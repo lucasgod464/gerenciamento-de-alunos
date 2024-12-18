@@ -2,8 +2,9 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Building2, Users, DoorOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Company {
   id: string;
@@ -32,8 +33,65 @@ const Companies = () => {
   return (
     <DashboardLayout role="super-admin">
       <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Gerenciamento de Empresas</h1>
+          <p className="text-muted-foreground">
+            Gerencie todas as instituições de ensino cadastradas no sistema
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardContent className="flex items-center p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Building2 className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Total de Empresas
+                  </p>
+                  <h2 className="text-2xl font-bold">3</h2>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="flex items-center p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Usuários Ativos
+                  </p>
+                  <h2 className="text-2xl font-bold">410</h2>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="flex items-center p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <DoorOpen className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Total de Salas
+                  </p>
+                  <h2 className="text-2xl font-bold">27</h2>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Empresas</h1>
+          <h2 className="text-xl font-semibold">Lista de Empresas</h2>
           <Button>
             Nova Empresa
           </Button>
