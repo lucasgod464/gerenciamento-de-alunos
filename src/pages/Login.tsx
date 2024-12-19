@@ -18,31 +18,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Primeiro, buscar o perfil pelo email
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("email", email.toLowerCase())
-        .maybeSingle();
-
-      console.log("Profile data:", profileData);
-
-      if (profileError) {
-        console.error("Profile error:", profileError);
-        throw new Error("Erro ao buscar usuário");
-      }
-
-      if (!profileData) {
-        throw new Error("Usuário não encontrado");
-      }
-
-      // Verificar credenciais
+      // Primeiro, verificar as credenciais
       const { data: credentialsData, error: credentialsError } = await supabase
         .from("credentials")
-        .select("*")
+        .select("profile_id")
         .eq("email", email.toLowerCase())
         .eq("password", password)
-        .eq("profile_id", profileData.id)
         .maybeSingle();
 
       console.log("Credentials data:", credentialsData);
@@ -54,6 +35,24 @@ const Login = () => {
 
       if (!credentialsData) {
         throw new Error("Email ou senha incorretos");
+      }
+
+      // Depois, buscar o perfil usando o profile_id das credenciais
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", credentialsData.profile_id)
+        .maybeSingle();
+
+      console.log("Profile data:", profileData);
+
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        throw new Error("Erro ao buscar dados do usuário");
+      }
+
+      if (!profileData) {
+        throw new Error("Perfil de usuário não encontrado");
       }
 
       // Determinar rota baseado no papel do usuário
