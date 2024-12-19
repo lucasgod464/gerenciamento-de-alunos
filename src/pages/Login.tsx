@@ -1,69 +1,44 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Auth } from "@supabase/auth-ui-react";
+import { ThemeSupa } from "@supabase/auth-ui-shared";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const validateEmail = (email: string) => {
-    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
-  };
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN") {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", session?.user?.id)
+            .single();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+          if (profile?.role === "super-admin") {
+            navigate("/super-admin/dashboard");
+          } else if (profile?.role === "admin") {
+            navigate("/admin");
+          } else {
+            navigate("/user");
+          }
 
-    if (!validateEmail(email)) {
-      setError("Por favor, insira um email válido");
-      return;
-    }
+          toast({
+            title: "Login realizado com sucesso!",
+            description: "Bem-vindo ao sistema.",
+          });
+        }
+      }
+    );
 
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
-      return;
-    }
-    
-    // Check for super admin
-    if (email === "super@teste.com" && password === "123456") {
-      toast.success("Login realizado com sucesso!");
-      navigate("/super-admin/dashboard");
-      return;
-    }
-
-    // Check for admin
-    if (email === "admin@teste.com" && password === "123456") {
-      toast.success("Login realizado com sucesso!");
-      navigate("/admin");
-      return;
-    }
-
-    // Check for regular user
-    if (email === "usuario@teste.com" && password === "123456") {
-      toast.success("Login realizado com sucesso!");
-      navigate("/user");
-      return;
-    }
-
-    // Check for created emails (this would normally be done against a database)
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    const foundEmail = createdEmails.find((e: any) => e.email === email);
-    
-    if (foundEmail) {
-      toast.success("Login realizado com sucesso!");
-      navigate(`/user?company=${foundEmail.company}`);
-      return;
-    }
-
-    setError("Email ou senha inválidos");
-    toast.error("Falha no login");
-  };
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -78,48 +53,40 @@ const Login = () => {
         
         <h1 className="text-2xl font-bold text-center">Entrar na sua conta</h1>
         
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
-          <p className="font-semibold">Contas para teste:</p>
-          <div>Super Admin: super@teste.com</div>
-          <div>Admin: admin@teste.com</div>
-          <div>Usuário: usuario@teste.com</div>
-          <div>Senha para todas as contas: 123456</div>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Email</label>
-            <Input
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Senha</label>
-            <Input
-              type="password"
-              placeholder="Sua senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full">
-            Entrar
-          </Button>
-        </form>
+        <Auth
+          supabaseClient={supabase}
+          appearance={{
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#2563eb',
+                  brandAccent: '#1d4ed8',
+                }
+              }
+            }
+          }}
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: "Email",
+                password_label: "Senha",
+                button_label: "Entrar",
+                loading_button_label: "Entrando...",
+                social_provider_text: "Entrar com {{provider}}",
+                link_text: "Já tem uma conta? Entre"
+              },
+              sign_up: {
+                email_label: "Email",
+                password_label: "Senha",
+                button_label: "Cadastrar",
+                loading_button_label: "Cadastrando...",
+                social_provider_text: "Cadastrar com {{provider}}",
+                link_text: "Não tem uma conta? Cadastre-se"
+              }
+            }
+          }}
+        />
       </div>
     </div>
   );
