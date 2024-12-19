@@ -29,22 +29,23 @@ export function useAuth() {
       return response;
     }
 
-    // Check for created emails in localStorage
+    // Verificar emails criados no localStorage
     const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
     const foundEmail = createdEmails.find((e: any) => e.email === email);
     
-    // Check for users created by admin
+    // Verificar usuários criados pelo admin
     const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
     const foundUser = createdUsers.find((u: any) => u.email === email);
     
+    // Login para emails criados pelo super admin
     if (foundEmail && password === "123456") {
       console.log("Found email data:", foundEmail);
 
-      // Converter o accessLevel para o formato correto
+      // Normalizar o accessLevel para o formato correto
       let role = foundEmail.accessLevel.toUpperCase();
-      if (role === "ADMIN" || role === "Admin" || role === "ADMINISTRADOR" || role === "Administrador") {
+      if (role.includes("ADMIN") || role.includes("ADMINISTRADOR")) {
         role = "ADMIN";
-      } else if (role === "USER" || role === "USUÁRIO" || role === "Usuário") {
+      } else if (role.includes("USER") || role.includes("USUÁRIO")) {
         role = "USER";
       }
 
@@ -66,7 +67,7 @@ export function useAuth() {
       return response;
     }
 
-    // Login for users created by admin
+    // Login para usuários criados pelo admin
     if (foundUser && password === "123456") {
       const response: AuthResponse = {
         user: {
