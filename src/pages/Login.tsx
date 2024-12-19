@@ -34,6 +34,7 @@ const Login = () => {
 
     try {
       const response = await login(email, password);
+      console.log("Login successful, redirecting based on role:", response.user.role);
       
       switch (response.user.role) {
         case "SUPER_ADMIN":

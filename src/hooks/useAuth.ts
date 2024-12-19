@@ -45,6 +45,8 @@ export function useAuth() {
         role = "ADMIN";
       }
 
+      console.log("Found email data:", foundEmail); // Debug log
+
       const response: AuthResponse = {
         user: {
           id: foundEmail.id,
