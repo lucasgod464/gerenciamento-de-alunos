@@ -26,7 +26,6 @@ export const SuperAdminProfile = () => {
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate current password
     if (currentPassword !== "123456") {
       toast({
         title: "Erro",
@@ -36,7 +35,6 @@ export const SuperAdminProfile = () => {
       return;
     }
 
-    // Validate new password
     if (newPassword !== confirmPassword) {
       toast({
         title: "Erro",
@@ -55,7 +53,6 @@ export const SuperAdminProfile = () => {
       return;
     }
 
-    // Update profile in localStorage
     const session = JSON.parse(localStorage.getItem("session") || "{}");
     session.user = {
       ...session.user,
@@ -75,7 +72,7 @@ export const SuperAdminProfile = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
+    navigate("/login");
     toast({
       title: "Desconectado",
       description: "Sessão encerrada com sucesso",

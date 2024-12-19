@@ -36,7 +36,7 @@ const Login = () => {
       const response = await login(email, password);
       
       if (response.user.role === "SUPER_ADMIN") {
-        window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/super-admin";
+        navigate("/super-admin");
       } else if (response.user.role === "ADMIN") {
         navigate("/admin");
       } else {

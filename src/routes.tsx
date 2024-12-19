@@ -19,7 +19,7 @@ import ReportsPage from "./pages/User/Reports";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: <Navigate to="/login" replace />,
   },
   {
     path: "/login",
@@ -29,7 +29,7 @@ export const router = createBrowserRouter([
   {
     path: "/super-admin",
     element: (
-      <RoleGuard role="SUPER_ADMIN">
+      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminDashboard />
       </RoleGuard>
     ),
@@ -37,7 +37,7 @@ export const router = createBrowserRouter([
   {
     path: "/super-admin/companies",
     element: (
-      <RoleGuard role="SUPER_ADMIN">
+      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminCompanies />
       </RoleGuard>
     ),
@@ -45,7 +45,7 @@ export const router = createBrowserRouter([
   {
     path: "/super-admin/emails",
     element: (
-      <RoleGuard role="SUPER_ADMIN">
+      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminEmails />
       </RoleGuard>
     ),
@@ -53,7 +53,7 @@ export const router = createBrowserRouter([
   {
     path: "/super-admin/profile",
     element: (
-      <RoleGuard role="SUPER_ADMIN">
+      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminProfile />
       </RoleGuard>
     ),
@@ -62,7 +62,7 @@ export const router = createBrowserRouter([
   {
     path: "/user",
     element: (
-      <RoleGuard role="USER">
+      <RoleGuard allowedRoles={["USER"]}>
         <UserDashboard />
       </RoleGuard>
     ),
@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
   {
     path: "/user/students",
     element: (
-      <RoleGuard role="USER">
+      <RoleGuard allowedRoles={["USER"]}>
         <StudentsPage />
       </RoleGuard>
     ),
@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
   {
     path: "/user/attendance",
     element: (
-      <RoleGuard role="USER">
+      <RoleGuard allowedRoles={["USER"]}>
         <AttendancePage />
       </RoleGuard>
     ),
@@ -86,7 +86,7 @@ export const router = createBrowserRouter([
   {
     path: "/user/reports",
     element: (
-      <RoleGuard role="USER">
+      <RoleGuard allowedRoles={["USER"]}>
         <ReportsPage />
       </RoleGuard>
     ),
@@ -94,13 +94,13 @@ export const router = createBrowserRouter([
   {
     path: "/user/profile",
     element: (
-      <RoleGuard role="USER">
+      <RoleGuard allowedRoles={["USER"]}>
         <UserProfile />
       </RoleGuard>
     ),
   },
   {
     path: "*",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/login" replace />,
   },
 ]);
