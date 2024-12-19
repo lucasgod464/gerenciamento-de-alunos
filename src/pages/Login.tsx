@@ -17,7 +17,7 @@ const Login = () => {
             .from("profiles")
             .select("role")
             .eq("id", session?.user?.id)
-            .single();
+            .maybeSingle();
 
           if (profile?.role === "super-admin") {
             navigate("/super-admin/dashboard");
