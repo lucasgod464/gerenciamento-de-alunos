@@ -4,40 +4,38 @@ import { StudentTable } from "./StudentTable";
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 
-interface StudentRegistrationProps {
-  onSubmit?: (student: Student) => void;
-}
-
-export const StudentRegistration = ({ onSubmit }: StudentRegistrationProps) => {
+export const StudentRegistration = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const { user: currentUser } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!currentUser?.companyId) return;
-
     const savedStudents = localStorage.getItem("students");
     if (savedStudents) {
-      const allStudents = JSON.parse(savedStudents);
-      const companyStudents = allStudents.filter(
-        (student: Student) => student.companyId === currentUser.companyId
-      );
-      setStudents(companyStudents);
+      const parsedStudents = JSON.parse(savedStudents);
+      if (user?.companyId) {
+        const companyStudents = parsedStudents.filter(
+          (student: Student) => student.companyId === user.companyId
+        );
+        setStudents(companyStudents);
+      }
     }
-  }, [currentUser]);
+  }, [user]);
 
   const handleAddStudent = (newStudent: Student) => {
-    const updatedStudent = {
-      ...newStudent,
-      companyId: currentUser?.companyId || null,
-    };
-    
-    const updatedStudents = [...students, updatedStudent];
+    const updatedStudents = [...students, newStudent];
     setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
     
-    if (onSubmit) {
-      onSubmit(updatedStudent);
-    }
+    // Save to localStorage including students from other companies
+    const savedStudents = localStorage.getItem("students");
+    const allStudents = savedStudents ? JSON.parse(savedStudents) : [];
+    const otherCompaniesStudents = allStudents.filter(
+      (student: Student) => student.companyId !== user?.companyId
+    );
+    
+    localStorage.setItem(
+      "students",
+      JSON.stringify([...otherCompaniesStudents, ...updatedStudents])
+    );
   };
 
   return (
