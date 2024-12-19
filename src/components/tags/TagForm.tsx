@@ -99,20 +99,15 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 transition-colors"
-                >
-                  +
-                </button>
+                  className="w-10 h-10 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors overflow-hidden"
+                  style={{ backgroundColor: color }}
+                />
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <HexColorPicker color={color} onChange={setColor} />
                     <div className="flex flex-col gap-2">
-                      <div 
-                        className="w-12 h-12 rounded-lg shadow-md border border-gray-200"
-                        style={{ backgroundColor: color }}
-                      />
                       <Input
                         type="text"
                         value={color}
