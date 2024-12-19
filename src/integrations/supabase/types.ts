@@ -104,64 +104,6 @@ export type Database = {
           },
         ]
       }
-      emails: {
-        Row: {
-          access_level: string
-          company_id: string | null
-          created_at: string
-          created_by: string | null
-          email: string
-          id: string
-          name: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          access_level: string
-          company_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          email: string
-          id?: string
-          name: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          access_level?: string
-          company_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          email?: string
-          id?: string
-          name?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "emails_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emails_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "emails_updated_by_fkey"
-            columns: ["updated_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           access_level: string
