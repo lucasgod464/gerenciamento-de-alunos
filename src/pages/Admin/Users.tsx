@@ -54,7 +54,7 @@ const Users = () => {
   const handleBulkAction = (action: "activate" | "deactivate") => {
     const updatedUsers = users.map((user) => ({
       ...user,
-      status: action === "activate" ? "active" : "inactive",
+      status: action === "activate" ? "active" as const : "inactive" as const,
     }));
     setUsers(updatedUsers);
     toast({
