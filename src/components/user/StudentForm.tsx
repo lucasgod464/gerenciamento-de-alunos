@@ -10,17 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
-
-interface Room {
-  id: string;
-  name: string;
-  companyId: string | null;
-}
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
@@ -28,7 +21,7 @@ interface StudentFormProps {
 
 export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">("active");
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [formFields, setFormFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
@@ -41,7 +34,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
       const companyRooms = allRooms.filter(
-        (room: Room) => room.companyId === currentUser.companyId
+        (room: any) => room.companyId === currentUser.companyId
       );
       setRooms(companyRooms);
       if (companyRooms.length > 0) {
@@ -65,14 +58,24 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
       birthDate: formData.get("birthDate") as string,
-      email: formData.get("email") as string,
-      document: formData.get("document") as string,
-      address: formData.get("address") as string,
+      email: formData.get("email") as string || "",
+      document: formData.get("document") as string || "",
+      address: formData.get("address") as string || "",
       room: selectedRoom,
       status: status,
       createdAt: new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
+
+    // Adiciona campos customizados
+    formFields.forEach((field) => {
+      if (!["name", "birthDate", "status", "room"].includes(field.id)) {
+        const value = formData.get(field.name);
+        if (value) {
+          (newStudent as any)[field.name] = value;
+        }
+      }
+    });
 
     onSubmit(newStudent);
     e.currentTarget.reset();
@@ -119,8 +122,17 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {formFields.map((field) => renderFormField(field))}
-          
+          {/* Campos padrão */}
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Nome Completo</Label>
+            <Input id="fullName" name="fullName" type="text" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Data de Nascimento</Label>
+            <Input id="birthDate" name="birthDate" type="date" required />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="room">Sala</Label>
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -139,15 +151,24 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
 
           <div className="space-y-2">
             <Label>Status</Label>
-            <div className="flex items-center space-x-2">
-              <Switch 
-                id="status" 
-                checked={status === "active"}
-                onCheckedChange={(checked) => setStatus(checked ? "active" : "inactive")}
-              />
-              <Label htmlFor="status">Ativo</Label>
-            </div>
+            <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+
+          {/* Campos customizados do formulário */}
+          {formFields.map((field) => {
+            if (!["name", "birthDate", "status", "room"].includes(field.id)) {
+              return renderFormField(field);
+            }
+            return null;
+          })}
 
           <Button type="submit" className="w-full">
             <Plus className="mr-2 h-4 w-4" />
