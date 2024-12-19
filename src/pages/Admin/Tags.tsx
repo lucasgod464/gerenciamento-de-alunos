@@ -16,7 +16,6 @@ const Tags = () => {
   const [tags, setTags] = useState<TagType[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [selectedColor, setSelectedColor] = useState("");
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const { toast } = useToast();
 
@@ -73,9 +72,8 @@ const Tags = () => {
     const matchesStatus = statusFilter === "all" 
       ? true 
       : statusFilter === "active" ? tag.status : !tag.status;
-    const matchesColor = !selectedColor || tag.color === selectedColor;
     
-    return matchesSearch && matchesStatus && matchesColor;
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -109,8 +107,6 @@ const Tags = () => {
             setSearchTerm={setSearchTerm}
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
-            selectedColor={selectedColor}
-            setSelectedColor={setSelectedColor}
           />
         </div>
       </div>

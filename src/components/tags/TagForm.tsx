@@ -78,7 +78,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            required
           />
         </div>
 

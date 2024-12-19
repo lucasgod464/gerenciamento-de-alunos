@@ -26,8 +26,6 @@ interface TagListProps {
   setSearchTerm: (term: string) => void;
   statusFilter: "all" | "active" | "inactive";
   setStatusFilter: (status: "all" | "active" | "inactive") => void;
-  selectedColor: string;
-  setSelectedColor: (color: string) => void;
 }
 
 export const TagList = ({
@@ -38,15 +36,10 @@ export const TagList = ({
   setSearchTerm,
   statusFilter,
   setStatusFilter,
-  selectedColor,
-  setSelectedColor
 }: TagListProps) => {
-  // Obtém apenas as cores que estão sendo usadas nas tags
-  const usedColors = Array.from(new Set(tags.map(tag => tag.color)));
-
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div className="space-y-2">
           <Input
             placeholder="Buscar por nome..."
@@ -67,30 +60,6 @@ export const TagList = ({
               <SelectItem value="all">Todos os status</SelectItem>
               <SelectItem value="active">Ativas</SelectItem>
               <SelectItem value="inactive">Inativas</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Select
-            value={selectedColor}
-            onValueChange={setSelectedColor}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por cor" />
-            </SelectTrigger>
-            <SelectContent>
-              {usedColors.map((color) => (
-                <SelectItem key={color} value={color}>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded"
-                      style={{ backgroundColor: color }}
-                    />
-                    <span>{color}</span>
-                  </div>
-                </SelectItem>
-              ))}
             </SelectContent>
           </Select>
         </div>
