@@ -12,8 +12,21 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 
+interface Company {
+  id: string
+  name: string
+  document: string
+  usersLimit: number
+  currentUsers: number
+  roomsLimit: number
+  currentRooms: number
+  status: "Ativa" | "Inativa"
+  createdAt: string
+  publicFolderPath: string
+}
+
 interface CreateCompanyDialogProps {
-  onCompanyCreated: (company: any) => void
+  onCompanyCreated: (company: Company) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
