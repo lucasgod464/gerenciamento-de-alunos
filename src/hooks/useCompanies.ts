@@ -16,7 +16,14 @@ interface Company {
 // Funções auxiliares para localStorage
 const getStoredCompanies = (): Company[] => {
   const stored = localStorage.getItem("companies")
-  return stored ? JSON.parse(stored) : []
+  if (!stored) return []
+  
+  const companies = JSON.parse(stored)
+  // Ensure status is either "Ativa" or "Inativa"
+  return companies.map((company: any) => ({
+    ...company,
+    status: company.status === "Ativa" ? "Ativa" : "Inativa"
+  }))
 }
 
 const setStoredCompanies = (companies: Company[]) => {
@@ -81,7 +88,7 @@ export function useCompanies() {
               ...company,
               currentUsers: 0,
               currentRooms: 0,
-              status: "Ativa",
+              status: "Ativa" as const,
             }
           : company
       )

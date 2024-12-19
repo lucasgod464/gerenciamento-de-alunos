@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { EmailList } from "@/components/emails/EmailList"
 import { EmailStats } from "@/components/emails/EmailStats"
-import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
@@ -29,7 +28,7 @@ const Emails = () => {
 
   // Mutation para atualizar email
   const updateEmailMutation = useMutation({
-    mutationFn: (updatedEmail: Email) => {
+    mutationFn: async (updatedEmail: Email) => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const newEmails = currentEmails.map((email: Email) =>
         email.id === updatedEmail.id ? updatedEmail : email
@@ -48,7 +47,7 @@ const Emails = () => {
 
   // Mutation para deletar email
   const deleteEmailMutation = useMutation({
-    mutationFn: (id: string) => {
+    mutationFn: async (id: string) => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const newEmails = currentEmails.filter((email: Email) => email.id !== id)
       localStorage.setItem("createdEmails", JSON.stringify(newEmails))
