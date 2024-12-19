@@ -8,18 +8,21 @@ export function useCompanies() {
 
   const fetchCompanies = async () => {
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!session.session) {
-        throw new Error("Não autorizado");
+      if (!session) {
+        throw new Error("Sessão expirada. Por favor, faça login novamente.");
       }
 
-      // Verificar se o usuário é super-admin
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', session.session.user.id)
+        .eq('id', session.user.id)
         .single();
+
+      if (profileError) {
+        throw profileError;
+      }
 
       if (!profile || profile.role !== 'super-admin') {
         throw new Error("Acesso não autorizado");

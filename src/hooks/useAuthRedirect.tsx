@@ -1,27 +1,38 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function useAuthRedirect() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/");
-        return;
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          navigate("/");
+          return;
+        }
 
-      // Verificar se o usuário é super-admin
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-      if (!profile || profile.role !== 'super-admin') {
+        if (error) {
+          throw error;
+        }
+
+        if (!profile || profile.role !== 'super-admin') {
+          toast.error("Acesso não autorizado");
+          navigate("/");
+        }
+      } catch (error: any) {
+        console.error("Error checking auth:", error);
+        toast.error(error.message || "Erro ao verificar autenticação");
         navigate("/");
       }
     };
@@ -34,14 +45,24 @@ export function useAuthRedirect() {
         return;
       }
 
-      // Verificar se o usuário é super-admin quando o estado de autenticação muda
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
 
-      if (!profile || profile.role !== 'super-admin') {
+        if (error) {
+          throw error;
+        }
+
+        if (!profile || profile.role !== 'super-admin') {
+          toast.error("Acesso não autorizado");
+          navigate("/");
+        }
+      } catch (error: any) {
+        console.error("Error checking auth:", error);
+        toast.error(error.message || "Erro ao verificar autenticação");
         navigate("/");
       }
     });
