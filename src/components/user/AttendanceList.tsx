@@ -36,6 +36,7 @@ export const AttendanceList = ({ students, onStatusChange, date }: AttendanceLis
             <TableCell>{student.room}</TableCell>
             <TableCell>
               <Select
+                defaultValue="present"
                 value={student.status}
                 onValueChange={(value: Student["status"]) =>
                   handleStatusChange(student.id, value)

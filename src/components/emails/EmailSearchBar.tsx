@@ -50,7 +50,7 @@ export function EmailSearchBar({
         <SelectContent>
           <SelectItem value="all">Todas</SelectItem>
           {companies.map((company: Company) => (
-            <SelectItem key={company.id} value={company.id}>
+            <SelectItem key={company.id} value={company.id || "no-id"}>
               {company.name}
             </SelectItem>
           ))}
