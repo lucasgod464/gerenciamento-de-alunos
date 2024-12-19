@@ -55,8 +55,8 @@ export const StudentRegistration = () => {
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = 
-      ((student.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (student.email || "").toLowerCase().includes(searchTerm.toLowerCase()));
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRoom = selectedRoom === "all" || student.room === selectedRoom;
     return matchesSearch && matchesRoom;
   });

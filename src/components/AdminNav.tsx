@@ -34,11 +34,6 @@ const adminRoutes = [
     icon: GraduationCap,
   },
   {
-    title: "Construtor de Formulários",
-    href: "/admin/form-builder",
-    icon: BookOpen,
-  },
-  {
     title: "Meu Perfil",
     href: "/admin/profile",
     icon: UserCircle,

@@ -1,174 +1,140 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
-import { FormField } from "@/types/form-builder";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { FormPreview } from "../form-builder/FormPreview";
+
+interface Room {
+  id: string;
+  name: string;
+  companyId: string | null;
+}
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
 }
 
 export const StudentForm = ({ onSubmit }: StudentFormProps) => {
-  const [formFields, setFormFields] = useState<FormField[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [status, setStatus] = useState<"active" | "inactive">("active");
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
-    // Load form fields
-    const savedFields = localStorage.getItem("formFields");
-    if (savedFields) {
-      const parsedFields = JSON.parse(savedFields);
-      const companyFields = parsedFields.filter(
-        (field: FormField) => field.companyId === currentUser.companyId
+    const storedRooms = localStorage.getItem("rooms");
+    if (storedRooms) {
+      const allRooms = JSON.parse(storedRooms);
+      const companyRooms = allRooms.filter(
+        (room: Room) => room.companyId === currentUser.companyId
       );
-      setFormFields(companyFields);
-    }
-
-    // Load students
-    const savedStudents = localStorage.getItem("students");
-    if (savedStudents) {
-      const allStudents = JSON.parse(savedStudents);
-      const companyStudents = allStudents.filter(
-        (student: Student) => student.companyId === currentUser.companyId
-      );
-      setStudents(companyStudents);
+      setRooms(companyRooms);
+      if (companyRooms.length > 0) {
+        setSelectedRoom(companyRooms[0].id);
+      }
     }
   }, [currentUser]);
 
-  const handleSubmit = (formValues: Record<string, any>) => {
-    const studentData: Student = {
-      id: editingStudent?.id || Math.random().toString(36).substr(2, 9),
-      name: formValues.name || "",
-      birthDate: formValues.birthDate || "",
-      email: formValues.email || "",
-      document: formValues.document || "",
-      address: formValues.address || "",
-      room: formValues.room || "",
-      status: formValues.status || "active",
-      createdAt: editingStudent?.createdAt || new Date().toISOString(),
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const newStudent: Student = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.get("name") as string,
+      birthDate: formData.get("birthDate") as string,
+      email: formData.get("email") as string,
+      document: formData.get("document") as string,
+      address: formData.get("address") as string,
+      room: selectedRoom,
+      status: status,
+      createdAt: new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
 
-    onSubmit(studentData);
-    
-    const updatedStudents = editingStudent
-      ? students.map((s) => (s.id === editingStudent.id ? studentData : s))
-      : [...students, studentData];
-
-    setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    
-    toast({
-      title: editingStudent ? "Aluno atualizado" : "Aluno adicionado",
-      description: `O aluno foi ${editingStudent ? "atualizado" : "adicionado"} com sucesso.`,
-    });
-
-    setEditingStudent(null);
-  };
-
-  const handleEdit = (student: Student) => {
-    setEditingStudent(student);
-  };
-
-  const handleDelete = (studentId: string) => {
-    const updatedStudents = students.filter((s) => s.id !== studentId);
-    setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    
-    toast({
-      title: "Aluno removido",
-      description: "O aluno foi removido com sucesso.",
-    });
+    onSubmit(newStudent);
+    e.currentTarget.reset();
+    setStatus("active");
   };
 
   return (
-    <div className="space-y-6">
-      <FormPreview fields={formFields} onSubmit={handleSubmit} />
+    <Card>
+      <CardHeader>
+        <CardTitle>Novo Aluno</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input id="name" name="name" placeholder="Nome do aluno" required />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Data de Nascimento</Label>
+            <Input id="birthDate" name="birthDate" type="date" required />
+          </div>
 
-      <div className="rounded-md border">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="p-2 text-left">Nome</th>
-              <th className="p-2 text-left">Email</th>
-              <th className="p-2 text-left">Sala</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-right">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.id} className="border-b">
-                <td className="p-2">{student.name}</td>
-                <td className="p-2">{student.email}</td>
-                <td className="p-2">{student.room}</td>
-                <td className="p-2">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      student.status === "active"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                  >
-                    {student.status === "active" ? "Ativo" : "Inativo"}
-                  </span>
-                </td>
-                <td className="p-2 text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEdit(student)}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remover aluno</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja remover este aluno? Esta ação não pode ser desfeita.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(student.id)}>
-                            Remover
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" type="email" placeholder="email@exemplo.com" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="document">CPF/RG</Label>
+            <Input id="document" name="document" placeholder="000.000.000-00" required />
+          </div>
+
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="address">Endereço Completo</Label>
+            <Input id="address" name="address" placeholder="Rua, número, bairro, cidade, estado" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="room">Sala</Label>
+            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a sala" />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <div className="flex items-center space-x-2">
+              <Switch 
+                id="status" 
+                checked={status === "active"}
+                onCheckedChange={(checked) => setStatus(checked ? "active" : "inactive")}
+              />
+              <Label htmlFor="status">Ativo</Label>
+            </div>
+          </div>
+
+          <Button type="submit" className="md:col-span-2">
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Aluno
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
