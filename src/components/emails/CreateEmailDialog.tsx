@@ -18,11 +18,9 @@ import {
 } from "@/components/ui/select"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { Email } from "@/types/email"
 
 interface CreateEmailDialogProps {
-  onEmailCreated: (email: Email) => void
+  onEmailCreated: (email: any) => void
 }
 
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
@@ -39,45 +37,30 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
     return password
   }
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    
     const newEmail = {
+      id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       email: formData.get("email") as string,
-      access_level: formData.get("access_level") as "Admin" | "Usuário Comum",
-      company_id: formData.get("company_id") as string,
+      password: formData.get("password") as string,
+      accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
+      company: formData.get("company") as string,
+      createdAt: new Date().toLocaleDateString(),
     }
     
-    try {
-      const { data, error } = await supabase
-        .from("emails")
-        .insert([newEmail])
-        .select()
-        .single()
-
-      if (error) throw error
-
-      // Cast the data to ensure access_level is of the correct type
-      const typedData = {
-        ...data,
-        access_level: data.access_level as "Admin" | "Usuário Comum"
-      }
-
-      onEmailCreated(typedData)
-      setOpen(false)
-      toast({
-        title: "Email criado",
-        description: "O email foi criado com sucesso.",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Erro ao criar email",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
+    // Store in localStorage for login functionality
+    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+    createdEmails.push(newEmail)
+    localStorage.setItem("createdEmails", JSON.stringify(createdEmails))
+    
+    onEmailCreated(newEmail)
+    setOpen(false)
+    toast({
+      title: "Email criado",
+      description: "O email foi criado com sucesso.",
+    })
   }
 
   return (
@@ -135,8 +118,8 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="access_level">Nível de Acesso</Label>
-            <Select name="access_level" required>
+            <Label htmlFor="accessLevel">Nível de Acesso</Label>
+            <Select name="accessLevel" required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o nível de acesso" />
               </SelectTrigger>
@@ -147,13 +130,13 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="company_id">Empresa</Label>
-            <Select name="company_id" required>
+            <Label htmlFor="company">Empresa</Label>
+            <Select name="company" required>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="company-1">Empresa Exemplo</SelectItem>
+                <SelectItem value="Empresa Exemplo">Empresa Exemplo</SelectItem>
               </SelectContent>
             </Select>
           </div>

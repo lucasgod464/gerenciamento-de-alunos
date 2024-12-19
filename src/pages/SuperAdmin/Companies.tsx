@@ -1,110 +1,134 @@
-import { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { CompanyList } from "@/components/companies/CompanyList";
-import { CompanyStats } from "@/components/companies/CompanyStats";
-import { CompanyHeader } from "@/components/companies/CompanyHeader";
-import { CompanySearch } from "@/components/companies/CompanySearch";
-import { useCompanies } from "@/hooks/useCompanies";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { Company } from "@/types/company";
-import { toast } from "sonner";
+import { useState } from "react"
+import { DashboardLayout } from "@/components/DashboardLayout"
+import { Input } from "@/components/ui/input"
+import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
+import { CompanyList } from "@/components/companies/CompanyList"
+import { CompanyStats } from "@/components/companies/CompanyStats"
+import { useToast } from "@/components/ui/use-toast"
+
+interface Company {
+  id: string
+  name: string
+  document: string
+  usersLimit: number
+  currentUsers: number
+  roomsLimit: number
+  currentRooms: number
+  status: "Ativa" | "Inativa"
+  createdAt: string
+  publicFolderPath: string
+}
+
+const initialCompanies: Company[] = [
+  {
+    id: "460027488",
+    name: "Empresa Exemplo",
+    document: "46.002.748/0001-14",
+    usersLimit: 100,
+    currentUsers: 45,
+    roomsLimit: 50,
+    currentRooms: 27,
+    status: "Ativa",
+    createdAt: "17/12/2024",
+    publicFolderPath: "/storage/460027488",
+  },
+]
 
 const Companies = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [search, setSearch] = useState("");
-  const { isLoading, fetchCompanies, handleUpdateCompany, handleDeleteCompany, handleResetCompany } = useCompanies();
-
-  useAuthRedirect();
-
-  useEffect(() => {
-    console.log("Companies component mounted");
-    const loadCompanies = async () => {
-      try {
-        console.log("Loading companies...");
-        const data = await fetchCompanies();
-        console.log("Companies loaded:", data);
-        setCompanies(data);
-      } catch (error: any) {
-        console.error("Error loading companies:", error);
-      }
-    };
-
-    loadCompanies();
-  }, [fetchCompanies]);
+  const [companies, setCompanies] = useState<Company[]>(initialCompanies)
+  const [search, setSearch] = useState("")
+  const { toast } = useToast()
 
   const handleCreateCompany = (newCompany: Company) => {
-    setCompanies([newCompany, ...companies]);
-  };
+    setCompanies([...companies, newCompany])
+  }
 
-  const onUpdateCompany = async (updatedCompany: Company) => {
-    const success = await handleUpdateCompany(updatedCompany);
-    if (success) {
-      setCompanies(companies.map((company) =>
-        company.id === updatedCompany.id ? updatedCompany : company
-      ));
-    }
-  };
+  const handleUpdateCompany = (updatedCompany: Company) => {
+    const updatedCompanies = companies.map((company) =>
+      company.id === updatedCompany.id ? updatedCompany : company
+    )
+    setCompanies(updatedCompanies)
+    toast({
+      title: "Empresa atualizada",
+      description: "As informações da empresa foram atualizadas com sucesso.",
+    })
+  }
 
-  const onDeleteCompany = async (id: string) => {
-    const success = await handleDeleteCompany(id);
-    if (success) {
-      setCompanies(companies.filter((company) => company.id !== id));
-    }
-  };
+  const handleDeleteCompany = (id: string) => {
+    setCompanies(companies.filter((company) => company.id !== id))
+    toast({
+      title: "Empresa excluída",
+      description: "A empresa foi excluída permanentemente.",
+      variant: "destructive",
+    })
+  }
 
-  const onResetCompany = async (id: string) => {
-    const success = await handleResetCompany(id);
-    if (success) {
-      setCompanies(companies.map((company) =>
-        company.id === id
-          ? {
-              ...company,
-              current_users: 0,
-              current_rooms: 0,
-              status: "active" as const,
-            }
-          : company
-      ));
-    }
-  };
+  const handleResetCompany = (id: string) => {
+    const updatedCompanies = companies.map((company) =>
+      company.id === id
+        ? {
+            ...company,
+            currentUsers: 0,
+            currentRooms: 0,
+            status: "Ativa" as const,
+          }
+        : company
+    )
+    setCompanies(updatedCompanies)
+    toast({
+      title: "Empresa resetada",
+      description: "A empresa foi restaurada para as configurações padrão.",
+    })
+  }
+
+  const totalUsers = companies.reduce((acc, company) => acc + company.currentUsers, 0)
+  const totalRooms = companies.reduce((acc, company) => acc + company.currentRooms, 0)
 
   const filteredCompanies = companies.filter(
     (company) =>
       company.name.toLowerCase().includes(search.toLowerCase()) ||
       company.id.includes(search) ||
       company.document.includes(search)
-  );
-
-  if (isLoading) {
-    return (
-      <DashboardLayout role="super-admin">
-        <div className="p-6">Carregando...</div>
-      </DashboardLayout>
-    );
-  }
+  )
 
   return (
     <DashboardLayout role="super-admin">
       <div className="space-y-6 p-6">
-        <CompanyHeader onCompanyCreated={handleCreateCompany} />
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Gerenciamento de Empresas</h1>
+          <p className="text-muted-foreground">
+            Gerencie todas as instituições de ensino cadastradas no sistema
+          </p>
+        </div>
 
         <CompanyStats
           totalCompanies={companies.length}
-          totalUsers={companies.reduce((acc, company) => acc + company.current_users, 0)}
-          totalRooms={companies.reduce((acc, company) => acc + company.current_rooms, 0)}
+          totalUsers={totalUsers}
+          totalRooms={totalRooms}
         />
 
-        <CompanySearch value={search} onChange={setSearch} />
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Lista de Empresas</h2>
+          <CreateCompanyDialog onCompanyCreated={handleCreateCompany} />
+        </div>
+
+        <div className="max-w-xl">
+          <Input
+            placeholder="Buscar empresas..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
         <CompanyList
           companies={filteredCompanies}
-          onUpdateCompany={onUpdateCompany}
-          onDeleteCompany={onDeleteCompany}
-          onResetCompany={onResetCompany}
+          onUpdateCompany={handleUpdateCompany}
+          onDeleteCompany={handleDeleteCompany}
+          onResetCompany={handleResetCompany}
         />
       </div>
     </DashboardLayout>
-  );
-};
+  )
+}
 
-export default Companies;
+export default Companies

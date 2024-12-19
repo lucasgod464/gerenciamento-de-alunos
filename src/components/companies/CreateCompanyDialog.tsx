@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: any) => void
@@ -19,49 +18,30 @@ interface CreateCompanyDialogProps {
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setIsLoading(true)
-
-    try {
-      const formData = new FormData(event.currentTarget)
-      const companyData = {
-        name: formData.get("name") as string,
-        document: formData.get("document") as string,
-        users_limit: Number(formData.get("usersLimit")),
-        current_users: 0,
-        rooms_limit: Number(formData.get("roomsLimit")),
-        current_rooms: 0,
-        status: "active",
-      }
-
-      const { data: company, error } = await supabase
-        .from('companies')
-        .insert(companyData)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      onCompanyCreated(company)
-      setOpen(false)
-      toast({
-        title: "Empresa criada",
-        description: "A empresa foi criada com sucesso.",
-      })
-    } catch (error: any) {
-      console.error('Error creating company:', error)
-      toast({
-        title: "Erro ao criar empresa",
-        description: error.message || "Ocorreu um erro ao criar a empresa.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+    const formData = new FormData(event.currentTarget)
+    const newCompany = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.get("name") as string,
+      document: formData.get("document") as string,
+      usersLimit: Number(formData.get("usersLimit")),
+      currentUsers: 0,
+      roomsLimit: Number(formData.get("roomsLimit")),
+      currentRooms: 0,
+      status: "Ativa" as const,
+      createdAt: new Date().toLocaleDateString(),
+      publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
     }
+    
+    onCompanyCreated(newCompany)
+    setOpen(false)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
   }
 
   return (
@@ -117,8 +97,8 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
               required
             />
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Criando..." : "Criar Empresa"}
+          <Button type="submit" className="w-full">
+            Criar Empresa
           </Button>
         </form>
       </DialogContent>

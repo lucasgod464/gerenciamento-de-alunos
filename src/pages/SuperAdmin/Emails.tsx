@@ -1,101 +1,65 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { Input } from "@/components/ui/input"
 import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog"
 import { EmailList } from "@/components/emails/EmailList"
 import { EmailStats } from "@/components/emails/EmailStats"
 import { useToast } from "@/components/ui/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-import { Email } from "@/types/email"
+
+interface Email {
+  id: string
+  name: string
+  email: string
+  accessLevel: "Admin" | "Usuário Comum"
+  company: string
+  createdAt: string
+}
+
+const initialEmails: Email[] = [
+  {
+    id: "460027488",
+    name: "John Doe",
+    email: "john@example.com",
+    accessLevel: "Admin",
+    company: "Empresa Exemplo",
+    createdAt: "17/12/2024",
+  },
+]
 
 const Emails = () => {
-  const [emails, setEmails] = useState<Email[]>([])
+  const [emails, setEmails] = useState<Email[]>(initialEmails)
   const [search, setSearch] = useState("")
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchEmails()
-  }, [])
-
-  const fetchEmails = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("emails")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-
-      // Cast the data to ensure access_level is of the correct type
-      const typedData = (data || []).map(email => ({
-        ...email,
-        access_level: email.access_level as "Admin" | "Usuário Comum"
-      }))
-
-      setEmails(typedData)
-    } catch (error: any) {
-      toast({
-        title: "Erro ao carregar emails",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
-  }
-
   const handleCreateEmail = (newEmail: Email) => {
-    setEmails([newEmail, ...emails])
+    setEmails([...emails, newEmail])
   }
 
-  const handleUpdateEmail = async (updatedEmail: Email) => {
-    try {
-      const { error } = await supabase
-        .from("emails")
-        .update(updatedEmail)
-        .eq("id", updatedEmail.id)
-
-      if (error) throw error
-
-      const updatedEmails = emails.map((email) =>
-        email.id === updatedEmail.id ? updatedEmail : email
-      )
-      setEmails(updatedEmails)
-      toast({
-        title: "Email atualizado",
-        description: "As informações do email foram atualizadas com sucesso.",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Erro ao atualizar email",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
+  const handleUpdateEmail = (updatedEmail: Email) => {
+    const updatedEmails = emails.map((email) =>
+      email.id === updatedEmail.id ? updatedEmail : email
+    )
+    setEmails(updatedEmails)
+    toast({
+      title: "Email atualizado",
+      description: "As informações do email foram atualizadas com sucesso.",
+    })
   }
 
-  const handleDeleteEmail = async (id: string) => {
-    try {
-      const { error } = await supabase.from("emails").delete().eq("id", id)
-
-      if (error) throw error
-
-      setEmails(emails.filter((email) => email.id !== id))
-      toast({
-        title: "Email excluído",
-        description: "O email foi excluído permanentemente.",
-      })
-    } catch (error: any) {
-      toast({
-        title: "Erro ao excluir email",
-        description: error.message,
-        variant: "destructive",
-      })
-    }
+  const handleDeleteEmail = (id: string) => {
+    setEmails(emails.filter((email) => email.id !== id))
+    toast({
+      title: "Email excluído",
+      description: "O email foi excluído permanentemente.",
+      variant: "destructive",
+    })
   }
 
   const filteredEmails = emails.filter(
     (email) =>
       email.name.toLowerCase().includes(search.toLowerCase()) ||
-      email.email.toLowerCase().includes(search.toLowerCase())
+      email.email.toLowerCase().includes(search.toLowerCase()) ||
+      email.company.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
