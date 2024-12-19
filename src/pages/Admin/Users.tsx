@@ -32,10 +32,10 @@ const Users = () => {
 
     if (savedUsers) {
       const parsedUsers = JSON.parse(savedUsers);
-      // Ensure status is either "active" or "inactive"
+      // Ensure status is properly typed as "active" or "inactive"
       const typedUsers = parsedUsers.map((user: any) => ({
         ...user,
-        status: user.status === "active" ? "active" : "inactive"
+        status: user.status === true || user.status === "active" ? "active" : "inactive"
       })) as User[];
       setUsers(typedUsers);
     }
