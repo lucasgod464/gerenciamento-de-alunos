@@ -37,10 +37,16 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     }
   }, [editingTag]);
 
+  // Paleta de cores refinada
   const colors = [
-    "#8E9196", "#9b87f5", "#7E69AB", "#6E59A5", "#1A1F2C",
-    "#D6BCFA", "#F2FCE2", "#FEF7CD", "#FEC6A1", "#E5DEFF",
-    "#FFDEE2", "#FDE1D3", "#D3E4FD", "#F1F0FB", "#8B5CF6"
+    "#8E9196", // Neutral Gray
+    "#9b87f5", // Primary Purple
+    "#7E69AB", // Secondary Purple
+    "#D6BCFA", // Light Purple
+    "#FFDEE2", // Soft Pink
+    "#FDE1D3", // Soft Peach
+    "#D3E4FD", // Soft Blue
+    "#F1F0FB"  // Soft Gray
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,13 +83,13 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
 
         <div className="space-y-2">
           <Label>Cor</Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {colors.map((c) => (
               <button
                 key={c}
                 type="button"
-                className={`w-8 h-8 rounded-full border-2 ${
-                  color === c ? "border-black" : "border-transparent"
+                className={`w-10 h-10 rounded-lg transition-all duration-200 ${
+                  color === c ? "ring-2 ring-offset-2 ring-black scale-110" : ""
                 }`}
                 style={{ backgroundColor: c }}
                 onClick={() => setColor(c)}
@@ -93,23 +99,25 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400"
+                  className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 transition-colors"
                 >
                   +
                 </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3">
-                <HexColorPicker color={color} onChange={setColor} />
+                <div className="space-y-3">
+                  <HexColorPicker color={color} onChange={setColor} />
+                  <Input
+                    type="text"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    className="mt-2"
+                    placeholder="Digite um código hex (#000000)"
+                  />
+                </div>
               </PopoverContent>
             </Popover>
           </div>
-          <Input
-            type="text"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="mt-2"
-            placeholder="Digite um código hex (#000000)"
-          />
         </div>
 
         <div className="space-y-2">
