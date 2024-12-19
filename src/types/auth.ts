@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: AccessLevel;
-  companyId: string | null; // null para SUPER_ADMIN
+  companyId: string | null; // null for SUPER_ADMIN
   createdAt: string;
   lastAccess: string;
 }
@@ -20,3 +20,36 @@ export interface AccessControl {
   accessLevel: AccessLevel;
   permissions: string[];
 }
+
+// Helper type to define what each role can do
+export interface RolePermissions {
+  canCreateCompany: boolean;
+  canCreateAdmin: boolean;
+  canCreateUser: boolean;
+  canViewAllCompanies: boolean;
+  canManageUsers: boolean;
+}
+
+export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
+  SUPER_ADMIN: {
+    canCreateCompany: true,
+    canCreateAdmin: true,
+    canCreateUser: true,
+    canViewAllCompanies: true,
+    canManageUsers: true,
+  },
+  ADMIN: {
+    canCreateCompany: false,
+    canCreateAdmin: false,
+    canCreateUser: true,
+    canViewAllCompanies: false,
+    canManageUsers: true,
+  },
+  USER: {
+    canCreateCompany: false,
+    canCreateAdmin: false,
+    canCreateUser: false,
+    canViewAllCompanies: false,
+    canManageUsers: false,
+  },
+};

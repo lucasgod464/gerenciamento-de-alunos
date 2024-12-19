@@ -1,18 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AuthResponse } from "@/types/auth";
+import { User, AuthResponse, ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
   const { data: session } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
-      // Aqui você implementaria a lógica para buscar a sessão atual
       const storedSession = localStorage.getItem("session");
       return storedSession ? JSON.parse(storedSession) : null;
     },
   });
 
   const login = async (email: string, password: string) => {
-    // Super Admin
+    // Super Admin login
     if (email === "super@teste.com" && password === "123456") {
       const response: AuthResponse = {
         user: {
@@ -30,22 +29,23 @@ export function useAuth() {
       return response;
     }
 
-    // Verificar emails criados no localStorage
+    // Check for created emails in localStorage
     const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
     const foundEmail = createdEmails.find((e: any) => e.email === email);
     
     if (foundEmail && password === "123456") {
+      const role = foundEmail.accessLevel === "Admin" ? "ADMIN" : "USER";
       const response: AuthResponse = {
         user: {
           id: foundEmail.id,
           name: foundEmail.name,
           email: foundEmail.email,
-          role: foundEmail.accessLevel === "Admin" ? "ADMIN" : "USER",
+          role,
           companyId: foundEmail.company,
           createdAt: foundEmail.createdAt,
           lastAccess: new Date().toISOString(),
         },
-        token: `${foundEmail.accessLevel.toLowerCase()}-token`,
+        token: `${role.toLowerCase()}-token`,
       };
       localStorage.setItem("session", JSON.stringify(response));
       return response;
@@ -61,10 +61,24 @@ export function useAuth() {
   const isAuthenticated = !!session;
   const user = session?.user;
 
+  // Helper functions to check permissions
+  const can = (permission: keyof typeof ROLE_PERMISSIONS[keyof typeof ROLE_PERMISSIONS]) => {
+    if (!user) return false;
+    return ROLE_PERMISSIONS[user.role][permission];
+  };
+
+  const isCompanyMember = (companyId: string) => {
+    if (!user) return false;
+    if (user.role === "SUPER_ADMIN") return true;
+    return user.companyId === companyId;
+  };
+
   return {
     user,
     isAuthenticated,
     login,
     logout,
+    can,
+    isCompanyMember,
   };
 }
