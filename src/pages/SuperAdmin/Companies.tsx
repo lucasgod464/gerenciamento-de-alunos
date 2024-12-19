@@ -23,7 +23,7 @@ const Companies = () => {
         const data = await fetchCompanies();
         setCompanies(data);
       } catch (error: any) {
-        toast.error("Erro ao carregar empresas");
+        // O erro já é tratado no hook useCompanies
       }
     };
 

@@ -14,6 +14,17 @@ export function useCompanies() {
         throw new Error("Não autorizado");
       }
 
+      // Verificar se o usuário é super-admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.session.user.id)
+        .single();
+
+      if (!profile || profile.role !== 'super-admin') {
+        throw new Error("Acesso não autorizado");
+      }
+
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -27,6 +38,7 @@ export function useCompanies() {
       }));
     } catch (error: any) {
       console.error("Error fetching companies:", error);
+      toast.error(error.message || "Erro ao carregar empresas");
       throw error;
     } finally {
       setIsLoading(false);

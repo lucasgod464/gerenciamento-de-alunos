@@ -11,13 +11,37 @@ export function useAuthRedirect() {
       
       if (!session) {
         navigate("/");
+        return;
+      }
+
+      // Verificar se o usuário é super-admin
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile || profile.role !== 'super-admin') {
+        navigate("/");
       }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session) {
+        navigate("/");
+        return;
+      }
+
+      // Verificar se o usuário é super-admin quando o estado de autenticação muda
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .single();
+
+      if (!profile || profile.role !== 'super-admin') {
         navigate("/");
       }
     });
