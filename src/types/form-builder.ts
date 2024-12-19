@@ -18,6 +18,7 @@ export interface FormField {
   required: boolean;
   order: number;
   isDefault?: boolean;
+  companyId?: string | null;
   options?: string[];
   validation?: {
     min?: number;
