@@ -32,7 +32,7 @@ const Login = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [navigate, toast]);
 
   const handleUserSession = async (session: any) => {
     try {
@@ -42,7 +42,7 @@ const Login = () => {
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       console.log("Profile data:", profile, "Error:", error);
 
