@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,16 @@ export const SuperAdminProfile = () => {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [email, setEmail] = useState(user?.email || "");
+  const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    if (user) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,12 +75,16 @@ export const SuperAdminProfile = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/");
+    window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
     toast({
       title: "Desconectado",
       description: "Sessão encerrada com sucesso",
     });
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="max-w-2xl mx-auto">
