@@ -13,7 +13,6 @@ import {
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
-import { FormField } from "@/types/form";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
