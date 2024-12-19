@@ -1,20 +1,20 @@
-import { BrowserRouter } from "react-router-dom"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Toaster } from "@/components/ui/toaster"
-import { Routes } from "./Routes"
-
-// Create a client
-const queryClient = new QueryClient()
+import { Routes, Route } from "react-router-dom";
+import Login from "./pages/Login";
+import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
+import Companies from "./pages/SuperAdmin/Companies";
+import Emails from "./pages/SuperAdmin/Emails";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes />
-        <Toaster />
-      </BrowserRouter>
-    </QueryClientProvider>
-  )
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
+      <Route path="/super-admin/companies" element={<Companies />} />
+      <Route path="/super-admin/emails" element={<Emails />} />
+      <Route path="/admin/*" element={<div>Admin Dashboard</div>} />
+      <Route path="/user/*" element={<div>User Dashboard</div>} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;

@@ -1,150 +1,125 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const validateEmail = (email: string) => {
+    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError("");
 
-    try {
-      // Primeiro, verificar as credenciais
-      const { data: credentialsData, error: credentialsError } = await supabase
-        .from("credentials")
-        .select("profile_id")
-        .eq("email", email.toLowerCase())
-        .eq("password", password)
-        .maybeSingle();
-
-      console.log("Credentials data:", credentialsData);
-
-      if (credentialsError) {
-        console.error("Credentials error:", credentialsError);
-        throw new Error("Erro ao verificar credenciais");
-      }
-
-      if (!credentialsData) {
-        throw new Error("Email ou senha incorretos");
-      }
-
-      // Depois, buscar o perfil usando o profile_id das credenciais
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", credentialsData.profile_id)
-        .maybeSingle();
-
-      console.log("Profile data:", profileData);
-
-      if (profileError) {
-        console.error("Profile error:", profileError);
-        throw new Error("Erro ao buscar dados do usuário");
-      }
-
-      if (!profileData) {
-        throw new Error("Perfil de usuário não encontrado");
-      }
-
-      // Determinar rota baseado no papel do usuário
-      let redirectPath;
-      if (profileData.role === 'super-admin') {
-        redirectPath = "/super-admin/dashboard";
-      } else if (profileData.access_level === 'Admin') {
-        redirectPath = "/admin";
-      } else {
-        redirectPath = "/user";
-      }
-
-      // Armazenar dados do usuário
-      localStorage.setItem("user", JSON.stringify({
-        id: profileData.id,
-        email: profileData.email,
-        role: profileData.role,
-        name: profileData.name,
-        company_id: profileData.company_id,
-        access_level: profileData.access_level
-      }));
-
-      // Redirecionar e mostrar mensagem de sucesso
-      navigate(redirectPath);
-      toast({
-        title: "Login realizado com sucesso!",
-        description: `Bem-vindo, ${profileData.name || 'usuário'}!`,
-      });
-    } catch (error: any) {
-      console.error("Erro no login:", error);
-      toast({
-        title: "Erro no login",
-        description: error.message || "Ocorreu um erro ao fazer login",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (!validateEmail(email)) {
+      setError("Por favor, insira um email válido");
+      return;
     }
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    
+    // Check for super admin
+    if (email === "super@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/super-admin/dashboard");
+      return;
+    }
+
+    // Check for admin
+    if (email === "admin@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/admin");
+      return;
+    }
+
+    // Check for regular user
+    if (email === "usuario@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/user");
+      return;
+    }
+
+    // Check for created emails (this would normally be done against a database)
+    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
+    const foundEmail = createdEmails.find((e: any) => e.email === email);
+    
+    if (foundEmail) {
+      toast.success("Login realizado com sucesso!");
+      navigate(`/user?company=${foundEmail.company}`);
+      return;
+    }
+
+    setError("Email ou senha inválidos");
+    toast.error("Falha no login");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Bem-vindo
-          </h1>
-          <p className="text-gray-500">
-            Faça login para acessar sua conta
-          </p>
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
+        <div className="flex justify-center">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+            </svg>
+          </div>
+        </div>
+        
+        <h1 className="text-2xl font-bold text-center">Entrar na sua conta</h1>
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
+          <p className="font-semibold">Contas para teste:</p>
+          <div>Super Admin: super@teste.com</div>
+          <div>Admin: admin@teste.com</div>
+          <div>Usuário: usuario@teste.com</div>
+          <div>Senha para todas as contas: 123456</div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <label className="text-sm font-medium">Email</label>
             <Input
-              id="email"
               type="email"
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full"
             />
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
+            <label className="text-sm font-medium">Senha</label>
             <Input
-              id="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="Sua senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full"
             />
           </div>
 
-          <Button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            disabled={isLoading}
-          >
-            {isLoading ? "Entrando..." : "Entrar"}
+          <Button type="submit" className="w-full">
+            Entrar
           </Button>
         </form>
-
-        <div className="text-center text-sm text-gray-500">
-          <p>Email para teste: superadmin@admin.com</p>
-          <p>Senha: admin123</p>
-        </div>
       </div>
     </div>
   );

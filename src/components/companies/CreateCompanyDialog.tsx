@@ -5,32 +5,44 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useState } from "react"
+import { useToast } from "@/components/ui/use-toast"
 
 interface CreateCompanyDialogProps {
-  onCompanyCreated: (company: any) => void;
+  onCompanyCreated: (company: any) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
+  const { toast } = useToast()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    event.preventDefault()
+    const formData = new FormData(event.currentTarget)
     const newCompany = {
+      id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       document: formData.get("document") as string,
-      users_limit: Number(formData.get("usersLimit")),
-      rooms_limit: Number(formData.get("roomsLimit")),
-    };
+      usersLimit: Number(formData.get("usersLimit")),
+      currentUsers: 0,
+      roomsLimit: Number(formData.get("roomsLimit")),
+      currentRooms: 0,
+      status: "Ativa" as const,
+      createdAt: new Date().toLocaleDateString(),
+      publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
+    }
     
-    onCompanyCreated(newCompany);
-    setOpen(false);
-  };
+    onCompanyCreated(newCompany)
+    setOpen(false)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,5 +103,5 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -1,8 +1,6 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Building2, Mail, Menu, User, Users, ClipboardList, FileText, LogOut } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { BarChart, Building2, Mail, Menu, User, Users, ClipboardList, FileText } from "lucide-react";
 
 const roleRoutes = {
   "super-admin": [
@@ -28,26 +26,7 @@ interface SidebarNavProps {
 
 export const SidebarNav = ({ role }: SidebarNavProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const routes = roleRoutes[role];
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Erro ao sair",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-      navigate("/");
-    }
-  };
 
   return (
     <div className="w-64 bg-white border-r min-h-screen p-4">
@@ -74,14 +53,6 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
             <span>{route.label}</span>
           </Link>
         ))}
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center space-x-3 px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50 w-full mt-4"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Sair</span>
-        </button>
       </nav>
     </div>
   );
