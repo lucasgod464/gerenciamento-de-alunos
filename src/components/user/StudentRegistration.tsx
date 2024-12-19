@@ -1,41 +1,81 @@
-import { useState, useEffect } from "react";
-import { StudentForm } from "./StudentForm";
-import { StudentTable } from "./StudentTable";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Student } from "@/types/student";
-import { useAuth } from "@/hooks/useAuth";
 
-export const StudentRegistration = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const { user: currentUser } = useAuth();
+interface StudentRegistrationProps {
+  onSubmit: (newStudent: Student) => void;
+  students: Student[];
+}
 
-  useEffect(() => {
-    if (!currentUser?.companyId) return;
+export const StudentRegistration = ({ onSubmit, students }: StudentRegistrationProps) => {
+  const [newStudent, setNewStudent] = useState<Partial<Student>>({
+    name: "",
+    email: "",
+    phone: "",
+    status: true,
+    companyId: localStorage.getItem("companyId") || "",
+  });
 
-    const savedStudents = localStorage.getItem("students");
-    if (savedStudents) {
-      const allStudents = JSON.parse(savedStudents);
-      const companyStudents = allStudents.filter(
-        (student: Student) => student.companyId === currentUser.companyId
-      );
-      setStudents(companyStudents);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newStudent.name && newStudent.email && newStudent.phone) {
+      onSubmit({
+        ...newStudent,
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+      } as Student);
+      setNewStudent({
+        name: "",
+        email: "",
+        phone: "",
+        status: true,
+        companyId: localStorage.getItem("companyId") || "",
+      });
     }
-  }, [currentUser]);
-
-  const handleAddStudent = (newStudent: Student) => {
-    const updatedStudent = {
-      ...newStudent,
-      companyId: currentUser?.companyId || null,
-    };
-    
-    const updatedStudents = [...students, updatedStudent];
-    setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
   };
 
   return (
-    <div className="space-y-6">
-      <StudentForm onSubmit={handleAddStudent} />
-      <StudentTable students={students} />
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome</Label>
+        <Input
+          id="name"
+          value={newStudent.name}
+          onChange={(e) =>
+            setNewStudent({ ...newStudent, name: e.target.value })
+          }
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={newStudent.email}
+          onChange={(e) =>
+            setNewStudent({ ...newStudent, email: e.target.value })
+          }
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="phone">Telefone</Label>
+        <Input
+          id="phone"
+          value={newStudent.phone}
+          onChange={(e) =>
+            setNewStudent({ ...newStudent, phone: e.target.value })
+          }
+          required
+        />
+      </div>
+
+      <Button type="submit">Cadastrar Aluno</Button>
+    </form>
   );
 };
