@@ -80,7 +80,6 @@ export const TagList = ({
               <SelectValue placeholder="Filtrar por cor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas as cores</SelectItem>
               {usedColors.map((color) => (
                 <SelectItem key={color} value={color}>
                   <div className="flex items-center gap-2">

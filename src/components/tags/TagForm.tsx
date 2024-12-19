@@ -106,14 +106,22 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3">
                 <div className="space-y-3">
-                  <HexColorPicker color={color} onChange={setColor} />
-                  <Input
-                    type="text"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="mt-2"
-                    placeholder="Digite um código hex (#000000)"
-                  />
+                  <div className="flex items-center gap-3">
+                    <HexColorPicker color={color} onChange={setColor} />
+                    <div className="flex flex-col gap-2">
+                      <div 
+                        className="w-12 h-12 rounded-lg shadow-md border border-gray-200"
+                        style={{ backgroundColor: color }}
+                      />
+                      <Input
+                        type="text"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                        className="w-24"
+                        placeholder="#000000"
+                      />
+                    </div>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
