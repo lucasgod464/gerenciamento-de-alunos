@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,19 @@ const Studies = () => {
     name: "",
     status: true,
   });
+
+  // Carregar estudos do localStorage quando o componente montar
+  useEffect(() => {
+    const savedStudies = localStorage.getItem("studies");
+    if (savedStudies) {
+      setStudies(JSON.parse(savedStudies));
+    }
+  }, []);
+
+  // Salvar estudos no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem("studies", JSON.stringify(studies));
+  }, [studies]);
 
   const handleSave = () => {
     if (editingStudy) {

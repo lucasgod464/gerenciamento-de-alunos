@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,19 @@ const Tags = () => {
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#8E9196");
   const [status, setStatus] = useState(true);
+
+  // Carregar tags do localStorage quando o componente montar
+  useEffect(() => {
+    const savedTags = localStorage.getItem("tags");
+    if (savedTags) {
+      setTags(JSON.parse(savedTags));
+    }
+  }, []);
+
+  // Salvar tags no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem("tags", JSON.stringify(tags));
+  }, [tags]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

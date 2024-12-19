@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,72 +11,68 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Specialization {
-  id: number;
+  id: string;
   name: string;
-  status: "active" | "inactive";
+  status: boolean;
 }
 
 const Specializations = () => {
-  const [newSpecializationName, setNewSpecializationName] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingName, setEditingName] = useState("");
-  const [specializations, setSpecializations] = useState<Specialization[]>([
-    { id: 1, name: "Cardiologia", status: "active" },
-    { id: 2, name: "Neurologia", status: "inactive" },
-  ]);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const { toast } = useToast();
 
-  const handleCreateSpecialization = () => {
-    if (!newSpecializationName.trim()) return;
-    
+  // Carregar especializações do localStorage quando o componente montar
+  useEffect(() => {
+    const savedSpecializations = localStorage.getItem("specializations");
+    if (savedSpecializations) {
+      setSpecializations(JSON.parse(savedSpecializations));
+    }
+  }, []);
+
+  // Salvar especializações no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem("specializations", JSON.stringify(specializations));
+  }, [specializations]);
+
+  const handleCreateSpecialization = (name: string) => {
     const newSpecialization: Specialization = {
-      id: specializations.length + 1,
-      name: newSpecializationName.trim(),
-      status: "active",
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      status: true,
     };
-    
     setSpecializations([...specializations, newSpecialization]);
-    setNewSpecializationName("");
+    toast({
+      title: "Especialização criada",
+      description: "A especialização foi criada com sucesso.",
+    });
   };
 
-  const handleDeleteSpecialization = (id: number) => {
+  const handleDeleteSpecialization = (id: string) => {
     setSpecializations(specializations.filter(spec => spec.id !== id));
+    toast({
+      title: "Especialização excluída",
+      description: "A especialização foi excluída com sucesso.",
+    });
   };
 
-  const startEditing = (specialization: Specialization) => {
-    setEditingId(specialization.id);
-    setEditingName(specialization.name);
-  };
-
-  const cancelEditing = () => {
-    setEditingId(null);
-    setEditingName("");
-  };
-
-  const saveEditing = (id: number) => {
-    if (!editingName.trim()) return;
-    
+  const handleToggleStatus = (id: string) => {
     setSpecializations(specializations.map(spec =>
-      spec.id === id ? { ...spec, name: editingName.trim() } : spec
-    ));
-    setEditingId(null);
-    setEditingName("");
-  };
-
-  const toggleStatus = (id: number) => {
-    setSpecializations(specializations.map(spec =>
-      spec.id === id
-        ? { ...spec, status: spec.status === "active" ? "inactive" : "active" }
-        : spec
+      spec.id === id ? { ...spec, status: !spec.status } : spec
     ));
   };
 
-  const filteredSpecializations = specializations.filter(spec =>
-    spec.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSpecializations = specializations.filter(spec => {
+    const matchesSearch = spec.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" 
+      ? true 
+      : statusFilter === "active" ? spec.status : !spec.status;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <DashboardLayout role="admin">
@@ -88,100 +84,61 @@ const Specializations = () => {
           </p>
         </div>
 
-        {/* Create Specialization Form */}
-        <div className="p-4 bg-white rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Criar Nova Especialização</h2>
+        <div className="space-y-4">
           <div className="flex gap-4">
-            <Input
-              placeholder="Nome da especialização"
-              value={newSpecializationName}
-              onChange={(e) => setNewSpecializationName(e.target.value)}
-              className="max-w-md"
-            />
-            <Button onClick={handleCreateSpecialization}>Salvar</Button>
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar especializações..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              className="border rounded-md px-3 py-2"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+            <Button onClick={() => {
+              const name = window.prompt("Digite o nome da especialização:");
+              if (name) handleCreateSpecialization(name);
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Especialização
+            </Button>
           </div>
-        </div>
 
-        {/* Manage Specializations */}
-        <div className="p-4 bg-white rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Gerenciar Especializações</h2>
-          
-          {/* Search Bar */}
-          <div className="mb-4">
-            <Input
-              placeholder="Buscar por nome..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="max-w-md"
-            />
-          </div>
-
-          {/* Specializations Table */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-[150px]">Ações</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSpecializations.map((spec) => (
                 <TableRow key={spec.id}>
-                  <TableCell>
-                    {editingId === spec.id ? (
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          value={editingName}
-                          onChange={(e) => setEditingName(e.target.value)}
-                          className="max-w-[200px]"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => saveEditing(spec.id)}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={cancelEditing}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      spec.name
-                    )}
-                  </TableCell>
+                  <TableCell>{spec.name}</TableCell>
                   <TableCell>
                     <Switch
-                      checked={spec.status === "active"}
-                      onCheckedChange={() => toggleStatus(spec.id)}
+                      checked={spec.status}
+                      onCheckedChange={() => handleToggleStatus(spec.id)}
                     />
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      {editingId !== spec.id && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => startEditing(spec)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteSpecialization(spec.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                    </div>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteSpecialization(spec.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

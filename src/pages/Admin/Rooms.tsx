@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -55,6 +55,19 @@ const Rooms = () => {
     resources: "",
     status: true,
   });
+
+  // Carregar salas do localStorage quando o componente montar
+  useEffect(() => {
+    const savedRooms = localStorage.getItem("rooms");
+    if (savedRooms) {
+      setRooms(JSON.parse(savedRooms));
+    }
+  }, []);
+
+  // Salvar salas no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem("rooms", JSON.stringify(rooms));
+  }, [rooms]);
 
   const handleSave = () => {
     if (editingRoom) {
