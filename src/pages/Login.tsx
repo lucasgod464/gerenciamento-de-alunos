@@ -19,28 +19,26 @@ const Login = () => {
 
     try {
       // Verificar credenciais na tabela credentials
-      const { data: credentials, error: credentialsError } = await supabase
+      const { data: credentialsData, error: credentialsError } = await supabase
         .from("credentials")
-        .select(`
-          *,
-          profile:profiles(
-            id,
-            email,
-            role,
-            name,
-            company_id
-          )
-        `)
+        .select("*, profile:profiles(*)")
         .eq("email", email)
         .eq("password", password)
         .single();
 
-      if (credentialsError) throw credentialsError;
-      if (!credentials) throw new Error("Credenciais inválidas");
+      if (credentialsError) {
+        throw new Error("Credenciais inválidas");
+      }
+
+      if (!credentialsData || !credentialsData.profile) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      const profile = credentialsData.profile;
 
       // Redirecionar baseado no papel do usuário
       let redirectPath;
-      switch (credentials.profile.role) {
+      switch (profile.role) {
         case "super-admin":
           redirectPath = "/super-admin/dashboard";
           break;
@@ -56,11 +54,11 @@ const Login = () => {
 
       // Armazenar informações do usuário no localStorage
       localStorage.setItem("user", JSON.stringify({
-        id: credentials.profile.id,
-        email: credentials.profile.email,
-        role: credentials.profile.role,
-        name: credentials.profile.name,
-        company_id: credentials.profile.company_id
+        id: profile.id,
+        email: profile.email,
+        role: profile.role,
+        name: profile.name,
+        company_id: profile.company_id
       }));
 
       navigate(redirectPath);
