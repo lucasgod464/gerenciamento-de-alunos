@@ -150,9 +150,9 @@ export type Database = {
       }
       orioledb_sys_tree_structure: {
         Args: {
+          depth?: number
           num: number
           options?: string
-          depth?: number
         }
         Returns: string
       }
@@ -270,8 +270,8 @@ export type Database = {
       }
       s3_put: {
         Args: {
-          filename: string
           objectname: string
+          filename: string
         }
         Returns: string
       }
