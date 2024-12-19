@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
+import { FormField } from "@/types/form-builder";
 
 interface Room {
   id: string;
@@ -29,6 +30,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [formFields, setFormFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -44,6 +46,11 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       if (companyRooms.length > 0) {
         setSelectedRoom(companyRooms[0].id);
       }
+    }
+
+    const savedFields = localStorage.getItem("formFields");
+    if (savedFields) {
+      setFormFields(JSON.parse(savedFields));
     }
   }, [currentUser]);
 
@@ -76,30 +83,19 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" name="name" placeholder="Nome do aluno" required />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input id="birthDate" name="birthDate" type="date" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="email@exemplo.com" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="document">CPF/RG</Label>
-            <Input id="document" name="document" placeholder="000.000.000-00" required />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="address">Endereço Completo</Label>
-            <Input id="address" name="address" placeholder="Rua, número, bairro, cidade, estado" required />
-          </div>
+          {formFields.map((field) => (
+            <div key={field.id} className="space-y-2">
+              <Label htmlFor={field.id}>{field.label}</Label>
+              <Input
+                id={field.id}
+                name={field.id}
+                type={field.type}
+                required={field.required}
+                min={field.validation?.min}
+                max={field.validation?.max}
+              />
+            </div>
+          ))}
 
           <div className="space-y-2">
             <Label htmlFor="room">Sala</Label>
