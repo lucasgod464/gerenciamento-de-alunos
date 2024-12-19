@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
 interface TagType {
-  id: number;
+  id: string; // Changed to string for better uniqueness
   name: string;
   description: string;
   color: string;
@@ -16,22 +16,36 @@ interface TagType {
 
 const Tags = () => {
   const [tags, setTags] = useState<TagType[]>([]);
+  const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Carregar tags do localStorage
+  // Helper function to get company-specific storage key
+  const getCompanyStorageKey = (companyId: string) => `company_${companyId}_tags`;
+
+  // Load tags from company-specific storage
   useEffect(() => {
     if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
 
-    const savedTags = localStorage.getItem("tags");
-    if (savedTags) {
-      const allTags = JSON.parse(savedTags);
-      // Filtrar tags por empresa
-      const companyTags = allTags.filter((tag: TagType) => 
-        user?.role === "SUPER_ADMIN" || tag.companyId === user?.companyId
+    if (user.role === "SUPER_ADMIN") {
+      // Super admin sees all tags from all companies
+      const allTags: TagType[] = [];
+      const companies = JSON.parse(localStorage.getItem("companies") || "[]");
+      
+      companies.forEach((company: { id: string }) => {
+        const companyTags = JSON.parse(
+          localStorage.getItem(getCompanyStorageKey(company.id)) || "[]"
+        );
+        allTags.push(...companyTags);
+      });
+      
+      setTags(allTags);
+    } else {
+      // Regular admin sees only their company's tags
+      const companyTags = JSON.parse(
+        localStorage.getItem(getCompanyStorageKey(user.companyId)) || "[]"
       );
       setTags(companyTags);
     }
@@ -40,20 +54,21 @@ const Tags = () => {
   const handleSubmit = (tagData: Omit<TagType, "id" | "companyId">) => {
     if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
 
-    // Carregar todas as tags existentes primeiro
-    const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
-    
+    const companyId = user.companyId;
+    const storageKey = getCompanyStorageKey(companyId);
+    const companyTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
+
     const newTag: TagType = {
-      id: editingTag?.id || Date.now(),
+      id: editingTag?.id || `tag_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       ...tagData,
-      companyId: user?.companyId || "",
+      companyId,
     };
 
-    let updatedTags: TagType[];
+    let updatedCompanyTags: TagType[];
 
     if (editingTag) {
-      // Atualizar tag existente
-      updatedTags = savedTags.map((tag: TagType) =>
+      // Update existing tag
+      updatedCompanyTags = companyTags.map((tag: TagType) =>
         tag.id === editingTag.id ? newTag : tag
       );
 
@@ -67,8 +82,8 @@ const Tags = () => {
         description: "A etiqueta foi atualizada com sucesso!",
       });
     } else {
-      // Criar nova tag
-      updatedTags = [...savedTags, newTag];
+      // Create new tag
+      updatedCompanyTags = [...companyTags, newTag];
       
       setTags(prev => [...prev, newTag]);
       
@@ -78,27 +93,27 @@ const Tags = () => {
       });
     }
 
-    // Salvar todas as tags atualizadas no localStorage
-    localStorage.setItem("tags", JSON.stringify(updatedTags));
+    // Save tags to company-specific storage
+    localStorage.setItem(storageKey, JSON.stringify(updatedCompanyTags));
   };
 
   const handleEdit = (tag: TagType) => {
     setEditingTag(tag);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
 
-    // Carregar todas as tags existentes
-    const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    const storageKey = getCompanyStorageKey(user.companyId);
+    const companyTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
     
-    // Remover a tag específica
-    const updatedTags = savedTags.filter((tag: TagType) => tag.id !== id);
+    // Remove the specific tag
+    const updatedCompanyTags = companyTags.filter((tag: TagType) => tag.id !== id);
     
-    // Atualizar localStorage
-    localStorage.setItem("tags", JSON.stringify(updatedTags));
+    // Update company-specific storage
+    localStorage.setItem(storageKey, JSON.stringify(updatedCompanyTags));
     
-    // Atualizar estado local
+    // Update local state
     setTags(prev => prev.filter(tag => tag.id !== id));
     
     toast({

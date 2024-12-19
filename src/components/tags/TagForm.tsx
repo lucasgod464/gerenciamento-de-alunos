@@ -10,12 +10,12 @@ import { Palette } from "lucide-react";
 
 interface TagFormProps {
   editingTag: TagType | null;
-  onSubmit: (tag: Omit<TagType, "id">) => void;
+  onSubmit: (tag: Omit<TagType, "id" | "companyId">) => void;
   onCancel: () => void;
 }
 
 interface TagType {
-  id: number;
+  id: string;
   name: string;
   description: string;
   color: string;

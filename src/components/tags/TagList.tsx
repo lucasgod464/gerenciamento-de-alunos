@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 
 interface TagType {
-  id: number;
+  id: string;
   name: string;
   description: string;
   color: string;
@@ -21,7 +21,7 @@ interface TagType {
 interface TagListProps {
   tags: TagType[];
   onEdit: (tag: TagType) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   statusFilter: "all" | "active" | "inactive";
