@@ -35,12 +35,18 @@ const Login = () => {
     try {
       const response = await login(email, password);
       
-      if (response.user.role === "SUPER_ADMIN") {
-        navigate("/super-admin");
-      } else if (response.user.role === "ADMIN") {
-        navigate("/admin");
-      } else {
-        navigate("/user");
+      switch (response.user.role) {
+        case "SUPER_ADMIN":
+          navigate("/super-admin");
+          break;
+        case "ADMIN":
+          navigate("/admin");
+          break;
+        case "USER":
+          navigate("/user");
+          break;
+        default:
+          navigate("/login");
       }
       
       toast.success("Login realizado com sucesso!");
