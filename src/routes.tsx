@@ -18,6 +18,7 @@ import AdminCourses from "./pages/Admin/Courses";
 import AdminStudies from "./pages/Admin/Studies";
 import AdminTags from "./pages/Admin/Tags";
 import AdminSpecializations from "./pages/Admin/Specializations";
+import AdminFormBuilder from "./pages/Admin/FormBuilder";
 
 // User
 import UserDashboard from "./pages/User/Dashboard";
@@ -130,6 +131,14 @@ export const router = createBrowserRouter([
     element: (
       <RoleGuard allowedRoles={["ADMIN"]}>
         <AdminProfile />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/form-builder",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminFormBuilder />
       </RoleGuard>
     ),
   },
