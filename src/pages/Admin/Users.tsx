@@ -27,55 +27,37 @@ const Users = () => {
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    const savedUsers = localStorage.getItem("users");
-    const savedRooms = localStorage.getItem("rooms");
-    const savedSpecializations = localStorage.getItem("specializations");
+    if (!currentUser?.companyId) return;
 
-    if (savedUsers) {
-      const parsedUsers = JSON.parse(savedUsers);
-      // Filter users by company
-      const companyUsers = parsedUsers.filter((user: any) => 
-        user.companyId === currentUser?.companyId
-      );
-      
-      const typedUsers = companyUsers.map((user: any) => ({
-        ...user,
-        status: (user.status === true || user.status === "active") ? "active" as const : "inactive" as const
-      }));
-      setUsers(typedUsers);
-    }
+    // Load company-specific users
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const companyUsers = allUsers.filter((user: User) => user.companyId === currentUser.companyId);
+    setUsers(companyUsers);
 
-    // Filter rooms by company
-    if (savedRooms) {
-      const allRooms = JSON.parse(savedRooms);
-      const companyRooms = allRooms.filter((room: any) => 
-        room.companyId === currentUser?.companyId
-      );
-      setRooms(companyRooms);
-    }
+    // Load company-specific rooms
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter((room: any) => room.companyId === currentUser.companyId);
+    setRooms(companyRooms);
 
-    // Filter specializations by company
-    if (savedSpecializations) {
-      const allSpecializations = JSON.parse(savedSpecializations);
-      const companySpecializations = allSpecializations.filter((spec: any) => 
-        spec.companyId === currentUser?.companyId
-      );
-      setSpecializations(companySpecializations);
-    }
+    // Load company-specific specializations
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const companySpecializations = allSpecializations.filter(
+      (spec: any) => spec.companyId === currentUser.companyId
+    );
+    setSpecializations(companySpecializations);
   }, [currentUser]);
 
   const handleUpdateUser = (updatedUser: User) => {
-    const newUsers = users.map((user) =>
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherUsers = allUsers.filter(
+      (user: User) => user.companyId !== currentUser?.companyId || user.id !== updatedUser.id
+    );
+    
+    const newUsers = [...users.map(user => 
       user.id === updatedUser.id ? updatedUser : user
-    );
+    )];
     
-    // Update in localStorage while preserving other companies' data
-    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherCompaniesUsers = savedUsers.filter((user: any) => 
-      user.companyId !== currentUser?.companyId
-    );
-    
-    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...newUsers]));
+    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
     setUsers(newUsers);
     
     toast({
@@ -85,15 +67,14 @@ const Users = () => {
   };
 
   const handleDeleteUser = (id: string) => {
-    const newUsers = users.filter((user) => user.id !== id);
-    
-    // Update in localStorage while preserving other companies' data
-    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherCompaniesUsers = savedUsers.filter((user: any) => 
-      user.companyId !== currentUser?.companyId
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherUsers = allUsers.filter(
+      (user: User) => user.companyId !== currentUser?.companyId || user.id !== id
     );
     
-    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...newUsers]));
+    const newUsers = users.filter(user => user.id !== id);
+    
+    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
     setUsers(newUsers);
     
     toast({
@@ -104,22 +85,20 @@ const Users = () => {
   };
 
   const handleCreateUser = (newUser: User) => {
-    // Add company ID to new user
     const userWithCompany = {
       ...newUser,
       companyId: currentUser?.companyId
     };
     
-    const updatedUsers = [...users, userWithCompany];
-    
-    // Update in localStorage while preserving other companies' data
-    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherCompaniesUsers = savedUsers.filter((user: any) => 
-      user.companyId !== currentUser?.companyId
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherUsers = allUsers.filter(
+      (user: User) => user.companyId !== currentUser?.companyId
     );
     
-    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...updatedUsers]));
-    setUsers(updatedUsers);
+    const newUsers = [...users, userWithCompany];
+    
+    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
+    setUsers(newUsers);
     
     toast({
       title: "Usuário criado",
@@ -215,6 +194,3 @@ const Users = () => {
       </div>
     </DashboardLayout>
   );
-};
-
-export default Users;

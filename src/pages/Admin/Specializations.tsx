@@ -13,11 +13,13 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Specialization {
   id: string;
   name: string;
   status: boolean;
+  companyId: string | null;
 }
 
 const Specializations = () => {
@@ -25,27 +27,35 @@ const Specializations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
-  // Carregar especializações do localStorage quando o componente montar
   useEffect(() => {
-    const savedSpecializations = localStorage.getItem("specializations");
-    if (savedSpecializations) {
-      setSpecializations(JSON.parse(savedSpecializations));
-    }
-  }, []);
-
-  // Salvar especializações no localStorage sempre que houver mudanças
-  useEffect(() => {
-    localStorage.setItem("specializations", JSON.stringify(specializations));
-  }, [specializations]);
+    if (!currentUser?.companyId) return;
+    
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const companySpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId === currentUser.companyId
+    );
+    setSpecializations(companySpecializations);
+  }, [currentUser]);
 
   const handleCreateSpecialization = (name: string) => {
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const otherSpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId !== currentUser?.companyId
+    );
+
     const newSpecialization: Specialization = {
       id: Math.random().toString(36).substr(2, 9),
       name,
       status: true,
+      companyId: currentUser?.companyId
     };
-    setSpecializations([...specializations, newSpecialization]);
+    
+    const updatedSpecializations = [...specializations, newSpecialization];
+    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
+    setSpecializations(updatedSpecializations);
+    
     toast({
       title: "Especialização criada",
       description: "A especialização foi criada com sucesso.",
@@ -53,7 +63,15 @@ const Specializations = () => {
   };
 
   const handleDeleteSpecialization = (id: string) => {
-    setSpecializations(specializations.filter(spec => spec.id !== id));
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const otherSpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== id
+    );
+    
+    const updatedSpecializations = specializations.filter(spec => spec.id !== id);
+    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
+    setSpecializations(updatedSpecializations);
+    
     toast({
       title: "Especialização excluída",
       description: "A especialização foi excluída com sucesso.",
@@ -61,9 +79,17 @@ const Specializations = () => {
   };
 
   const handleToggleStatus = (id: string) => {
-    setSpecializations(specializations.map(spec =>
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const otherSpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== id
+    );
+    
+    const updatedSpecializations = specializations.map(spec =>
       spec.id === id ? { ...spec, status: !spec.status } : spec
-    ));
+    );
+    
+    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
+    setSpecializations(updatedSpecializations);
   };
 
   const filteredSpecializations = specializations.filter(spec => {
@@ -148,6 +174,3 @@ const Specializations = () => {
       </div>
     </DashboardLayout>
   );
-};
-
-export default Specializations;

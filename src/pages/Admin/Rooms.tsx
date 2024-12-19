@@ -19,14 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Room {
   id: string;
@@ -37,6 +31,7 @@ interface Room {
   capacity: number;
   resources: string;
   status: boolean;
+  companyId: string | null;
 }
 
 const Rooms = () => {
@@ -46,6 +41,8 @@ const Rooms = () => {
   const [studyRoomFilter, setStudyRoomFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const { user: currentUser } = useAuth();
+  
   const [newRoom, setNewRoom] = useState({
     name: "",
     schedule: "",
@@ -56,32 +53,39 @@ const Rooms = () => {
     status: true,
   });
 
-  // Carregar salas do localStorage quando o componente montar
   useEffect(() => {
-    const savedRooms = localStorage.getItem("rooms");
-    if (savedRooms) {
-      setRooms(JSON.parse(savedRooms));
-    }
-  }, []);
-
-  // Salvar salas no localStorage sempre que houver mudanças
-  useEffect(() => {
-    localStorage.setItem("rooms", JSON.stringify(rooms));
-  }, [rooms]);
+    if (!currentUser?.companyId) return;
+    
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
+    setRooms(companyRooms);
+  }, [currentUser]);
 
   const handleSave = () => {
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const otherRooms = allRooms.filter(
+      (room: Room) => room.companyId !== currentUser?.companyId
+    );
+
     if (editingRoom) {
-      setRooms(rooms.map(room => 
+      const updatedRooms = rooms.map(room => 
         room.id === editingRoom.id 
           ? { ...editingRoom, ...newRoom }
           : room
-      ));
+      );
+      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
+      setRooms(updatedRooms);
     } else {
-      setRooms([...rooms, { 
+      const newRoomWithId = { 
         id: Math.random().toString(36).substr(2, 9),
         ...newRoom,
-      }]);
+        companyId: currentUser?.companyId
+      };
+      const updatedRooms = [...rooms, newRoomWithId];
+      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
+      setRooms(updatedRooms);
     }
+    
     setIsDialogOpen(false);
     setNewRoom({
       name: "",
@@ -95,22 +99,15 @@ const Rooms = () => {
     setEditingRoom(null);
   };
 
-  const handleEdit = (room: Room) => {
-    setEditingRoom(room);
-    setNewRoom({
-      name: room.name,
-      schedule: room.schedule,
-      location: room.location,
-      studyRoom: room.studyRoom,
-      capacity: room.capacity,
-      resources: room.resources,
-      status: room.status,
-    });
-    setIsDialogOpen(true);
-  };
-
   const handleDelete = (id: string) => {
-    setRooms(rooms.filter(room => room.id !== id));
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const otherRooms = allRooms.filter(
+      (room: Room) => room.companyId !== currentUser?.companyId || room.id !== id
+    );
+    
+    const updatedRooms = rooms.filter(room => room.id !== id);
+    localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
+    setRooms(updatedRooms);
   };
 
   const filteredRooms = rooms.filter(room => {

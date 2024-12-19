@@ -20,11 +20,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Study {
   id: string;
   name: string;
   status: boolean;
+  companyId: string | null;
 }
 
 const Studies = () => {
@@ -33,51 +35,60 @@ const Studies = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
+  const { user: currentUser } = useAuth();
+  
   const [newStudy, setNewStudy] = useState({
     name: "",
     status: true,
   });
 
-  // Carregar estudos do localStorage quando o componente montar
   useEffect(() => {
-    const savedStudies = localStorage.getItem("studies");
-    if (savedStudies) {
-      setStudies(JSON.parse(savedStudies));
-    }
-  }, []);
-
-  // Salvar estudos no localStorage sempre que houver mudanças
-  useEffect(() => {
-    localStorage.setItem("studies", JSON.stringify(studies));
-  }, [studies]);
+    if (!currentUser?.companyId) return;
+    
+    const allStudies = JSON.parse(localStorage.getItem("studies") || "[]");
+    const companyStudies = allStudies.filter((study: Study) => study.companyId === currentUser.companyId);
+    setStudies(companyStudies);
+  }, [currentUser]);
 
   const handleSave = () => {
+    const allStudies = JSON.parse(localStorage.getItem("studies") || "[]");
+    const otherStudies = allStudies.filter(
+      (study: Study) => study.companyId !== currentUser?.companyId
+    );
+
     if (editingStudy) {
-      setStudies(studies.map(study => 
+      const updatedStudies = studies.map(study => 
         study.id === editingStudy.id 
-          ? { ...editingStudy, name: newStudy.name, status: newStudy.status }
+          ? { ...editingStudy, ...newStudy }
           : study
-      ));
+      );
+      localStorage.setItem("studies", JSON.stringify([...otherStudies, ...updatedStudies]));
+      setStudies(updatedStudies);
     } else {
-      setStudies([...studies, { 
+      const newStudyWithId = { 
         id: Math.random().toString(36).substr(2, 9),
-        name: newStudy.name,
-        status: newStudy.status,
-      }]);
+        ...newStudy,
+        companyId: currentUser?.companyId
+      };
+      const updatedStudies = [...studies, newStudyWithId];
+      localStorage.setItem("studies", JSON.stringify([...otherStudies, ...updatedStudies]));
+      setStudies(updatedStudies);
     }
+    
     setIsDialogOpen(false);
     setNewStudy({ name: "", status: true });
     setEditingStudy(null);
   };
 
-  const handleEdit = (study: Study) => {
-    setEditingStudy(study);
-    setNewStudy({ name: study.name, status: study.status });
-    setIsDialogOpen(true);
-  };
-
   const handleDelete = (id: string) => {
-    setStudies(studies.filter(study => study.id !== id));
+    const allStudies = JSON.parse(localStorage.getItem("studies") || "[]");
+    const otherStudies = allStudies.filter(
+      (study: Study) => study.companyId !== currentUser?.companyId || study.id !== id
+    );
+    
+    const updatedStudies = studies.filter(study => study.id !== id);
+    localStorage.setItem("studies", JSON.stringify([...otherStudies, ...updatedStudies]));
+    setStudies(updatedStudies);
   };
 
   const filteredStudies = studies.filter(study => {
