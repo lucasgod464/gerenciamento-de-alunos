@@ -40,7 +40,6 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
             description: "Falha ao verificar permissões do usuário",
             variant: "destructive",
           });
-          navigate("/");
           return;
         }
 
@@ -48,11 +47,9 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
           console.error("No profile found for user:", session.user.id);
           toast({
             title: "Erro",
-            description: "Perfil de usuário não encontrado. Por favor, faça login novamente.",
+            description: "Perfil de usuário não encontrado",
             variant: "destructive",
           });
-          await supabase.auth.signOut();
-          navigate("/");
           return;
         }
 
@@ -65,6 +62,7 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
             variant: "destructive",
           });
           navigate("/");
+          return;
         }
       }
     };
