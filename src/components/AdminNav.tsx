@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Users, School, BookOpen, Tag, GraduationCap, UserCircle } from "lucide-react";
+import { BarChart, Users2, ClipboardList, FileBarChart2, UserCircle } from "lucide-react";
 
 const adminRoutes = [
   {
@@ -9,29 +9,19 @@ const adminRoutes = [
     icon: BarChart,
   },
   {
-    title: "Usuários",
-    href: "/admin/users",
-    icon: Users,
+    title: "Alunos",
+    href: "/admin/students",
+    icon: Users2,
   },
   {
-    title: "Salas",
-    href: "/admin/rooms",
-    icon: School,
+    title: "Frequência",
+    href: "/admin/attendance",
+    icon: ClipboardList,
   },
   {
-    title: "Estudos",
-    href: "/admin/studies",
-    icon: BookOpen,
-  },
-  {
-    title: "Etiquetas",
-    href: "/admin/tags",
-    icon: Tag,
-  },
-  {
-    title: "Especializações",
-    href: "/admin/specializations",
-    icon: GraduationCap,
+    title: "Relatórios",
+    href: "/admin/reports",
+    icon: FileBarChart2,
   },
   {
     title: "Meu Perfil",
