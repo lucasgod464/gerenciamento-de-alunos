@@ -11,7 +11,7 @@ interface TagType {
   description: string;
   color: string;
   status: boolean;
-  companyId: string; // Add companyId to tag type
+  companyId: string;
 }
 
 const Tags = () => {
@@ -22,11 +22,14 @@ const Tags = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Carregar tags do localStorage
   useEffect(() => {
+    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+
     const savedTags = localStorage.getItem("tags");
     if (savedTags) {
       const allTags = JSON.parse(savedTags);
-      // Filter tags by company
+      // Filtrar tags por empresa
       const companyTags = allTags.filter((tag: TagType) => 
         user?.role === "SUPER_ADMIN" || tag.companyId === user?.companyId
       );
@@ -34,51 +37,49 @@ const Tags = () => {
     }
   }, [user]);
 
-  const handleSubmit = (tagData: Omit<TagType, "id">) => {
+  const handleSubmit = (tagData: Omit<TagType, "id" | "companyId">) => {
+    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+
+    // Carregar todas as tags existentes primeiro
+    const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    
     const newTag: TagType = {
       id: editingTag?.id || Date.now(),
       ...tagData,
-      companyId: user?.companyId || "", // Ensure companyId is set
+      companyId: user?.companyId || "",
     };
 
+    let updatedTags: TagType[];
+
     if (editingTag) {
-      // Update existing tag
-      const updatedTags = tags.map((tag) =>
+      // Atualizar tag existente
+      updatedTags = savedTags.map((tag: TagType) =>
         tag.id === editingTag.id ? newTag : tag
       );
-      
-      // Update in localStorage while preserving other companies' data
-      const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
-      const otherCompaniesTags = savedTags.filter((tag: TagType) => 
-        tag.companyId !== user?.companyId
-      );
-      
-      localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
-      setTags(updatedTags);
+
+      setTags(prev => prev.map(tag => 
+        tag.id === editingTag.id ? newTag : tag
+      ));
+
       setEditingTag(null);
-      
       toast({
         title: "Etiqueta atualizada",
         description: "A etiqueta foi atualizada com sucesso!",
       });
     } else {
-      // Create new tag
-      const updatedTags = [...tags, newTag];
+      // Criar nova tag
+      updatedTags = [...savedTags, newTag];
       
-      // Update in localStorage while preserving other companies' data
-      const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
-      const otherCompaniesTags = savedTags.filter((tag: TagType) => 
-        tag.companyId !== user?.companyId
-      );
-      
-      localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
-      setTags(updatedTags);
+      setTags(prev => [...prev, newTag]);
       
       toast({
         title: "Etiqueta criada",
         description: "A nova etiqueta foi criada com sucesso!",
       });
     }
+
+    // Salvar todas as tags atualizadas no localStorage
+    localStorage.setItem("tags", JSON.stringify(updatedTags));
   };
 
   const handleEdit = (tag: TagType) => {
@@ -86,16 +87,19 @@ const Tags = () => {
   };
 
   const handleDelete = (id: number) => {
-    const updatedTags = tags.filter((tag) => tag.id !== id);
-    
-    // Update in localStorage while preserving other companies' data
+    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+
+    // Carregar todas as tags existentes
     const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
-    const otherCompaniesTags = savedTags.filter((tag: TagType) => 
-      tag.companyId !== user?.companyId
-    );
     
-    localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
-    setTags(updatedTags);
+    // Remover a tag específica
+    const updatedTags = savedTags.filter((tag: TagType) => tag.id !== id);
+    
+    // Atualizar localStorage
+    localStorage.setItem("tags", JSON.stringify(updatedTags));
+    
+    // Atualizar estado local
+    setTags(prev => prev.filter(tag => tag.id !== id));
     
     toast({
       title: "Etiqueta excluída",
