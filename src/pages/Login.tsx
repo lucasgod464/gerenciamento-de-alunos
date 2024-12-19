@@ -3,25 +3,66 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const validateEmail = (email: string) => {
+    return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Simple role-based routing for demo
-    if (email === "super@teste.com") {
-      navigate("/super-admin");
-    } else if (email === "admin@teste.com") {
-      navigate("/admin");
-    } else if (email === "usuario@teste.com") {
-      navigate("/user");
-    } else {
-      toast.error("Credenciais inválidas");
+    setError("");
+
+    if (!validateEmail(email)) {
+      setError("Por favor, insira um email válido");
+      return;
     }
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+    
+    // Check for super admin
+    if (email === "super@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/super-admin/dashboard");
+      return;
+    }
+
+    // Check for admin
+    if (email === "admin@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/admin");
+      return;
+    }
+
+    // Check for regular user
+    if (email === "usuario@teste.com" && password === "123456") {
+      toast.success("Login realizado com sucesso!");
+      navigate("/user");
+      return;
+    }
+
+    // Check for created emails (this would normally be done against a database)
+    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
+    const foundEmail = createdEmails.find((e: any) => e.email === email);
+    
+    if (foundEmail) {
+      toast.success("Login realizado com sucesso!");
+      navigate(`/user?company=${foundEmail.company}`);
+      return;
+    }
+
+    setError("Email ou senha inválidos");
+    toast.error("Falha no login");
   };
 
   return (
@@ -37,6 +78,13 @@ const Login = () => {
         
         <h1 className="text-2xl font-bold text-center">Entrar na sua conta</h1>
         
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>

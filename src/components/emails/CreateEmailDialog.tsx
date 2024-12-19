@@ -44,10 +44,16 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       email: formData.get("email") as string,
+      password: formData.get("password") as string,
       accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
       company: formData.get("company") as string,
       createdAt: new Date().toLocaleDateString(),
     }
+    
+    // Store in localStorage for login functionality
+    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+    createdEmails.push(newEmail)
+    localStorage.setItem("createdEmails", JSON.stringify(createdEmails))
     
     onEmailCreated(newEmail)
     setOpen(false)
