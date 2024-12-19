@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, FileDown } from "lucide-react";
+import { Check, X } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 interface Student {
   id: string;
@@ -23,29 +24,56 @@ interface Student {
 
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [selectedRoom, setSelectedRoom] = useState("all");
   const { toast } = useToast();
+  const [students, setStudents] = useState<Student[]>([]);
   
   // Mock data - replace with actual data from your backend
-  const students: Student[] = [
+  const mockStudents: Student[] = [
     { id: "1", name: "João Silva", room: "Sala 1", status: "present" },
     { id: "2", name: "Maria Santos", room: "Sala 1", status: "absent" },
     { id: "3", name: "Pedro Oliveira", room: "Sala 2", status: "late" },
+    { id: "4", name: "Ana Souza", room: "Sala 1", status: "present" },
+    { id: "5", name: "Lucas Ferreira", room: "Sala 2", status: "absent" },
   ];
 
+  useEffect(() => {
+    // Simulate loading data for the selected date
+    // Replace this with actual API call
+    setStudents(mockStudents);
+  }, [selectedDate]);
+
   const handleStatusChange = (studentId: string, status: Student["status"]) => {
-    // Here you would update the attendance status in your backend
+    setStudents(prevStudents =>
+      prevStudents.map(student =>
+        student.id === studentId ? { ...student, status } : student
+      )
+    );
+    
     toast({
       title: "Presença atualizada",
       description: "O status de presença foi atualizado com sucesso."
     });
   };
 
-  const handleExportReport = () => {
-    toast({
-      title: "Relatório gerado",
-      description: "O relatório de presença foi gerado e está sendo baixado."
-    });
+  // Calculate attendance statistics for pie chart
+  const getAttendanceStats = () => {
+    const stats = students.reduce(
+      (acc, student) => {
+        if (student.status === "present") acc.present += 1;
+        else if (student.status === "absent") acc.absent += 1;
+        else if (student.status === "late") acc.late += 1;
+        else if (student.status === "justified") acc.justified += 1;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0, justified: 0 }
+    );
+
+    return [
+      { name: "Presentes", value: stats.present, color: "#22c55e" },
+      { name: "Ausentes", value: stats.absent, color: "#ef4444" },
+      { name: "Atrasados", value: stats.late, color: "#f59e0b" },
+      { name: "Justificados", value: stats.justified, color: "#3b82f6" },
+    ];
   };
 
   return (
@@ -67,32 +95,42 @@ export const AttendanceControl = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Filtros</CardTitle>
+            <CardTitle>Estatísticas de Presença</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a sala" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as salas</SelectItem>
-                  <SelectItem value="sala1">Sala 1</SelectItem>
-                  <SelectItem value="sala2">Sala 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleExportReport} variant="outline">
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar Relatório
-            </Button>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={getAttendanceStats()}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={80}
+                  label
+                >
+                  {getAttendanceStats().map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Presença</CardTitle>
+          <CardTitle>
+            Lista de Presença - {selectedDate?.toLocaleDateString('pt-BR', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
