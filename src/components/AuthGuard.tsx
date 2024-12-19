@@ -17,9 +17,12 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        console.log("No session found, redirecting to login");
         navigate("/");
         return;
       }
+
+      console.log("Session found:", session.user.id);
 
       if (requiredRole) {
         const { data: profile, error } = await supabase
@@ -28,11 +31,13 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
           .eq("id", session.user.id)
           .maybeSingle();
 
+        console.log("Profile lookup result:", { profile, error });
+
         if (error) {
           console.error("Error fetching profile:", error);
           toast({
-            title: "Error",
-            description: "Failed to verify user permissions",
+            title: "Erro",
+            description: "Falha ao verificar permissões do usuário",
             variant: "destructive",
           });
           navigate("/");
@@ -40,20 +45,23 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
         }
 
         if (!profile) {
-          console.error("No profile found for user");
+          console.error("No profile found for user:", session.user.id);
           toast({
-            title: "Error",
-            description: "User profile not found",
+            title: "Erro",
+            description: "Perfil de usuário não encontrado. Por favor, faça login novamente.",
             variant: "destructive",
           });
+          await supabase.auth.signOut();
           navigate("/");
           return;
         }
 
+        console.log("User role:", profile.role, "Required role:", requiredRole);
+
         if (profile.role !== requiredRole) {
           toast({
-            title: "Access Denied",
-            description: "You don't have permission to access this page",
+            title: "Acesso Negado",
+            description: "Você não tem permissão para acessar esta página",
             variant: "destructive",
           });
           navigate("/");
@@ -63,7 +71,8 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
       if (event === "SIGNED_OUT") {
         navigate("/");
       }
