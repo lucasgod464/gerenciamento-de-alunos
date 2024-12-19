@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { UserList } from "@/components/users/UserList";
@@ -23,6 +23,19 @@ const Users = () => {
   const [roomFilter, setRoomFilter] = useState<string>("all");
   const [specializationFilter, setSpecializationFilter] = useState<string>("all");
   const { toast } = useToast();
+
+  // Carregar usuários do localStorage quando o componente montar
+  useEffect(() => {
+    const savedUsers = localStorage.getItem("users");
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
+    }
+  }, []);
+
+  // Salvar usuários no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem("users", JSON.stringify(users));
+  }, [users]);
 
   const handleCreateUser = (newUser: User) => {
     setUsers([...users, newUser]);
