@@ -1,38 +1,106 @@
-import { Routes as RouterRoutes, Route } from "react-router-dom"
-import Login from "./pages/Login"
-import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard"
-import Companies from "./pages/SuperAdmin/Companies"
-import Emails from "./pages/SuperAdmin/Emails"
-import Profile from "./pages/SuperAdmin/Profile"
-import UserDashboard from "./pages/User/Dashboard"
-import UserProfile from "./pages/User/Profile"
-import ReportsPage from "./pages/User/Reports"
-import AdminDashboard from "./pages/Admin/Dashboard"
-import AdminUsers from "./pages/Admin/Users"
-import AdminRooms from "./pages/Admin/Rooms"
-import AdminStudies from "./pages/Admin/Studies"
-import AdminTags from "./pages/Admin/Tags"
-import AdminSpecializations from "./pages/Admin/Specializations"
-import AdminProfile from "./pages/Admin/Profile"
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { RoleGuard } from "./components/auth/RoleGuard";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
 
-export const Routes = () => {
-  return (
-    <RouterRoutes>
-      <Route path="/" element={<Login />} />
-      <Route path="/super-admin" element={<SuperAdminDashboard />} />
-      <Route path="/super-admin/companies" element={<Companies />} />
-      <Route path="/super-admin/emails" element={<Emails />} />
-      <Route path="/super-admin/profile" element={<Profile />} />
-      <Route path="/user" element={<UserDashboard />} />
-      <Route path="/user/profile" element={<UserProfile />} />
-      <Route path="/user/reports" element={<ReportsPage />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<AdminUsers />} />
-      <Route path="/admin/rooms" element={<AdminRooms />} />
-      <Route path="/admin/studies" element={<AdminStudies />} />
-      <Route path="/admin/tags" element={<AdminTags />} />
-      <Route path="/admin/specializations" element={<AdminSpecializations />} />
-      <Route path="/admin/profile" element={<AdminProfile />} />
-    </RouterRoutes>
-  )
-}
+// Super Admin
+import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
+import SuperAdminCompanies from "./pages/SuperAdmin/Companies";
+import SuperAdminEmails from "./pages/SuperAdmin/Emails";
+import SuperAdminProfile from "./pages/SuperAdmin/Profile";
+
+// User
+import UserDashboard from "./pages/User/Dashboard";
+import UserProfile from "./pages/User/Profile";
+import StudentsPage from "./pages/User/Students";
+import AttendancePage from "./pages/User/Attendance";
+import ReportsPage from "./pages/User/Reports";
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  // Super Admin Routes
+  {
+    path: "/super-admin",
+    element: (
+      <RoleGuard role="SUPER_ADMIN">
+        <SuperAdminDashboard />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/super-admin/companies",
+    element: (
+      <RoleGuard role="SUPER_ADMIN">
+        <SuperAdminCompanies />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/super-admin/emails",
+    element: (
+      <RoleGuard role="SUPER_ADMIN">
+        <SuperAdminEmails />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/super-admin/profile",
+    element: (
+      <RoleGuard role="SUPER_ADMIN">
+        <SuperAdminProfile />
+      </RoleGuard>
+    ),
+  },
+  // User Routes
+  {
+    path: "/user",
+    element: (
+      <RoleGuard role="USER">
+        <UserDashboard />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/students",
+    element: (
+      <RoleGuard role="USER">
+        <StudentsPage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/attendance",
+    element: (
+      <RoleGuard role="USER">
+        <AttendancePage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/reports",
+    element: (
+      <RoleGuard role="USER">
+        <ReportsPage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/profile",
+    element: (
+      <RoleGuard role="USER">
+        <UserProfile />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
+  },
+]);
