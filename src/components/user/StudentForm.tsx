@@ -66,6 +66,12 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
+  const rooms = [
+    { id: "sala1", name: "Sala 1" },
+    { id: "sala2", name: "Sala 2" },
+    { id: "sala3", name: "Sala 3" },
+  ];
+
   return (
     <Card>
       <CardHeader>
@@ -139,9 +145,11 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
                 <SelectValue placeholder="Selecione a sala" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sala1">Sala 1</SelectItem>
-                <SelectItem value="sala2">Sala 2</SelectItem>
-                <SelectItem value="sala3">Sala 3</SelectItem>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
