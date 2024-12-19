@@ -10,7 +10,6 @@ const Login = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
@@ -20,7 +19,6 @@ const Login = () => {
 
     checkSession();
 
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_IN" && session) {
@@ -41,14 +39,14 @@ const Login = () => {
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         throw error;
       }
 
       if (!profile) {
-        throw new Error("Perfil não encontrado");
+        throw new Error("Perfil não encontrado. Por favor, entre em contato com o suporte.");
       }
 
       // Redirect based on user role
@@ -82,6 +80,7 @@ const Login = () => {
         variant: "destructive",
       });
       
+      // Sign out the user if there was an error
       await supabase.auth.signOut();
     }
   };
