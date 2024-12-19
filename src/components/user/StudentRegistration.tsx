@@ -70,15 +70,33 @@ export const StudentRegistration = () => {
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
     });
+  };
 
-    // Dispara um evento para atualizar outras abas/janelas
-    window.dispatchEvent(new Event("storage"));
+  const handleDeleteStudent = (id: string) => {
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
+    const updatedStudents = allStudents.filter((student: Student) => student.id !== id);
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    
+    setStudents(prev => prev.filter(student => student.id !== id));
+  };
+
+  const handleUpdateStudent = (updatedStudent: Student) => {
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
+    const updatedStudents = allStudents.map((student: Student) => 
+      student.id === updatedStudent.id ? updatedStudent : student
+    );
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    
+    setStudents(prev => prev.map(student => 
+      student.id === updatedStudent.id ? updatedStudent : student
+    ));
   };
 
   const filteredStudents = students.filter((student) => {
-    const matchesSearch = student.name && student.email 
-      ? (student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         student.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    const matchesSearch = student.name
+      ? student.name.toLowerCase().includes(searchTerm.toLowerCase())
       : false;
     const matchesRoom = selectedRoom === "all" || student.room === selectedRoom;
     return matchesSearch && matchesRoom;
@@ -111,7 +129,12 @@ export const StudentRegistration = () => {
         </Select>
       </div>
       <StudentForm onSubmit={handleAddStudent} />
-      <StudentTable students={filteredStudents} rooms={rooms} />
+      <StudentTable 
+        students={filteredStudents} 
+        rooms={rooms} 
+        onDeleteStudent={handleDeleteStudent}
+        onUpdateStudent={handleUpdateStudent}
+      />
     </div>
   );
 };

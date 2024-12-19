@@ -10,24 +10,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Plus, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
+  initialData?: Student;
 }
 
-export const StudentForm = ({ onSubmit }: StudentFormProps) => {
-  const [status, setStatus] = useState<"active" | "inactive">("active");
+export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
+  const [status, setStatus] = useState<"active" | "inactive">(initialData?.status || "active");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState<string>(initialData?.room || "");
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
-    // Carrega as salas
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -35,46 +35,62 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
         (room: any) => room.companyId === currentUser.companyId
       );
       setRooms(companyRooms);
-      if (companyRooms.length > 0) {
+      if (!initialData && companyRooms.length > 0) {
         setSelectedRoom(companyRooms[0].id);
       }
     }
-  }, [currentUser]);
+  }, [currentUser, initialData]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    const newStudent: Student = {
-      id: Math.random().toString(36).substr(2, 9),
+    const studentData: Student = {
+      id: initialData?.id || Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
       birthDate: formData.get("birthDate") as string,
       room: selectedRoom,
       status: status,
-      createdAt: new Date().toISOString(),
+      createdAt: initialData?.createdAt || new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
 
-    onSubmit(newStudent);
-    e.currentTarget.reset();
-    setStatus("active");
+    onSubmit(studentData);
+    if (!initialData) {
+      e.currentTarget.reset();
+      setStatus("active");
+    }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Novo Aluno</CardTitle>
-      </CardHeader>
+    <Card className={!initialData ? undefined : "border-0 shadow-none"}>
+      {!initialData && (
+        <CardHeader>
+          <CardTitle>Novo Aluno</CardTitle>
+        </CardHeader>
+      )}
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome Completo</Label>
-            <Input id="fullName" name="fullName" type="text" required />
+            <Input 
+              id="fullName" 
+              name="fullName" 
+              type="text" 
+              required 
+              defaultValue={initialData?.name}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input id="birthDate" name="birthDate" type="date" required />
+            <Input 
+              id="birthDate" 
+              name="birthDate" 
+              type="date" 
+              required 
+              defaultValue={initialData?.birthDate}
+            />
           </div>
 
           <div className="space-y-2">
@@ -107,8 +123,17 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
           </div>
 
           <Button type="submit" className="w-full">
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Aluno
+            {initialData ? (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Alterações
+              </>
+            ) : (
+              <>
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Aluno
+              </>
+            )}
           </Button>
         </form>
       </CardContent>
