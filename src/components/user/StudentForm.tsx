@@ -50,7 +50,7 @@ export const StudentForm = () => {
 
           <div className="space-y-2">
             <Label htmlFor="room">Sala</Label>
-            <Select>
+            <Select defaultValue="sala1">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a sala" />
               </SelectTrigger>
@@ -82,4 +82,4 @@ export const StudentForm = () => {
       </CardContent>
     </Card>
   );
-};
+}

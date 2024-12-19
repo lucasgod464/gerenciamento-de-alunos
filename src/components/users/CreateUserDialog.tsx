@@ -122,7 +122,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="responsibleRoom">Sala Responsável</Label>
-            <Select name="responsibleRoom" required>
+            <Select name="responsibleRoom" defaultValue="sala1">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a sala" />
               </SelectTrigger>
@@ -143,7 +143,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="specialization">Especialização</Label>
-            <Select name="specialization" required>
+            <Select name="specialization" defaultValue="esp1">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a especialização" />
               </SelectTrigger>
@@ -155,7 +155,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
-            <Select name="status" defaultValue="active" required>
+            <Select name="status" defaultValue="active">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>

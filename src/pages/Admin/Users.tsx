@@ -14,14 +14,14 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types/user";
 
-type StatusFilter = "" | "active" | "inactive";
+type StatusFilter = "all" | "active" | "inactive";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
-  const [roomFilter, setRoomFilter] = useState<string>("");
-  const [specializationFilter, setSpecializationFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [roomFilter, setRoomFilter] = useState<string>("all");
+  const [specializationFilter, setSpecializationFilter] = useState<string>("all");
   const { toast } = useToast();
 
   const handleCreateUser = (newUser: User) => {
@@ -67,9 +67,9 @@ const Users = () => {
     const matchesSearch = 
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = !statusFilter || user.status === statusFilter;
-    const matchesRoom = !roomFilter || user.responsibleRoom === roomFilter;
-    const matchesSpecialization = !specializationFilter || user.specialization === specializationFilter;
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesRoom = roomFilter === "all" || user.responsibleRoom === roomFilter;
+    const matchesSpecialization = specializationFilter === "all" || user.specialization === specializationFilter;
 
     return matchesSearch && matchesStatus && matchesRoom && matchesSpecialization;
   });
@@ -116,7 +116,7 @@ const Users = () => {
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="active">Ativo</SelectItem>
               <SelectItem value="inactive">Inativo</SelectItem>
             </SelectContent>
@@ -126,7 +126,7 @@ const Users = () => {
               <SelectValue placeholder="Filtrar por sala" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="sala1">Sala 1</SelectItem>
               <SelectItem value="sala2">Sala 2</SelectItem>
             </SelectContent>
@@ -136,7 +136,7 @@ const Users = () => {
               <SelectValue placeholder="Filtrar por especialização" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="all">Todas</SelectItem>
               <SelectItem value="esp1">Especialização 1</SelectItem>
               <SelectItem value="esp2">Especialização 2</SelectItem>
             </SelectContent>
