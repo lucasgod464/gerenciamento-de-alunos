@@ -13,6 +13,7 @@ import AdminRooms from "./pages/Admin/Rooms"
 import AdminStudies from "./pages/Admin/Studies"
 import AdminTags from "./pages/Admin/Tags"
 import AdminSpecializations from "./pages/Admin/Specializations"
+import AdminProfile from "./pages/Admin/Profile"
 
 export const Routes = () => {
   return (
@@ -31,6 +32,7 @@ export const Routes = () => {
       <Route path="/admin/studies" element={<AdminStudies />} />
       <Route path="/admin/tags" element={<AdminTags />} />
       <Route path="/admin/specializations" element={<AdminSpecializations />} />
+      <Route path="/admin/profile" element={<AdminProfile />} />
     </RouterRoutes>
   )
 }
