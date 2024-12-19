@@ -25,12 +25,16 @@ const Login = () => {
         .from("profiles")
         .select("*")
         .eq("email", email)
-        .single();
+        .maybeSingle();
 
       console.log("Resultado da busca do perfil:", profileData, profileError);
 
-      if (profileError || !profileData) {
+      if (profileError) {
         console.error("Erro ao buscar perfil:", profileError);
+        throw new Error("Erro ao buscar usuário");
+      }
+
+      if (!profileData) {
         throw new Error("Usuário não encontrado");
       }
 
@@ -41,13 +45,17 @@ const Login = () => {
         .eq("email", email)
         .eq("password", password)
         .eq("profile_id", profileData.id)
-        .single();
+        .maybeSingle();
 
       console.log("Resultado da busca de credenciais:", credentialsData, credentialsError);
 
-      if (credentialsError || !credentialsData) {
+      if (credentialsError) {
         console.error("Erro ao buscar credenciais:", credentialsError);
-        throw new Error("Credenciais inválidas");
+        throw new Error("Erro ao verificar credenciais");
+      }
+
+      if (!credentialsData) {
+        throw new Error("Senha incorreta");
       }
 
       // Redirecionar baseado no papel do usuário
