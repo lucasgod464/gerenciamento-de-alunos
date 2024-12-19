@@ -13,11 +13,10 @@ export const DynamicFormField = ({ field, defaultValue }: DynamicFormFieldProps)
       <Label htmlFor={field.id}>{field.label}</Label>
       <Input
         id={field.id}
-        name={field.id}
+        name={field.name}
         type={field.type}
         required={field.required}
-        min={field.validation?.min}
-        max={field.validation?.max}
+        placeholder={field.placeholder}
         defaultValue={defaultValue}
       />
     </div>

@@ -20,6 +20,7 @@ export interface FormField {
   isDefault?: boolean;
   companyId?: string | null;
   options?: string[];
+  placeholder?: string;
   validation?: {
     min?: number;
     max?: number;
