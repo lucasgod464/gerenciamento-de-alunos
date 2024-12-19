@@ -30,7 +30,15 @@ const Users = () => {
     const savedRooms = localStorage.getItem("rooms");
     const savedSpecializations = localStorage.getItem("specializations");
 
-    if (savedUsers) setUsers(JSON.parse(savedUsers));
+    if (savedUsers) {
+      const parsedUsers = JSON.parse(savedUsers);
+      // Ensure status is either "active" or "inactive"
+      const typedUsers = parsedUsers.map((user: any) => ({
+        ...user,
+        status: user.status === "active" ? "active" : "inactive"
+      })) as User[];
+      setUsers(typedUsers);
+    }
     if (savedRooms) setRooms(JSON.parse(savedRooms));
     if (savedSpecializations) setSpecializations(JSON.parse(savedSpecializations));
   }, []);
