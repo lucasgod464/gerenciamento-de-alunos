@@ -1,37 +1,29 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { AccessLevel, ROLE_PERMISSIONS, RolePermissions } from "@/types/auth";
+import { AccessLevel } from "@/types/auth";
 
 interface RoleGuardProps {
   children: ReactNode;
-  allowedRoles?: AccessLevel[];
+  role: AccessLevel;
   companyId?: string;
-  requiredPermissions?: Array<keyof RolePermissions>;
 }
 
 export function RoleGuard({
   children,
-  allowedRoles,
+  role,
   companyId,
-  requiredPermissions = [],
 }: RoleGuardProps) {
-  const { user, can, isCompanyMember } = useAuth();
+  const { user, isCompanyMember } = useAuth();
 
   if (!user) return null;
 
   // Check role access
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (role && user.role !== role) {
     return null;
   }
 
   // Check company access
   if (companyId && !isCompanyMember(companyId)) {
-    return null;
-  }
-
-  // Check permissions
-  const hasAllPermissions = requiredPermissions.every((permission) => can(permission));
-  if (!hasAllPermissions) {
     return null;
   }
 
