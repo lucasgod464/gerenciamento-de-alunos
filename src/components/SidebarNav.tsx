@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Building2, Mail, Menu, User } from "lucide-react";
+import { BarChart, Building2, Mail, Menu, User, Users, ClipboardList, FileText } from "lucide-react";
 
 const roleRoutes = {
   "super-admin": [
@@ -13,8 +13,10 @@ const roleRoutes = {
     { icon: User, label: "Usuários", path: "/admin/users" },
   ],
   "user": [
-    { icon: BarChart, label: "Dashboard", path: "/user" },
-    { icon: User, label: "Perfil", path: "/user/profile" },
+    { icon: User, label: "Perfil", path: "/user" },
+    { icon: Users, label: "Cadastro de Alunos", path: "/user/students" },
+    { icon: ClipboardList, label: "Controle de Presença", path: "/user/attendance" },
+    { icon: FileText, label: "Relatórios", path: "/user/reports" },
   ],
 };
 
