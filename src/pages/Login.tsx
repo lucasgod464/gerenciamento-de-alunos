@@ -18,19 +18,16 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("Tentando login com:", email);
-      
-      // Primeiro, buscar o perfil
+      // Primeiro, buscar o perfil pelo email
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("email", email)
-        .maybeSingle();
+        .eq("email", email.toLowerCase())
+        .single();
 
-      console.log("Resultado da busca do perfil:", profileData, profileError);
+      console.log("Profile data:", profileData);
 
       if (profileError) {
-        console.error("Erro ao buscar perfil:", profileError);
         throw new Error("Erro ao buscar usuário");
       }
 
@@ -38,27 +35,22 @@ const Login = () => {
         throw new Error("Usuário não encontrado");
       }
 
-      // Depois, verificar as credenciais
+      // Verificar credenciais
       const { data: credentialsData, error: credentialsError } = await supabase
         .from("credentials")
         .select("*")
-        .eq("email", email)
+        .eq("email", email.toLowerCase())
         .eq("password", password)
         .eq("profile_id", profileData.id)
-        .maybeSingle();
+        .single();
 
-      console.log("Resultado da busca de credenciais:", credentialsData, credentialsError);
+      console.log("Credentials data:", credentialsData);
 
-      if (credentialsError) {
-        console.error("Erro ao buscar credenciais:", credentialsError);
-        throw new Error("Erro ao verificar credenciais");
+      if (credentialsError || !credentialsData) {
+        throw new Error("Email ou senha incorretos");
       }
 
-      if (!credentialsData) {
-        throw new Error("Senha incorreta");
-      }
-
-      // Redirecionar baseado no papel do usuário
+      // Determinar rota baseado no papel do usuário
       let redirectPath;
       if (profileData.role === 'super-admin') {
         redirectPath = "/super-admin/dashboard";
@@ -68,7 +60,7 @@ const Login = () => {
         redirectPath = "/user";
       }
 
-      // Armazenar informações do usuário no localStorage
+      // Armazenar dados do usuário
       localStorage.setItem("user", JSON.stringify({
         id: profileData.id,
         email: profileData.email,
@@ -78,18 +70,17 @@ const Login = () => {
         access_level: profileData.access_level
       }));
 
+      // Redirecionar e mostrar mensagem de sucesso
       navigate(redirectPath);
-      
       toast({
         title: "Login realizado com sucesso!",
-        description: "Bem-vindo ao sistema.",
+        description: `Bem-vindo, ${profileData.name || 'usuário'}!`,
       });
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
-      
+      console.error("Erro no login:", error);
       toast({
         title: "Erro no login",
-        description: error.message || "Email ou senha inválidos",
+        description: error.message || "Ocorreu um erro ao fazer login",
         variant: "destructive",
       });
     } finally {
@@ -99,30 +90,17 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg 
-              className="w-6 h-6 text-blue-600" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth="2" 
-                d="M11 16l-4-4m0 0l4-4m-4 4h14" 
-              />
-            </svg>
-          </div>
+      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Bem-vindo
+          </h1>
+          <p className="text-gray-500">
+            Faça login para acessar sua conta
+          </p>
         </div>
-        
-        <h1 className="text-2xl font-bold text-center text-gray-900">
-          Entrar na sua conta
-        </h1>
-        
-        <form onSubmit={handleLogin} className="space-y-4">
+
+        <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -132,9 +110,10 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="w-full"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
             <Input
@@ -144,17 +123,22 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="w-full"
             />
           </div>
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700"
             disabled={isLoading}
           >
             {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
+
+        <div className="text-center text-sm text-gray-500">
+          <p>Email para teste: superadmin@admin.com</p>
+        </div>
       </div>
     </div>
   );
