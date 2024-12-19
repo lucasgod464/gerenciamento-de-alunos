@@ -5,6 +5,7 @@ import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -19,6 +20,7 @@ export const StudentRegistration = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -59,6 +61,11 @@ export const StudentRegistration = () => {
     );
     const newAllStudents = [...filteredStudents, ...updatedStudents];
     localStorage.setItem("students", JSON.stringify(newAllStudents));
+
+    toast({
+      title: "Sucesso",
+      description: "Aluno cadastrado com sucesso!",
+    });
   };
 
   const filteredStudents = students.filter((student) => {
@@ -97,7 +104,7 @@ export const StudentRegistration = () => {
         </Select>
       </div>
       <StudentForm onSubmit={handleAddStudent} />
-      <StudentTable students={filteredStudents} />
+      <StudentTable students={filteredStudents} rooms={rooms} />
     </div>
   );
 };
