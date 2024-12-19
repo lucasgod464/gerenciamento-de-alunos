@@ -8,4 +8,5 @@ export interface Student {
   room: string;
   status: "active" | "inactive";
   createdAt: string;
+  companyId: string | null;
 }

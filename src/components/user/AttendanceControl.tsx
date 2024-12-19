@@ -5,21 +5,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { AttendanceStats } from "./AttendanceStats";
 import { AttendanceList } from "./AttendanceList";
 import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
+import { useAuth } from "@/hooks/useAuth";
 
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
   const [observation, setObservation] = useState("");
   const [observations, setObservations] = useState<DailyObservation[]>([]);
+  const { user: currentUser } = useAuth();
   
-  // Mock data - replace with actual data from your backend
-  const mockStudents: Student[] = [
-    { id: "1", name: "João Silva", room: "Sala 1", status: "present" },
-    { id: "2", name: "Maria Santos", room: "Sala 1", status: "absent" },
-    { id: "3", name: "Pedro Oliveira", room: "Sala 2", status: "late" },
-    { id: "4", name: "Ana Souza", room: "Sala 1", status: "present" },
-    { id: "5", name: "Lucas Ferreira", room: "Sala 2", status: "absent" },
-  ];
+  // Load students from localStorage filtered by company
+  const getCompanyStudents = () => {
+    if (!currentUser?.companyId) return [];
+    const savedStudents = localStorage.getItem("students");
+    if (!savedStudents) return [];
+    
+    const allStudents = JSON.parse(savedStudents);
+    return allStudents.filter((student: Student) => 
+      student.companyId === currentUser.companyId
+    );
+  };
 
   useEffect(() => {
     if (selectedDate) {
@@ -29,14 +34,14 @@ export const AttendanceControl = () => {
       if (!existingAttendance) {
         setDailyAttendances(prev => [...prev, {
           date: dateStr,
-          students: mockStudents
+          students: getCompanyStudents()
         }]);
       }
 
       const existingObservation = observations.find(obs => obs.date === dateStr);
       setObservation(existingObservation?.text || "");
     }
-  }, [selectedDate]);
+  }, [selectedDate, currentUser]);
 
   const getCurrentDayStudents = () => {
     if (!selectedDate) return [];
@@ -65,7 +70,7 @@ export const AttendanceControl = () => {
       if (!prevAttendances.some(da => da.date === dateStr)) {
         updatedAttendances.push({
           date: dateStr,
-          students: mockStudents.map(student =>
+          students: getCompanyStudents().map(student =>
             student.id === studentId ? { ...student, status } : student
           )
         });

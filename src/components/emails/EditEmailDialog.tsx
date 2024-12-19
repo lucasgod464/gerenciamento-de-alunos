@@ -56,7 +56,7 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
   })
 
   const updateEmailMutation = useMutation({
-    mutationFn: (updatedEmail: Email) => {
+    mutationFn: async (updatedEmail: Email) => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const newEmails = currentEmails.map((e: Email) =>
         e.id === updatedEmail.id ? updatedEmail : e
@@ -64,7 +64,7 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
       localStorage.setItem("createdEmails", JSON.stringify(newEmails))
       return updatedEmail
     },
-    onSuccess: (updatedEmail) => {
+    onSuccess: (updatedEmail: Email) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] })
       onEmailUpdated(updatedEmail)
       onOpenChange(false)
