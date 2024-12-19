@@ -24,7 +24,7 @@ export function EmailSearchBar({
           <SelectValue placeholder="Nível de Acesso" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos</SelectItem>
+          <SelectItem value="all">Todos</SelectItem>
           <SelectItem value="Admin">Admin</SelectItem>
           <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
         </SelectContent>
@@ -34,7 +34,7 @@ export function EmailSearchBar({
           <SelectValue placeholder="Empresa" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todas</SelectItem>
+          <SelectItem value="all">Todas</SelectItem>
           <SelectItem value="Empresa Exemplo">Empresa Exemplo</SelectItem>
         </SelectContent>
       </Select>
