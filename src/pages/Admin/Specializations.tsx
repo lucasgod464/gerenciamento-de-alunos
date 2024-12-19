@@ -174,3 +174,6 @@ const Specializations = () => {
       </div>
     </DashboardLayout>
   );
+};
+
+export default Specializations;

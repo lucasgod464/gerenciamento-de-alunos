@@ -194,3 +194,6 @@ const Users = () => {
       </div>
     </DashboardLayout>
   );
+};
+
+export default Users;
