@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,14 +7,45 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Camera, KeyRound } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export const UserProfile = () => {
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState({
     email: true,
     push: false
   });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
   const [avatarUrl, setAvatarUrl] = useState<string>("/placeholder.svg");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || ""
+      }));
+      // If user has a profile picture, set it
+      if (user.profilePicture) {
+        setAvatarUrl(user.profilePicture);
+      }
+    }
+  }, [user]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,15 +61,48 @@ export const UserProfile = () => {
       
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAvatarUrl(e.target?.result as string);
+        const result = e.target?.result as string;
+        setAvatarUrl(result);
+        
+        // Save the profile picture to localStorage
+        const session = JSON.parse(localStorage.getItem("session") || "{}");
+        if (session.user) {
+          session.user.profilePicture = result;
+          localStorage.setItem("session", JSON.stringify(session));
+        }
+
         toast({
           title: "Sucesso",
-          description: "Imagem atualizada com sucesso"
+          description: "Foto de perfil atualizada com sucesso"
         });
       };
       reader.readAsDataURL(file);
     }
   };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Update user data in localStorage
+    const session = JSON.parse(localStorage.getItem("session") || "{}");
+    if (session.user) {
+      session.user = {
+        ...session.user,
+        name: formData.name,
+        email: formData.email
+      };
+      localStorage.setItem("session", JSON.stringify(session));
+      
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso"
+      });
+    }
+  };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -50,7 +114,7 @@ export const UserProfile = () => {
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
               <AvatarImage src={avatarUrl} />
-              <AvatarFallback>UN</AvatarFallback>
+              <AvatarFallback>{user.name?.substring(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div>
               <Input
@@ -71,17 +135,30 @@ export const UserProfile = () => {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" placeholder="Seu nome" />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+            </div>
 
-          <Button>Salvar Alterações</Button>
+            <Button type="submit">Salvar Alterações</Button>
+          </form>
         </CardContent>
       </Card>
 
@@ -92,18 +169,36 @@ export const UserProfile = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="current-password">Senha Atual</Label>
-              <Input id="current-password" type="password" />
+              <Label htmlFor="currentPassword">Senha Atual</Label>
+              <Input
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                value={formData.currentPassword}
+                onChange={handleInputChange}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="new-password">Nova Senha</Label>
-              <Input id="new-password" type="password" />
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type="password"
+                value={formData.newPassword}
+                onChange={handleInputChange}
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="confirm-password">Confirmar Nova Senha</Label>
-              <Input id="confirm-password" type="password" />
+              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+              />
             </div>
 
             <Button variant="outline" className="w-full">
