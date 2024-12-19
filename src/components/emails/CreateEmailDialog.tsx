@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 interface Company {
   id: string
@@ -32,13 +32,33 @@ interface CreateEmailDialogProps {
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   // Buscar empresas do localStorage
   const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
     queryFn: () => {
-      const storedCompanies = JSON.parse(localStorage.getItem("companies") || "[]")
-      return storedCompanies
+      const storedCompanies = localStorage.getItem("companies")
+      return storedCompanies ? JSON.parse(storedCompanies) : []
+    },
+  })
+
+  // Mutation para criar email
+  const createEmailMutation = useMutation({
+    mutationFn: (newEmail: any) => {
+      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+      const updatedEmails = [...currentEmails, newEmail]
+      localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
+      return newEmail
+    },
+    onSuccess: (newEmail) => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] })
+      onEmailCreated(newEmail)
+      setOpen(false)
+      toast({
+        title: "Email criado",
+        description: "O email foi criado com sucesso.",
+      })
     },
   })
 
@@ -65,17 +85,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
       createdAt: new Date().toLocaleDateString(),
     }
     
-    // Store in localStorage for login functionality
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-    createdEmails.push(newEmail)
-    localStorage.setItem("createdEmails", JSON.stringify(createdEmails))
-    
-    onEmailCreated(newEmail)
-    setOpen(false)
-    toast({
-      title: "Email criado",
-      description: "O email foi criado com sucesso.",
-    })
+    createEmailMutation.mutate(newEmail)
   }
 
   return (

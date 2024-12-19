@@ -1,8 +1,9 @@
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { EmailList } from "@/components/emails/EmailList"
 import { EmailStats } from "@/components/emails/EmailStats"
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 
 interface Email {
   id: string
@@ -14,36 +15,61 @@ interface Email {
 }
 
 const Emails = () => {
-  const [emails, setEmails] = useState<Email[]>([])
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    // Carregar emails do localStorage
-    const storedEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-    setEmails(storedEmails)
-  }, [])
+  // Buscar emails do localStorage
+  const { data: emails = [] } = useQuery({
+    queryKey: ["emails"],
+    queryFn: () => {
+      const storedEmails = localStorage.getItem("createdEmails")
+      return storedEmails ? JSON.parse(storedEmails) : []
+    },
+  })
+
+  // Mutation para atualizar email
+  const updateEmailMutation = useMutation({
+    mutationFn: (updatedEmail: Email) => {
+      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+      const newEmails = currentEmails.map((email: Email) =>
+        email.id === updatedEmail.id ? updatedEmail : email
+      )
+      localStorage.setItem("createdEmails", JSON.stringify(newEmails))
+      return updatedEmail
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] })
+      toast({
+        title: "Email atualizado",
+        description: "As informações do email foram atualizadas com sucesso.",
+      })
+    },
+  })
+
+  // Mutation para deletar email
+  const deleteEmailMutation = useMutation({
+    mutationFn: (id: string) => {
+      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+      const newEmails = currentEmails.filter((email: Email) => email.id !== id)
+      localStorage.setItem("createdEmails", JSON.stringify(newEmails))
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] })
+      toast({
+        title: "Email excluído",
+        description: "O email foi excluído permanentemente.",
+        variant: "destructive",
+      })
+    },
+  })
 
   const handleUpdateEmail = (updatedEmail: Email) => {
-    const newEmails = emails.map((email) =>
-      email.id === updatedEmail.id ? updatedEmail : email
-    )
-    setEmails(newEmails)
-    localStorage.setItem("createdEmails", JSON.stringify(newEmails))
-    toast({
-      title: "Email atualizado",
-      description: "As informações do email foram atualizadas com sucesso.",
-    })
+    updateEmailMutation.mutate(updatedEmail)
   }
 
   const handleDeleteEmail = (id: string) => {
-    const newEmails = emails.filter((email) => email.id !== id)
-    setEmails(newEmails)
-    localStorage.setItem("createdEmails", JSON.stringify(newEmails))
-    toast({
-      title: "Email excluído",
-      description: "O email foi excluído permanentemente.",
-      variant: "destructive",
-    })
+    deleteEmailMutation.mutate(id)
   }
 
   return (
