@@ -12,12 +12,16 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface FormPreviewProps {
   fields: FormField[];
+  onSubmit?: (formData: any) => void;
+  showSubmitButton?: boolean;
 }
 
-export function FormPreview({ fields }: FormPreviewProps) {
+export function FormPreview({ fields, onSubmit, showSubmitButton = true }: FormPreviewProps) {
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [status, setStatus] = useState(true);
@@ -39,15 +43,32 @@ export function FormPreview({ fields }: FormPreviewProps) {
     }
   }, [currentUser]);
 
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!onSubmit) return;
+
+    const formData = new FormData(e.currentTarget);
+    const values: Record<string, any> = {};
+    
+    fields.forEach((field) => {
+      values[field.name] = formData.get(field.id);
+    });
+
+    values.room = selectedRoom;
+    values.status = status ? "active" : "inactive";
+
+    onSubmit(values);
+  };
+
   const sortedFields = [...fields].sort((a, b) => a.order - b.order);
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-none shadow-none">
+      <CardHeader className="px-0">
         <CardTitle>Novo Aluno</CardTitle>
       </CardHeader>
-      <CardContent>
-        <form className="grid gap-4 md:grid-cols-2">
+      <CardContent className="px-0">
+        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
           {sortedFields.map((field) => (
             <div key={field.id} className={field.name === "address" ? "md:col-span-2" : ""}>
               <DynamicFormField field={field} />
@@ -81,6 +102,13 @@ export function FormPreview({ fields }: FormPreviewProps) {
               <Label htmlFor="status">Ativo</Label>
             </div>
           </div>
+
+          {showSubmitButton && (
+            <Button type="submit" className="md:col-span-2">
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar Aluno
+            </Button>
+          )}
         </form>
       </CardContent>
     </Card>
