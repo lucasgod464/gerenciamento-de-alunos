@@ -11,8 +11,11 @@ export function useCompanies() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
+        console.log("No session in fetchCompanies");
         throw new Error("Sessão expirada. Por favor, faça login novamente.");
       }
+
+      console.log("Session in fetchCompanies:", session);
 
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -20,11 +23,15 @@ export function useCompanies() {
         .eq('id', session.user.id)
         .single();
 
+      console.log("Profile in fetchCompanies:", profile);
+
       if (profileError) {
+        console.error("Profile error in fetchCompanies:", profileError);
         throw profileError;
       }
 
       if (!profile || profile.role !== 'super-admin') {
+        console.log("Not a super-admin in fetchCompanies:", profile);
         throw new Error("Acesso não autorizado");
       }
 
@@ -33,14 +40,16 @@ export function useCompanies() {
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Companies fetch error:", error);
+        throw error;
+      }
 
-      return data.map(company => ({
-        ...company,
-        status: company.status as "active" | "inactive"
-      }));
+      console.log("Companies fetched:", data);
+
+      return data as Company[];
     } catch (error: any) {
-      console.error("Error fetching companies:", error);
+      console.error("Error in fetchCompanies:", error);
       toast.error(error.message || "Erro ao carregar empresas");
       throw error;
     } finally {

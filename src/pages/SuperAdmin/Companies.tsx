@@ -14,16 +14,18 @@ const Companies = () => {
   const [search, setSearch] = useState("");
   const { isLoading, fetchCompanies, handleUpdateCompany, handleDeleteCompany, handleResetCompany } = useCompanies();
 
-  // Usar o hook de autenticação
   useAuthRedirect();
 
   useEffect(() => {
+    console.log("Companies component mounted");
     const loadCompanies = async () => {
       try {
+        console.log("Loading companies...");
         const data = await fetchCompanies();
+        console.log("Companies loaded:", data);
         setCompanies(data);
       } catch (error: any) {
-        // O erro já é tratado no hook useCompanies
+        console.error("Error loading companies:", error);
       }
     };
 
