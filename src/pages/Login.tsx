@@ -1,57 +1,46 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        handleUserSession(session);
-      }
-    };
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    checkSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          handleUserSession(session);
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const handleUserSession = async (session: any) => {
     try {
-      // Get user profile from profiles table
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", session.user.id)
-        .maybeSingle();
+      // Verificar credenciais na tabela credentials
+      const { data: credentials, error: credentialsError } = await supabase
+        .from("credentials")
+        .select(`
+          *,
+          profile:profiles(
+            id,
+            email,
+            role,
+            name,
+            company_id
+          )
+        `)
+        .eq("email", email)
+        .eq("password", password)
+        .single();
 
-      if (error) {
-        throw error;
-      }
+      if (credentialsError) throw credentialsError;
+      if (!credentials) throw new Error("Credenciais inválidas");
 
-      if (!profile) {
-        throw new Error("Perfil não encontrado. Por favor, entre em contato com o suporte.");
-      }
-
-      // Redirect based on user role
+      // Redirecionar baseado no papel do usuário
       let redirectPath;
-      switch (profile.role) {
+      switch (credentials.profile.role) {
         case "super-admin":
           redirectPath = "/super-admin/dashboard";
           break;
@@ -65,6 +54,15 @@ const Login = () => {
           throw new Error("Tipo de usuário não reconhecido");
       }
 
+      // Armazenar informações do usuário no localStorage
+      localStorage.setItem("user", JSON.stringify({
+        id: credentials.profile.id,
+        email: credentials.profile.email,
+        role: credentials.profile.role,
+        name: credentials.profile.name,
+        company_id: credentials.profile.company_id
+      }));
+
       navigate(redirectPath);
       
       toast({
@@ -72,16 +70,15 @@ const Login = () => {
         description: "Bem-vindo ao sistema.",
       });
     } catch (error: any) {
-      console.error("Erro ao processar login:", error);
+      console.error("Erro ao fazer login:", error);
       
       toast({
         title: "Erro no login",
-        description: error.message || "Erro ao processar login",
+        description: "Email ou senha inválidos",
         variant: "destructive",
       });
-      
-      // Sign out the user if there was an error
-      await supabase.auth.signOut();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -110,39 +107,39 @@ const Login = () => {
           Entrar na sua conta
         </h1>
         
-        <Auth
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#2563eb',
-                  brandAccent: '#1d4ed8',
-                }
-              }
-            }
-          }}
-          providers={[]}
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: "Email",
-                password_label: "Senha",
-                button_label: "Entrar",
-                loading_button_label: "Entrando...",
-                link_text: "Já tem uma conta? Entre"
-              },
-              sign_up: {
-                email_label: "Email",
-                password_label: "Senha",
-                button_label: "Cadastrar",
-                loading_button_label: "Cadastrando...",
-                link_text: "Não tem uma conta? Cadastre-se"
-              }
-            }
-          }}
-        />
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading}
+          >
+            {isLoading ? "Entrando..." : "Entrar"}
+          </Button>
+        </form>
       </div>
     </div>
   );
