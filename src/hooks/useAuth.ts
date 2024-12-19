@@ -38,17 +38,18 @@ export function useAuth() {
     const foundUser = createdUsers.find((u: any) => u.email === email);
     
     if (foundEmail && password === "123456") {
+      const role = foundEmail.accessLevel === "Admin" ? "ADMIN" : "USER";
       const response: AuthResponse = {
         user: {
           id: foundEmail.id,
           name: foundEmail.name,
           email: foundEmail.email,
-          role: foundEmail.accessLevel === "Admin" ? "ADMIN" : "USER",
+          role,
           companyId: foundEmail.company,
           createdAt: foundEmail.createdAt,
           lastAccess: new Date().toISOString(),
         },
-        token: `${foundEmail.accessLevel.toLowerCase()}-token`,
+        token: `${role.toLowerCase()}-token`,
       };
       localStorage.setItem("session", JSON.stringify(response));
       return response;
@@ -82,6 +83,7 @@ export function useAuth() {
   const isAuthenticated = !!session;
   const user = session?.user;
 
+  // Helper functions to check permissions
   const can = (permission: keyof typeof ROLE_PERMISSIONS[keyof typeof ROLE_PERMISSIONS]) => {
     if (!user) return false;
     return ROLE_PERMISSIONS[user.role][permission];

@@ -4,7 +4,11 @@ import {
   LayoutDashboard,
   Building2,
   Mail,
+  FileText,
   UserCircle,
+  GraduationCap,
+  ClipboardCheck,
+  BarChart,
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -36,6 +40,26 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
   ];
 
   const userLinks = [
+    {
+      title: "Dashboard",
+      href: "/user",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Cadastro de Alunos",
+      href: "/user/students",
+      icon: GraduationCap,
+    },
+    {
+      title: "Controle de Presença",
+      href: "/user/attendance",
+      icon: ClipboardCheck,
+    },
+    {
+      title: "Relatórios",
+      href: "/user/reports",
+      icon: BarChart,
+    },
     {
       title: "Meu Perfil",
       href: "/user/profile",
