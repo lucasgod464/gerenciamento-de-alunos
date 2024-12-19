@@ -18,23 +18,39 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // Verificar credenciais na tabela credentials
+      console.log("Tentando login com:", email);
+      
+      // Primeiro, buscar as credenciais e o perfil associado
       const { data: credentialsData, error: credentialsError } = await supabase
         .from("credentials")
-        .select("*, profile:profiles(*)")
+        .select(`
+          *,
+          profile:profiles(
+            id,
+            email,
+            role,
+            name,
+            company_id
+          )
+        `)
         .eq("email", email)
         .eq("password", password)
         .single();
 
+      console.log("Resultado da busca:", credentialsData, credentialsError);
+
       if (credentialsError) {
+        console.error("Erro ao buscar credenciais:", credentialsError);
         throw new Error("Credenciais inválidas");
       }
 
       if (!credentialsData || !credentialsData.profile) {
+        console.error("Dados não encontrados:", credentialsData);
         throw new Error("Usuário não encontrado");
       }
 
       const profile = credentialsData.profile;
+      console.log("Perfil encontrado:", profile);
 
       // Redirecionar baseado no papel do usuário
       let redirectPath;
@@ -72,7 +88,7 @@ const Login = () => {
       
       toast({
         title: "Erro no login",
-        description: "Email ou senha inválidos",
+        description: error.message || "Email ou senha inválidos",
         variant: "destructive",
       });
     } finally {
