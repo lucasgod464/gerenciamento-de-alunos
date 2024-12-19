@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Building2, Mail, Menu } from "lucide-react";
+import { BarChart, Building2, Mail, Menu, User } from "lucide-react";
 
 const roleRoutes = {
   "super-admin": [
