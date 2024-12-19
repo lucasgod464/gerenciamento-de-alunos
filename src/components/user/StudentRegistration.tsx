@@ -25,11 +25,9 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
-    // Load all students from localStorage
     const savedStudents = localStorage.getItem("students");
     if (savedStudents) {
       const allStudents = JSON.parse(savedStudents);
-      // Filter students by company
       const companyStudents = allStudents.filter(
         (student: Student) => student.companyId === currentUser.companyId
       );
@@ -40,10 +38,8 @@ export const StudentRegistration = () => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    // Initial load of students
     loadStudents();
 
-    // Load rooms
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -52,16 +48,6 @@ export const StudentRegistration = () => {
       );
       setRooms(companyRooms);
     }
-
-    // Add event listener for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "students") {
-        loadStudents();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
@@ -70,25 +56,23 @@ export const StudentRegistration = () => {
     const savedStudents = localStorage.getItem("students") || "[]";
     const allStudents = JSON.parse(savedStudents);
     
-    // Add the new student with company ID
     const studentWithCompany = {
       ...newStudent,
       companyId: currentUser.companyId,
     };
     
-    // Add to all students
-    const updatedStudents = [...allStudents, studentWithCompany];
+    allStudents.push(studentWithCompany);
+    localStorage.setItem("students", JSON.stringify(allStudents));
     
-    // Save to localStorage
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    
-    // Update local state with company's students
     setStudents(prev => [...prev, studentWithCompany]);
 
     toast({
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
     });
+
+    // Dispara um evento para atualizar outras abas/janelas
+    window.dispatchEvent(new Event("storage"));
   };
 
   const filteredStudents = students.filter((student) => {

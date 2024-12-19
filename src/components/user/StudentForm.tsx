@@ -29,7 +29,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
-    // Load rooms
+    // Carrega as salas
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -42,7 +42,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       }
     }
 
-    // Load form fields configuration
+    // Carrega os campos do formulário configurados pelo administrador
     const storedFields = localStorage.getItem("formFields");
     if (storedFields) {
       const fields = JSON.parse(storedFields);
@@ -67,13 +67,11 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       companyId: currentUser?.companyId || null,
     };
 
-    // Adiciona campos customizados
+    // Adiciona campos customizados configurados pelo administrador
     formFields.forEach((field) => {
-      if (!["name", "birthDate", "status", "room"].includes(field.id)) {
-        const value = formData.get(field.name);
-        if (value) {
-          (newStudent as any)[field.name] = value;
-        }
+      const value = formData.get(field.name);
+      if (value) {
+        (newStudent as any)[field.name] = value;
       }
     });
 
@@ -122,7 +120,6 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Campos padrão */}
           <div className="space-y-2">
             <Label htmlFor="fullName">Nome Completo</Label>
             <Input id="fullName" name="fullName" type="text" required />
@@ -131,6 +128,21 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
           <div className="space-y-2">
             <Label htmlFor="birthDate">Data de Nascimento</Label>
             <Input id="birthDate" name="birthDate" type="date" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">E-mail</Label>
+            <Input id="email" name="email" type="email" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="document">Documento</Label>
+            <Input id="document" name="document" type="text" required />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Endereço</Label>
+            <Input id="address" name="address" type="text" required />
           </div>
 
           <div className="space-y-2">
@@ -162,13 +174,8 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
             </Select>
           </div>
 
-          {/* Campos customizados do formulário */}
-          {formFields.map((field) => {
-            if (!["name", "birthDate", "status", "room"].includes(field.id)) {
-              return renderFormField(field);
-            }
-            return null;
-          })}
+          {/* Campos customizados configurados pelo administrador */}
+          {formFields.map((field) => renderFormField(field))}
 
           <Button type="submit" className="w-full">
             <Plus className="mr-2 h-4 w-4" />
