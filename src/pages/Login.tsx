@@ -10,27 +10,19 @@ const Login = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        handleUserSession(session);
+      }
+    };
+
+    checkSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === "SIGNED_IN") {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", session?.user?.id)
-            .maybeSingle();
-
-          if (profile?.role === "super-admin") {
-            navigate("/super-admin/dashboard");
-          } else if (profile?.role === "admin") {
-            navigate("/admin");
-          } else {
-            navigate("/user");
-          }
-
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo ao sistema.",
-          });
+        if (event === "SIGNED_IN" && session) {
+          handleUserSession(session);
         }
       }
     );
@@ -39,6 +31,65 @@ const Login = () => {
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
+
+  const handleUserSession = async (session: any) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar perfil do usuário",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!profile) {
+        toast({
+          title: "Erro",
+          description: "Perfil de usuário não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      switch (profile.role) {
+        case "super-admin":
+          navigate("/super-admin/dashboard");
+          break;
+        case "admin":
+          navigate("/admin");
+          break;
+        case "user":
+          navigate("/user");
+          break;
+        default:
+          toast({
+            title: "Erro",
+            description: "Tipo de usuário não reconhecido",
+            variant: "destructive",
+          });
+      }
+
+      toast({
+        title: "Login realizado com sucesso!",
+        description: "Bem-vindo ao sistema.",
+      });
+    } catch (error) {
+      console.error("Error in handleUserSession:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar login",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
