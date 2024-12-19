@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types/user";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -27,12 +28,14 @@ interface CreateUserDialogProps {
 interface Room {
   id: string;
   name: string;
+  companyId: string | null;
 }
 
 interface Specialization {
   id: string;
   name: string;
   status: boolean;
+  companyId: string | null;
 }
 
 export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
@@ -40,20 +43,32 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    // Carregar salas do localStorage
+    if (!currentUser?.companyId) return;
+
+    // Carregar salas do localStorage filtradas por companyId
     const savedRooms = localStorage.getItem("rooms");
     if (savedRooms) {
-      setRooms(JSON.parse(savedRooms));
+      const allRooms = JSON.parse(savedRooms);
+      const companyRooms = allRooms.filter(
+        (room: Room) => room.companyId === currentUser.companyId
+      );
+      setRooms(companyRooms);
     }
 
-    // Carregar especializações do localStorage
+    // Carregar especializações do localStorage filtradas por companyId
     const savedSpecializations = localStorage.getItem("specializations");
     if (savedSpecializations) {
-      setSpecializations(JSON.parse(savedSpecializations));
+      const allSpecializations = JSON.parse(savedSpecializations);
+      const companySpecializations = allSpecializations.filter(
+        (spec: Specialization) => 
+          spec.companyId === currentUser.companyId && spec.status === true
+      );
+      setSpecializations(companySpecializations);
     }
-  }, []);
+  }, [currentUser]);
 
   const generateUniqueId = () => {
     return Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -83,7 +98,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       status: formData.get("status") as "active" | "inactive",
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
-      companyId: null, // This will be set by the parent component
+      companyId: currentUser?.companyId || null,
     };
     
     onUserCreated(newUser);
@@ -93,9 +108,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       description: "O usuário foi criado com sucesso.",
     });
   };
-
-  // Filtrar apenas especializações ativas
-  const activeSpecializations = specializations.filter(spec => spec.status);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -182,7 +194,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
                 <SelectValue placeholder="Selecione a especialização" />
               </SelectTrigger>
               <SelectContent>
-                {activeSpecializations.map((spec) => (
+                {specializations.map((spec) => (
                   <SelectItem key={spec.id} value={spec.id}>
                     {spec.name}
                   </SelectItem>
