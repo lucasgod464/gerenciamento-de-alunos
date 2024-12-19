@@ -8,9 +8,11 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/super-admin/dashboard" element={<SuperAdminDashboard />} />
-      <Route path="/super-admin/companies" element={<Companies />} />
-      <Route path="/super-admin/emails" element={<Emails />} />
+      <Route path="/super-admin">
+        <Route path="dashboard" element={<SuperAdminDashboard />} />
+        <Route path="companies" element={<Companies />} />
+        <Route path="emails" element={<Emails />} />
+      </Route>
       <Route path="/admin/*" element={<div>Admin Dashboard</div>} />
       <Route path="/user/*" element={<div>User Dashboard</div>} />
     </Routes>

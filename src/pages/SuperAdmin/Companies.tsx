@@ -16,27 +16,6 @@ const Companies = () => {
   const { toast } = useToast()
   const navigate = useNavigate()
 
-  useEffect(() => {
-    // Check authentication status when component mounts
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate('/')
-        return
-      }
-    })
-
-    // Subscribe to auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate('/')
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [navigate])
-
   const fetchCompanies = async () => {
     try {
       const { data: session } = await supabase.auth.getSession()
@@ -50,7 +29,10 @@ const Companies = () => {
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Error fetching companies:', error)
+        throw error
+      }
 
       // Cast the data to ensure status is of the correct type
       const typedData = (data || []).map(company => ({
@@ -173,9 +155,6 @@ const Companies = () => {
     }
   }
 
-  const totalUsers = companies.reduce((acc, company) => acc + company.current_users, 0)
-  const totalRooms = companies.reduce((acc, company) => acc + company.current_rooms, 0)
-
   const filteredCompanies = companies.filter(
     (company) =>
       company.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -203,8 +182,8 @@ const Companies = () => {
 
         <CompanyStats
           totalCompanies={companies.length}
-          totalUsers={totalUsers}
-          totalRooms={totalRooms}
+          totalUsers={companies.reduce((acc, company) => acc + company.current_users, 0)}
+          totalRooms={companies.reduce((acc, company) => acc + company.current_rooms, 0)}
         />
 
         <div className="flex justify-between items-center">
