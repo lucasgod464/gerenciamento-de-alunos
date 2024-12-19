@@ -59,7 +59,13 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
 
       if (error) throw error
 
-      onEmailCreated(data)
+      // Cast the data to ensure access_level is of the correct type
+      const typedData = {
+        ...data,
+        access_level: data.access_level as "Admin" | "Usuário Comum"
+      }
+
+      onEmailCreated(typedData)
       setOpen(false)
       toast({
         title: "Email criado",

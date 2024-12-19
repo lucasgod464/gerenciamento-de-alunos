@@ -51,7 +51,14 @@ const Companies = () => {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setCompanies(data || [])
+
+      // Cast the data to ensure status is of the correct type
+      const typedData = (data || []).map(company => ({
+        ...company,
+        status: company.status as "active" | "inactive"
+      }))
+
+      setCompanies(typedData)
     } catch (error: any) {
       console.error('Error fetching companies:', error)
       toast({
@@ -135,7 +142,7 @@ const Companies = () => {
         .update({
           current_users: 0,
           current_rooms: 0,
-          status: 'active',
+          status: 'active' as const,
         })
         .eq('id', id)
 
@@ -147,7 +154,7 @@ const Companies = () => {
               ...company,
               current_users: 0,
               current_rooms: 0,
-              status: 'active',
+              status: 'active' as const,
             }
           : company
       )

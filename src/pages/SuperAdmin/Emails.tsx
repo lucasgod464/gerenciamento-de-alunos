@@ -26,7 +26,13 @@ const Emails = () => {
 
       if (error) throw error
 
-      setEmails(data)
+      // Cast the data to ensure access_level is of the correct type
+      const typedData = (data || []).map(email => ({
+        ...email,
+        access_level: email.access_level as "Admin" | "Usuário Comum"
+      }))
+
+      setEmails(typedData)
     } catch (error: any) {
       toast({
         title: "Erro ao carregar emails",
