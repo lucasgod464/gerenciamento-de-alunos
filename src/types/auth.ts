@@ -8,6 +8,7 @@ export interface User {
   companyId: string | null; // null for SUPER_ADMIN
   createdAt: string;
   lastAccess: string;
+  profilePicture?: string;
 }
 
 export interface AuthResponse {
