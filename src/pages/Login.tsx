@@ -10,11 +10,17 @@ const Login = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let isSubscribed = true;
+
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Checking initial session:", session);
-      if (session) {
-        handleUserSession(session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Checking initial session:", session);
+        if (session && isSubscribed) {
+          await handleUserSession(session);
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
       }
     };
 
@@ -23,13 +29,14 @@ const Login = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session);
-        if (event === "SIGNED_IN" && session) {
-          handleUserSession(session);
+        if (event === "SIGNED_IN" && session && isSubscribed) {
+          await handleUserSession(session);
         }
       }
     );
 
     return () => {
+      isSubscribed = false;
       subscription.unsubscribe();
     };
   }, [navigate, toast]);
@@ -63,6 +70,7 @@ const Login = () => {
           description: "Perfil de usuário não encontrado",
           variant: "destructive",
         });
+        await supabase.auth.signOut();
         return;
       }
 
@@ -85,6 +93,7 @@ const Login = () => {
             description: "Tipo de usuário não reconhecido",
             variant: "destructive",
           });
+          await supabase.auth.signOut();
           return;
       }
 
@@ -102,6 +111,7 @@ const Login = () => {
         description: "Erro ao processar login",
         variant: "destructive",
       });
+      await supabase.auth.signOut();
     }
   };
 
