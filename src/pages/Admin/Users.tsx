@@ -1,6 +1,88 @@
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { CreateUserDialog } from "@/components/users/CreateUserDialog";
+import { UserList } from "@/components/users/UserList";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  responsibleRoom: string;
+  location: string;
+  specialization: string;
+  status: "active" | "inactive";
+  createdAt: string;
+  lastAccess: string;
+}
 
 const Users = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [roomFilter, setRoomFilter] = useState<string>("");
+  const [specializationFilter, setSpecializationFilter] = useState<string>("");
+  const { toast } = useToast();
+
+  const handleCreateUser = (newUser: User) => {
+    setUsers([...users, newUser]);
+    toast({
+      title: "Usuário criado",
+      description: "O usuário foi criado com sucesso.",
+    });
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setUsers(users.map((user) => 
+      user.id === updatedUser.id ? updatedUser : user
+    ));
+    toast({
+      title: "Usuário atualizado",
+      description: "As informações do usuário foram atualizadas com sucesso.",
+    });
+  };
+
+  const handleDeleteUser = (id: string) => {
+    setUsers(users.filter((user) => user.id !== id));
+    toast({
+      title: "Usuário excluído",
+      description: "O usuário foi excluído permanentemente.",
+      variant: "destructive",
+    });
+  };
+
+  const handleBulkAction = (action: "activate" | "deactivate") => {
+    const updatedUsers = users.map((user) => ({
+      ...user,
+      status: action === "activate" ? "active" : "inactive",
+    }));
+    setUsers(updatedUsers);
+    toast({
+      title: "Ação em massa concluída",
+      description: `Os usuários selecionados foram ${action === "activate" ? "ativados" : "desativados"}.`,
+    });
+  };
+
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch = 
+      user.name.toLowerCase().includes(search.toLowerCase()) ||
+      user.email.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = !statusFilter || user.status === statusFilter;
+    const matchesRoom = !roomFilter || user.responsibleRoom === roomFilter;
+    const matchesSpecialization = !specializationFilter || user.specialization === specializationFilter;
+
+    return matchesSearch && matchesStatus && matchesRoom && matchesSpecialization;
+  });
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -10,6 +92,68 @@ const Users = () => {
             Gerencie os usuários do sistema
           </p>
         </div>
+
+        <div className="flex justify-between items-center">
+          <div className="space-x-2">
+            <Button
+              variant="secondary"
+              onClick={() => handleBulkAction("activate")}
+            >
+              Ativar Selecionados
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => handleBulkAction("deactivate")}
+            >
+              Desativar Selecionados
+            </Button>
+          </div>
+          <CreateUserDialog onUserCreated={handleCreateUser} />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-4">
+          <Input
+            placeholder="Buscar usuários..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="active">Ativo</SelectItem>
+              <SelectItem value="inactive">Inativo</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={roomFilter} onValueChange={setRoomFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por sala" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="sala1">Sala 1</SelectItem>
+              <SelectItem value="sala2">Sala 2</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={specializationFilter} onValueChange={setSpecializationFilter}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por especialização" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Todas</SelectItem>
+              <SelectItem value="esp1">Especialização 1</SelectItem>
+              <SelectItem value="esp2">Especialização 2</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <UserList
+          users={filteredUsers}
+          onUpdateUser={handleUpdateUser}
+          onDeleteUser={handleDeleteUser}
+        />
       </div>
     </DashboardLayout>
   );
