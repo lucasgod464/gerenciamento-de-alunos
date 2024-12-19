@@ -23,7 +23,6 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
-  const [formFields, setFormFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -41,13 +40,6 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
         setSelectedRoom(companyRooms[0].id);
       }
     }
-
-    // Carrega os campos do formulário configurados pelo administrador
-    const storedFields = localStorage.getItem("formFields");
-    if (storedFields) {
-      const fields = JSON.parse(storedFields);
-      setFormFields(fields);
-    }
   }, [currentUser]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -58,59 +50,15 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
       birthDate: formData.get("birthDate") as string,
-      email: formData.get("email") as string || "",
-      document: formData.get("document") as string || "",
-      address: formData.get("address") as string || "",
       room: selectedRoom,
       status: status,
       createdAt: new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
 
-    // Adiciona campos customizados configurados pelo administrador
-    formFields.forEach((field) => {
-      const value = formData.get(field.name);
-      if (value) {
-        (newStudent as any)[field.name] = value;
-      }
-    });
-
     onSubmit(newStudent);
     e.currentTarget.reset();
     setStatus("active");
-  };
-
-  const renderFormField = (field: FormField) => {
-    switch (field.type) {
-      case "text":
-      case "email":
-      case "tel":
-        return (
-          <div className="space-y-2" key={field.id}>
-            <Label htmlFor={field.name}>{field.label}</Label>
-            <Input
-              id={field.name}
-              name={field.name}
-              type={field.type}
-              required={field.required}
-            />
-          </div>
-        );
-      case "textarea":
-        return (
-          <div className="space-y-2" key={field.id}>
-            <Label htmlFor={field.name}>{field.label}</Label>
-            <textarea
-              id={field.name}
-              name={field.name}
-              className="w-full min-h-[100px] p-2 border rounded-md"
-              required={field.required}
-            />
-          </div>
-        );
-      default:
-        return null;
-    }
   };
 
   return (
@@ -131,18 +79,16 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" name="email" type="email" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="document">Documento</Label>
-            <Input id="document" name="document" type="text" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Endereço</Label>
-            <Input id="address" name="address" type="text" required />
+            <Label>Status</Label>
+            <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -160,22 +106,6 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Campos customizados configurados pelo administrador */}
-          {formFields.map((field) => renderFormField(field))}
 
           <Button type="submit" className="w-full">
             <Plus className="mr-2 h-4 w-4" />
