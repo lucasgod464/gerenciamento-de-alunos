@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -23,6 +24,7 @@ const Users = () => {
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     const savedUsers = localStorage.getItem("users");
@@ -31,22 +33,51 @@ const Users = () => {
 
     if (savedUsers) {
       const parsedUsers = JSON.parse(savedUsers);
-      const typedUsers = parsedUsers.map((user: any) => ({
+      // Filter users by company
+      const companyUsers = parsedUsers.filter((user: any) => 
+        user.companyId === currentUser?.companyId
+      );
+      
+      const typedUsers = companyUsers.map((user: any) => ({
         ...user,
         status: (user.status === true || user.status === "active") ? "active" as const : "inactive" as const
       }));
       setUsers(typedUsers);
     }
-    if (savedRooms) setRooms(JSON.parse(savedRooms));
-    if (savedSpecializations) setSpecializations(JSON.parse(savedSpecializations));
-  }, []);
+
+    // Filter rooms by company
+    if (savedRooms) {
+      const allRooms = JSON.parse(savedRooms);
+      const companyRooms = allRooms.filter((room: any) => 
+        room.companyId === currentUser?.companyId
+      );
+      setRooms(companyRooms);
+    }
+
+    // Filter specializations by company
+    if (savedSpecializations) {
+      const allSpecializations = JSON.parse(savedSpecializations);
+      const companySpecializations = allSpecializations.filter((spec: any) => 
+        spec.companyId === currentUser?.companyId
+      );
+      setSpecializations(companySpecializations);
+    }
+  }, [currentUser]);
 
   const handleUpdateUser = (updatedUser: User) => {
     const newUsers = users.map((user) =>
       user.id === updatedUser.id ? updatedUser : user
     );
+    
+    // Update in localStorage while preserving other companies' data
+    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherCompaniesUsers = savedUsers.filter((user: any) => 
+      user.companyId !== currentUser?.companyId
+    );
+    
+    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...newUsers]));
     setUsers(newUsers);
-    localStorage.setItem("users", JSON.stringify(newUsers));
+    
     toast({
       title: "Usuário atualizado",
       description: "As informações do usuário foram atualizadas com sucesso.",
@@ -55,8 +86,16 @@ const Users = () => {
 
   const handleDeleteUser = (id: string) => {
     const newUsers = users.filter((user) => user.id !== id);
+    
+    // Update in localStorage while preserving other companies' data
+    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherCompaniesUsers = savedUsers.filter((user: any) => 
+      user.companyId !== currentUser?.companyId
+    );
+    
+    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...newUsers]));
     setUsers(newUsers);
-    localStorage.setItem("users", JSON.stringify(newUsers));
+    
     toast({
       title: "Usuário excluído",
       description: "O usuário foi excluído com sucesso.",
@@ -65,9 +104,23 @@ const Users = () => {
   };
 
   const handleCreateUser = (newUser: User) => {
-    const updatedUsers = [...users, newUser];
+    // Add company ID to new user
+    const userWithCompany = {
+      ...newUser,
+      companyId: currentUser?.companyId
+    };
+    
+    const updatedUsers = [...users, userWithCompany];
+    
+    // Update in localStorage while preserving other companies' data
+    const savedUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherCompaniesUsers = savedUsers.filter((user: any) => 
+      user.companyId !== currentUser?.companyId
+    );
+    
+    localStorage.setItem("users", JSON.stringify([...otherCompaniesUsers, ...updatedUsers]));
     setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    
     toast({
       title: "Usuário criado",
       description: "O novo usuário foi criado com sucesso.",

@@ -8,4 +8,5 @@ export interface User {
   status: "active" | "inactive";
   createdAt: string;
   lastAccess: string;
+  companyId: string | null;
 }
