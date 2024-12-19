@@ -1,24 +1,24 @@
-import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { Input } from "@/components/ui/input";
-import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog";
-import { CompanyList } from "@/components/companies/CompanyList";
-import { CompanyStats } from "@/components/companies/CompanyStats";
-import { useCompanies } from "@/hooks/useCompanies";
+import { useState } from "react"
+import { DashboardLayout } from "@/components/DashboardLayout"
+import { Input } from "@/components/ui/input"
+import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
+import { CompanyList } from "@/components/companies/CompanyList"
+import { CompanyStats } from "@/components/companies/CompanyStats"
+import { useCompanies } from "@/hooks/useCompanies"
 
 const Companies = () => {
-  const [search, setSearch] = useState("");
-  const { companies, isLoading, createCompany, updateCompany, deleteCompany, resetCompany } = useCompanies();
+  const [search, setSearch] = useState("")
+  const { companies, isLoading, createCompany, updateCompany, deleteCompany, resetCompany } = useCompanies()
 
-  const totalUsers = companies.reduce((acc, company) => acc + company.current_users, 0);
-  const totalRooms = companies.reduce((acc, company) => acc + company.current_rooms, 0);
+  const totalUsers = companies.reduce((acc, company) => acc + company.currentUsers, 0)
+  const totalRooms = companies.reduce((acc, company) => acc + company.currentRooms, 0)
 
   const filteredCompanies = companies.filter(
     (company) =>
       company.name.toLowerCase().includes(search.toLowerCase()) ||
       company.id.includes(search) ||
       company.document.includes(search)
-  );
+  )
 
   return (
     <DashboardLayout role="super-admin">
@@ -57,7 +57,7 @@ const Companies = () => {
         />
       </div>
     </DashboardLayout>
-  );
-};
+  )
+}
 
-export default Companies;
+export default Companies
