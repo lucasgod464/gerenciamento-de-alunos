@@ -9,11 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Student {
   id: string;
@@ -22,10 +21,17 @@ interface Student {
   status: "present" | "absent" | "late" | "justified";
 }
 
+interface DailyObservation {
+  date: string;
+  text: string;
+}
+
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
+  const [observation, setObservation] = useState("");
+  const [observations, setObservations] = useState<DailyObservation[]>([]);
   
   // Mock data - replace with actual data from your backend
   const mockStudents: Student[] = [
@@ -38,8 +44,12 @@ export const AttendanceControl = () => {
 
   useEffect(() => {
     // Simulate loading data for the selected date
-    // Replace this with actual API call
     setStudents(mockStudents);
+    
+    // Load observation for selected date
+    const dateStr = selectedDate?.toISOString().split('T')[0];
+    const existingObservation = observations.find(obs => obs.date === dateStr);
+    setObservation(existingObservation?.text || "");
   }, [selectedDate]);
 
   const handleStatusChange = (studentId: string, status: Student["status"]) => {
@@ -50,9 +60,23 @@ export const AttendanceControl = () => {
     );
     
     toast({
-      title: "Presença atualizada",
+      title: "Status atualizado",
       description: "O status de presença foi atualizado com sucesso."
     });
+  };
+
+  const handleObservationChange = (text: string) => {
+    if (text.length <= 100) {
+      setObservation(text);
+      const dateStr = selectedDate?.toISOString().split('T')[0];
+      
+      if (dateStr) {
+        setObservations(prev => {
+          const filtered = prev.filter(obs => obs.date !== dateStr);
+          return [...filtered, { date: dateStr, text }];
+        });
+      }
+    }
   };
 
   // Calculate attendance statistics for pie chart
@@ -133,60 +157,57 @@ export const AttendanceControl = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Sala</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>{student.room}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={student.status}
-                      onValueChange={(value: Student["status"]) =>
-                        handleStatusChange(student.id, value)
-                      }
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="present">Presente</SelectItem>
-                        <SelectItem value="absent">Ausente</SelectItem>
-                        <SelectItem value="late">Atrasado</SelectItem>
-                        <SelectItem value="justified">Justificado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleStatusChange(student.id, "present")}
-                      >
-                        <Check className="h-4 w-4 text-green-500" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleStatusChange(student.id, "absent")}
-                      >
-                        <X className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Sala</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {students.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>{student.room}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={student.status}
+                        onValueChange={(value: Student["status"]) =>
+                          handleStatusChange(student.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="present">Presente</SelectItem>
+                          <SelectItem value="absent">Ausente</SelectItem>
+                          <SelectItem value="late">Atrasado</SelectItem>
+                          <SelectItem value="justified">Justificado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            <div className="space-y-2">
+              <CardTitle className="text-lg">Observações do dia</CardTitle>
+              <Textarea
+                value={observation}
+                onChange={(e) => handleObservationChange(e.target.value)}
+                placeholder="Digite suas observações para este dia (máximo 100 caracteres)"
+                maxLength={100}
+                className="min-h-[100px]"
+              />
+              <p className="text-sm text-muted-foreground text-right">
+                {observation.length}/100 caracteres
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
