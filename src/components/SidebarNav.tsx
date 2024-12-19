@@ -4,7 +4,7 @@ import { BarChart, Building2, Mail, Menu, User, Users, ClipboardList, FileText }
 
 const roleRoutes = {
   "super-admin": [
-    { icon: BarChart, label: "Relatórios", path: "/super-admin" },
+    { icon: BarChart, label: "Dashboard", path: "/super-admin/dashboard" },
     { icon: Building2, label: "Empresas", path: "/super-admin/companies" },
     { icon: Mail, label: "E-mails", path: "/super-admin/emails" },
   ],
