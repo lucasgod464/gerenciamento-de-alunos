@@ -5,13 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
-import { Camera, KeyRound, Bell } from "lucide-react";
+import { Camera, KeyRound } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export const UserProfile = () => {
   const [notifications, setNotifications] = useState({
     email: true,
     push: false
   });
+  const [avatarUrl, setAvatarUrl] = useState<string>("/placeholder.svg");
+  const { toast } = useToast();
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+          title: "Erro",
+          description: "A imagem deve ter menos de 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setAvatarUrl(e.target?.result as string);
+        toast({
+          title: "Sucesso",
+          description: "Imagem atualizada com sucesso"
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -22,13 +49,26 @@ export const UserProfile = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center space-x-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src="/placeholder.svg" />
+              <AvatarImage src={avatarUrl} />
               <AvatarFallback>UN</AvatarFallback>
             </Avatar>
-            <Button variant="outline" size="sm">
-              <Camera className="mr-2 h-4 w-4" />
-              Alterar Foto
-            </Button>
+            <div>
+              <Input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="avatar-upload"
+                onChange={handleImageUpload}
+              />
+              <Label htmlFor="avatar-upload">
+                <Button variant="outline" size="sm" asChild>
+                  <span>
+                    <Camera className="mr-2 h-4 w-4" />
+                    Alterar Foto
+                  </span>
+                </Button>
+              </Label>
+            </div>
           </div>
 
           <div className="space-y-2">
