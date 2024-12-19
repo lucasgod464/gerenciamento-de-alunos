@@ -38,14 +38,15 @@ export function useAuth() {
     const foundUser = createdUsers.find((u: any) => u.email === email);
     
     if (foundEmail && password === "123456") {
-      // Garantir que o accessLevel seja convertido corretamente
-      let role = foundEmail.accessLevel.toUpperCase();
-      // Se o accessLevel for "Admin", converte para "ADMIN"
-      if (role === "ADMIN" || role === "Admin") {
-        role = "ADMIN";
-      }
+      console.log("Found email data:", foundEmail);
 
-      console.log("Found email data:", foundEmail); // Debug log
+      // Converter o accessLevel para o formato correto
+      let role = foundEmail.accessLevel.toUpperCase();
+      if (role === "ADMIN" || role === "Admin" || role === "ADMINISTRADOR" || role === "Administrador") {
+        role = "ADMIN";
+      } else if (role === "USER" || role === "USUÁRIO" || role === "Usuário") {
+        role = "USER";
+      }
 
       const response: AuthResponse = {
         user: {
@@ -60,7 +61,7 @@ export function useAuth() {
         token: `${role.toLowerCase()}-token`,
       };
       
-      console.log("Login response:", response); // Para debug
+      console.log("Login response:", response);
       localStorage.setItem("session", JSON.stringify(response));
       return response;
     }

@@ -9,6 +9,16 @@ import SuperAdminCompanies from "./pages/SuperAdmin/Companies";
 import SuperAdminEmails from "./pages/SuperAdmin/Emails";
 import SuperAdminProfile from "./pages/SuperAdmin/Profile";
 
+// Admin
+import AdminDashboard from "./pages/Admin/Dashboard";
+import AdminProfile from "./pages/Admin/Profile";
+import AdminUsers from "./pages/Admin/Users";
+import AdminRooms from "./pages/Admin/Rooms";
+import AdminCourses from "./pages/Admin/Courses";
+import AdminStudies from "./pages/Admin/Studies";
+import AdminTags from "./pages/Admin/Tags";
+import AdminSpecializations from "./pages/Admin/Specializations";
+
 // User
 import UserDashboard from "./pages/User/Dashboard";
 import UserProfile from "./pages/User/Profile";
@@ -55,6 +65,71 @@ export const router = createBrowserRouter([
     element: (
       <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminProfile />
+      </RoleGuard>
+    ),
+  },
+  // Admin Routes
+  {
+    path: "/admin",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminDashboard />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/users",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminUsers />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/rooms",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminRooms />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/courses",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminCourses />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/studies",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminStudies />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/tags",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminTags />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/specializations",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminSpecializations />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/profile",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminProfile />
       </RoleGuard>
     ),
   },
