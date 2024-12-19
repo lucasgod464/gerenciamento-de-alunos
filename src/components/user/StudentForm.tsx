@@ -36,6 +36,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
+    // Load rooms
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -48,9 +49,14 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       }
     }
 
+    // Load form fields
     const savedFields = localStorage.getItem("formFields");
     if (savedFields) {
-      setFormFields(JSON.parse(savedFields));
+      const parsedFields = JSON.parse(savedFields);
+      const companyFields = parsedFields.filter(
+        (field: FormField) => field.companyId === currentUser.companyId
+      );
+      setFormFields(companyFields);
     }
   }, [currentUser]);
 
@@ -58,13 +64,14 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const formValues: Record<string, any> = {};
+    formFields.forEach((field) => {
+      formValues[field.name] = formData.get(field.name);
+    });
+
     const newStudent: Student = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.get("name") as string,
-      birthDate: formData.get("birthDate") as string,
-      email: formData.get("email") as string,
-      document: formData.get("document") as string,
-      address: formData.get("address") as string,
+      ...formValues,
       room: selectedRoom,
       status: status,
       createdAt: new Date().toISOString(),
