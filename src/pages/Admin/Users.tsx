@@ -32,11 +32,10 @@ const Users = () => {
 
     if (savedUsers) {
       const parsedUsers = JSON.parse(savedUsers);
-      // Ensure status is properly typed as "active" or "inactive"
       const typedUsers = parsedUsers.map((user: any) => ({
         ...user,
-        status: user.status === true || user.status === "active" ? "active" : "inactive"
-      })) as User[];
+        status: (user.status === true || user.status === "active") ? "active" as const : "inactive" as const
+      }));
       setUsers(typedUsers);
     }
     if (savedRooms) setRooms(JSON.parse(savedRooms));
