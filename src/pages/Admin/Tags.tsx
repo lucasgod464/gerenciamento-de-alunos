@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { TagForm } from "@/components/tags/TagForm";
 import { TagList } from "@/components/tags/TagList";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TagType {
   id: number;
@@ -10,6 +11,7 @@ interface TagType {
   description: string;
   color: string;
   status: boolean;
+  companyId: string; // Add companyId to tag type
 }
 
 const Tags = () => {
@@ -18,36 +20,60 @@ const Tags = () => {
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const savedTags = localStorage.getItem("tags");
     if (savedTags) {
-      setTags(JSON.parse(savedTags));
+      const allTags = JSON.parse(savedTags);
+      // Filter tags by company
+      const companyTags = allTags.filter((tag: TagType) => 
+        user?.role === "SUPER_ADMIN" || tag.companyId === user?.companyId
+      );
+      setTags(companyTags);
     }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("tags", JSON.stringify(tags));
-  }, [tags]);
+  }, [user]);
 
   const handleSubmit = (tagData: Omit<TagType, "id">) => {
+    const newTag: TagType = {
+      id: editingTag?.id || Date.now(),
+      ...tagData,
+      companyId: user?.companyId || "", // Ensure companyId is set
+    };
+
     if (editingTag) {
-      setTags(tags.map(tag => 
-        tag.id === editingTag.id 
-          ? { ...tag, ...tagData }
-          : tag
-      ));
+      // Update existing tag
+      const updatedTags = tags.map((tag) =>
+        tag.id === editingTag.id ? newTag : tag
+      );
+      
+      // Update in localStorage while preserving other companies' data
+      const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
+      const otherCompaniesTags = savedTags.filter((tag: TagType) => 
+        tag.companyId !== user?.companyId
+      );
+      
+      localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
+      setTags(updatedTags);
       setEditingTag(null);
+      
       toast({
         title: "Etiqueta atualizada",
         description: "A etiqueta foi atualizada com sucesso!",
       });
     } else {
-      const newTag: TagType = {
-        id: Date.now(),
-        ...tagData,
-      };
-      setTags([...tags, newTag]);
+      // Create new tag
+      const updatedTags = [...tags, newTag];
+      
+      // Update in localStorage while preserving other companies' data
+      const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
+      const otherCompaniesTags = savedTags.filter((tag: TagType) => 
+        tag.companyId !== user?.companyId
+      );
+      
+      localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
+      setTags(updatedTags);
+      
       toast({
         title: "Etiqueta criada",
         description: "A nova etiqueta foi criada com sucesso!",
@@ -60,19 +86,32 @@ const Tags = () => {
   };
 
   const handleDelete = (id: number) => {
-    setTags(tags.filter(tag => tag.id !== id));
+    const updatedTags = tags.filter((tag) => tag.id !== id);
+    
+    // Update in localStorage while preserving other companies' data
+    const savedTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    const otherCompaniesTags = savedTags.filter((tag: TagType) => 
+      tag.companyId !== user?.companyId
+    );
+    
+    localStorage.setItem("tags", JSON.stringify([...otherCompaniesTags, ...updatedTags]));
+    setTags(updatedTags);
+    
     toast({
       title: "Etiqueta excluída",
       description: "A etiqueta foi excluída com sucesso!",
     });
   };
 
-  const filteredTags = tags.filter(tag => {
+  const filteredTags = tags.filter((tag) => {
     const matchesSearch = tag.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" 
-      ? true 
-      : statusFilter === "active" ? tag.status : !tag.status;
-    
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "active"
+        ? tag.status
+        : !tag.status;
+
     return matchesSearch && matchesStatus;
   });
 
