@@ -3,6 +3,7 @@ import { useState } from "react"
 import { EmailTableRow } from "./EmailTableRow"
 import { EmailSearchBar } from "./EmailSearchBar"
 import { CreateEmailDialog } from "./CreateEmailDialog"
+import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
 
 interface Email {
@@ -28,6 +29,8 @@ export function EmailList({
   const [search, setSearch] = useState("")
   const [accessLevelFilter, setAccessLevelFilter] = useState("")
   const [companyFilter, setCompanyFilter] = useState("")
+  const [editingEmail, setEditingEmail] = useState<Email | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
 
   const handleEmailCreated = (email: Email) => {
@@ -36,6 +39,16 @@ export function EmailList({
       title: "Email criado",
       description: "O email foi criado com sucesso.",
     })
+  }
+
+  const handleEditEmail = (email: Email) => {
+    setEditingEmail(email)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEmailUpdated = (email: Email) => {
+    onUpdateEmail(email)
+    setEditingEmail(null)
   }
 
   const filteredEmails = emails.filter((email) => {
@@ -77,13 +90,20 @@ export function EmailList({
               <EmailTableRow
                 key={email.id}
                 email={email}
-                onEdit={onUpdateEmail}
+                onEdit={handleEditEmail}
                 onDelete={onDeleteEmail}
               />
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <EditEmailDialog
+        email={editingEmail}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onEmailUpdated={handleEmailUpdated}
+      />
     </div>
   )
 }

@@ -20,8 +20,8 @@ interface EmailTableRowProps {
 
 export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
   return (
-    <tr className="border-b">
-      <td className="p-4">
+    <TableRow>
+      <TableCell>
         <div>
           <div className="font-medium">{email.name}</div>
           <div className="text-sm text-gray-500">
@@ -30,8 +30,8 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
             ID: {email.id}
           </div>
         </div>
-      </td>
-      <td className="p-4">
+      </TableCell>
+      <TableCell>
         <span
           className={cn(
             "px-2 py-1 rounded-full text-sm",
@@ -42,10 +42,10 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
         >
           {email.accessLevel}
         </span>
-      </td>
-      <td className="p-4">{email.company}</td>
-      <td className="p-4">{email.createdAt}</td>
-      <td className="p-4">
+      </TableCell>
+      <TableCell>{email.company}</TableCell>
+      <TableCell>{email.createdAt}</TableCell>
+      <TableCell>
         <div className="flex justify-end space-x-2">
           <Button
             variant="ghost"
@@ -63,7 +63,7 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   )
 }
