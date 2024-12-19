@@ -50,13 +50,22 @@ export const StudentRegistration = () => {
     
     const updatedStudents = [...students, updatedStudent];
     setStudents(updatedStudents);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
+
+    // Update localStorage with all existing students
+    const savedStudents = localStorage.getItem("students");
+    const allStudents = savedStudents ? JSON.parse(savedStudents) : [];
+    const filteredStudents = allStudents.filter(
+      (student: Student) => student.companyId !== currentUser?.companyId
+    );
+    const newAllStudents = [...filteredStudents, ...updatedStudents];
+    localStorage.setItem("students", JSON.stringify(newAllStudents));
   };
 
   const filteredStudents = students.filter((student) => {
-    const matchesSearch = 
-      student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = student.name && student.email 
+      ? (student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+         student.email.toLowerCase().includes(searchTerm.toLowerCase()))
+      : false;
     const matchesRoom = selectedRoom === "all" || student.room === selectedRoom;
     return matchesSearch && matchesRoom;
   });
