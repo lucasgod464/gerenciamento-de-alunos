@@ -20,41 +20,39 @@ const Login = () => {
     try {
       console.log("Tentando login com:", email);
       
-      // Primeiro, buscar as credenciais e o perfil associado
-      const { data: credentialsData, error: credentialsError } = await supabase
-        .from("credentials")
-        .select(`
-          *,
-          profile:profiles(
-            id,
-            email,
-            role,
-            name,
-            company_id
-          )
-        `)
+      // Primeiro, buscar o perfil
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
         .eq("email", email)
-        .eq("password", password)
         .single();
 
-      console.log("Resultado da busca:", credentialsData, credentialsError);
+      console.log("Resultado da busca do perfil:", profileData, profileError);
 
-      if (credentialsError) {
+      if (profileError || !profileData) {
+        console.error("Erro ao buscar perfil:", profileError);
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Depois, verificar as credenciais
+      const { data: credentialsData, error: credentialsError } = await supabase
+        .from("credentials")
+        .select("*")
+        .eq("email", email)
+        .eq("password", password)
+        .eq("profile_id", profileData.id)
+        .single();
+
+      console.log("Resultado da busca de credenciais:", credentialsData, credentialsError);
+
+      if (credentialsError || !credentialsData) {
         console.error("Erro ao buscar credenciais:", credentialsError);
         throw new Error("Credenciais inválidas");
       }
 
-      if (!credentialsData || !credentialsData.profile) {
-        console.error("Dados não encontrados:", credentialsData);
-        throw new Error("Usuário não encontrado");
-      }
-
-      const profile = credentialsData.profile;
-      console.log("Perfil encontrado:", profile);
-
       // Redirecionar baseado no papel do usuário
       let redirectPath;
-      switch (profile.role) {
+      switch (profileData.role) {
         case "super-admin":
           redirectPath = "/super-admin/dashboard";
           break;
@@ -70,11 +68,11 @@ const Login = () => {
 
       // Armazenar informações do usuário no localStorage
       localStorage.setItem("user", JSON.stringify({
-        id: profile.id,
-        email: profile.email,
-        role: profile.role,
-        name: profile.name,
-        company_id: profile.company_id
+        id: profileData.id,
+        email: profileData.email,
+        role: profileData.role,
+        name: profileData.name,
+        company_id: profileData.company_id
       }));
 
       navigate(redirectPath);
