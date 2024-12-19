@@ -12,6 +12,7 @@ const Login = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log("Checking initial session:", session);
       if (session) {
         handleUserSession(session);
       }
@@ -21,6 +22,7 @@ const Login = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session);
         if (event === "SIGNED_IN" && session) {
           handleUserSession(session);
         }
@@ -30,15 +32,19 @@ const Login = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, []);
 
   const handleUserSession = async (session: any) => {
     try {
+      console.log("Handling user session for:", session.user.id);
+      
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .maybeSingle();
+        .single();
+
+      console.log("Profile data:", profile, "Error:", error);
 
       if (error) {
         console.error("Error fetching profile:", error);
@@ -51,6 +57,7 @@ const Login = () => {
       }
 
       if (!profile) {
+        console.error("No profile found");
         toast({
           title: "Erro",
           description: "Perfil de usuário não encontrado",
@@ -59,15 +66,18 @@ const Login = () => {
         return;
       }
 
+      console.log("User role:", profile.role);
+
+      let redirectPath = "/user";
       switch (profile.role) {
         case "super-admin":
-          navigate("/super-admin/dashboard");
+          redirectPath = "/super-admin/dashboard";
           break;
         case "admin":
-          navigate("/admin");
+          redirectPath = "/admin";
           break;
         case "user":
-          navigate("/user");
+          redirectPath = "/user";
           break;
         default:
           toast({
@@ -75,7 +85,11 @@ const Login = () => {
             description: "Tipo de usuário não reconhecido",
             variant: "destructive",
           });
+          return;
       }
+
+      console.log("Redirecting to:", redirectPath);
+      navigate(redirectPath);
 
       toast({
         title: "Login realizado com sucesso!",
