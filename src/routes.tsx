@@ -1,4 +1,5 @@
 import { Routes as RouterRoutes, Route } from "react-router-dom"
+import Login from "./pages/Login"
 import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard"
 import Companies from "./pages/SuperAdmin/Companies"
 import Emails from "./pages/SuperAdmin/Emails"
@@ -10,6 +11,7 @@ import ReportsPage from "./pages/User/Reports"
 export const Routes = () => {
   return (
     <RouterRoutes>
+      <Route path="/" element={<Login />} />
       <Route path="/super-admin" element={<SuperAdminDashboard />} />
       <Route path="/super-admin/companies" element={<Companies />} />
       <Route path="/super-admin/emails" element={<Emails />} />
