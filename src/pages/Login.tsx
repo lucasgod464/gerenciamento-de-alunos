@@ -23,11 +23,12 @@ const Login = () => {
         .from("profiles")
         .select("*")
         .eq("email", email.toLowerCase())
-        .single();
+        .maybeSingle();
 
       console.log("Profile data:", profileData);
 
       if (profileError) {
+        console.error("Profile error:", profileError);
         throw new Error("Erro ao buscar usuário");
       }
 
@@ -42,11 +43,16 @@ const Login = () => {
         .eq("email", email.toLowerCase())
         .eq("password", password)
         .eq("profile_id", profileData.id)
-        .single();
+        .maybeSingle();
 
       console.log("Credentials data:", credentialsData);
 
-      if (credentialsError || !credentialsData) {
+      if (credentialsError) {
+        console.error("Credentials error:", credentialsError);
+        throw new Error("Erro ao verificar credenciais");
+      }
+
+      if (!credentialsData) {
         throw new Error("Email ou senha incorretos");
       }
 
@@ -138,6 +144,7 @@ const Login = () => {
 
         <div className="text-center text-sm text-gray-500">
           <p>Email para teste: superadmin@admin.com</p>
+          <p>Senha: admin123</p>
         </div>
       </div>
     </div>
