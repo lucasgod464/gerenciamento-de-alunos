@@ -4,7 +4,7 @@ import { BarChart, Users, School, BookOpen, Tag, GraduationCap } from "lucide-re
 
 const adminRoutes = [
   {
-    title: "Relatório",
+    title: "Dashboard",
     href: "/admin",
     icon: BarChart,
   },
@@ -45,11 +45,13 @@ export function AdminNav() {
           key={route.href}
           to={route.href}
           className={cn(
-            "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-            location.pathname === route.href ? "bg-accent" : "transparent"
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+            location.pathname === route.href
+              ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
+              : "hover:bg-gray-100 dark:hover:bg-gray-800"
           )}
         >
-          <route.icon className="mr-2 h-4 w-4" />
+          <route.icon className="h-4 w-4" />
           <span>{route.title}</span>
         </Link>
       ))}

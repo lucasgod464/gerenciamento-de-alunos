@@ -7,6 +7,12 @@ import Profile from "./pages/SuperAdmin/Profile"
 import UserDashboard from "./pages/User/Dashboard"
 import UserProfile from "./pages/User/Profile"
 import ReportsPage from "./pages/User/Reports"
+import AdminDashboard from "./pages/Admin/Dashboard"
+import AdminUsers from "./pages/Admin/Users"
+import AdminRooms from "./pages/Admin/Rooms"
+import AdminStudies from "./pages/Admin/Studies"
+import AdminTags from "./pages/Admin/Tags"
+import AdminSpecializations from "./pages/Admin/Specializations"
 
 export const Routes = () => {
   return (
@@ -19,6 +25,12 @@ export const Routes = () => {
       <Route path="/user" element={<UserDashboard />} />
       <Route path="/user/profile" element={<UserProfile />} />
       <Route path="/user/reports" element={<ReportsPage />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/rooms" element={<AdminRooms />} />
+      <Route path="/admin/studies" element={<AdminStudies />} />
+      <Route path="/admin/tags" element={<AdminTags />} />
+      <Route path="/admin/specializations" element={<AdminSpecializations />} />
     </RouterRoutes>
   )
 }
