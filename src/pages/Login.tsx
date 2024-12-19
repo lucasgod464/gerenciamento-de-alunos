@@ -10,79 +10,49 @@ const Login = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    let isSubscribed = true;
-
+    // Check if user is already logged in
     const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Initial session check:", session);
-        if (session && isSubscribed) {
-          await handleUserSession(session);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao verificar sessão",
-          variant: "destructive",
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        handleUserSession(session);
       }
     };
 
     checkSession();
 
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session);
-        if (event === "SIGNED_IN" && session && isSubscribed) {
-          await handleUserSession(session);
+        if (event === "SIGNED_IN" && session) {
+          handleUserSession(session);
         }
       }
     );
 
     return () => {
-      isSubscribed = false;
       subscription.unsubscribe();
     };
-  }, [navigate, toast]);
+  }, [navigate]);
 
   const handleUserSession = async (session: any) => {
     try {
-      console.log("Handling user session for:", session.user.id);
-      
+      // Get user profile from profiles table
       const { data: profile, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .maybeSingle();
-
-      console.log("Profile lookup result:", { profile, error });
+        .single();
 
       if (error) {
-        console.error("Error fetching profile:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar perfil do usuário",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
-        return;
+        throw error;
       }
 
       if (!profile) {
-        console.error("No profile found");
-        toast({
-          title: "Erro",
-          description: "Perfil de usuário não encontrado",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
-        return;
+        throw new Error("Perfil não encontrado");
       }
 
-      console.log("User role:", profile.role);
-
-      let redirectPath = "/user";
+      // Redirect based on user role
+      let redirectPath;
       switch (profile.role) {
         case "super-admin":
           redirectPath = "/super-admin/dashboard";
@@ -94,29 +64,24 @@ const Login = () => {
           redirectPath = "/user";
           break;
         default:
-          toast({
-            title: "Erro",
-            description: "Tipo de usuário não reconhecido",
-            variant: "destructive",
-          });
-          await supabase.auth.signOut();
-          return;
+          throw new Error("Tipo de usuário não reconhecido");
       }
 
-      console.log("Redirecting to:", redirectPath);
       navigate(redirectPath);
-
+      
       toast({
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao sistema.",
       });
-    } catch (error) {
-      console.error("Error in handleUserSession:", error);
+    } catch (error: any) {
+      console.error("Erro ao processar login:", error);
+      
       toast({
-        title: "Erro",
-        description: "Erro ao processar login",
+        title: "Erro no login",
+        description: error.message || "Erro ao processar login",
         variant: "destructive",
       });
+      
       await supabase.auth.signOut();
     }
   };
@@ -126,13 +91,25 @@ const Login = () => {
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-lg">
         <div className="flex justify-center">
           <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14" />
+            <svg 
+              className="w-6 h-6 text-blue-600" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M11 16l-4-4m0 0l4-4m-4 4h14" 
+              />
             </svg>
           </div>
         </div>
         
-        <h1 className="text-2xl font-bold text-center">Entrar na sua conta</h1>
+        <h1 className="text-2xl font-bold text-center text-gray-900">
+          Entrar na sua conta
+        </h1>
         
         <Auth
           supabaseClient={supabase}
