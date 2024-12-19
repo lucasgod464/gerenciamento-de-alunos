@@ -5,9 +5,11 @@ import { CompanyStats } from "@/components/companies/CompanyStats"
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { useState } from "react"
 import { useCompanies } from "@/hooks/useCompanies"
+import { useToast } from "@/components/ui/use-toast"
 
 const Companies = () => {
   const [search, setSearch] = useState("")
+  const { toast } = useToast()
   const {
     companies,
     isLoading,
@@ -16,6 +18,14 @@ const Companies = () => {
     deleteCompany,
     resetCompany,
   } = useCompanies()
+
+  const handleCreateCompany = (newCompany: any) => {
+    createCompany(newCompany)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
+  }
 
   const filteredCompanies = companies.filter(
     (company) =>
@@ -55,7 +65,7 @@ const Companies = () => {
 
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Lista de Empresas</h2>
-          <CreateCompanyDialog onCompanyCreated={createCompany} />
+          <CreateCompanyDialog onCompanyCreated={handleCreateCompany} />
         </div>
 
         <div className="max-w-xl">
