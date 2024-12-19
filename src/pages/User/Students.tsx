@@ -1,7 +1,16 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { StudentRegistration } from "@/components/user/StudentRegistration";
+import { StudentTable } from "@/components/user/StudentTable";
+import { useState } from "react";
+import { Student } from "@/types/student";
 
 const StudentsPage = () => {
+  const [students, setStudents] = useState<Student[]>([]);
+
+  const handleSubmit = (newStudent: Student) => {
+    setStudents([...students, newStudent]);
+  };
+
   return (
     <DashboardLayout role="user">
       <div className="space-y-6">
@@ -11,7 +20,8 @@ const StudentsPage = () => {
             Gerencie o cadastro dos seus alunos
           </p>
         </div>
-        <StudentRegistration />
+        <StudentRegistration onSubmit={handleSubmit} students={students} />
+        <StudentTable />
       </div>
     </DashboardLayout>
   );

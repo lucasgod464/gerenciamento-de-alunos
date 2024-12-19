@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Student } from "@/types/student";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentRegistrationProps {
   onSubmit: (newStudent: Student) => void;
@@ -10,6 +11,7 @@ interface StudentRegistrationProps {
 }
 
 export const StudentRegistration = ({ onSubmit, students }: StudentRegistrationProps) => {
+  const { toast } = useToast();
   const [newStudent, setNewStudent] = useState<Partial<Student>>({
     name: "",
     email: "",
@@ -21,17 +23,24 @@ export const StudentRegistration = ({ onSubmit, students }: StudentRegistrationP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newStudent.name && newStudent.email && newStudent.phone) {
-      onSubmit({
+      const student = {
         ...newStudent,
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
-      } as Student);
+      } as Student;
+      
+      onSubmit(student);
       setNewStudent({
         name: "",
         email: "",
         phone: "",
         status: true,
         companyId: localStorage.getItem("companyId") || "",
+      });
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno cadastrado com sucesso!",
       });
     }
   };

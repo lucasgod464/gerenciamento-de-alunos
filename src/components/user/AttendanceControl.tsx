@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Student } from "@/types/student";
+import { useToast } from "@/hooks/use-toast";
 
 export const AttendanceControl = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const companyId = localStorage.getItem("companyId");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Aqui você faria a chamada para a API para buscar os alunos
@@ -42,6 +44,13 @@ export const AttendanceControl = () => {
     setStudents(mockStudents.filter(student => student.companyId === companyId));
   }, [companyId]);
 
+  const handleAttendance = (studentId: string, status: 'present' | 'absent') => {
+    toast({
+      title: "Presença registrada",
+      description: `${status === 'present' ? 'Presença' : 'Falta'} registrada com sucesso!`,
+    });
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -65,19 +74,13 @@ export const AttendanceControl = () => {
                   <div className="flex items-center space-x-4">
                     <button
                       className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600"
-                      onClick={() => {
-                        // Aqui você implementaria a lógica para marcar presença
-                        console.log(`Marcando presença para ${student.name}`);
-                      }}
+                      onClick={() => handleAttendance(student.id, 'present')}
                     >
                       Presente
                     </button>
                     <button
                       className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
-                      onClick={() => {
-                        // Aqui você implementaria a lógica para marcar falta
-                        console.log(`Marcando falta para ${student.name}`);
-                      }}
+                      onClick={() => handleAttendance(student.id, 'absent')}
                     >
                       Falta
                     </button>
