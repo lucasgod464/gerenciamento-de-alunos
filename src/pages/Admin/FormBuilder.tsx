@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AddFieldDialog } from "@/components/form-builder/AddFieldDialog";
 import { FormFieldList } from "@/components/form-builder/FormFieldList";
+import { FormPreview } from "@/components/form-builder/FormPreview";
 import { FormField } from "@/types/form-builder";
 import { v4 as uuidv4 } from "uuid";
 import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
 
 const FormBuilderPage = () => {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -15,10 +17,11 @@ const FormBuilderPage = () => {
     if (savedFields) {
       setFields(JSON.parse(savedFields));
     } else {
-      // Initialize with default fields
+      // Initialize with default required fields
       const defaultFields: FormField[] = [
         {
           id: uuidv4(),
+          name: "fullName",
           label: "Nome Completo",
           type: "text",
           required: true,
@@ -27,15 +30,32 @@ const FormBuilderPage = () => {
         },
         {
           id: uuidv4(),
-          label: "Idade",
-          type: "number",
+          name: "birthDate",
+          label: "Data de Nascimento",
+          type: "date",
           required: true,
           order: 2,
           isDefault: true,
-          validation: {
-            min: 0,
-            max: 120,
-          },
+        },
+        {
+          id: uuidv4(),
+          name: "status",
+          label: "Status",
+          type: "select",
+          required: true,
+          order: 3,
+          isDefault: true,
+          options: ["Ativo", "Inativo"],
+        },
+        {
+          id: uuidv4(),
+          name: "room",
+          label: "Sala",
+          type: "select",
+          required: true,
+          order: 4,
+          isDefault: true,
+          options: [],
         },
       ];
       setFields(defaultFields);
@@ -91,15 +111,26 @@ const FormBuilderPage = () => {
           </p>
         </div>
 
-        <div className="flex justify-end">
-          <AddFieldDialog onAddField={handleAddField} />
-        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <AddFieldDialog onAddField={handleAddField} />
+            </div>
 
-        <FormFieldList
-          fields={fields}
-          onDeleteField={handleDeleteField}
-          onUpdateField={handleUpdateField}
-        />
+            <FormFieldList
+              fields={fields}
+              onDeleteField={handleDeleteField}
+              onUpdateField={handleUpdateField}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Prévia do Formulário</h2>
+            <Card className="p-4">
+              <FormPreview fields={fields} />
+            </Card>
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );

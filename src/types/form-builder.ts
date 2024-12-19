@@ -12,6 +12,7 @@ export type FieldType =
 
 export interface FormField {
   id: string;
+  name: string;
   label: string;
   type: FieldType;
   required: boolean;
