@@ -5,18 +5,20 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -29,40 +31,23 @@ const Login = () => {
       setError("A senha deve ter pelo menos 6 caracteres");
       return;
     }
-    
-    // Check for super admin
-    if (email === "super@teste.com" && password === "123456") {
-      toast.success("Login realizado com sucesso!");
-      navigate("/super-admin/dashboard");
-      return;
-    }
 
-    // Check for admin
-    if (email === "admin@teste.com" && password === "123456") {
+    try {
+      const response = await login(email, password);
+      
+      if (response.user.role === "SUPER_ADMIN") {
+        window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/super-admin";
+      } else if (response.user.role === "ADMIN") {
+        navigate("/admin");
+      } else {
+        navigate("/user");
+      }
+      
       toast.success("Login realizado com sucesso!");
-      navigate("/admin");
-      return;
+    } catch (error) {
+      setError("Email ou senha inválidos");
+      toast.error("Falha no login");
     }
-
-    // Check for regular user
-    if (email === "usuario@teste.com" && password === "123456") {
-      toast.success("Login realizado com sucesso!");
-      navigate("/user");
-      return;
-    }
-
-    // Check for created emails (this would normally be done against a database)
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    const foundEmail = createdEmails.find((e: any) => e.email === email);
-    
-    if (foundEmail) {
-      toast.success("Login realizado com sucesso!");
-      navigate(`/user?company=${foundEmail.company}`);
-      return;
-    }
-
-    setError("Email ou senha inválidos");
-    toast.error("Falha no login");
   };
 
   return (
