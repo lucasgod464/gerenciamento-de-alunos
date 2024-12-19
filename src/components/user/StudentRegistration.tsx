@@ -4,38 +4,40 @@ import { StudentTable } from "./StudentTable";
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 
-export const StudentRegistration = () => {
+interface StudentRegistrationProps {
+  onSubmit?: (student: Student) => void;
+}
+
+export const StudentRegistration = ({ onSubmit }: StudentRegistrationProps) => {
   const [students, setStudents] = useState<Student[]>([]);
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
+    if (!currentUser?.companyId) return;
+
     const savedStudents = localStorage.getItem("students");
     if (savedStudents) {
-      const parsedStudents = JSON.parse(savedStudents);
-      if (user?.companyId) {
-        const companyStudents = parsedStudents.filter(
-          (student: Student) => student.companyId === user.companyId
-        );
-        setStudents(companyStudents);
-      }
+      const allStudents = JSON.parse(savedStudents);
+      const companyStudents = allStudents.filter(
+        (student: Student) => student.companyId === currentUser.companyId
+      );
+      setStudents(companyStudents);
     }
-  }, [user]);
+  }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    const updatedStudents = [...students, newStudent];
+    const updatedStudent = {
+      ...newStudent,
+      companyId: currentUser?.companyId || null,
+    };
+    
+    const updatedStudents = [...students, updatedStudent];
     setStudents(updatedStudents);
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
     
-    // Save to localStorage including students from other companies
-    const savedStudents = localStorage.getItem("students");
-    const allStudents = savedStudents ? JSON.parse(savedStudents) : [];
-    const otherCompaniesStudents = allStudents.filter(
-      (student: Student) => student.companyId !== user?.companyId
-    );
-    
-    localStorage.setItem(
-      "students",
-      JSON.stringify([...otherCompaniesStudents, ...updatedStudents])
-    );
+    if (onSubmit) {
+      onSubmit(updatedStudent);
+    }
   };
 
   return (

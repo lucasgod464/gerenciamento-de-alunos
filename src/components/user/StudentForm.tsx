@@ -12,65 +12,9 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 
-interface StudentFormProps {
-  onSubmit: (student: any) => void;
-}
-
-export const StudentForm = ({ onSubmit }: StudentFormProps) => {
+export const StudentForm = () => {
   const [status, setStatus] = useState<"active" | "inactive">("active");
-  const [formData, setFormData] = useState({
-    name: "",
-    birthDate: "",
-    email: "",
-    document: "",
-    address: "",
-    room: "sala1", // Default value to prevent empty selection
-  });
-  const { toast } = useToast();
-  const { user } = useAuth();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const newStudent = {
-      id: crypto.randomUUID(),
-      ...formData,
-      status,
-      companyId: user?.companyId,
-      createdAt: new Date().toISOString(),
-    };
-
-    onSubmit(newStudent);
-    toast({
-      title: "Sucesso!",
-      description: "Aluno cadastrado com sucesso.",
-    });
-
-    // Reset form
-    setFormData({
-      name: "",
-      birthDate: "",
-      email: "",
-      document: "",
-      address: "",
-      room: "sala1", // Reset to default value
-    });
-    setStatus("active");
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-  };
-
-  const rooms = [
-    { id: "sala1", name: "Sala 1" },
-    { id: "sala2", name: "Sala 2" },
-    { id: "sala3", name: "Sala 3" },
-  ];
 
   return (
     <Card>
@@ -78,78 +22,42 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
         <CardTitle>Novo Aluno</CardTitle>
       </CardHeader>
       <CardContent>
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+        <form className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="name">Nome Completo</Label>
-            <Input 
-              id="name" 
-              placeholder="Nome do aluno" 
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="name" placeholder="Nome do aluno" />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input 
-              id="birthDate" 
-              type="date" 
-              value={formData.birthDate}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="birthDate" type="date" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="email@exemplo.com" 
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="email" type="email" placeholder="email@exemplo.com" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="document">CPF/RG</Label>
-            <Input 
-              id="document" 
-              placeholder="000.000.000-00" 
-              value={formData.document}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="document" placeholder="000.000.000-00" />
           </div>
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="address">Endereço Completo</Label>
-            <Input 
-              id="address" 
-              placeholder="Rua, número, bairro, cidade, estado" 
-              value={formData.address}
-              onChange={handleInputChange}
-              required
-            />
+            <Input id="address" placeholder="Rua, número, bairro, cidade, estado" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="room">Sala</Label>
-            <Select 
-              value={formData.room}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, room: value }))}
-            >
+            <Select defaultValue="sala1">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a sala" />
               </SelectTrigger>
               <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="sala1">Sala 1</SelectItem>
+                <SelectItem value="sala2">Sala 2</SelectItem>
+                <SelectItem value="sala3">Sala 3</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -166,7 +74,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
             </div>
           </div>
 
-          <Button type="submit" className="md:col-span-2">
+          <Button className="md:col-span-2">
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Aluno
           </Button>
@@ -174,4 +82,4 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       </CardContent>
     </Card>
   );
-};
+}

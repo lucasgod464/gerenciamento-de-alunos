@@ -17,7 +17,7 @@ const Studies = () => {
   });
 
   const handleEdit = (id: string) => {
-    const studyToEdit = studies.find((study: Study) => study.id === id);
+    const studyToEdit = studies.find(study => study.id === id);
     if (studyToEdit) {
       setEditingStudy(studyToEdit);
       setIsEditDialogOpen(true);
