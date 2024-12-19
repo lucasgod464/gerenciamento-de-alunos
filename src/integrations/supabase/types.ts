@@ -69,6 +69,41 @@ export type Database = {
           },
         ]
       }
+      credentials: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password: string
+          profile_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password: string
+          profile_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password?: string
+          profile_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credentials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           access_level: string
@@ -143,7 +178,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           email?: string | null
-          id: string
+          id?: string
           name?: string | null
           role?: string | null
           updated_at?: string
