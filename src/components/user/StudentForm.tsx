@@ -47,17 +47,17 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     }
   }, [currentUser]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
+    const formData = new FormData(e.currentTarget);
     
     const newStudent: Student = {
       id: Math.random().toString(36).substr(2, 9),
-      name: (form.name as HTMLInputElement).value,
-      birthDate: (form.birthDate as HTMLInputElement).value,
-      email: (form.email as HTMLInputElement).value,
-      document: (form.document as HTMLInputElement).value,
-      address: (form.address as HTMLInputElement).value,
+      name: formData.get("name") as string,
+      birthDate: formData.get("birthDate") as string,
+      email: formData.get("email") as string,
+      document: formData.get("document") as string,
+      address: formData.get("address") as string,
       room: selectedRoom,
       status: status,
       createdAt: new Date().toISOString(),
@@ -65,7 +65,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     };
 
     onSubmit(newStudent);
-    form.reset();
+    e.currentTarget.reset();
     setStatus("active");
   };
 
