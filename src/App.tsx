@@ -1,33 +1,33 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Emails from "@/pages/SuperAdmin/Emails";
-import SuperAdminDashboard from "@/pages/SuperAdmin/Dashboard";
-import Companies from "@/pages/SuperAdmin/Companies";
-import AdminDashboard from "@/pages/Admin/Dashboard";
-import Users from "@/pages/Admin/Users";
-import Rooms from "@/pages/Admin/Rooms";
-import Studies from "@/pages/Admin/Studies";
-import Tags from "@/pages/Admin/Tags";
-import Specializations from "@/pages/Admin/Specializations";
-import UserDashboard from "@/pages/User/Dashboard";
-import UserProfile from "@/pages/User/Profile";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import UserDashboard from "./pages/User/Dashboard";
+import StudentsPage from "./pages/User/Students";
+import AttendancePage from "./pages/User/Attendance";
+import ReportsPage from "./pages/User/Reports";
+import AdminDashboard from "./pages/Admin/Dashboard";
+import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/super-admin" element={<SuperAdminDashboard />} />
-        <Route path="/super-admin/companies" element={<Companies />} />
-        <Route path="/super-admin/emails" element={<Emails />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<Users />} />
-        <Route path="/admin/rooms" element={<Rooms />} />
-        <Route path="/admin/studies" element={<Studies />} />
-        <Route path="/admin/tags" element={<Tags />} />
-        <Route path="/admin/specializations" element={<Specializations />} />
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* User Routes */}
         <Route path="/user" element={<UserDashboard />} />
-        <Route path="/user/profile" element={<UserProfile />} />
+        <Route path="/user/students" element={<StudentsPage />} />
+        <Route path="/user/attendance" element={<AttendancePage />} />
+        <Route path="/user/reports" element={<ReportsPage />} />
+        
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminDashboard />} />
+        
+        {/* Super Admin Routes */}
+        <Route path="/super-admin" element={<SuperAdminDashboard />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 
