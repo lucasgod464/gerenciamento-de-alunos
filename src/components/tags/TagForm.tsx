@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Palette } from "lucide-react";
 
 interface TagFormProps {
   editingTag: TagType | null;
@@ -99,9 +100,21 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="w-10 h-10 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors overflow-hidden"
-                  style={{ backgroundColor: color }}
-                />
+                  className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors gap-1 group ${
+                    showColorPicker ? "border-primary" : ""
+                  }`}
+                  style={{ 
+                    backgroundColor: color !== colors.find(c => c === color) ? color : 'transparent'
+                  }}
+                >
+                  <Palette 
+                    size={16} 
+                    className={`${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
+                  />
+                  <span className={`text-[10px] ${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                    Custom
+                  </span>
+                </button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-3">
                 <div className="space-y-3">
