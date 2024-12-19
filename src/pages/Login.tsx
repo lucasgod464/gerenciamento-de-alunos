@@ -66,6 +66,7 @@ const Login = () => {
               }
             }
           }}
+          providers={[]}
           localization={{
             variables: {
               sign_in: {
@@ -73,7 +74,6 @@ const Login = () => {
                 password_label: "Senha",
                 button_label: "Entrar",
                 loading_button_label: "Entrando...",
-                social_provider_text: "Entrar com {{provider}}",
                 link_text: "Já tem uma conta? Entre"
               },
               sign_up: {
@@ -81,7 +81,6 @@ const Login = () => {
                 password_label: "Senha",
                 button_label: "Cadastrar",
                 loading_button_label: "Cadastrando...",
-                social_provider_text: "Cadastrar com {{provider}}",
                 link_text: "Não tem uma conta? Cadastre-se"
               }
             }
