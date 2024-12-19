@@ -60,18 +60,12 @@ const Login = () => {
 
       // Redirecionar baseado no papel do usuário
       let redirectPath;
-      switch (profileData.role) {
-        case "super-admin":
-          redirectPath = "/super-admin/dashboard";
-          break;
-        case "admin":
-          redirectPath = "/admin";
-          break;
-        case "user":
-          redirectPath = "/user";
-          break;
-        default:
-          throw new Error("Tipo de usuário não reconhecido");
+      if (profileData.role === 'super-admin') {
+        redirectPath = "/super-admin/dashboard";
+      } else if (profileData.access_level === 'Admin') {
+        redirectPath = "/admin";
+      } else {
+        redirectPath = "/user";
       }
 
       // Armazenar informações do usuário no localStorage
@@ -80,7 +74,8 @@ const Login = () => {
         email: profileData.email,
         role: profileData.role,
         name: profileData.name,
-        company_id: profileData.company_id
+        company_id: profileData.company_id,
+        access_level: profileData.access_level
       }));
 
       navigate(redirectPath);
