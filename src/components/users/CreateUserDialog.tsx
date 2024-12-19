@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,36 @@ interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
 }
 
+interface Room {
+  id: string;
+  name: string;
+}
+
+interface Specialization {
+  id: string;
+  name: string;
+  status: boolean;
+}
+
 export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Carregar salas do localStorage
+    const savedRooms = localStorage.getItem("rooms");
+    if (savedRooms) {
+      setRooms(JSON.parse(savedRooms));
+    }
+
+    // Carregar especializações do localStorage
+    const savedSpecializations = localStorage.getItem("specializations");
+    if (savedSpecializations) {
+      setSpecializations(JSON.parse(savedSpecializations));
+    }
+  }, []);
 
   const generateUniqueId = () => {
     return Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -65,6 +92,9 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       description: "O usuário foi criado com sucesso.",
     });
   };
+
+  // Filtrar apenas especializações ativas
+  const activeSpecializations = specializations.filter(spec => spec.status);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -122,13 +152,16 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="responsibleRoom">Sala Responsável</Label>
-            <Select name="responsibleRoom" defaultValue="sala1">
+            <Select name="responsibleRoom">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a sala" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sala1">Sala 1</SelectItem>
-                <SelectItem value="sala2">Sala 2</SelectItem>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -143,13 +176,16 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="specialization">Especialização</Label>
-            <Select name="specialization" defaultValue="esp1">
+            <Select name="specialization">
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a especialização" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="esp1">Especialização 1</SelectItem>
-                <SelectItem value="esp2">Especialização 2</SelectItem>
+                {activeSpecializations.map((spec) => (
+                  <SelectItem key={spec.id} value={spec.id}>
+                    {spec.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
