@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useQuery } from "@tanstack/react-query"
 
 interface EmailSearchBarProps {
   onSearchChange: (value: string) => void
@@ -7,11 +8,24 @@ interface EmailSearchBarProps {
   onCompanyChange: (value: string) => void
 }
 
+interface Company {
+  id: string
+  name: string
+}
+
 export function EmailSearchBar({
   onSearchChange,
   onAccessLevelChange,
   onCompanyChange,
 }: EmailSearchBarProps) {
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => {
+      const storedCompanies = JSON.parse(localStorage.getItem("companies") || "[]")
+      return storedCompanies
+    },
+  })
+
   return (
     <div className="flex gap-4 mb-6">
       <Input
@@ -35,7 +49,11 @@ export function EmailSearchBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas</SelectItem>
-          <SelectItem value="Empresa Exemplo">Empresa Exemplo</SelectItem>
+          {companies.map((company: Company) => (
+            <SelectItem key={company.id} value={company.name}>
+              {company.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
     </div>

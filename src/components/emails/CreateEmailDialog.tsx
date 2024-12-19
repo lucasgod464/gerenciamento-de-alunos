@@ -18,6 +18,12 @@ import {
 } from "@/components/ui/select"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
+import { useQuery } from "@tanstack/react-query"
+
+interface Company {
+  id: string
+  name: string
+}
 
 interface CreateEmailDialogProps {
   onEmailCreated: (email: any) => void
@@ -26,6 +32,15 @@ interface CreateEmailDialogProps {
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
+
+  // Buscar empresas do localStorage
+  const { data: companies = [] } = useQuery({
+    queryKey: ["companies"],
+    queryFn: () => {
+      const storedCompanies = JSON.parse(localStorage.getItem("companies") || "[]")
+      return storedCompanies
+    },
+  })
 
   const generateStrongPassword = () => {
     const length = 12
@@ -136,7 +151,17 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
                 <SelectValue placeholder="Selecione a empresa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Empresa Exemplo">Empresa Exemplo</SelectItem>
+                {companies.length > 0 ? (
+                  companies.map((company: Company) => (
+                    <SelectItem key={company.id} value={company.name}>
+                      {company.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-companies" disabled>
+                    Nenhuma empresa cadastrada
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
