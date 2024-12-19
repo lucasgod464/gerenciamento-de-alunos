@@ -14,10 +14,12 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types/user";
 
+type StatusFilter = "" | "active" | "inactive";
+
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "">("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [roomFilter, setRoomFilter] = useState<string>("");
   const [specializationFilter, setSpecializationFilter] = useState<string>("");
   const { toast } = useToast();
@@ -106,11 +108,15 @@ const Users = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: StatusFilter) => setStatusFilter(value)}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">Todos</SelectItem>
               <SelectItem value="active">Ativo</SelectItem>
               <SelectItem value="inactive">Inativo</SelectItem>
             </SelectContent>
@@ -120,6 +126,7 @@ const Users = () => {
               <SelectValue placeholder="Filtrar por sala" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">Todas</SelectItem>
               <SelectItem value="sala1">Sala 1</SelectItem>
               <SelectItem value="sala2">Sala 2</SelectItem>
             </SelectContent>
@@ -129,6 +136,7 @@ const Users = () => {
               <SelectValue placeholder="Filtrar por especialização" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">Todas</SelectItem>
               <SelectItem value="esp1">Especialização 1</SelectItem>
               <SelectItem value="esp2">Especialização 2</SelectItem>
             </SelectContent>
