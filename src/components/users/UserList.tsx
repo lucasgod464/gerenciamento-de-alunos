@@ -25,18 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  responsibleRoom: string;
-  location: string;
-  specialization: string;
-  status: "active" | "inactive";
-  createdAt: string;
-  lastAccess: string;
-}
+import { User } from "@/types/user";
 
 interface UserListProps {
   users: User[];
@@ -62,7 +51,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     if (!editingUser) return;
 
     const formData = new FormData(event.currentTarget);
-    const updatedUser = {
+    const updatedUser: User = {
       ...editingUser,
       name: formData.get("name") as string,
       email: formData.get("email") as string,

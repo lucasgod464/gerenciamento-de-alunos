@@ -17,10 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { User } from "@/types/user";
 
 interface CreateUserDialogProps {
-  onUserCreated: (user: any) => void;
+  onUserCreated: (user: User) => void;
 }
 
 export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
@@ -45,7 +46,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const uniqueId = generateUniqueId();
-    const newUser = {
+    const newUser: User = {
       id: uniqueId,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
@@ -110,7 +111,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={(e) => {
+                onClick={() => {
                   const input = document.getElementById("password") as HTMLInputElement;
                   input.value = generateStrongPassword();
                 }}
