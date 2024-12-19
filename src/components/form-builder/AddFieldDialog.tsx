@@ -32,7 +32,9 @@ export const AddFieldDialog = ({ onAddField }: AddFieldDialogProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddField({ label, type, required });
+    // Generate a name from the label (lowercase, no spaces)
+    const name = label.toLowerCase().replace(/\s+/g, '_');
+    onAddField({ label, type, required, name });
     setOpen(false);
     setLabel("");
     setType("text");

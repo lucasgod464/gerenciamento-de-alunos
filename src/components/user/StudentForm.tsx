@@ -55,19 +55,24 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   }, [currentUser]);
 
   const handleSubmit = (formValues: Record<string, any>) => {
-    const studentData = {
-      ...formValues,
-      createdAt: new Date().toISOString(),
+    const studentData: Student = {
+      id: editingStudent?.id || Math.random().toString(36).substr(2, 9),
+      name: formValues.name || "",
+      birthDate: formValues.birthDate || "",
+      email: formValues.email || "",
+      document: formValues.document || "",
+      address: formValues.address || "",
+      room: formValues.room || "",
+      status: formValues.status || "active",
+      createdAt: editingStudent?.createdAt || new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
 
-    const newStudent: Student = editingStudent
-      ? { ...editingStudent, ...studentData }
-      : { id: Math.random().toString(36).substr(2, 9), ...studentData };
-
+    onSubmit(studentData);
+    
     const updatedStudents = editingStudent
-      ? students.map((s) => (s.id === editingStudent.id ? newStudent : s))
-      : [...students, newStudent];
+      ? students.map((s) => (s.id === editingStudent.id ? studentData : s))
+      : [...students, studentData];
 
     setStudents(updatedStudents);
     localStorage.setItem("students", JSON.stringify(updatedStudents));
