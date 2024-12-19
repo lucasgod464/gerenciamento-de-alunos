@@ -3,6 +3,7 @@ export interface Student {
   name: string;
   room: string;
   status: "present" | "absent" | "late" | "justified";
+  companyId: string | null;
 }
 
 export interface DailyAttendance {
