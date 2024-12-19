@@ -1,35 +1,14 @@
 import { useState, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Student {
-  id: string;
-  name: string;
-  room: string;
-  status: "present" | "absent" | "late" | "justified";
-}
-
-interface DailyObservation {
-  date: string;
-  text: string;
-}
+import { AttendanceStats } from "./AttendanceStats";
+import { AttendanceList } from "./AttendanceList";
+import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
 
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const { toast } = useToast();
-  const [students, setStudents] = useState<Student[]>([]);
+  const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
   const [observation, setObservation] = useState("");
   const [observations, setObservations] = useState<DailyObservation[]>([]);
   
@@ -43,61 +22,69 @@ export const AttendanceControl = () => {
   ];
 
   useEffect(() => {
-    // Simulate loading data for the selected date
-    setStudents(mockStudents);
-    
-    // Load observation for selected date
-    const dateStr = selectedDate?.toISOString().split('T')[0];
-    const existingObservation = observations.find(obs => obs.date === dateStr);
-    setObservation(existingObservation?.text || "");
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const existingAttendance = dailyAttendances.find(da => da.date === dateStr);
+      
+      if (!existingAttendance) {
+        setDailyAttendances(prev => [...prev, {
+          date: dateStr,
+          students: mockStudents
+        }]);
+      }
+
+      const existingObservation = observations.find(obs => obs.date === dateStr);
+      setObservation(existingObservation?.text || "");
+    }
   }, [selectedDate]);
 
+  const getCurrentDayStudents = () => {
+    if (!selectedDate) return [];
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const attendance = dailyAttendances.find(da => da.date === dateStr);
+    return attendance?.students || [];
+  };
+
   const handleStatusChange = (studentId: string, status: Student["status"]) => {
-    setStudents(prevStudents =>
-      prevStudents.map(student =>
-        student.id === studentId ? { ...student, status } : student
-      )
-    );
+    if (!selectedDate) return;
     
-    toast({
-      title: "Status atualizado",
-      description: "O status de presença foi atualizado com sucesso."
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    setDailyAttendances(prevAttendances => {
+      const updatedAttendances = prevAttendances.map(da => {
+        if (da.date === dateStr) {
+          return {
+            ...da,
+            students: da.students.map(student =>
+              student.id === studentId ? { ...student, status } : student
+            )
+          };
+        }
+        return da;
+      });
+
+      if (!prevAttendances.some(da => da.date === dateStr)) {
+        updatedAttendances.push({
+          date: dateStr,
+          students: mockStudents.map(student =>
+            student.id === studentId ? { ...student, status } : student
+          )
+        });
+      }
+
+      return updatedAttendances;
     });
   };
 
   const handleObservationChange = (text: string) => {
-    if (text.length <= 100) {
+    if (text.length <= 100 && selectedDate) {
       setObservation(text);
-      const dateStr = selectedDate?.toISOString().split('T')[0];
+      const dateStr = selectedDate.toISOString().split('T')[0];
       
-      if (dateStr) {
-        setObservations(prev => {
-          const filtered = prev.filter(obs => obs.date !== dateStr);
-          return [...filtered, { date: dateStr, text }];
-        });
-      }
+      setObservations(prev => {
+        const filtered = prev.filter(obs => obs.date !== dateStr);
+        return [...filtered, { date: dateStr, text }];
+      });
     }
-  };
-
-  // Calculate attendance statistics for pie chart
-  const getAttendanceStats = () => {
-    const stats = students.reduce(
-      (acc, student) => {
-        if (student.status === "present") acc.present += 1;
-        else if (student.status === "absent") acc.absent += 1;
-        else if (student.status === "late") acc.late += 1;
-        else if (student.status === "justified") acc.justified += 1;
-        return acc;
-      },
-      { present: 0, absent: 0, late: 0, justified: 0 }
-    );
-
-    return [
-      { name: "Presentes", value: stats.present, color: "#22c55e" },
-      { name: "Ausentes", value: stats.absent, color: "#ef4444" },
-      { name: "Atrasados", value: stats.late, color: "#f59e0b" },
-      { name: "Justificados", value: stats.justified, color: "#3b82f6" },
-    ];
   };
 
   return (
@@ -117,32 +104,7 @@ export const AttendanceControl = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Estatísticas de Presença</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={getAttendanceStats()}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {getAttendanceStats().map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <AttendanceStats students={getCurrentDayStudents()} />
       </div>
 
       <Card>
@@ -158,41 +120,11 @@ export const AttendanceControl = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Sala</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.room}</TableCell>
-                    <TableCell>
-                      <Select
-                        value={student.status}
-                        onValueChange={(value: Student["status"]) =>
-                          handleStatusChange(student.id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="present">Presente</SelectItem>
-                          <SelectItem value="absent">Ausente</SelectItem>
-                          <SelectItem value="late">Atrasado</SelectItem>
-                          <SelectItem value="justified">Justificado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <AttendanceList
+              students={getCurrentDayStudents()}
+              onStatusChange={handleStatusChange}
+              date={selectedDate || new Date()}
+            />
 
             <div className="space-y-2">
               <CardTitle className="text-lg">Observações do dia</CardTitle>
