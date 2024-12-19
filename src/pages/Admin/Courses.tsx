@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { AdminNav } from "@/components/AdminNav";
 
-const Users = () => {
+const Courses = () => {
   return (
     <DashboardLayout role="admin">
       <div className="flex">
@@ -11,9 +11,9 @@ const Users = () => {
         <main className="flex-1 p-8">
           <div className="space-y-6">
             <div>
-              <h1 className="text-2xl font-bold mb-2">Usuários</h1>
+              <h1 className="text-2xl font-bold mb-2">Cursos/Treinamentos</h1>
               <p className="text-muted-foreground">
-                Gerencie os usuários do sistema
+                Gerencie os cursos e treinamentos do sistema
               </p>
             </div>
           </div>
@@ -23,4 +23,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default Courses;
