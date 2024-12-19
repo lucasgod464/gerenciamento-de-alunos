@@ -51,25 +51,25 @@ export const StudentRegistration = () => {
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    const savedStudents = localStorage.getItem("students");
-    const allStudents = savedStudents ? JSON.parse(savedStudents) : [];
+    if (!currentUser?.companyId) return;
+
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
     
-    // Filtra os estudantes que não são da empresa atual
-    const otherStudents = allStudents.filter(
-      (student: Student) => student.companyId !== currentUser?.companyId
-    );
+    // Add the new student with company ID
+    const studentWithCompany = {
+      ...newStudent,
+      companyId: currentUser.companyId,
+    };
     
-    // Adiciona o novo estudante à lista
-    const updatedStudents = [...otherStudents, newStudent];
+    // Add to all students
+    const updatedStudents = [...allStudents, studentWithCompany];
     
-    // Atualiza o localStorage
+    // Save to localStorage
     localStorage.setItem("students", JSON.stringify(updatedStudents));
     
-    // Atualiza o estado local com os estudantes da empresa atual
-    const companyStudents = updatedStudents.filter(
-      (student: Student) => student.companyId === currentUser?.companyId
-    );
-    setStudents(companyStudents);
+    // Update local state with company's students
+    setStudents(prev => [...prev, studentWithCompany]);
 
     toast({
       title: "Sucesso",
