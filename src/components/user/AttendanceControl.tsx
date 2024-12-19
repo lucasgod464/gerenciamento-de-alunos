@@ -1,94 +1,150 @@
 import { useState, useEffect } from "react";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Student } from "@/types/student";
-import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { AttendanceStats } from "./AttendanceStats";
+import { AttendanceList } from "./AttendanceList";
+import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
+import { useAuth } from "@/hooks/useAuth";
 
 export const AttendanceControl = () => {
-  const [students, setStudents] = useState<Student[]>([]);
-  const companyId = localStorage.getItem("companyId");
-  const { toast } = useToast();
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
+  const [observation, setObservation] = useState("");
+  const [observations, setObservations] = useState<DailyObservation[]>([]);
+  const { user: currentUser } = useAuth();
+  
+  // Load students from localStorage filtered by company
+  const getCompanyStudents = () => {
+    if (!currentUser?.companyId) return [];
+    const savedStudents = localStorage.getItem("students");
+    if (!savedStudents) return [];
+    
+    const allStudents = JSON.parse(savedStudents);
+    return allStudents.filter((student: Student) => 
+      student.companyId === currentUser.companyId
+    );
+  };
 
   useEffect(() => {
-    // Aqui você faria a chamada para a API para buscar os alunos
-    // Por enquanto, vamos usar dados mockados
-    const mockStudents: Student[] = [
-      {
-        id: "1",
-        name: "João Silva",
-        email: "joao@example.com",
-        phone: "(11) 99999-9999",
-        status: true,
-        companyId: companyId || "",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "2",
-        name: "Maria Santos",
-        email: "maria@example.com",
-        phone: "(11) 88888-8888",
-        status: true,
-        companyId: companyId || "",
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: "3",
-        name: "Pedro Oliveira",
-        email: "pedro@example.com",
-        phone: "(11) 77777-7777",
-        status: true,
-        companyId: companyId || "",
-        createdAt: new Date().toISOString(),
+    if (selectedDate) {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      const existingAttendance = dailyAttendances.find(da => da.date === dateStr);
+      
+      if (!existingAttendance) {
+        setDailyAttendances(prev => [...prev, {
+          date: dateStr,
+          students: getCompanyStudents()
+        }]);
       }
-    ];
 
-    setStudents(mockStudents.filter(student => student.companyId === companyId));
-  }, [companyId]);
+      const existingObservation = observations.find(obs => obs.date === dateStr);
+      setObservation(existingObservation?.text || "");
+    }
+  }, [selectedDate, currentUser]);
 
-  const handleAttendance = (studentId: string, status: 'present' | 'absent') => {
-    toast({
-      title: "Presença registrada",
-      description: `${status === 'present' ? 'Presença' : 'Falta'} registrada com sucesso!`,
+  const getCurrentDayStudents = () => {
+    if (!selectedDate) return [];
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    const attendance = dailyAttendances.find(da => da.date === dateStr);
+    return attendance?.students || [];
+  };
+
+  const handleStatusChange = (studentId: string, status: Student["status"]) => {
+    if (!selectedDate) return;
+    
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    setDailyAttendances(prevAttendances => {
+      const updatedAttendances = prevAttendances.map(da => {
+        if (da.date === dateStr) {
+          return {
+            ...da,
+            students: da.students.map(student =>
+              student.id === studentId ? { ...student, status } : student
+            )
+          };
+        }
+        return da;
+      });
+
+      if (!prevAttendances.some(da => da.date === dateStr)) {
+        updatedAttendances.push({
+          date: dateStr,
+          students: getCompanyStudents().map(student =>
+            student.id === studentId ? { ...student, status } : student
+          )
+        });
+      }
+
+      return updatedAttendances;
     });
   };
 
+  const handleObservationChange = (text: string) => {
+    if (text.length <= 100 && selectedDate) {
+      setObservation(text);
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      setObservations(prev => {
+        const filtered = prev.filter(obs => obs.date !== dateStr);
+        return [...filtered, { date: dateStr, text }];
+      });
+    }
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Calendário</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border"
+            />
+          </CardContent>
+        </Card>
+
+        <AttendanceStats students={getCurrentDayStudents()} />
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Controle de Presença</CardTitle>
+          <CardTitle>
+            Lista de Presença - {selectedDate?.toLocaleDateString('pt-BR', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {students.length === 0 ? (
-            <p>Nenhum aluno encontrado.</p>
-          ) : (
-            <div className="space-y-4">
-              {students.map((student) => (
-                <div
-                  key={student.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium">{student.name}</p>
-                    <p className="text-sm text-gray-500">{student.email}</p>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <button
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-600"
-                      onClick={() => handleAttendance(student.id, 'present')}
-                    >
-                      Presente
-                    </button>
-                    <button
-                      className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600"
-                      onClick={() => handleAttendance(student.id, 'absent')}
-                    >
-                      Falta
-                    </button>
-                  </div>
-                </div>
-              ))}
+          <div className="space-y-4">
+            <AttendanceList
+              students={getCurrentDayStudents()}
+              onStatusChange={handleStatusChange}
+              date={selectedDate || new Date()}
+            />
+
+            <div className="space-y-2">
+              <CardTitle className="text-lg">Observações do dia</CardTitle>
+              <Textarea
+                value={observation}
+                onChange={(e) => handleObservationChange(e.target.value)}
+                placeholder="Digite suas observações para este dia (máximo 100 caracteres)"
+                maxLength={100}
+                className="min-h-[100px]"
+              />
+              <p className="text-sm text-muted-foreground text-right">
+                {observation.length}/100 caracteres
+              </p>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>

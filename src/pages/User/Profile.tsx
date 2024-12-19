@@ -1,20 +1,18 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { UserProfile } from "@/components/user/UserProfile";
 
-const Profile = () => {
+const UserProfile = () => {
   return (
     <DashboardLayout role="user">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Perfil do Usuário</h1>
+          <h1 className="text-2xl font-bold mb-2">Meu Perfil</h1>
           <p className="text-muted-foreground">
-            Gerencie suas informações pessoais e preferências
+            Gerencie suas informações pessoais
           </p>
         </div>
-        <UserProfile />
       </div>
     </DashboardLayout>
   );
 };
 
-export default Profile;
+export default UserProfile;
