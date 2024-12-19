@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -9,6 +10,7 @@ interface AuthGuardProps {
 
 export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -20,13 +22,40 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
       }
 
       if (requiredRole) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from("profiles")
           .select("role")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profile?.role !== requiredRole) {
+        if (error) {
+          console.error("Error fetching profile:", error);
+          toast({
+            title: "Error",
+            description: "Failed to verify user permissions",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        if (!profile) {
+          console.error("No profile found for user");
+          toast({
+            title: "Error",
+            description: "User profile not found",
+            variant: "destructive",
+          });
+          navigate("/");
+          return;
+        }
+
+        if (profile.role !== requiredRole) {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to access this page",
+            variant: "destructive",
+          });
           navigate("/");
         }
       }
@@ -43,7 +72,7 @@ export const AuthGuard = ({ children, requiredRole }: AuthGuardProps) => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [navigate, requiredRole]);
+  }, [navigate, requiredRole, toast]);
 
   return <>{children}</>;
 };
