@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/types/user";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,19 +40,6 @@ const Users = () => {
     if (savedRooms) setRooms(JSON.parse(savedRooms));
     if (savedSpecializations) setSpecializations(JSON.parse(savedSpecializations));
   }, []);
-
-  const handleBulkAction = (action: "activate" | "deactivate") => {
-    const updatedUsers = users.map((user) => ({
-      ...user,
-      status: action === "activate" ? "active" : "inactive",
-    }));
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    toast({
-      title: "Ação em massa concluída",
-      description: `Os usuários foram ${action === "activate" ? "ativados" : "desativados"} com sucesso.`,
-    });
-  };
 
   const handleUpdateUser = (updatedUser: User) => {
     const newUsers = users.map((user) =>
@@ -113,21 +99,7 @@ const Users = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-col gap-6">
-              <div className="flex justify-between items-center">
-                <div className="space-x-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleBulkAction("activate")}
-                  >
-                    Ativar Selecionados
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => handleBulkAction("deactivate")}
-                  >
-                    Desativar Selecionados
-                  </Button>
-                </div>
+              <div className="flex justify-end">
                 <CreateUserDialog onUserCreated={handleCreateUser} />
               </div>
 
