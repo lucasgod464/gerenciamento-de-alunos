@@ -4,9 +4,10 @@ import { FormField } from "@/types/form-builder";
 
 interface DynamicFormFieldProps {
   field: FormField;
+  defaultValue?: string;
 }
 
-export const DynamicFormField = ({ field }: DynamicFormFieldProps) => {
+export const DynamicFormField = ({ field, defaultValue }: DynamicFormFieldProps) => {
   return (
     <div className="space-y-2">
       <Label htmlFor={field.id}>{field.label}</Label>
@@ -17,6 +18,7 @@ export const DynamicFormField = ({ field }: DynamicFormFieldProps) => {
         required={field.required}
         min={field.validation?.min}
         max={field.validation?.max}
+        defaultValue={defaultValue}
       />
     </div>
   );

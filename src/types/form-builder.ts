@@ -12,11 +12,13 @@ export type FieldType =
 
 export interface FormField {
   id: string;
+  name: string;
   label: string;
   type: FieldType;
   required: boolean;
   order: number;
   isDefault?: boolean;
+  companyId?: string | null;
   options?: string[];
   validation?: {
     min?: number;
