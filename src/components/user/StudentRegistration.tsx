@@ -25,9 +25,11 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
+    // Load all students from localStorage
     const savedStudents = localStorage.getItem("students");
     if (savedStudents) {
       const allStudents = JSON.parse(savedStudents);
+      // Filter students by company
       const companyStudents = allStudents.filter(
         (student: Student) => student.companyId === currentUser.companyId
       );
@@ -38,8 +40,10 @@ export const StudentRegistration = () => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
+    // Initial load of students
     loadStudents();
 
+    // Load rooms
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -48,6 +52,16 @@ export const StudentRegistration = () => {
       );
       setRooms(companyRooms);
     }
+
+    // Add event listener for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "students") {
+        loadStudents();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
