@@ -4,11 +4,7 @@ import { StudentTable } from "./StudentTable";
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 
-interface StudentRegistrationProps {
-  onSubmit?: (student: Student) => void;
-}
-
-export const StudentRegistration = ({ onSubmit }: StudentRegistrationProps) => {
+export const StudentRegistration = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const { user: currentUser } = useAuth();
 
@@ -34,10 +30,6 @@ export const StudentRegistration = ({ onSubmit }: StudentRegistrationProps) => {
     const updatedStudents = [...students, updatedStudent];
     setStudents(updatedStudents);
     localStorage.setItem("students", JSON.stringify(updatedStudents));
-    
-    if (onSubmit) {
-      onSubmit(updatedStudent);
-    }
   };
 
   return (
