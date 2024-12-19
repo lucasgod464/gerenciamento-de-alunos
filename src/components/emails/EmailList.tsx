@@ -54,8 +54,8 @@ export function EmailList({
 
   const filteredEmails = emails.filter((email) => {
     const matchesSearch =
-      (email.name?.toLowerCase() || "").includes(search.toLowerCase()) ||
-      (email.email?.toLowerCase() || "").includes(search.toLowerCase())
+      email.name.toLowerCase().includes(search.toLowerCase()) ||
+      email.email.toLowerCase().includes(search.toLowerCase())
     const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
     const matchesCompany = !companyFilter || companyFilter === "all" || email.company === companyFilter
 
