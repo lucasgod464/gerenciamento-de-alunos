@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
+import { FormField } from "@/types/form";
 
 interface Room {
   id: string;
@@ -29,11 +30,13 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [formFields, setFormFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
+    // Load rooms
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -45,6 +48,13 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
         setSelectedRoom(companyRooms[0].id);
       }
     }
+
+    // Load form fields configuration
+    const storedFields = localStorage.getItem("formFields");
+    if (storedFields) {
+      const fields = JSON.parse(storedFields);
+      setFormFields(fields);
+    }
   }, [currentUser]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -53,7 +63,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     
     const newStudent: Student = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.get("name") as string,
+      name: formData.get("fullName") as string,
       birthDate: formData.get("birthDate") as string,
       email: formData.get("email") as string,
       document: formData.get("document") as string,
@@ -69,38 +79,48 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     setStatus("active");
   };
 
+  const renderFormField = (field: FormField) => {
+    switch (field.type) {
+      case "text":
+      case "email":
+      case "tel":
+        return (
+          <div className="space-y-2" key={field.id}>
+            <Label htmlFor={field.name}>{field.label}</Label>
+            <Input
+              id={field.name}
+              name={field.name}
+              type={field.type}
+              required={field.required}
+            />
+          </div>
+        );
+      case "textarea":
+        return (
+          <div className="space-y-2" key={field.id}>
+            <Label htmlFor={field.name}>{field.label}</Label>
+            <textarea
+              id={field.name}
+              name={field.name}
+              className="w-full min-h-[100px] p-2 border rounded-md"
+              required={field.required}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Novo Aluno</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" name="name" placeholder="Nome do aluno" required />
-          </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {formFields.map((field) => renderFormField(field))}
           
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input id="birthDate" name="birthDate" type="date" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" placeholder="email@exemplo.com" required />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="document">CPF/RG</Label>
-            <Input id="document" name="document" placeholder="000.000.000-00" required />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="address">Endereço Completo</Label>
-            <Input id="address" name="address" placeholder="Rua, número, bairro, cidade, estado" required />
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="room">Sala</Label>
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>
@@ -129,7 +149,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
             </div>
           </div>
 
-          <Button type="submit" className="md:col-span-2">
+          <Button type="submit" className="w-full">
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Aluno
           </Button>

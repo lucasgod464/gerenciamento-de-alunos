@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
+import { useAuth } from "@/hooks/useAuth";
 
 export const FormBuilder = () => {
+  const { user: currentUser } = useAuth();
   const [fields, setFields] = useState<FormField[]>([
     {
       id: "name",
@@ -48,6 +50,11 @@ export const FormBuilder = () => {
   ]);
 
   const [isAddingField, setIsAddingField] = useState(false);
+
+  useEffect(() => {
+    // Save form fields to localStorage whenever they change
+    localStorage.setItem("formFields", JSON.stringify(fields));
+  }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     const newField: FormField = {
