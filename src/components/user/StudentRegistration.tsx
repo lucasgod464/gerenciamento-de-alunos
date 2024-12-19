@@ -22,7 +22,7 @@ export const StudentRegistration = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
+  const loadStudents = () => {
     if (!currentUser?.companyId) return;
 
     const savedStudents = localStorage.getItem("students");
@@ -33,6 +33,12 @@ export const StudentRegistration = () => {
       );
       setStudents(companyStudents);
     }
+  };
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
+    loadStudents();
 
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
@@ -66,6 +72,9 @@ export const StudentRegistration = () => {
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
     });
+
+    // Recarrega a lista de alunos após adicionar um novo
+    loadStudents();
   };
 
   const filteredStudents = students.filter((student) => {
