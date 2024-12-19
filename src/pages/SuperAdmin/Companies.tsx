@@ -7,15 +7,44 @@ import { CompanyStats } from "@/components/companies/CompanyStats"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Company } from "@/types/company"
+import { useNavigate } from "react-router-dom"
 
 const Companies = () => {
   const [companies, setCompanies] = useState<Company[]>([])
   const [search, setSearch] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check authentication status when component mounts
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate('/')
+        return
+      }
+    })
+
+    // Subscribe to auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate('/')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [navigate])
 
   const fetchCompanies = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession()
+      if (!session.session) {
+        navigate('/')
+        return
+      }
+
       const { data, error } = await supabase
         .from('companies')
         .select('*')
@@ -146,6 +175,14 @@ const Companies = () => {
       company.id.includes(search) ||
       company.document.includes(search)
   )
+
+  if (isLoading) {
+    return (
+      <DashboardLayout role="super-admin">
+        <div className="p-6">Carregando...</div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout role="super-admin">
