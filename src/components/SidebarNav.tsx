@@ -1,59 +1,83 @@
-import { Link, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Building2, Mail, Menu, User, Users, ClipboardList, FileText } from "lucide-react";
-
-const roleRoutes = {
-  "super-admin": [
-    { icon: BarChart, label: "Dashboard", path: "/super-admin/dashboard" },
-    { icon: Building2, label: "Empresas", path: "/super-admin/companies" },
-    { icon: Mail, label: "E-mails", path: "/super-admin/emails" },
-  ],
-  "admin": [
-    { icon: BarChart, label: "Dashboard", path: "/admin" },
-    { icon: User, label: "Usuários", path: "/admin/users" },
-  ],
-  "user": [
-    { icon: User, label: "Perfil", path: "/user" },
-    { icon: Users, label: "Cadastro de Alunos", path: "/user/students" },
-    { icon: ClipboardList, label: "Controle de Presença", path: "/user/attendance" },
-    { icon: FileText, label: "Relatórios", path: "/user/reports" },
-  ],
-};
+import {
+  LayoutDashboard,
+  Building2,
+  Mail,
+  FileText,
+  UserCircle,
+} from "lucide-react";
 
 interface SidebarNavProps {
   role: "super-admin" | "admin" | "user";
 }
 
 export const SidebarNav = ({ role }: SidebarNavProps) => {
-  const location = useLocation();
-  const routes = roleRoutes[role];
+  const superAdminLinks = [
+    {
+      title: "Dashboard",
+      href: "/super-admin",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Empresas",
+      href: "/super-admin/companies",
+      icon: Building2,
+    },
+    {
+      title: "E-mails",
+      href: "/super-admin/emails",
+      icon: Mail,
+    },
+    {
+      title: "Meu Perfil",
+      href: "/super-admin/profile",
+      icon: UserCircle,
+    },
+  ];
+
+  const userLinks = [
+    {
+      title: "Dashboard",
+      href: "/user",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Relatórios",
+      href: "/user/reports",
+      icon: FileText,
+    },
+    {
+      title: "Meu Perfil",
+      href: "/user/profile",
+      icon: UserCircle,
+    },
+  ];
+
+  const links = role === "super-admin" ? superAdminLinks : userLinks;
 
   return (
-    <div className="w-64 bg-white border-r min-h-screen p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-bold">Painel {role}</h1>
-        <button className="p-2 hover:bg-gray-100 rounded-md">
-          <Menu className="w-5 h-5" />
-        </button>
-      </div>
-      
-      <nav className="space-y-1">
-        {routes.map((route) => (
-          <Link
-            key={route.path}
-            to={route.path}
-            className={cn(
-              "flex items-center space-x-3 px-3 py-2 rounded-md text-sm transition-colors",
-              location.pathname === route.path
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-700 hover:bg-gray-100"
-            )}
+    <nav className="grid items-start gap-2 p-4">
+      {links.map((link) => {
+        const Icon = link.icon;
+        return (
+          <NavLink
+            key={link.href}
+            to={link.href}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+                isActive
+                  ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+              )
+            }
           >
-            <route.icon className="w-5 h-5" />
-            <span>{route.label}</span>
-          </Link>
-        ))}
-      </nav>
-    </div>
+            <Icon className="h-4 w-4" />
+            {link.title}
+          </NavLink>
+        );
+      })}
+    </nav>
   );
 };
