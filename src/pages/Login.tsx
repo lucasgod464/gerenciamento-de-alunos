@@ -15,12 +15,17 @@ const Login = () => {
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("Checking initial session:", session);
+        console.log("Initial session check:", session);
         if (session && isSubscribed) {
           await handleUserSession(session);
         }
       } catch (error) {
         console.error("Error checking session:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar sessão",
+          variant: "destructive",
+        });
       }
     };
 
@@ -49,9 +54,9 @@ const Login = () => {
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .maybeSingle();
+        .single();
 
-      console.log("Profile data:", profile, "Error:", error);
+      console.log("Profile lookup result:", { profile, error });
 
       if (error) {
         console.error("Error fetching profile:", error);
@@ -60,6 +65,7 @@ const Login = () => {
           description: "Erro ao carregar perfil do usuário",
           variant: "destructive",
         });
+        await supabase.auth.signOut();
         return;
       }
 
