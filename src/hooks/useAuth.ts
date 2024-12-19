@@ -33,6 +33,10 @@ export function useAuth() {
     const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
     const foundEmail = createdEmails.find((e: any) => e.email === email);
     
+    // Check for users created by admin
+    const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const foundUser = createdUsers.find((u: any) => u.email === email);
+    
     if (foundEmail && password === "123456") {
       const role = foundEmail.accessLevel === "Admin" ? "ADMIN" : "USER";
       const response: AuthResponse = {
@@ -46,6 +50,24 @@ export function useAuth() {
           lastAccess: new Date().toISOString(),
         },
         token: `${role.toLowerCase()}-token`,
+      };
+      localStorage.setItem("session", JSON.stringify(response));
+      return response;
+    }
+
+    // Login for users created by admin
+    if (foundUser && password === "123456") {
+      const response: AuthResponse = {
+        user: {
+          id: foundUser.id,
+          name: foundUser.name,
+          email: foundUser.email,
+          role: "USER",
+          companyId: null,
+          createdAt: foundUser.createdAt,
+          lastAccess: new Date().toISOString(),
+        },
+        token: "user-token",
       };
       localStorage.setItem("session", JSON.stringify(response));
       return response;
