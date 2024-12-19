@@ -1,10 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { Input } from "@/components/ui/input"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 interface Company {
   id: string
@@ -19,66 +20,157 @@ interface Company {
   publicFolderPath: string
 }
 
-const initialCompanies: Company[] = [
-  {
-    id: "460027488",
-    name: "Empresa Exemplo",
-    document: "46.002.748/0001-14",
-    usersLimit: 100,
-    currentUsers: 45,
-    roomsLimit: 50,
-    currentRooms: 27,
-    status: "Ativa",
-    createdAt: "17/12/2024",
-    publicFolderPath: "/storage/460027488",
-  },
-]
-
 const Companies = () => {
-  const [companies, setCompanies] = useState<Company[]>(initialCompanies)
+  const [companies, setCompanies] = useState<Company[]>([])
   const [search, setSearch] = useState("")
   const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleCreateCompany = (newCompany: Company) => {
-    setCompanies([...companies, newCompany])
+  useEffect(() => {
+    fetchCompanies()
+  }, [])
+
+  const fetchCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        throw error
+      }
+
+      const formattedCompanies: Company[] = data.map((company) => ({
+        id: company.id,
+        name: company.name,
+        document: company.document,
+        usersLimit: company.users_limit,
+        currentUsers: company.current_users,
+        roomsLimit: company.rooms_limit,
+        currentRooms: company.current_rooms,
+        status: company.status === "active" ? "Ativa" : "Inativa",
+        createdAt: new Date(company.created_at).toLocaleDateString("pt-BR"),
+        publicFolderPath: `/storage/${company.id}`,
+      }))
+
+      setCompanies(formattedCompanies)
+    } catch (error) {
+      console.error("Error fetching companies:", error)
+      toast({
+        title: "Erro ao carregar empresas",
+        description: "Não foi possível carregar a lista de empresas.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleUpdateCompany = (updatedCompany: Company) => {
-    const updatedCompanies = companies.map((company) =>
-      company.id === updatedCompany.id ? updatedCompany : company
-    )
-    setCompanies(updatedCompanies)
-    toast({
-      title: "Empresa atualizada",
-      description: "As informações da empresa foram atualizadas com sucesso.",
-    })
+  const handleCreateCompany = async (newCompany: Company) => {
+    try {
+      const { data, error } = await supabase.from("companies").insert([
+        {
+          name: newCompany.name,
+          document: newCompany.document,
+          users_limit: newCompany.usersLimit,
+          rooms_limit: newCompany.roomsLimit,
+          status: newCompany.status === "Ativa" ? "active" : "inactive",
+        },
+      ])
+
+      if (error) throw error
+
+      await fetchCompanies()
+      toast({
+        title: "Empresa criada",
+        description: "A empresa foi criada com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error creating company:", error)
+      toast({
+        title: "Erro ao criar empresa",
+        description: "Não foi possível criar a empresa.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleDeleteCompany = (id: string) => {
-    setCompanies(companies.filter((company) => company.id !== id))
-    toast({
-      title: "Empresa excluída",
-      description: "A empresa foi excluída permanentemente.",
-      variant: "destructive",
-    })
+  const handleUpdateCompany = async (updatedCompany: Company) => {
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          name: updatedCompany.name,
+          users_limit: updatedCompany.usersLimit,
+          rooms_limit: updatedCompany.roomsLimit,
+        })
+        .eq("id", updatedCompany.id)
+
+      if (error) throw error
+
+      await fetchCompanies()
+      toast({
+        title: "Empresa atualizada",
+        description: "As informações da empresa foram atualizadas com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error updating company:", error)
+      toast({
+        title: "Erro ao atualizar empresa",
+        description: "Não foi possível atualizar a empresa.",
+        variant: "destructive",
+      })
+    }
   }
 
-  const handleResetCompany = (id: string) => {
-    const updatedCompanies = companies.map((company) =>
-      company.id === id
-        ? {
-            ...company,
-            currentUsers: 0,
-            currentRooms: 0,
-            status: "Ativa" as const,
-          }
-        : company
-    )
-    setCompanies(updatedCompanies)
-    toast({
-      title: "Empresa resetada",
-      description: "A empresa foi restaurada para as configurações padrão.",
-    })
+  const handleDeleteCompany = async (id: string) => {
+    try {
+      const { error } = await supabase.from("companies").delete().eq("id", id)
+
+      if (error) throw error
+
+      await fetchCompanies()
+      toast({
+        title: "Empresa excluída",
+        description: "A empresa foi excluída permanentemente.",
+      })
+    } catch (error) {
+      console.error("Error deleting company:", error)
+      toast({
+        title: "Erro ao excluir empresa",
+        description: "Não foi possível excluir a empresa.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleResetCompany = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          current_users: 0,
+          current_rooms: 0,
+          status: "active",
+        })
+        .eq("id", id)
+
+      if (error) throw error
+
+      await fetchCompanies()
+      toast({
+        title: "Empresa resetada",
+        description: "A empresa foi restaurada para as configurações padrão.",
+      })
+    } catch (error) {
+      console.error("Error resetting company:", error)
+      toast({
+        title: "Erro ao resetar empresa",
+        description: "Não foi possível resetar a empresa.",
+        variant: "destructive",
+      })
+    }
   }
 
   const totalUsers = companies.reduce((acc, company) => acc + company.currentUsers, 0)
