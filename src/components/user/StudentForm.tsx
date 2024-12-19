@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +14,7 @@ import { Plus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form-builder";
+import { DynamicFormField } from "../form-builder/DynamicFormField";
 
 interface Room {
   id: string;
@@ -84,17 +84,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
           {formFields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id}>{field.label}</Label>
-              <Input
-                id={field.id}
-                name={field.id}
-                type={field.type}
-                required={field.required}
-                min={field.validation?.min}
-                max={field.validation?.max}
-              />
-            </div>
+            <DynamicFormField key={field.id} field={field} />
           ))}
 
           <div className="space-y-2">
