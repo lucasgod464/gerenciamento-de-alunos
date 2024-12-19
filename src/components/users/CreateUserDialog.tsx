@@ -83,6 +83,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       status: formData.get("status") as "active" | "inactive",
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
+      companyId: null, // This will be set by the parent component
     };
     
     onUserCreated(newUser);

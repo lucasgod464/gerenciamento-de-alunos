@@ -29,19 +29,19 @@ export function useAuth() {
       return response;
     }
 
-    // Verificar emails criados no localStorage
+    // Check created emails in localStorage
     const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
     const foundEmail = createdEmails.find((e: any) => e.email === email);
     
-    // Verificar usuários criados pelo admin
+    // Check users created by admin
     const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
     const foundUser = createdUsers.find((u: any) => u.email === email);
     
-    // Login para emails criados pelo super admin
+    // Login for emails created by super admin
     if (foundEmail && password === "123456") {
       console.log("Found email data:", foundEmail);
 
-      // Normalizar o accessLevel para o formato correto
+      // Normalize accessLevel to correct format
       let role = foundEmail.accessLevel.toUpperCase();
       if (role.includes("ADMIN") || role.includes("ADMINISTRADOR")) {
         role = "ADMIN";
@@ -67,7 +67,7 @@ export function useAuth() {
       return response;
     }
 
-    // Login para usuários criados pelo admin
+    // Login for users created by admin
     if (foundUser && password === "123456") {
       const response: AuthResponse = {
         user: {
@@ -75,7 +75,7 @@ export function useAuth() {
           name: foundUser.name,
           email: foundUser.email,
           role: "USER",
-          companyId: null,
+          companyId: foundUser.companyId,
           createdAt: foundUser.createdAt,
           lastAccess: new Date().toISOString(),
         },
@@ -85,7 +85,7 @@ export function useAuth() {
       return response;
     }
 
-    throw new Error("Credenciais inválidas");
+    throw new Error("Invalid credentials");
   };
 
   const logout = () => {

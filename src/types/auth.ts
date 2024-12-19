@@ -28,6 +28,10 @@ export interface RolePermissions {
   canCreateUser: boolean;
   canViewAllCompanies: boolean;
   canManageUsers: boolean;
+  canManageRooms: boolean;
+  canManageStudies: boolean;
+  canManageTags: boolean;
+  canManageSpecializations: boolean;
 }
 
 export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
@@ -37,6 +41,10 @@ export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
     canCreateUser: true,
     canViewAllCompanies: true,
     canManageUsers: true,
+    canManageRooms: true,
+    canManageStudies: true,
+    canManageTags: true,
+    canManageSpecializations: true,
   },
   ADMIN: {
     canCreateCompany: false,
@@ -44,6 +52,10 @@ export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
     canCreateUser: true,
     canViewAllCompanies: false,
     canManageUsers: true,
+    canManageRooms: true,
+    canManageStudies: true,
+    canManageTags: true,
+    canManageSpecializations: true,
   },
   USER: {
     canCreateCompany: false,
@@ -51,5 +63,9 @@ export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
     canCreateUser: false,
     canViewAllCompanies: false,
     canManageUsers: false,
+    canManageRooms: false,
+    canManageStudies: false,
+    canManageTags: false,
+    canManageSpecializations: false,
   },
 };
