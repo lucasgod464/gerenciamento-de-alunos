@@ -58,6 +58,47 @@ export const router = createBrowserRouter([
       </RoleGuard>
     ),
   },
+  // Admin Routes
+  {
+    path: "/admin",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <UserDashboard />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/students",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <StudentsPage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/attendance",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AttendancePage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/reports",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <ReportsPage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/profile",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <UserProfile />
+      </RoleGuard>
+    ),
+  },
   // User Routes
   {
     path: "/user",
