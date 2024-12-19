@@ -54,7 +54,7 @@ const Login = () => {
         .from("profiles")
         .select("role")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       console.log("Profile lookup result:", { profile, error });
 
