@@ -1,96 +1,98 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { FormFieldList } from "@/components/form-builder/FormFieldList";
 import { AddFieldDialog } from "@/components/form-builder/AddFieldDialog";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { FormFieldList } from "@/components/form-builder/FormFieldList";
 import { FormField } from "@/types/form-builder";
+import { v4 as uuidv4 } from "uuid";
+import { useToast } from "@/hooks/use-toast";
 
-const FormBuilder = () => {
-  const [fields, setFields] = useState<FormField[]>([
-    {
-      id: "name",
-      label: "Nome Completo",
-      type: "text",
-      required: true,
-      order: 1,
-      isDefault: true,
-    },
-    {
-      id: "age",
-      label: "Idade",
-      type: "number",
-      required: true,
-      order: 2,
-      isDefault: true,
-    },
-  ]);
+const FormBuilderPage = () => {
+  const [fields, setFields] = useState<FormField[]>([]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    const savedFields = localStorage.getItem("formFields");
+    if (savedFields) {
+      setFields(JSON.parse(savedFields));
+    } else {
+      // Initialize with default fields
+      const defaultFields: FormField[] = [
+        {
+          id: uuidv4(),
+          label: "Nome Completo",
+          type: "text",
+          required: true,
+          order: 1,
+          isDefault: true,
+        },
+        {
+          id: uuidv4(),
+          label: "Idade",
+          type: "number",
+          required: true,
+          order: 2,
+          isDefault: true,
+          validation: {
+            min: 0,
+            max: 120,
+          },
+        },
+      ];
+      setFields(defaultFields);
+      localStorage.setItem("formFields", JSON.stringify(defaultFields));
+    }
+  }, []);
+
   const handleAddField = (newField: Omit<FormField, "id" | "order">) => {
-    const id = Math.random().toString(36).substr(2, 9);
-    const order = Math.max(...fields.map((f) => f.order), 0) + 1;
-    
-    setFields((prev) => [...prev, { ...newField, id, order }]);
+    const field: FormField = {
+      ...newField,
+      id: uuidv4(),
+      order: fields.length + 1,
+    };
+    const updatedFields = [...fields, field];
+    setFields(updatedFields);
+    localStorage.setItem("formFields", JSON.stringify(updatedFields));
     toast({
       title: "Campo adicionado",
       description: "O novo campo foi adicionado com sucesso.",
     });
   };
 
-  const handleDeleteField = (id: string) => {
-    const field = fields.find((f) => f.id === id);
-    if (field?.isDefault) {
-      toast({
-        title: "Operação não permitida",
-        description: "Campos padrão não podem ser removidos.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setFields((prev) => prev.filter((field) => field.id !== id));
-    toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
-    });
-  };
-
   const handleUpdateField = (updatedField: FormField) => {
-    setFields((prev) =>
-      prev.map((field) =>
-        field.id === updatedField.id ? updatedField : field
-      )
+    const updatedFields = fields.map((field) =>
+      field.id === updatedField.id ? updatedField : field
     );
+    setFields(updatedFields);
+    localStorage.setItem("formFields", JSON.stringify(updatedFields));
     toast({
       title: "Campo atualizado",
       description: "O campo foi atualizado com sucesso.",
     });
   };
 
-  const handleSaveForm = () => {
-    localStorage.setItem("formFields", JSON.stringify(fields));
+  const handleDeleteField = (id: string) => {
+    const updatedFields = fields.filter((field) => field.id !== id);
+    setFields(updatedFields);
+    localStorage.setItem("formFields", JSON.stringify(updatedFields));
     toast({
-      title: "Formulário salvo",
-      description: "As configurações do formulário foram salvas com sucesso.",
+      title: "Campo removido",
+      description: "O campo foi removido com sucesso.",
     });
   };
 
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Construtor de Formulários</h1>
-            <p className="text-muted-foreground">
-              Personalize o formulário de cadastro de alunos
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <AddFieldDialog onAddField={handleAddField} />
-            <Button onClick={handleSaveForm}>Salvar Alterações</Button>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Construtor de Formulários</h1>
+          <p className="text-muted-foreground">
+            Personalize o formulário de cadastro de alunos adicionando, editando ou
+            removendo campos.
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          <AddFieldDialog onAddField={handleAddField} />
         </div>
 
         <FormFieldList
@@ -103,4 +105,4 @@ const FormBuilder = () => {
   );
 };
 
-export default FormBuilder;
+export default FormBuilderPage;
