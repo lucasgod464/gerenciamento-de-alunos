@@ -13,8 +13,15 @@ interface Company {
   publicFolderPath: string
 }
 
-// This would be replaced with actual API calls in a real application
-const mockCompanies: Company[] = []
+// Funções auxiliares para localStorage
+const getStoredCompanies = (): Company[] => {
+  const stored = localStorage.getItem("companies")
+  return stored ? JSON.parse(stored) : []
+}
+
+const setStoredCompanies = (companies: Company[]) => {
+  localStorage.setItem("companies", JSON.stringify(companies))
+}
 
 export function useCompanies() {
   const queryClient = useQueryClient()
@@ -22,16 +29,16 @@ export function useCompanies() {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      // In a real app, this would be an API call
-      return mockCompanies
+      return getStoredCompanies()
     },
-    staleTime: Infinity, // Keep the data fresh until explicitly invalidated
+    staleTime: Infinity,
   })
 
   const createMutation = useMutation({
     mutationFn: async (newCompany: Company) => {
-      // In a real app, this would be an API call
-      mockCompanies.push(newCompany)
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = [...currentCompanies, newCompany]
+      setStoredCompanies(updatedCompanies)
       return newCompany
     },
     onSuccess: () => {
@@ -41,11 +48,11 @@ export function useCompanies() {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedCompany: Company) => {
-      // In a real app, this would be an API call
-      const index = mockCompanies.findIndex((c) => c.id === updatedCompany.id)
-      if (index !== -1) {
-        mockCompanies[index] = updatedCompany
-      }
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.map((company) =>
+        company.id === updatedCompany.id ? updatedCompany : company
+      )
+      setStoredCompanies(updatedCompanies)
       return updatedCompany
     },
     onSuccess: () => {
@@ -55,11 +62,9 @@ export function useCompanies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // In a real app, this would be an API call
-      const index = mockCompanies.findIndex((c) => c.id === id)
-      if (index !== -1) {
-        mockCompanies.splice(index, 1)
-      }
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.filter((company) => company.id !== id)
+      setStoredCompanies(updatedCompanies)
       return id
     },
     onSuccess: () => {
@@ -69,16 +74,18 @@ export function useCompanies() {
 
   const resetMutation = useMutation({
     mutationFn: async (id: string) => {
-      // In a real app, this would be an API call
-      const index = mockCompanies.findIndex((c) => c.id === id)
-      if (index !== -1) {
-        mockCompanies[index] = {
-          ...mockCompanies[index],
-          currentUsers: 0,
-          currentRooms: 0,
-          status: "Ativa",
-        }
-      }
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.map((company) =>
+        company.id === id
+          ? {
+              ...company,
+              currentUsers: 0,
+              currentRooms: 0,
+              status: "Ativa",
+            }
+          : company
+      )
+      setStoredCompanies(updatedCompanies)
       return id
     },
     onSuccess: () => {
