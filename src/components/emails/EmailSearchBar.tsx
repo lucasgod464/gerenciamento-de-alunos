@@ -33,24 +33,24 @@ export function EmailSearchBar({
         onChange={(e) => onSearchChange(e.target.value)}
         className="flex-1"
       />
-      <Select onValueChange={onAccessLevelChange}>
+      <Select defaultValue="all" onValueChange={onAccessLevelChange}>
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Nível de Acesso" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos</SelectItem>
-          <SelectItem value="Admin">Admin</SelectItem>
-          <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
+          <SelectItem value="admin">Admin</SelectItem>
+          <SelectItem value="user">Usuário Comum</SelectItem>
         </SelectContent>
       </Select>
-      <Select onValueChange={onCompanyChange}>
+      <Select defaultValue="all" onValueChange={onCompanyChange}>
         <SelectTrigger className="w-[200px]">
           <SelectValue placeholder="Empresa" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todas</SelectItem>
           {companies.map((company: Company) => (
-            <SelectItem key={company.id} value={company.name}>
+            <SelectItem key={company.id} value={company.id}>
               {company.name}
             </SelectItem>
           ))}
