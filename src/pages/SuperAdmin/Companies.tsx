@@ -6,18 +6,7 @@ import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-
-interface Company {
-  id: string
-  name: string
-  document: string
-  users_limit: number
-  current_users: number
-  rooms_limit: number
-  current_rooms: number
-  status: string
-  created_at: string
-}
+import { Company } from "@/types/company"
 
 const Companies = () => {
   const [companies, setCompanies] = useState<Company[]>([])
@@ -60,10 +49,8 @@ const Companies = () => {
         .from('companies')
         .update({
           name: updatedCompany.name,
-          document: updatedCompany.document,
           users_limit: updatedCompany.users_limit,
           rooms_limit: updatedCompany.rooms_limit,
-          status: updatedCompany.status,
         })
         .eq('id', updatedCompany.id)
 
@@ -174,7 +161,6 @@ const Companies = () => {
           totalCompanies={companies.length}
           totalUsers={totalUsers}
           totalRooms={totalRooms}
-          isLoading={isLoading}
         />
 
         <div className="flex justify-between items-center">
@@ -195,7 +181,6 @@ const Companies = () => {
           onUpdateCompany={handleUpdateCompany}
           onDeleteCompany={handleDeleteCompany}
           onResetCompany={handleResetCompany}
-          isLoading={isLoading}
         />
       </div>
     </DashboardLayout>

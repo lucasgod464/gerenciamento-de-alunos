@@ -13,26 +13,44 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          current_rooms: number
+          current_users: number
+          document: string
           id: string
           name: string
+          rooms_limit: number
+          status: string
           updated_at: string
           updated_by: string | null
+          users_limit: number
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          current_rooms?: number
+          current_users?: number
+          document?: string
           id?: string
           name: string
+          rooms_limit?: number
+          status?: string
           updated_at?: string
           updated_by?: string | null
+          users_limit?: number
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          current_rooms?: number
+          current_users?: number
+          document?: string
           id?: string
           name?: string
+          rooms_limit?: number
+          status?: string
           updated_at?: string
           updated_by?: string | null
+          users_limit?: number
         }
         Relationships: [
           {
