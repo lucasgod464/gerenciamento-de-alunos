@@ -1,5 +1,4 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface Company {
   id: string
@@ -14,55 +13,85 @@ interface Company {
   publicFolderPath: string
 }
 
-export function useCompanies() {
-  const [companies, setCompanies] = useState<Company[]>([])
+// This would be replaced with actual API calls in a real application
+const mockCompanies: Company[] = []
 
-  const { data, isLoading } = useQuery({
+export function useCompanies() {
+  const queryClient = useQueryClient()
+
+  const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      // For now, we'll just return the companies from state
-      // Later this can be replaced with an actual API call
-      return companies
+      // In a real app, this would be an API call
+      return mockCompanies
+    },
+    staleTime: Infinity, // Keep the data fresh until explicitly invalidated
+  })
+
+  const createMutation = useMutation({
+    mutationFn: async (newCompany: Company) => {
+      // In a real app, this would be an API call
+      mockCompanies.push(newCompany)
+      return newCompany
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
     },
   })
 
-  const createCompany = (newCompany: Company) => {
-    setCompanies((prev) => [...prev, newCompany])
-  }
+  const updateMutation = useMutation({
+    mutationFn: async (updatedCompany: Company) => {
+      // In a real app, this would be an API call
+      const index = mockCompanies.findIndex((c) => c.id === updatedCompany.id)
+      if (index !== -1) {
+        mockCompanies[index] = updatedCompany
+      }
+      return updatedCompany
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+    },
+  })
 
-  const updateCompany = (updatedCompany: Company) => {
-    setCompanies((prev) =>
-      prev.map((company) =>
-        company.id === updatedCompany.id ? updatedCompany : company
-      )
-    )
-  }
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // In a real app, this would be an API call
+      const index = mockCompanies.findIndex((c) => c.id === id)
+      if (index !== -1) {
+        mockCompanies.splice(index, 1)
+      }
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+    },
+  })
 
-  const deleteCompany = (id: string) => {
-    setCompanies((prev) => prev.filter((company) => company.id !== id))
-  }
-
-  const resetCompany = (id: string) => {
-    setCompanies((prev) =>
-      prev.map((company) =>
-        company.id === id
-          ? {
-              ...company,
-              currentUsers: 0,
-              currentRooms: 0,
-              status: "Ativa" as const,
-            }
-          : company
-      )
-    )
-  }
+  const resetMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // In a real app, this would be an API call
+      const index = mockCompanies.findIndex((c) => c.id === id)
+      if (index !== -1) {
+        mockCompanies[index] = {
+          ...mockCompanies[index],
+          currentUsers: 0,
+          currentRooms: 0,
+          status: "Ativa",
+        }
+      }
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
+    },
+  })
 
   return {
-    companies: data || [],
+    companies,
     isLoading,
-    createCompany,
-    updateCompany,
-    deleteCompany,
-    resetCompany,
+    createCompany: createMutation.mutate,
+    updateCompany: updateMutation.mutate,
+    deleteCompany: deleteMutation.mutate,
+    resetCompany: resetMutation.mutate,
   }
 }
