@@ -27,7 +27,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
     email: "",
     document: "",
     address: "",
-    room: "sala1",
+    room: "sala1", // Default value to prevent empty selection
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,7 +56,7 @@ export const StudentForm = ({ onSubmit }: StudentFormProps) => {
       email: "",
       document: "",
       address: "",
-      room: "sala1",
+      room: "sala1", // Reset to default value
     });
     setStatus("active");
   };
