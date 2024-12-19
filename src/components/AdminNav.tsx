@@ -29,8 +29,8 @@ const adminRoutes = [
     icon: Tag,
   },
   {
-    title: "Cursos/Treinamentos",
-    href: "/admin/courses",
+    title: "Especializações",
+    href: "/admin/specializations",
     icon: GraduationCap,
   },
 ];
