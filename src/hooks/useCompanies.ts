@@ -6,12 +6,13 @@ interface Company {
   id: string;
   name: string;
   document: string;
-  users_limit: number;
-  current_users: number;
-  rooms_limit: number;
-  current_rooms: number;
-  status: string;
-  created_at: string;
+  usersLimit: number;
+  currentUsers: number;
+  roomsLimit: number;
+  currentRooms: number;
+  status: "Ativa" | "Inativa";
+  createdAt: string;
+  publicFolderPath: string;
 }
 
 export const useCompanies = () => {
@@ -34,8 +35,15 @@ export const useCompanies = () => {
         throw error;
       }
 
-      return data.map((company) => ({
-        ...company,
+      return data.map((company): Company => ({
+        id: company.id,
+        name: company.name,
+        document: company.document,
+        usersLimit: company.users_limit,
+        currentUsers: company.current_users,
+        roomsLimit: company.rooms_limit,
+        currentRooms: company.current_rooms,
+        status: company.status === "active" ? "Ativa" : "Inativa",
         createdAt: new Date(company.created_at).toLocaleDateString("pt-BR"),
         publicFolderPath: `/storage/${company.id}`,
       }));
@@ -50,8 +58,8 @@ export const useCompanies = () => {
           {
             name: newCompany.name,
             document: newCompany.document,
-            users_limit: newCompany.users_limit,
-            rooms_limit: newCompany.rooms_limit,
+            users_limit: newCompany.usersLimit,
+            rooms_limit: newCompany.roomsLimit,
             status: "active",
           },
         ])
@@ -83,8 +91,8 @@ export const useCompanies = () => {
         .from("companies")
         .update({
           name: company.name,
-          users_limit: company.users_limit,
-          rooms_limit: company.rooms_limit,
+          users_limit: company.usersLimit,
+          rooms_limit: company.roomsLimit,
         })
         .eq("id", company.id)
         .select()
