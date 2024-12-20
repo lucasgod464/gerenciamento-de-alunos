@@ -66,13 +66,22 @@ export const FormBuilder = () => {
       try {
         const parsedFields = JSON.parse(savedFields);
         console.log("Campos carregados:", parsedFields);
-        setFields(parsedFields);
+        
+        // Garante que os campos padrão estejam sempre presentes
+        const mergedFields = [...defaultFields];
+        
+        // Adiciona campos personalizados que não são padrão
+        parsedFields.forEach((field: FormField) => {
+          if (!defaultFields.some(defaultField => defaultField.id === field.id)) {
+            mergedFields.push(field);
+          }
+        });
+        
+        setFields(mergedFields);
       } catch (error) {
         console.error("Erro ao carregar campos salvos:", error);
         setFields(defaultFields);
       }
-    } else {
-      setFields(defaultFields);
     }
   }, [currentUser?.companyId]);
 
@@ -83,15 +92,8 @@ export const FormBuilder = () => {
     console.log("Salvando campos para a empresa:", currentUser.companyId);
     const storageKey = `formFields_${currentUser.companyId}`;
     
-    // Garante que os campos padrão estejam sempre presentes
-    const fieldsToSave = defaultFields.concat(
-      fields.filter(field => 
-        !defaultFields.some(defaultField => defaultField.id === field.id)
-      )
-    );
-    
-    localStorage.setItem(storageKey, JSON.stringify(fieldsToSave));
-    console.log("Campos salvos:", fieldsToSave);
+    localStorage.setItem(storageKey, JSON.stringify(fields));
+    console.log("Campos salvos:", fields);
   }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {

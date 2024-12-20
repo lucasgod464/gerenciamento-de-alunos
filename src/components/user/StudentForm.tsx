@@ -45,7 +45,8 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     }
 
     // Carregar campos personalizados
-    const savedFields = localStorage.getItem("formFields");
+    const storageKey = `formFields_${currentUser.companyId}`;
+    const savedFields = localStorage.getItem(storageKey);
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
@@ -58,7 +59,7 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
         console.error("Error parsing custom fields:", error);
       }
     }
-  }, [currentUser, initialData]);
+  }, [currentUser?.companyId, initialData]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
