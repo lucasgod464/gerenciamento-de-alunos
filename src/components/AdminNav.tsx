@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { BarChart, Users, School, BookOpen, Tag, GraduationCap, UserCircle, FormInput } from "lucide-react";
+import { BarChart, Users, School, Tag, GraduationCap, UserCircle, FormInput } from "lucide-react";
 
 const adminRoutes = [
   {
@@ -19,9 +19,9 @@ const adminRoutes = [
     icon: School,
   },
   {
-    title: "Estudos",
-    href: "/admin/studies",
-    icon: BookOpen,
+    title: "Categorias",
+    href: "/admin/categories",
+    icon: Tag,
   },
   {
     title: "Etiquetas",

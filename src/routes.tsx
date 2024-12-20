@@ -14,8 +14,7 @@ import AdminDashboard from "./pages/Admin/Dashboard";
 import AdminProfile from "./pages/Admin/Profile";
 import AdminUsers from "./pages/Admin/Users";
 import AdminRooms from "./pages/Admin/Rooms";
-import AdminCourses from "./pages/Admin/Courses";
-import AdminStudies from "./pages/Admin/Studies";
+import AdminCategories from "./pages/Admin/Categories";
 import AdminTags from "./pages/Admin/Tags";
 import AdminSpecializations from "./pages/Admin/Specializations";
 import AdminFormBuilder from "./pages/Admin/FormBuilder";
@@ -95,18 +94,10 @@ export const routes = [
     ),
   },
   {
-    path: "/admin/courses",
+    path: "/admin/categories",
     element: (
       <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminCourses />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/studies",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminStudies />
+        <AdminCategories />
       </RoleGuard>
     ),
   },
