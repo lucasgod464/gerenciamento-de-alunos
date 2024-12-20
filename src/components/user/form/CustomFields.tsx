@@ -2,6 +2,13 @@ import { FormField } from "@/types/form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CustomFieldsProps {
   fields: FormField[];
@@ -22,6 +29,21 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
             defaultValue={value}
           />
         );
+      case "select":
+        return (
+          <Select defaultValue={value} name={field.name}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
       case "email":
         return (
           <Input
@@ -38,6 +60,16 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
             id={field.name}
             name={field.name}
             type="tel"
+            required={field.required}
+            defaultValue={value}
+          />
+        );
+      case "date":
+        return (
+          <Input
+            id={field.name}
+            name={field.name}
+            type="date"
             required={field.required}
             defaultValue={value}
           />

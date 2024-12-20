@@ -28,6 +28,36 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
+  // Carregar campos personalizados sempre que houver mudanças
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+    
+    console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
+    const storageKey = `formFields_${currentUser.companyId}`;
+    const savedFields = localStorage.getItem(storageKey);
+    
+    if (savedFields) {
+      try {
+        const parsedFields = JSON.parse(savedFields);
+        console.log("Campos carregados:", parsedFields);
+        
+        // Filtra apenas os campos personalizados (exclui os campos padrão)
+        const defaultFields = ["name", "birthDate", "status", "room"];
+        const customFields = parsedFields.filter(
+          (field: FormField) => !defaultFields.includes(field.id)
+        );
+        
+        console.log("Campos personalizados filtrados:", customFields);
+        setCustomFields(customFields);
+      } catch (error) {
+        console.error("Erro ao carregar campos personalizados:", error);
+        setCustomFields([]);
+      }
+    } else {
+      setCustomFields([]);
+    }
+  }, [currentUser?.companyId]);
+
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
@@ -41,22 +71,6 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       setRooms(companyRooms);
       if (!initialData && companyRooms.length > 0) {
         setSelectedRoom(companyRooms[0].id);
-      }
-    }
-
-    // Carregar campos personalizados
-    const storageKey = `formFields_${currentUser.companyId}`;
-    const savedFields = localStorage.getItem(storageKey);
-    if (savedFields) {
-      try {
-        const parsedFields = JSON.parse(savedFields);
-        const defaultFields = ["name", "birthDate", "status", "room"];
-        const customFields = parsedFields.filter(
-          (field: FormField) => !defaultFields.includes(field.id)
-        );
-        setCustomFields(customFields);
-      } catch (error) {
-        console.error("Error parsing custom fields:", error);
       }
     }
   }, [currentUser?.companyId, initialData]);
