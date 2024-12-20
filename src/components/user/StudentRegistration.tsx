@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { StudentForm } from "./StudentForm";
+import { AddStudentDialog } from "./AddStudentDialog";
 import { StudentTable } from "./StudentTable";
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
@@ -104,31 +104,33 @@ export const StudentRegistration = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar alunos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="grid gap-4 md:grid-cols-2 flex-1 max-w-2xl">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar alunos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filtrar por sala" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as salas</SelectItem>
+              {rooms.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
+                  {room.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-          <SelectTrigger>
-            <SelectValue placeholder="Filtrar por sala" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas as salas</SelectItem>
-            {rooms.map((room) => (
-              <SelectItem key={room.id} value={room.id}>
-                {room.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <AddStudentDialog onStudentAdded={handleAddStudent} />
       </div>
-      <StudentForm onSubmit={handleAddStudent} />
       <StudentTable 
         students={filteredStudents} 
         rooms={rooms} 
