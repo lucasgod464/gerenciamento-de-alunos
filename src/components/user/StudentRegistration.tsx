@@ -150,7 +150,10 @@ export const StudentRegistration = () => {
             <DialogHeader>
               <DialogTitle>Novo Aluno</DialogTitle>
             </DialogHeader>
-            <StudentForm onSubmit={handleAddStudent} />
+            <StudentForm 
+              onSubmit={handleAddStudent} 
+              open={isDialogOpen}
+            />
           </DialogContent>
         </Dialog>
       </div>

@@ -19,9 +19,10 @@ import {
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
   initialData?: Student;
+  open?: boolean;
 }
 
-export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
+export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">(initialData?.status || "active");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>(initialData?.room || "");
@@ -63,6 +64,14 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
   }, [currentUser?.companyId]);
 
   // Recarregar campos quando o diálogo for aberto
+  useEffect(() => {
+    if (open) {
+      console.log("Dialog aberto, recarregando campos personalizados");
+      loadCustomFields();
+    }
+  }, [open]);
+
+  // Monitorar mudanças no localStorage
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key && e.key.startsWith('formFields_')) {
