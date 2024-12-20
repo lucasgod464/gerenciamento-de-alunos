@@ -54,8 +54,7 @@ export const FormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
 
-  // Carrega os campos salvos do localStorage
-  useEffect(() => {
+  const loadFields = () => {
     if (!currentUser?.companyId) return;
 
     const storageKey = `formFields_${currentUser.companyId}`;
@@ -64,11 +63,8 @@ export const FormBuilder = () => {
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        
-        // Garante que os campos padrão estejam sempre presentes
         const mergedFields = [...defaultFields];
         
-        // Adiciona campos personalizados que não são padrão
         parsedFields.forEach((field: FormField) => {
           if (!defaultFields.some(defaultField => defaultField.id === field.id)) {
             mergedFields.push(field);
@@ -80,7 +76,31 @@ export const FormBuilder = () => {
         console.error("Erro ao carregar campos salvos:", error);
         setFields(defaultFields);
       }
+    } else {
+      // Se não houver campos salvos, salva os campos padrão
+      localStorage.setItem(storageKey, JSON.stringify(defaultFields));
+      setFields(defaultFields);
     }
+  };
+
+  // Carrega os campos ao montar o componente
+  useEffect(() => {
+    loadFields();
+  }, [currentUser?.companyId]);
+
+  // Monitora mudanças no localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!currentUser?.companyId) return;
+      
+      const storageKey = `formFields_${currentUser.companyId}`;
+      if (e.key === storageKey) {
+        loadFields();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, [currentUser?.companyId]);
 
   // Salva os campos no localStorage sempre que houver mudanças
@@ -89,6 +109,12 @@ export const FormBuilder = () => {
     
     const storageKey = `formFields_${currentUser.companyId}`;
     localStorage.setItem(storageKey, JSON.stringify(fields));
+
+    // Dispara um evento customizado para notificar outras partes da aplicação
+    const event = new CustomEvent('formFieldsUpdated', { 
+      detail: { companyId: currentUser.companyId } 
+    });
+    window.dispatchEvent(event);
   }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {

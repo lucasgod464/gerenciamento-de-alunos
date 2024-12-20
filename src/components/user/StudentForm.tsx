@@ -41,19 +41,36 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
     loadCustomFields();
   }, [currentUser?.companyId]);
 
-  // Carregar salas disponíveis
+  // Monitorar mudanças nos campos do formulário
   useEffect(() => {
-    // Carregar lógica de salas disponíveis
-    const fetchRooms = async () => {
-      if (!currentUser?.companyId) return;
-
-      // Simulação de chamada de API para buscar salas
-      const response = await fetch(`/api/rooms?companyId=${currentUser.companyId}`);
-      const data = await response.json();
-      setRooms(data);
+    const handleFormFieldsUpdate = (e: CustomEvent) => {
+      if (e.detail.companyId === currentUser?.companyId) {
+        loadCustomFields();
+      }
     };
 
-    fetchRooms();
+    window.addEventListener('formFieldsUpdated', handleFormFieldsUpdate as EventListener);
+    return () => {
+      window.removeEventListener('formFieldsUpdated', handleFormFieldsUpdate as EventListener);
+    };
+  }, [currentUser?.companyId]);
+
+  // Carregar salas disponíveis
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
+    const storedRooms = localStorage.getItem("rooms");
+    if (storedRooms) {
+      try {
+        const allRooms = JSON.parse(storedRooms);
+        const companyRooms = allRooms.filter(
+          (room: any) => room.companyId === currentUser.companyId
+        );
+        setRooms(companyRooms);
+      } catch (error) {
+        console.error("Erro ao carregar salas:", error);
+      }
+    }
   }, [currentUser?.companyId]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -61,28 +78,25 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
 
     const formData = new FormData(e.currentTarget);
     const data: any = {
-      fullName: formData.get("fullName"),
+      id: initialData?.id || Math.random().toString(36).substr(2, 9),
+      name: formData.get("fullName"),
       birthDate: formData.get("birthDate"),
       status: formData.get("status"),
-      roomId: formData.get("roomId"),
+      room: formData.get("room"),
+      companyId: currentUser?.companyId,
+      createdAt: initialData?.createdAt || new Date().toISOString(),
       customFields: {},
     };
 
     // Processar campos personalizados
     customFields.forEach((field) => {
-      if (field.id !== "name" && field.id !== "birthDate" && field.id !== "status" && field.id !== "room") {
+      if (!["name", "birthDate", "status", "room"].includes(field.id)) {
         data.customFields[field.name] = formData.get(field.name);
       }
     });
 
     try {
       await onSubmit(data);
-      toast({
-        title: initialData ? "Aluno atualizado" : "Aluno cadastrado",
-        description: initialData
-          ? "As informações do aluno foram atualizadas com sucesso."
-          : "O aluno foi cadastrado com sucesso.",
-      });
     } catch (error) {
       console.error("Erro ao processar formulário:", error);
       toast({
@@ -101,7 +115,7 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
           id="fullName"
           name="fullName"
           required
-          defaultValue={initialData?.fullName}
+          defaultValue={initialData?.name}
         />
       </div>
 
@@ -131,10 +145,10 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="roomId">Sala</Label>
+        <Label htmlFor="room">Sala</Label>
         <RoomSelect
           rooms={rooms}
-          defaultValue={initialData?.roomId}
+          defaultValue={initialData?.room}
           required
         />
       </div>
