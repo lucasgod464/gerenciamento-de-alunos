@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -11,9 +12,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Specialization {
   id: string;
@@ -26,6 +34,8 @@ const Specializations = () => {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newSpecializationName, setNewSpecializationName] = useState("");
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -39,7 +49,16 @@ const Specializations = () => {
     setSpecializations(companySpecializations);
   }, [currentUser]);
 
-  const handleCreateSpecialization = (name: string) => {
+  const handleCreateSpecialization = () => {
+    if (!newSpecializationName.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome da especialização é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
     const otherSpecializations = allSpecializations.filter(
       (spec: Specialization) => spec.companyId !== currentUser?.companyId
@@ -47,7 +66,7 @@ const Specializations = () => {
 
     const newSpecialization: Specialization = {
       id: Math.random().toString(36).substr(2, 9),
-      name,
+      name: newSpecializationName,
       status: true,
       companyId: currentUser?.companyId
     };
@@ -60,6 +79,9 @@ const Specializations = () => {
       title: "Especialização criada",
       description: "A especialização foi criada com sucesso.",
     });
+
+    setNewSpecializationName("");
+    setIsDialogOpen(false);
   };
 
   const handleDeleteSpecialization = (id: string) => {
@@ -130,10 +152,7 @@ const Specializations = () => {
               <option value="active">Ativos</option>
               <option value="inactive">Inativos</option>
             </select>
-            <Button onClick={() => {
-              const name = window.prompt("Digite o nome da especialização:");
-              if (name) handleCreateSpecialization(name);
-            }}>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Especialização
             </Button>
@@ -172,6 +191,33 @@ const Specializations = () => {
           </Table>
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Especialização</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Especialização</Label>
+              <Input
+                id="name"
+                value={newSpecializationName}
+                onChange={(e) => setNewSpecializationName(e.target.value)}
+                placeholder="Digite o nome da especialização"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateSpecialization}>
+              Criar Especialização
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
