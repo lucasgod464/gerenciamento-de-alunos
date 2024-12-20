@@ -11,6 +11,7 @@ import {
 interface Room {
   id: string;
   name: string;
+  companyId: string;
 }
 
 interface RoomSelectProps {
