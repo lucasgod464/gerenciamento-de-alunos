@@ -28,40 +28,44 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
-  // Carregar campos personalizados sempre que houver mudanças
+  // Carregar campos personalizados imediatamente quando o componente montar
   useEffect(() => {
-    if (!currentUser?.companyId) return;
-    
-    console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
-    const storageKey = `formFields_${currentUser.companyId}`;
-    const savedFields = localStorage.getItem(storageKey);
-    
-    if (savedFields) {
-      try {
-        const parsedFields = JSON.parse(savedFields);
-        console.log("Campos carregados:", parsedFields);
-        
-        // Filtra apenas os campos personalizados (exclui os campos padrão)
-        const defaultFields = ["name", "birthDate", "status", "room"];
-        const customFields = parsedFields.filter(
-          (field: FormField) => !defaultFields.includes(field.id)
-        );
-        
-        console.log("Campos personalizados filtrados:", customFields);
-        setCustomFields(customFields);
-      } catch (error) {
-        console.error("Erro ao carregar campos personalizados:", error);
+    const loadCustomFields = () => {
+      if (!currentUser?.companyId) return;
+      
+      console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
+      const storageKey = `formFields_${currentUser.companyId}`;
+      const savedFields = localStorage.getItem(storageKey);
+      
+      if (savedFields) {
+        try {
+          const parsedFields = JSON.parse(savedFields);
+          console.log("Campos carregados:", parsedFields);
+          
+          // Filtra apenas os campos personalizados (exclui os campos padrão)
+          const defaultFields = ["name", "birthDate", "status", "room"];
+          const customFields = parsedFields.filter(
+            (field: FormField) => !defaultFields.includes(field.id)
+          );
+          
+          console.log("Campos personalizados filtrados:", customFields);
+          setCustomFields(customFields);
+        } catch (error) {
+          console.error("Erro ao carregar campos personalizados:", error);
+          setCustomFields([]);
+        }
+      } else {
         setCustomFields([]);
       }
-    } else {
-      setCustomFields([]);
-    }
+    };
+
+    loadCustomFields();
   }, [currentUser?.companyId]);
 
+  // Carregar salas disponíveis
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
-    // Carregar salas
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -146,6 +150,7 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
         />
       </div>
 
+      {/* Renderiza os campos personalizados */}
       <CustomFields
         fields={customFields}
         initialData={initialData?.customFields}
