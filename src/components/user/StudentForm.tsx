@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -13,6 +14,7 @@ import {
 import { Plus, Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
+import { FormField } from "@/types/form";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
@@ -23,11 +25,13 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">(initialData?.status || "active");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>(initialData?.room || "");
+  const [customFields, setCustomFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
+    // Carregar salas
     const storedRooms = localStorage.getItem("rooms");
     if (storedRooms) {
       const allRooms = JSON.parse(storedRooms);
@@ -37,6 +41,22 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       setRooms(companyRooms);
       if (!initialData && companyRooms.length > 0) {
         setSelectedRoom(companyRooms[0].id);
+      }
+    }
+
+    // Carregar campos personalizados
+    const savedFields = localStorage.getItem("formFields");
+    if (savedFields) {
+      try {
+        const parsedFields = JSON.parse(savedFields);
+        // Filtrar apenas campos personalizados (não padrão)
+        const defaultFields = ["name", "birthDate", "status", "room"];
+        const customFields = parsedFields.filter(
+          (field: FormField) => !defaultFields.includes(field.id)
+        );
+        setCustomFields(customFields);
+      } catch (error) {
+        console.error("Error parsing custom fields:", error);
       }
     }
   }, [currentUser, initialData]);
@@ -53,12 +73,62 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       status: status,
       createdAt: initialData?.createdAt || new Date().toISOString(),
       companyId: currentUser?.companyId || null,
+      customFields: customFields.reduce((acc: Record<string, string>, field) => {
+        acc[field.name] = formData.get(field.name) as string;
+        return acc;
+      }, {}),
     };
 
     onSubmit(studentData);
     if (!initialData) {
       e.currentTarget.reset();
       setStatus("active");
+    }
+  };
+
+  const renderCustomField = (field: FormField) => {
+    const value = initialData?.customFields?.[field.name] || "";
+
+    switch (field.type) {
+      case "textarea":
+        return (
+          <Textarea
+            id={field.name}
+            name={field.name}
+            required={field.required}
+            defaultValue={value}
+          />
+        );
+      case "email":
+        return (
+          <Input
+            id={field.name}
+            name={field.name}
+            type="email"
+            required={field.required}
+            defaultValue={value}
+          />
+        );
+      case "tel":
+        return (
+          <Input
+            id={field.name}
+            name={field.name}
+            type="tel"
+            required={field.required}
+            defaultValue={value}
+          />
+        );
+      default:
+        return (
+          <Input
+            id={field.name}
+            name={field.name}
+            type="text"
+            required={field.required}
+            defaultValue={value}
+          />
+        );
     }
   };
 
@@ -121,6 +191,13 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
               </SelectContent>
             </Select>
           </div>
+
+          {customFields.map((field) => (
+            <div key={field.id} className="space-y-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              {renderCustomField(field)}
+            </div>
+          ))}
 
           <Button type="submit" className="w-full">
             {initialData ? (

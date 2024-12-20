@@ -9,4 +9,5 @@ export interface Student {
   status: "active" | "inactive";
   createdAt: string;
   companyId: string | null;
+  customFields?: Record<string, string>;
 }
