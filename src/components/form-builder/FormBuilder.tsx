@@ -54,68 +54,30 @@ export const FormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
 
-  const loadFields = () => {
-    if (!currentUser?.companyId) return;
-
-    const storageKey = `formFields_${currentUser.companyId}`;
-    const savedFields = localStorage.getItem(storageKey);
-    
+  useEffect(() => {
+    // Load saved fields from localStorage
+    const savedFields = localStorage.getItem("formFields");
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        const mergedFields = [...defaultFields];
-        
-        parsedFields.forEach((field: FormField) => {
-          if (!defaultFields.some(defaultField => defaultField.id === field.id)) {
-            mergedFields.push(field);
-          }
-        });
-        
+        // Ensure default fields are always present
+        const mergedFields = defaultFields.concat(
+          parsedFields.filter((field: FormField) => 
+            !defaultFields.some(defaultField => defaultField.id === field.id)
+          )
+        );
         setFields(mergedFields);
       } catch (error) {
-        console.error("Erro ao carregar campos salvos:", error);
+        console.error("Error parsing saved fields:", error);
         setFields(defaultFields);
       }
-    } else {
-      // Se não houver campos salvos, salva os campos padrão
-      localStorage.setItem(storageKey, JSON.stringify(defaultFields));
-      setFields(defaultFields);
     }
-  };
+  }, []);
 
-  // Carrega os campos ao montar o componente
   useEffect(() => {
-    loadFields();
-  }, [currentUser?.companyId]);
-
-  // Monitora mudanças no localStorage
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (!currentUser?.companyId) return;
-      
-      const storageKey = `formFields_${currentUser.companyId}`;
-      if (e.key === storageKey) {
-        loadFields();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [currentUser?.companyId]);
-
-  // Salva os campos no localStorage sempre que houver mudanças
-  useEffect(() => {
-    if (!currentUser?.companyId || !fields.length) return;
-    
-    const storageKey = `formFields_${currentUser.companyId}`;
-    localStorage.setItem(storageKey, JSON.stringify(fields));
-
-    // Dispara um evento customizado para notificar outras partes da aplicação
-    const event = new CustomEvent('formFieldsUpdated', { 
-      detail: { companyId: currentUser.companyId } 
-    });
-    window.dispatchEvent(event);
-  }, [fields, currentUser?.companyId]);
+    // Save form fields to localStorage whenever they change
+    localStorage.setItem("formFields", JSON.stringify(fields));
+  }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     const newField: FormField = {
@@ -123,11 +85,8 @@ export const FormBuilder = () => {
       id: Math.random().toString(36).substr(2, 9),
       order: fields.length,
     };
-    
-    const updatedFields = [...fields, newField];
-    setFields(updatedFields);
+    setFields([...fields, newField]);
     setIsAddingField(false);
-    
     toast({
       title: "Campo adicionado",
       description: "O novo campo foi adicionado com sucesso.",
@@ -135,14 +94,11 @@ export const FormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
-    const defaultFieldIds = ["name", "birthDate", "status", "room"];
-    if (defaultFieldIds.includes(id)) {
+    const defaultFields = ["name", "birthDate", "status", "room"];
+    if (defaultFields.includes(id)) {
       return;
     }
-    
-    const updatedFields = fields.filter((field) => field.id !== id);
-    setFields(updatedFields);
-    
+    setFields(fields.filter((field) => field.id !== id));
     toast({
       title: "Campo removido",
       description: "O campo foi removido com sucesso.",

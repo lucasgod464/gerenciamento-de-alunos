@@ -4,16 +4,8 @@ import { StudentTable } from "./StudentTable";
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Search, Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -27,7 +19,6 @@ export const StudentRegistration = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
@@ -74,7 +65,6 @@ export const StudentRegistration = () => {
     localStorage.setItem("students", JSON.stringify(allStudents));
     
     setStudents(prev => [...prev, studentWithCompany]);
-    setIsDialogOpen(false);
 
     toast({
       title: "Sucesso",
@@ -114,49 +104,31 @@ export const StudentRegistration = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="grid gap-4 md:grid-cols-2 flex-1 mr-4">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar alunos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
-            />
-          </div>
-          <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por sala" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as salas</SelectItem>
-              {rooms.map((room) => (
-                <SelectItem key={room.id} value={room.id}>
-                  {room.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar alunos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Aluno
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Novo Aluno</DialogTitle>
-            </DialogHeader>
-            <StudentForm 
-              onSubmit={handleAddStudent} 
-              open={isDialogOpen}
-            />
-          </DialogContent>
-        </Dialog>
+        <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+          <SelectTrigger>
+            <SelectValue placeholder="Filtrar por sala" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as salas</SelectItem>
+            {rooms.map((room) => (
+              <SelectItem key={room.id} value={room.id}>
+                {room.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
+      <StudentForm onSubmit={handleAddStudent} />
       <StudentTable 
         students={filteredStudents} 
         rooms={rooms} 
