@@ -14,6 +14,13 @@ import { Switch } from "@/components/ui/switch";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Category {
   id: string;
@@ -26,6 +33,8 @@ const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -39,7 +48,16 @@ const Categories = () => {
     setCategories(companyCategories);
   }, [currentUser]);
 
-  const handleCreateCategory = (name: string) => {
+  const handleCreateCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Erro",
+        description: "O nome da categoria é obrigatório.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
     const otherCategories = allCategories.filter(
       (cat: Category) => cat.companyId !== currentUser?.companyId
@@ -47,7 +65,7 @@ const Categories = () => {
 
     const newCategory: Category = {
       id: Math.random().toString(36).substr(2, 9),
-      name,
+      name: newCategoryName,
       status: true,
       companyId: currentUser?.companyId
     };
@@ -60,6 +78,9 @@ const Categories = () => {
       title: "Categoria criada",
       description: "A categoria foi criada com sucesso.",
     });
+
+    setNewCategoryName("");
+    setIsDialogOpen(false);
   };
 
   const handleDeleteCategory = (id: string) => {
@@ -130,10 +151,7 @@ const Categories = () => {
               <option value="active">Ativos</option>
               <option value="inactive">Inativos</option>
             </select>
-            <Button onClick={() => {
-              const name = window.prompt("Digite o nome da categoria:");
-              if (name) handleCreateCategory(name);
-            }}>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Categoria
             </Button>
@@ -172,6 +190,33 @@ const Categories = () => {
           </Table>
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nova Categoria</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome da Categoria</Label>
+              <Input
+                id="name"
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                placeholder="Digite o nome da categoria"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateCategory}>
+              Criar Categoria
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
