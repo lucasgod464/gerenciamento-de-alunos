@@ -6,10 +6,12 @@ import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export const FormBuilder = () => {
+  const { toast } = useToast();
   const { user: currentUser } = useAuth();
-  const [fields, setFields] = useState<FormField[]>([
+  const defaultFields: FormField[] = [
     {
       id: "name",
       name: "fullName",
@@ -45,11 +47,32 @@ export const FormBuilder = () => {
       type: "select",
       required: true,
       order: 3,
-      options: [], // Will be populated from rooms data
+      options: [],
     },
-  ]);
+  ];
 
+  const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
+
+  useEffect(() => {
+    // Load saved fields from localStorage
+    const savedFields = localStorage.getItem("formFields");
+    if (savedFields) {
+      try {
+        const parsedFields = JSON.parse(savedFields);
+        // Ensure default fields are always present
+        const mergedFields = defaultFields.concat(
+          parsedFields.filter((field: FormField) => 
+            !defaultFields.some(defaultField => defaultField.id === field.id)
+          )
+        );
+        setFields(mergedFields);
+      } catch (error) {
+        console.error("Error parsing saved fields:", error);
+        setFields(defaultFields);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Save form fields to localStorage whenever they change
@@ -64,14 +87,22 @@ export const FormBuilder = () => {
     };
     setFields([...fields, newField]);
     setIsAddingField(false);
+    toast({
+      title: "Campo adicionado",
+      description: "O novo campo foi adicionado com sucesso.",
+    });
   };
 
   const handleDeleteField = (id: string) => {
     const defaultFields = ["name", "birthDate", "status", "room"];
     if (defaultFields.includes(id)) {
-      return; // Prevent deletion of default fields
+      return;
     }
     setFields(fields.filter((field) => field.id !== id));
+    toast({
+      title: "Campo removido",
+      description: "O campo foi removido com sucesso.",
+    });
   };
 
   return (
