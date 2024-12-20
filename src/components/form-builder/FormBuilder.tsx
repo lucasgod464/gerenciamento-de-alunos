@@ -66,29 +66,32 @@ export const FormBuilder = () => {
       try {
         const parsedFields = JSON.parse(savedFields);
         console.log("Campos carregados:", parsedFields);
-        
-        // Garante que os campos padrão estejam sempre presentes
-        const mergedFields = defaultFields.concat(
-          parsedFields.filter((field: FormField) => 
-            !defaultFields.some(defaultField => defaultField.id === field.id)
-          )
-        );
-        setFields(mergedFields);
+        setFields(parsedFields);
       } catch (error) {
         console.error("Erro ao carregar campos salvos:", error);
         setFields(defaultFields);
       }
+    } else {
+      setFields(defaultFields);
     }
   }, [currentUser?.companyId]);
 
   // Salva os campos no localStorage sempre que houver mudanças
   useEffect(() => {
-    if (!currentUser?.companyId) return;
+    if (!currentUser?.companyId || !fields) return;
     
     console.log("Salvando campos para a empresa:", currentUser.companyId);
     const storageKey = `formFields_${currentUser.companyId}`;
-    localStorage.setItem(storageKey, JSON.stringify(fields));
-    console.log("Campos salvos:", fields);
+    
+    // Garante que os campos padrão estejam sempre presentes
+    const fieldsToSave = defaultFields.concat(
+      fields.filter(field => 
+        !defaultFields.some(defaultField => defaultField.id === field.id)
+      )
+    );
+    
+    localStorage.setItem(storageKey, JSON.stringify(fieldsToSave));
+    console.log("Campos salvos:", fieldsToSave);
   }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
