@@ -1,135 +1,123 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Plus, Save } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { CustomFields } from "./form/CustomFields";
 import { RoomSelect } from "./form/RoomSelect";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface StudentFormProps {
-  onSubmit: (student: Student) => void;
-  initialData?: Student;
+  onSubmit: (data: any) => void;
+  initialData?: any;
   open?: boolean;
 }
 
 export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) => {
-  const [status, setStatus] = useState<"active" | "inactive">(initialData?.status || "active");
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState<string>(initialData?.room || "");
-  const [customFields, setCustomFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
+  const [customFields, setCustomFields] = useState<FormField[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
 
   const loadCustomFields = () => {
     if (!currentUser?.companyId) return;
-    
-    console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
+
     const storageKey = `formFields_${currentUser.companyId}`;
     const savedFields = localStorage.getItem(storageKey);
-    
+
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        console.log("Campos carregados:", parsedFields);
-        
-        // Filtra apenas os campos personalizados (exclui os campos padrão)
-        const defaultFields = ["name", "birthDate", "status", "room"];
-        const customFields = parsedFields.filter(
-          (field: FormField) => !defaultFields.includes(field.id)
-        );
-        
-        console.log("Campos personalizados filtrados:", customFields);
-        setCustomFields(customFields);
+        // Verifica se os campos realmente mudaram antes de atualizar o estado
+        if (JSON.stringify(parsedFields) !== JSON.stringify(customFields)) {
+          console.log("Atualizando campos personalizados:", parsedFields);
+          setCustomFields(parsedFields);
+        }
       } catch (error) {
         console.error("Erro ao carregar campos personalizados:", error);
-        setCustomFields([]);
       }
-    } else {
-      setCustomFields([]);
     }
   };
 
-  // Carregar campos personalizados quando o componente montar
-  useEffect(() => {
-    loadCustomFields();
-  }, [currentUser?.companyId]);
-
-  // Recarregar campos quando o diálogo for aberto
+  // Carregar campos personalizados quando o formulário for aberto
   useEffect(() => {
     if (open) {
-      console.log("Dialog aberto, recarregando campos personalizados");
       loadCustomFields();
     }
   }, [open]);
 
-  // Monitorar mudanças no localStorage em tempo real
+  // Monitorar mudanças no localStorage
   useEffect(() => {
-    const handleStorageChange = () => {
-      console.log("Detectada mudança nos campos personalizados");
-      loadCustomFields();
+    if (!currentUser?.companyId) return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('formFields_')) {
+        console.log("Detectada mudança nos campos personalizados");
+        loadCustomFields();
+      }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    // Carrega os campos inicialmente
+    loadCustomFields();
 
-    // Adiciona um intervalo para verificar mudanças no localStorage
-    const interval = setInterval(() => {
-      loadCustomFields();
-    }, 1000); // Verifica a cada segundo
+    // Adiciona o listener para mudanças no localStorage
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, [currentUser?.companyId]);
 
   // Carregar salas disponíveis
   useEffect(() => {
-    if (!currentUser?.companyId) return;
-    
-    const storedRooms = localStorage.getItem("rooms");
-    if (storedRooms) {
-      const allRooms = JSON.parse(storedRooms);
-      const companyRooms = allRooms.filter(
-        (room: any) => room.companyId === currentUser.companyId
-      );
-      setRooms(companyRooms);
-      if (!initialData && companyRooms.length > 0) {
-        setSelectedRoom(companyRooms[0].id);
-      }
-    }
-  }, [currentUser?.companyId, initialData]);
+    // Carregar lógica de salas disponíveis
+    const fetchRooms = async () => {
+      if (!currentUser?.companyId) return;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const studentData: Student = {
-      id: initialData?.id || Math.random().toString(36).substr(2, 9),
-      name: formData.get("fullName") as string,
-      birthDate: formData.get("birthDate") as string,
-      room: selectedRoom,
-      status: status,
-      createdAt: initialData?.createdAt || new Date().toISOString(),
-      companyId: currentUser?.companyId || null,
-      customFields: customFields.reduce((acc: Record<string, string>, field) => {
-        acc[field.name] = formData.get(field.name) as string;
-        return acc;
-      }, {}),
+      // Simulação de chamada de API para buscar salas
+      const response = await fetch(`/api/rooms?companyId=${currentUser.companyId}`);
+      const data = await response.json();
+      setRooms(data);
     };
 
-    onSubmit(studentData);
-    if (!initialData) {
-      e.currentTarget.reset();
-      setStatus("active");
+    fetchRooms();
+  }, [currentUser?.companyId]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+    const data: any = {
+      fullName: formData.get("fullName"),
+      birthDate: formData.get("birthDate"),
+      status: formData.get("status"),
+      roomId: formData.get("roomId"),
+      customFields: {},
+    };
+
+    // Processar campos personalizados
+    customFields.forEach((field) => {
+      if (field.id !== "name" && field.id !== "birthDate" && field.id !== "status" && field.id !== "room") {
+        data.customFields[field.name] = formData.get(field.name);
+      }
+    });
+
+    try {
+      await onSubmit(data);
+      toast({
+        title: initialData ? "Aluno atualizado" : "Aluno cadastrado",
+        description: initialData
+          ? "As informações do aluno foram atualizadas com sucesso."
+          : "O aluno foi cadastrado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao processar formulário:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao processar o formulário.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -140,9 +128,8 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
         <Input
           id="fullName"
           name="fullName"
-          type="text"
           required
-          defaultValue={initialData?.name}
+          defaultValue={initialData?.fullName}
         />
       </div>
 
@@ -158,24 +145,25 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
       </div>
 
       <div className="space-y-2">
-        <Label>Status</Label>
-        <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Ativo</SelectItem>
-            <SelectItem value="inactive">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label htmlFor="status">Status</Label>
+        <select
+          id="status"
+          name="status"
+          className="w-full px-3 py-2 border rounded-md"
+          required
+          defaultValue={initialData?.status || "active"}
+        >
+          <option value="active">Ativo</option>
+          <option value="inactive">Inativo</option>
+        </select>
       </div>
 
       <div className="space-y-2">
-        <Label>Sala</Label>
+        <Label htmlFor="roomId">Sala</Label>
         <RoomSelect
           rooms={rooms}
-          selectedRoom={selectedRoom}
-          onRoomChange={setSelectedRoom}
+          defaultValue={initialData?.roomId}
+          required
         />
       </div>
 
@@ -184,19 +172,11 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
         initialData={initialData?.customFields}
       />
 
-      <Button type="submit" className="w-full">
-        {initialData ? (
-          <>
-            <Save className="mr-2 h-4 w-4" />
-            Salvar Alterações
-          </>
-        ) : (
-          <>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Aluno
-          </>
-        )}
-      </Button>
+      <div className="flex justify-end space-x-2">
+        <Button type="submit">
+          {initialData ? "Atualizar" : "Cadastrar"}
+        </Button>
+      </div>
     </form>
   );
 };
