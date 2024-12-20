@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Plus, Save } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Student } from "@/types/student";
+import { FormField } from "@/types/form";
+import { CustomFields } from "./form/CustomFields";
+import { RoomSelect } from "./form/RoomSelect";
 import {
   Select,
   SelectContent,
@@ -11,10 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Save } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { Student } from "@/types/student";
-import { FormField } from "@/types/form";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
@@ -49,7 +49,6 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        // Filtrar apenas campos personalizados (não padrão)
         const defaultFields = ["name", "birthDate", "status", "room"];
         const customFields = parsedFields.filter(
           (field: FormField) => !defaultFields.includes(field.id)
@@ -86,134 +85,70 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     }
   };
 
-  const renderCustomField = (field: FormField) => {
-    const value = initialData?.customFields?.[field.name] || "";
-
-    switch (field.type) {
-      case "textarea":
-        return (
-          <Textarea
-            id={field.name}
-            name={field.name}
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-      case "email":
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type="email"
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-      case "tel":
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type="tel"
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-      default:
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type="text"
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-    }
-  };
-
   return (
-    <Card className={!initialData ? undefined : "border-0 shadow-none"}>
-      {!initialData && (
-        <CardHeader>
-          <CardTitle>Novo Aluno</CardTitle>
-        </CardHeader>
-      )}
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nome Completo</Label>
-            <Input 
-              id="fullName" 
-              name="fullName" 
-              type="text" 
-              required 
-              defaultValue={initialData?.name}
-            />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="fullName">Nome Completo</Label>
+        <Input
+          id="fullName"
+          name="fullName"
+          type="text"
+          required
+          defaultValue={initialData?.name}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input 
-              id="birthDate" 
-              name="birthDate" 
-              type="date" 
-              required 
-              defaultValue={initialData?.birthDate}
-            />
-          </div>
+      <div className="space-y-2">
+        <Label htmlFor="birthDate">Data de Nascimento</Label>
+        <Input
+          id="birthDate"
+          name="birthDate"
+          type="date"
+          required
+          defaultValue={initialData?.birthDate}
+        />
+      </div>
 
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="space-y-2">
+        <Label>Status</Label>
+        <Select value={status} onValueChange={(value: "active" | "inactive") => setStatus(value)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Ativo</SelectItem>
+            <SelectItem value="inactive">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="room">Sala</Label>
-            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a sala" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="space-y-2">
+        <Label>Sala</Label>
+        <RoomSelect
+          rooms={rooms}
+          selectedRoom={selectedRoom}
+          onRoomChange={setSelectedRoom}
+        />
+      </div>
 
-          {customFields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.name}>{field.label}</Label>
-              {renderCustomField(field)}
-            </div>
-          ))}
+      <CustomFields
+        fields={customFields}
+        initialData={initialData?.customFields}
+      />
 
-          <Button type="submit" className="w-full">
-            {initialData ? (
-              <>
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Alterações
-              </>
-            ) : (
-              <>
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Aluno
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+      <Button type="submit" className="w-full">
+        {initialData ? (
+          <>
+            <Save className="mr-2 h-4 w-4" />
+            Salvar Alterações
+          </>
+        ) : (
+          <>
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Aluno
+          </>
+        )}
+      </Button>
+    </form>
   );
 };
