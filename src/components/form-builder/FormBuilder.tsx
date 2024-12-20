@@ -56,10 +56,17 @@ export const FormBuilder = () => {
 
   // Carrega os campos salvos do localStorage
   useEffect(() => {
-    const savedFields = localStorage.getItem(`formFields_${currentUser?.companyId}`);
+    if (!currentUser?.companyId) return;
+
+    console.log("Carregando campos para a empresa:", currentUser.companyId);
+    const storageKey = `formFields_${currentUser.companyId}`;
+    const savedFields = localStorage.getItem(storageKey);
+    
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
+        console.log("Campos carregados:", parsedFields);
+        
         // Garante que os campos padrão estejam sempre presentes
         const mergedFields = defaultFields.concat(
           parsedFields.filter((field: FormField) => 
@@ -76,9 +83,12 @@ export const FormBuilder = () => {
 
   // Salva os campos no localStorage sempre que houver mudanças
   useEffect(() => {
-    if (currentUser?.companyId) {
-      localStorage.setItem(`formFields_${currentUser.companyId}`, JSON.stringify(fields));
-    }
+    if (!currentUser?.companyId) return;
+    
+    console.log("Salvando campos para a empresa:", currentUser.companyId);
+    const storageKey = `formFields_${currentUser.companyId}`;
+    localStorage.setItem(storageKey, JSON.stringify(fields));
+    console.log("Campos salvos:", fields);
   }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
@@ -87,9 +97,11 @@ export const FormBuilder = () => {
       id: Math.random().toString(36).substr(2, 9),
       order: fields.length,
     };
+    
     const updatedFields = [...fields, newField];
     setFields(updatedFields);
     setIsAddingField(false);
+    
     toast({
       title: "Campo adicionado",
       description: "O novo campo foi adicionado com sucesso.",
@@ -101,8 +113,10 @@ export const FormBuilder = () => {
     if (defaultFieldIds.includes(id)) {
       return;
     }
+    
     const updatedFields = fields.filter((field) => field.id !== id);
     setFields(updatedFields);
+    
     toast({
       title: "Campo removido",
       description: "O campo foi removido com sucesso.",
