@@ -71,18 +71,25 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
     }
   }, [open]);
 
-  // Monitorar mudanças no localStorage
+  // Monitorar mudanças no localStorage em tempo real
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('formFields_')) {
-        console.log("Detectada mudança nos campos personalizados");
-        loadCustomFields();
-      }
+    const handleStorageChange = () => {
+      console.log("Detectada mudança nos campos personalizados");
+      loadCustomFields();
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+
+    // Adiciona um intervalo para verificar mudanças no localStorage
+    const interval = setInterval(() => {
+      loadCustomFields();
+    }, 1000); // Verifica a cada segundo
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [currentUser?.companyId]);
 
   // Carregar salas disponíveis
   useEffect(() => {
@@ -172,7 +179,6 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
         />
       </div>
 
-      {/* Renderiza os campos personalizados */}
       <CustomFields
         fields={customFields}
         initialData={initialData?.customFields}
