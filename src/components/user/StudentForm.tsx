@@ -29,11 +29,7 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        // Verifica se os campos realmente mudaram antes de atualizar o estado
-        if (JSON.stringify(parsedFields) !== JSON.stringify(customFields)) {
-          console.log("Atualizando campos personalizados:", parsedFields);
-          setCustomFields(parsedFields);
-        }
+        setCustomFields(parsedFields);
       } catch (error) {
         console.error("Erro ao carregar campos personalizados:", error);
       }
@@ -42,31 +38,7 @@ export const StudentForm = ({ onSubmit, initialData, open }: StudentFormProps) =
 
   // Carregar campos personalizados quando o formulário for aberto
   useEffect(() => {
-    if (open) {
-      loadCustomFields();
-    }
-  }, [open]);
-
-  // Monitorar mudanças no localStorage
-  useEffect(() => {
-    if (!currentUser?.companyId) return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('formFields_')) {
-        console.log("Detectada mudança nos campos personalizados");
-        loadCustomFields();
-      }
-    };
-
-    // Carrega os campos inicialmente
     loadCustomFields();
-
-    // Adiciona o listener para mudanças no localStorage
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, [currentUser?.companyId]);
 
   // Carregar salas disponíveis
