@@ -2,7 +2,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  responsibleRoom: string;
+  responsibleCategory: string;
   location: string;
   specialization: string;
   status: "active" | "inactive";
