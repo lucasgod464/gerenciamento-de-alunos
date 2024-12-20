@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { User } from "@/types/user";
+import { CategorySelect } from "./CategorySelect";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -52,16 +53,11 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="responsibleRoom">Sala Responsável</Label>
-            <Select name="responsibleRoom" defaultValue={user.responsibleRoom}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sala1">Sala 1</SelectItem>
-                <SelectItem value="sala2">Sala 2</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="responsibleCategory">Categoria Responsável</Label>
+            <CategorySelect
+              value={user.responsibleCategory}
+              onChange={() => {}}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="location">Local</Label>

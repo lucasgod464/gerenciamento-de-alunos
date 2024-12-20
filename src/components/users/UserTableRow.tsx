@@ -16,7 +16,7 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
     <TableRow>
       <TableCell>{user.name}</TableCell>
       <TableCell>{user.email}</TableCell>
-      <TableCell>{user.responsibleRoom}</TableCell>
+      <TableCell>{user.responsibleCategory}</TableCell>
       <TableCell>{user.specialization}</TableCell>
       <TableCell>
         <Switch

@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -10,7 +11,7 @@ import {
 import { CategorySelect } from "./CategorySelect";
 
 interface UserFormFieldsProps {
-  generateStrongPassword: () => void;
+  generateStrongPassword?: () => void;
 }
 
 export const UserFormFields = ({ generateStrongPassword }: UserFormFieldsProps) => {
@@ -35,25 +36,27 @@ export const UserFormFields = ({ generateStrongPassword }: UserFormFieldsProps) 
           required
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
-        <div className="flex gap-2">
-          <Input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Digite a senha"
-            required
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={generateStrongPassword}
-          >
-            Gerar
-          </Button>
+      {generateStrongPassword && (
+        <div className="space-y-2">
+          <Label htmlFor="password">Senha</Label>
+          <div className="flex gap-2">
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="Digite a senha"
+              required
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={generateStrongPassword}
+            >
+              Gerar
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="responsibleCategory">Categoria Responsável</Label>
         <CategorySelect
@@ -77,11 +80,8 @@ export const UserFormFields = ({ generateStrongPassword }: UserFormFieldsProps) 
             <SelectValue placeholder="Selecione a especialização" />
           </SelectTrigger>
           <SelectContent>
-            {specializations.map((spec) => (
-              <SelectItem key={spec.id} value={spec.id}>
-                {spec.name}
-              </SelectItem>
-            ))}
+            <SelectItem value="esp1">Especialização 1</SelectItem>
+            <SelectItem value="esp2">Especialização 2</SelectItem>
           </SelectContent>
         </Select>
       </div>

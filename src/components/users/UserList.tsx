@@ -38,7 +38,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
       ...editingUser,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
-      responsibleRoom: formData.get("responsibleRoom") as string,
+      responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,
       status: formData.get("status") as "active" | "inactive",
@@ -55,7 +55,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
           <TableRow>
             <TableHead>Nome Completo</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Sala Responsável</TableHead>
+            <TableHead>Categoria Responsável</TableHead>
             <TableHead>Especialização</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Data de Cadastro</TableHead>
