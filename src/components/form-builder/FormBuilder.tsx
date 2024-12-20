@@ -54,13 +54,13 @@ export const FormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
 
+  // Carrega os campos salvos do localStorage
   useEffect(() => {
-    // Load saved fields from localStorage
-    const savedFields = localStorage.getItem("formFields");
+    const savedFields = localStorage.getItem(`formFields_${currentUser?.companyId}`);
     if (savedFields) {
       try {
         const parsedFields = JSON.parse(savedFields);
-        // Ensure default fields are always present
+        // Garante que os campos padrão estejam sempre presentes
         const mergedFields = defaultFields.concat(
           parsedFields.filter((field: FormField) => 
             !defaultFields.some(defaultField => defaultField.id === field.id)
@@ -68,16 +68,18 @@ export const FormBuilder = () => {
         );
         setFields(mergedFields);
       } catch (error) {
-        console.error("Error parsing saved fields:", error);
+        console.error("Erro ao carregar campos salvos:", error);
         setFields(defaultFields);
       }
     }
-  }, []);
+  }, [currentUser?.companyId]);
 
+  // Salva os campos no localStorage sempre que houver mudanças
   useEffect(() => {
-    // Save form fields to localStorage whenever they change
-    localStorage.setItem("formFields", JSON.stringify(fields));
-  }, [fields]);
+    if (currentUser?.companyId) {
+      localStorage.setItem(`formFields_${currentUser.companyId}`, JSON.stringify(fields));
+    }
+  }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     const newField: FormField = {
@@ -85,7 +87,8 @@ export const FormBuilder = () => {
       id: Math.random().toString(36).substr(2, 9),
       order: fields.length,
     };
-    setFields([...fields, newField]);
+    const updatedFields = [...fields, newField];
+    setFields(updatedFields);
     setIsAddingField(false);
     toast({
       title: "Campo adicionado",
@@ -94,11 +97,12 @@ export const FormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
-    const defaultFields = ["name", "birthDate", "status", "room"];
-    if (defaultFields.includes(id)) {
+    const defaultFieldIds = ["name", "birthDate", "status", "room"];
+    if (defaultFieldIds.includes(id)) {
       return;
     }
-    setFields(fields.filter((field) => field.id !== id));
+    const updatedFields = fields.filter((field) => field.id !== id);
+    setFields(updatedFields);
     toast({
       title: "Campo removido",
       description: "O campo foi removido com sucesso.",
