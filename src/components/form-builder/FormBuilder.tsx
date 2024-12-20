@@ -82,6 +82,8 @@ export const FormBuilder = () => {
         console.error("Erro ao carregar campos salvos:", error);
         setFields(defaultFields);
       }
+    } else {
+      setFields(defaultFields);
     }
   }, [currentUser?.companyId]);
 
@@ -92,8 +94,11 @@ export const FormBuilder = () => {
     console.log("Salvando campos para a empresa:", currentUser.companyId);
     const storageKey = `formFields_${currentUser.companyId}`;
     
-    localStorage.setItem(storageKey, JSON.stringify(fields));
-    console.log("Campos salvos:", fields);
+    // Garante que os campos padrão estejam sempre presentes
+    const fieldsToSave = [...fields];
+    
+    localStorage.setItem(storageKey, JSON.stringify(fieldsToSave));
+    console.log("Campos salvos:", fieldsToSave);
   }, [fields, currentUser?.companyId]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
