@@ -28,39 +28,52 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const { user: currentUser } = useAuth();
 
-  // Carregar campos personalizados imediatamente quando o componente montar
-  useEffect(() => {
-    const loadCustomFields = () => {
-      if (!currentUser?.companyId) return;
-      
-      console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
-      const storageKey = `formFields_${currentUser.companyId}`;
-      const savedFields = localStorage.getItem(storageKey);
-      
-      if (savedFields) {
-        try {
-          const parsedFields = JSON.parse(savedFields);
-          console.log("Campos carregados:", parsedFields);
-          
-          // Filtra apenas os campos personalizados (exclui os campos padrão)
-          const defaultFields = ["name", "birthDate", "status", "room"];
-          const customFields = parsedFields.filter(
-            (field: FormField) => !defaultFields.includes(field.id)
-          );
-          
-          console.log("Campos personalizados filtrados:", customFields);
-          setCustomFields(customFields);
-        } catch (error) {
-          console.error("Erro ao carregar campos personalizados:", error);
-          setCustomFields([]);
-        }
-      } else {
+  const loadCustomFields = () => {
+    if (!currentUser?.companyId) return;
+    
+    console.log("Carregando campos personalizados para a empresa:", currentUser.companyId);
+    const storageKey = `formFields_${currentUser.companyId}`;
+    const savedFields = localStorage.getItem(storageKey);
+    
+    if (savedFields) {
+      try {
+        const parsedFields = JSON.parse(savedFields);
+        console.log("Campos carregados:", parsedFields);
+        
+        // Filtra apenas os campos personalizados (exclui os campos padrão)
+        const defaultFields = ["name", "birthDate", "status", "room"];
+        const customFields = parsedFields.filter(
+          (field: FormField) => !defaultFields.includes(field.id)
+        );
+        
+        console.log("Campos personalizados filtrados:", customFields);
+        setCustomFields(customFields);
+      } catch (error) {
+        console.error("Erro ao carregar campos personalizados:", error);
         setCustomFields([]);
+      }
+    } else {
+      setCustomFields([]);
+    }
+  };
+
+  // Carregar campos personalizados quando o componente montar
+  useEffect(() => {
+    loadCustomFields();
+  }, [currentUser?.companyId]);
+
+  // Recarregar campos quando o diálogo for aberto
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('formFields_')) {
+        console.log("Detectada mudança nos campos personalizados");
+        loadCustomFields();
       }
     };
 
-    loadCustomFields();
-  }, [currentUser?.companyId]);
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Carregar salas disponíveis
   useEffect(() => {

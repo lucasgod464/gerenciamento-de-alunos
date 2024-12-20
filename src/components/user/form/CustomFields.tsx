@@ -23,6 +23,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
       case "textarea":
         return (
           <Textarea
+            key={field.id}
             id={field.name}
             name={field.name}
             required={field.required}
@@ -31,7 +32,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
         );
       case "select":
         return (
-          <Select defaultValue={value} name={field.name}>
+          <Select key={field.id} defaultValue={value} name={field.name}>
             <SelectTrigger>
               <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
@@ -47,6 +48,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
       case "email":
         return (
           <Input
+            key={field.id}
             id={field.name}
             name={field.name}
             type="email"
@@ -57,6 +59,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
       case "tel":
         return (
           <Input
+            key={field.id}
             id={field.name}
             name={field.name}
             type="tel"
@@ -67,6 +70,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
       case "date":
         return (
           <Input
+            key={field.id}
             id={field.name}
             name={field.name}
             type="date"
@@ -77,6 +81,7 @@ export const CustomFields = ({ fields, initialData }: CustomFieldsProps) => {
       default:
         return (
           <Input
+            key={field.id}
             id={field.name}
             name={field.name}
             type="text"
