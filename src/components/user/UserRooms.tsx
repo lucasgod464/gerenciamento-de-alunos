@@ -1,0 +1,69 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent } from "@/components/ui/card";
+import { DoorOpen } from "lucide-react";
+
+interface Room {
+  id: string;
+  name: string;
+  schedule: string;
+  location: string;
+  studyRoom: string;
+  capacity: number;
+  resources: string;
+  status: boolean;
+  companyId: string | null;
+  authorizedUsers: string[];
+}
+
+export function UserRooms() {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const authorizedRooms = allRooms.filter((room: Room) => 
+      room.authorizedUsers.includes(user.id) && room.status
+    );
+    setRooms(authorizedRooms);
+  }, [user]);
+
+  if (rooms.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            Você ainda não tem acesso a nenhuma sala.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {rooms.map((room) => (
+        <Card key={room.id}>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <DoorOpen className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold">{room.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  {room.location}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Horário: {room.schedule}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}

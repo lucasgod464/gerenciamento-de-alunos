@@ -9,6 +9,7 @@ import {
   GraduationCap,
   ClipboardCheck,
   BarChart,
+  DoorOpen,
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -54,6 +55,11 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
       title: "Controle de Presença",
       href: "/user/attendance",
       icon: ClipboardCheck,
+    },
+    {
+      title: "Minhas Salas",
+      href: "/user/my-rooms",
+      icon: DoorOpen,
     },
     {
       title: "Relatórios",
