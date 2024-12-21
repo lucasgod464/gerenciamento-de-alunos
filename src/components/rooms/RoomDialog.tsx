@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Room {
   id: string;
@@ -27,6 +29,7 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
+  authorizedUsers: string[]; // Array of user IDs
 }
 
 interface RoomDialogProps {
@@ -46,8 +49,21 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
       capacity: 0,
       resources: "",
       status: true,
+      authorizedUsers: [],
     }
   );
+  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([]);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+    
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const companyUsers = allUsers.filter(
+      (user: any) => user.companyId === currentUser.companyId
+    );
+    setUsers(companyUsers);
+  }, [currentUser]);
 
   const handleSave = () => {
     onSave(room);
@@ -61,6 +77,9 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
           <DialogTitle>
             {editingRoom ? "Editar Sala" : "Nova Sala"}
           </DialogTitle>
+          <DialogDescription>
+            Preencha os dados da sala e selecione os usuários autorizados
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
@@ -118,6 +137,55 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
               value={room.resources}
               onChange={(e) => setRoom({ ...room, resources: e.target.value })}
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Usuários Autorizados</Label>
+            <Select
+              value=""
+              onValueChange={(userId) => {
+                const currentUsers = room.authorizedUsers || [];
+                if (!currentUsers.includes(userId)) {
+                  setRoom({
+                    ...room,
+                    authorizedUsers: [...currentUsers, userId],
+                  });
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione os usuários" />
+              </SelectTrigger>
+              <SelectContent>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* Lista de usuários selecionados */}
+            <div className="mt-2 space-y-2">
+              {room.authorizedUsers?.map((userId) => {
+                const user = users.find((u) => u.id === userId);
+                return user ? (
+                  <div key={userId} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+                    <span>{user.name}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setRoom({
+                          ...room,
+                          authorizedUsers: room.authorizedUsers?.filter((id) => id !== userId) || [],
+                        });
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  </div>
+                ) : null;
+              })}
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <Label htmlFor="status">Status</Label>

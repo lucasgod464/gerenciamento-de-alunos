@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoomDialog } from "@/components/rooms/RoomDialog";
 import { RoomFilters } from "@/components/rooms/RoomFilters";
 import { RoomTable } from "@/components/rooms/RoomTable";
+import { useToast } from "@/hooks/use-toast";
 
 interface Room {
   id: string;
@@ -17,6 +18,7 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
+  authorizedUsers: string[];
 }
 
 const Rooms = () => {
@@ -27,6 +29,7 @@ const Rooms = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -50,15 +53,24 @@ const Rooms = () => {
       );
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
+      toast({
+        title: "Sala atualizada",
+        description: "A sala foi atualizada com sucesso.",
+      });
     } else {
       const newRoomWithId = { 
         id: Math.random().toString(36).substr(2, 9),
         ...newRoom,
-        companyId: currentUser?.companyId
+        companyId: currentUser?.companyId,
+        authorizedUsers: newRoom.authorizedUsers || []
       } as Room;
       const updatedRooms = [...rooms, newRoomWithId];
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
+      toast({
+        title: "Sala criada",
+        description: "A nova sala foi criada com sucesso.",
+      });
     }
     
     setIsDialogOpen(false);
@@ -79,6 +91,12 @@ const Rooms = () => {
     const updatedRooms = rooms.filter(room => room.id !== id);
     localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
     setRooms(updatedRooms);
+    
+    toast({
+      title: "Sala excluída",
+      description: "A sala foi excluída com sucesso.",
+      variant: "destructive",
+    });
   };
 
   const filteredRooms = rooms.filter(room => {
