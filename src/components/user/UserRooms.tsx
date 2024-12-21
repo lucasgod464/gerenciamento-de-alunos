@@ -26,33 +26,29 @@ export function UserRooms() {
       return;
     }
 
+    // Carregar usuários para obter as salas autorizadas
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUserData = users.find((u: any) => 
+      u.id === user.id || u.email === user.email
+    );
+
+    console.log("Current user data:", currentUserData);
+
+    if (!currentUserData?.authorizedRooms?.length) {
+      console.log("No authorized rooms found for user");
+      setRooms([]);
+      return;
+    }
+
+    // Carregar todas as salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    console.log("All rooms from localStorage:", allRooms);
-    console.log("Current user ID:", user.id);
-    console.log("Current user email:", user.email);
+    console.log("All rooms:", allRooms);
+    console.log("User's authorized rooms:", currentUserData.authorizedRooms);
 
-    const authorizedRooms = allRooms.filter((room: Room) => {
-      // Garante que authorizedUsers seja sempre um array
-      const roomAuthorizedUsers = Array.isArray(room.authorizedUsers) 
-        ? room.authorizedUsers 
-        : [];
-
-      // Verifica se o usuário está autorizado (por ID ou email) e a sala está ativa
-      const isAuthorized = (
-        roomAuthorizedUsers.includes(user.id) || 
-        roomAuthorizedUsers.includes(user.email)
-      ) && room.status;
-
-      console.log(`Room ${room.id} - ${room.name}:`, {
-        authorizedUsers: roomAuthorizedUsers,
-        currentUserId: user.id,
-        currentUserEmail: user.email,
-        isAuthorized: isAuthorized,
-        status: room.status
-      });
-
-      return isAuthorized;
-    });
+    // Filtrar apenas as salas que o usuário tem autorização
+    const authorizedRooms = allRooms.filter((room: Room) => 
+      currentUserData.authorizedRooms.includes(room.id) && room.status
+    );
 
     console.log("Filtered authorized rooms:", authorizedRooms);
     setRooms(authorizedRooms);
