@@ -25,26 +25,33 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
+    // Carregar todos os usuários para obter as salas autorizadas
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUserData = users.find((u: any) => 
+      u.id === currentUser.id || u.email === currentUser.email
+    );
+    
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Filtrar apenas as salas da empresa atual
-    const companyRooms = allRooms.filter(
-      (room: any) => room.companyId === currentUser.companyId
+    // Filtrar apenas as salas da empresa atual E que o usuário tem acesso
+    const authorizedRooms = allRooms.filter((room: any) => 
+      room.companyId === currentUser.companyId && 
+      currentUserData?.authorizedRooms?.includes(room.id)
     );
 
-    // Coletar todos os alunos das salas da empresa
-    const companyStudents: Student[] = [];
-    companyRooms.forEach((room: any) => {
+    // Coletar todos os alunos das salas autorizadas
+    const authorizedStudents: Student[] = [];
+    authorizedRooms.forEach((room: any) => {
       if (room.students && Array.isArray(room.students)) {
         const roomStudents = room.students.filter((student: any) => 
           typeof student === 'object' && student.companyId === currentUser.companyId
         );
-        companyStudents.push(...roomStudents);
+        authorizedStudents.push(...roomStudents);
       }
     });
 
-    setStudents(companyStudents);
-    setRooms(companyRooms);
+    setStudents(authorizedStudents);
+    setRooms(authorizedRooms);
   };
 
   useEffect(() => {
@@ -63,10 +70,17 @@ export const StudentRegistration = () => {
   const handleDeleteStudent = (id: string) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Encontrar e remover o aluno apenas das salas da empresa atual
+    // Encontrar e remover o aluno apenas das salas autorizadas da empresa atual
     const updatedRooms = allRooms.map((room: any) => {
       if (room.companyId === currentUser?.companyId && room.students) {
-        room.students = room.students.filter((student: Student) => student.id !== id);
+        const users = JSON.parse(localStorage.getItem("users") || "[]");
+        const currentUserData = users.find((u: any) => 
+          u.id === currentUser.id || u.email === currentUser.email
+        );
+        
+        if (currentUserData?.authorizedRooms?.includes(room.id)) {
+          room.students = room.students.filter((student: Student) => student.id !== id);
+        }
       }
       return room;
     });
@@ -83,14 +97,21 @@ export const StudentRegistration = () => {
   const handleUpdateStudent = (updatedStudent: Student) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Atualizar o aluno apenas nas salas da empresa atual
+    // Atualizar o aluno apenas nas salas autorizadas da empresa atual
     const updatedRooms = allRooms.map((room: any) => {
       if (room.companyId === currentUser?.companyId && 
-          room.id === updatedStudent.room && 
-          room.students) {
-        room.students = room.students.map((student: Student) =>
-          student.id === updatedStudent.id ? updatedStudent : student
+          room.id === updatedStudent.room) {
+        
+        const users = JSON.parse(localStorage.getItem("users") || "[]");
+        const currentUserData = users.find((u: any) => 
+          u.id === currentUser.id || u.email === currentUser.email
         );
+        
+        if (currentUserData?.authorizedRooms?.includes(room.id) && room.students) {
+          room.students = room.students.map((student: Student) =>
+            student.id === updatedStudent.id ? updatedStudent : student
+          );
+        }
       }
       return room;
     });
