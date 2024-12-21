@@ -11,6 +11,8 @@ export function useAuth() {
   });
 
   const login = async (email: string, password: string) => {
+    console.log("Attempting login for:", email);
+
     // Super Admin login
     if (email === "super@teste.com" && password === "123456") {
       const response: AuthResponse = {
@@ -31,15 +33,17 @@ export function useAuth() {
 
     // Check created emails in localStorage
     const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    const foundEmail = createdEmails.find((e: any) => e.email === email);
+    console.log("Created emails:", createdEmails);
+    const foundEmail = createdEmails.find((e: any) => e.email.toLowerCase() === email.toLowerCase());
     
     // Check users created by admin
     const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const foundUser = createdUsers.find((u: any) => u.email === email);
+    console.log("Created users:", createdUsers);
+    const foundUser = createdUsers.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
     
     // Login for emails created by super admin
     if (foundEmail && password === "123456") {
-      console.log("Found email data:", foundEmail);
+      console.log("Found email in createdEmails:", foundEmail);
 
       // Normalize accessLevel to correct format
       let role = foundEmail.accessLevel.toUpperCase();
@@ -62,13 +66,14 @@ export function useAuth() {
         token: `${role.toLowerCase()}-token`,
       };
       
-      console.log("Login response:", response);
+      console.log("Login response for createdEmail:", response);
       localStorage.setItem("session", JSON.stringify(response));
       return response;
     }
 
     // Login for users created by admin
     if (foundUser && password === "123456") {
+      console.log("Found user in users:", foundUser);
       const response: AuthResponse = {
         user: {
           id: foundUser.id,
@@ -81,10 +86,12 @@ export function useAuth() {
         },
         token: "user-token",
       };
+      console.log("Login response for user:", response);
       localStorage.setItem("session", JSON.stringify(response));
       return response;
     }
 
+    console.log("Login failed - Invalid credentials");
     throw new Error("Invalid credentials");
   };
 

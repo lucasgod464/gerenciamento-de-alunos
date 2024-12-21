@@ -25,27 +25,11 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const formData = new FormData(event.currentTarget);
     
     const id = Math.random().toString(36).substr(2, 9);
-    const email = formData.get("email") as string;
 
-    // Criar entrada no createdEmails para autenticação
-    const emailEntry = {
-      id,
-      name: formData.get("name") as string,
-      email: email,
-      password: "123456", // Senha padrão
-      accessLevel: "Usuário Comum",
-      company: currentUser?.companyId || "",
-      createdAt: new Date().toLocaleDateString(),
-    };
-
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    localStorage.setItem("createdEmails", JSON.stringify([...createdEmails, emailEntry]));
-
-    // Criar o usuário
     const newUser: User = {
       id,
       name: formData.get("name") as string,
-      email: email,
+      email: formData.get("email") as string,
       responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,
@@ -56,9 +40,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       authorizedRooms: selectedRooms,
     };
 
-    console.log("Criando novo usuário:", newUser);
-    console.log("Criando entrada de email:", emailEntry);
-
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     localStorage.setItem("users", JSON.stringify([...users, newUser]));
 
@@ -66,7 +47,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     
     toast({
       title: "Usuário criado",
-      description: "O usuário foi criado com sucesso. A senha padrão é: 123456",
+      description: "O usuário foi criado com sucesso.",
     });
 
     setOpen(false);
