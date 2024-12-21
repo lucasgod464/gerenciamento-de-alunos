@@ -26,19 +26,24 @@ export const StudentRegistration = () => {
     if (!currentUser?.companyId) return;
     
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    
+    // Filtrar apenas as salas da empresa atual
     const companyRooms = allRooms.filter(
       (room: any) => room.companyId === currentUser.companyId
     );
 
-    // Coletar todos os alunos de todas as salas
-    const allStudents: Student[] = [];
+    // Coletar todos os alunos das salas da empresa
+    const companyStudents: Student[] = [];
     companyRooms.forEach((room: any) => {
-      if (room.students) {
-        allStudents.push(...room.students);
+      if (room.students && Array.isArray(room.students)) {
+        const roomStudents = room.students.filter((student: any) => 
+          typeof student === 'object' && student.companyId === currentUser.companyId
+        );
+        companyStudents.push(...roomStudents);
       }
     });
 
-    setStudents(allStudents);
+    setStudents(companyStudents);
     setRooms(companyRooms);
   };
 
@@ -58,9 +63,9 @@ export const StudentRegistration = () => {
   const handleDeleteStudent = (id: string) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Encontrar e remover o aluno da sala correta
+    // Encontrar e remover o aluno apenas das salas da empresa atual
     const updatedRooms = allRooms.map((room: any) => {
-      if (room.students) {
+      if (room.companyId === currentUser?.companyId && room.students) {
         room.students = room.students.filter((student: Student) => student.id !== id);
       }
       return room;
@@ -78,9 +83,11 @@ export const StudentRegistration = () => {
   const handleUpdateStudent = (updatedStudent: Student) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Atualizar o aluno na sala correta
+    // Atualizar o aluno apenas nas salas da empresa atual
     const updatedRooms = allRooms.map((room: any) => {
-      if (room.id === updatedStudent.room && room.students) {
+      if (room.companyId === currentUser?.companyId && 
+          room.id === updatedStudent.room && 
+          room.students) {
         room.students = room.students.map((student: Student) =>
           student.id === updatedStudent.id ? updatedStudent : student
         );
