@@ -21,14 +21,31 @@ export function UserRooms() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log("No user ID found");
+      return;
+    }
 
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const authorizedRooms = allRooms.filter((room: Room) => 
-      Array.isArray(room.authorizedUsers) && 
-      room.authorizedUsers.includes(user.id) && 
-      room.status
-    );
+    console.log("All rooms from localStorage:", allRooms);
+    console.log("Current user ID:", user.id);
+
+    const authorizedRooms = allRooms.filter((room: Room) => {
+      const isAuthorized = Array.isArray(room.authorizedUsers) && 
+                          room.authorizedUsers.includes(user.id) && 
+                          room.status;
+      
+      console.log(`Room ${room.id} - ${room.name}:`, {
+        hasAuthorizedUsers: Array.isArray(room.authorizedUsers),
+        authorizedUsers: room.authorizedUsers,
+        includesUser: Array.isArray(room.authorizedUsers) && room.authorizedUsers.includes(user.id),
+        isActive: room.status
+      });
+      
+      return isAuthorized;
+    });
+
+    console.log("Filtered authorized rooms:", authorizedRooms);
     setRooms(authorizedRooms);
   }, [user]);
 
