@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Room {
   id: string;
@@ -30,44 +31,44 @@ export function RoomSelectionFields({
   );
 
   return (
-    <div className="space-y-2">
-      <Label>Salas Autorizadas</Label>
-      <div className="relative">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar salas..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-8"
-        />
-      </div>
-      <ScrollArea className="h-[200px] border rounded-md p-2">
-        <div className="space-y-2">
-          {filteredRooms.map((room) => (
-            <div
-              key={room.id}
-              className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md"
-            >
-              <Checkbox
-                id={`room-${room.id}`}
-                checked={selectedRooms.includes(room.id)}
-                onCheckedChange={() => onRoomToggle(room.id)}
-              />
-              <Label
-                htmlFor={`room-${room.id}`}
-                className="cursor-pointer flex-grow"
-              >
-                {room.name}
-              </Label>
+    <div className="space-y-3">
+      <Label className="text-base font-semibold">Salas Autorizadas</Label>
+      <Card className="border-muted">
+        <CardContent className="p-4 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar salas..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="pl-8 bg-background"
+            />
+          </div>
+          
+          <ScrollArea className="h-[180px] pr-4">
+            <div className="space-y-2">
+              {filteredRooms.map((room) => (
+                <label
+                  key={room.id}
+                  className="flex items-center space-x-3 p-2 hover:bg-accent rounded-md cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    id={`room-${room.id}`}
+                    checked={selectedRooms.includes(room.id)}
+                    onCheckedChange={() => onRoomToggle(room.id)}
+                  />
+                  <span className="text-sm">{room.name}</span>
+                </label>
+              ))}
+              {filteredRooms.length === 0 && (
+                <div className="text-center text-muted-foreground py-8">
+                  Nenhuma sala encontrada
+                </div>
+              )}
             </div>
-          ))}
-          {filteredRooms.length === 0 && (
-            <div className="text-center text-muted-foreground py-4">
-              Nenhuma sala encontrada
-            </div>
-          )}
-        </div>
-      </ScrollArea>
+          </ScrollArea>
+        </CardContent>
+      </Card>
       <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
     </div>
   );
