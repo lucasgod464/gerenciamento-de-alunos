@@ -85,8 +85,25 @@ const Users = () => {
   };
 
   const handleCreateUser = (newUser: User) => {
-    console.log("Creating new user:", newUser);
-    setUsers(prevUsers => [...prevUsers, newUser]);
+    const userWithCompany = {
+      ...newUser,
+      companyId: currentUser?.companyId
+    };
+    
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherUsers = allUsers.filter(
+      (user: User) => user.companyId !== currentUser?.companyId
+    );
+    
+    const newUsers = [...users, userWithCompany];
+    
+    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
+    setUsers(newUsers);
+    
+    toast({
+      title: "Usuário criado",
+      description: "O novo usuário foi criado com sucesso.",
+    });
   };
 
   const filteredUsers = users.filter((user) => {
