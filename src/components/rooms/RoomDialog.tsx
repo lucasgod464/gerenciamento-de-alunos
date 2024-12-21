@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
+import { RoomFormFields } from "./RoomFormFields";
+import { AuthorizedUsersList } from "./AuthorizedUsersList";
 
 interface Room {
   id: string;
@@ -29,7 +21,7 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
-  authorizedUsers: string[]; // Array of user IDs
+  authorizedUsers: string[];
 }
 
 interface RoomDialogProps {
@@ -65,6 +57,44 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
     setUsers(companyUsers);
   }, [currentUser]);
 
+  // Atualiza o estado do room quando editingRoom muda
+  useEffect(() => {
+    if (editingRoom) {
+      console.log("Editing room data:", editingRoom); // Debug log
+      setRoom(editingRoom);
+    } else {
+      setRoom({
+        name: "",
+        schedule: "",
+        location: "",
+        studyRoom: "",
+        capacity: 0,
+        resources: "",
+        status: true,
+        authorizedUsers: [],
+      });
+    }
+  }, [editingRoom]);
+
+  const handleFieldChange = (field: keyof Room, value: any) => {
+    setRoom((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddUser = (userId: string) => {
+    const currentUsers = room.authorizedUsers || [];
+    if (!currentUsers.includes(userId)) {
+      handleFieldChange("authorizedUsers", [...currentUsers, userId]);
+    }
+  };
+
+  const handleRemoveUser = (userId: string) => {
+    const currentUsers = room.authorizedUsers || [];
+    handleFieldChange(
+      "authorizedUsers",
+      currentUsers.filter((id) => id !== userId)
+    );
+  };
+
   const handleSave = () => {
     onSave(room);
     onOpenChange(false);
@@ -82,122 +112,13 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome da Sala</Label>
-            <Input
-              id="name"
-              value={room.name}
-              onChange={(e) => setRoom({ ...room, name: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="schedule">Horário</Label>
-            <Input
-              id="schedule"
-              value={room.schedule}
-              onChange={(e) => setRoom({ ...room, schedule: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="location">Local</Label>
-            <Input
-              id="location"
-              value={room.location}
-              onChange={(e) => setRoom({ ...room, location: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="studyRoom">Sala de Estudo</Label>
-            <Select
-              value={room.studyRoom}
-              onValueChange={(value) => setRoom({ ...room, studyRoom: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma sala de estudo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="study1">Estudo 1</SelectItem>
-                <SelectItem value="study2">Estudo 2</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="capacity">Capacidade</Label>
-            <Input
-              id="capacity"
-              type="number"
-              value={room.capacity}
-              onChange={(e) => setRoom({ ...room, capacity: parseInt(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="resources">Recursos</Label>
-            <Input
-              id="resources"
-              value={room.resources}
-              onChange={(e) => setRoom({ ...room, resources: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Usuários Autorizados</Label>
-            <Select
-              value=""
-              onValueChange={(userId) => {
-                const currentUsers = room.authorizedUsers || [];
-                if (!currentUsers.includes(userId)) {
-                  setRoom({
-                    ...room,
-                    authorizedUsers: [...currentUsers, userId],
-                  });
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione os usuários" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map((user) => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Lista de usuários selecionados */}
-            <div className="mt-2 space-y-2">
-              {room.authorizedUsers?.map((userId) => {
-                const user = users.find((u) => u.id === userId);
-                return user ? (
-                  <div key={userId} className="flex items-center justify-between bg-gray-100 p-2 rounded">
-                    <span>{user.name}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setRoom({
-                          ...room,
-                          authorizedUsers: room.authorizedUsers?.filter((id) => id !== userId) || [],
-                        });
-                      }}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                ) : null;
-              })}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="status">Status</Label>
-            <Switch
-              id="status"
-              checked={room.status}
-              onCheckedChange={(checked) => setRoom({ ...room, status: checked })}
-            />
-            <span className="text-sm text-muted-foreground">
-              {room.status ? "Ativa" : "Inativa"}
-            </span>
-          </div>
+          <RoomFormFields room={room} onChange={handleFieldChange} />
+          <AuthorizedUsersList
+            users={users}
+            authorizedUsers={room.authorizedUsers || []}
+            onAddUser={handleAddUser}
+            onRemoveUser={handleRemoveUser}
+          />
           <Button onClick={handleSave} className="w-full">
             Salvar
           </Button>
