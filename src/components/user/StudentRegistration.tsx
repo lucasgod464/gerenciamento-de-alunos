@@ -34,18 +34,23 @@ export const StudentRegistration = () => {
     const allStudents: Student[] = [];
     companyRooms.forEach((room: any) => {
       if (room.students) {
-        room.students.forEach((studentId: string) => {
-          // Adicionar o aluno apenas se ele ainda não estiver na lista
-          if (!allStudents.find(s => s.id === studentId)) {
-            allStudents.push({
-              id: studentId,
-              name: studentId, // Aqui você precisaria buscar os detalhes do aluno da sala
-              room: room.id,
-              status: "active",
-              birthDate: "",
-              createdAt: "",
-              companyId: currentUser.companyId
-            });
+        const roomStudents = room.students.map((studentId: string) => {
+          // Buscar os detalhes do aluno no storage da sala
+          const studentDetails = localStorage.getItem(`student_${studentId}_${room.id}`);
+          if (studentDetails) {
+            const student = JSON.parse(studentDetails);
+            return {
+              ...student,
+              room: room.id
+            };
+          }
+          return null;
+        }).filter(Boolean); // Remove null values
+        
+        // Adicionar apenas alunos que ainda não estão na lista
+        roomStudents.forEach((student: Student) => {
+          if (!allStudents.find(s => s.id === student.id)) {
+            allStudents.push(student);
           }
         });
       }
@@ -87,6 +92,11 @@ export const StudentRegistration = () => {
       return room;
     });
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    
+    // Remover os detalhes do aluno de todas as salas
+    rooms.forEach(room => {
+      localStorage.removeItem(`student_${id}_${room.id}`);
+    });
     
     setStudents(prev => prev.filter(student => student.id !== id));
     

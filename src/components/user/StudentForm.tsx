@@ -8,7 +8,7 @@ import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { RoomSelect } from "./RoomSelect";
 import { CustomFields } from "./CustomFields";
-import { saveStudentToRoom, removeStudentFromRoom } from "@/utils/storageUtils";
+import { saveStudentToRoom, removeStudentFromRoom, saveStudentDetails } from "@/utils/storageUtils";
 import {
   Select,
   SelectContent,
@@ -85,38 +85,7 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     // Salvar o aluno apenas na sala selecionada
     if (currentUser?.companyId) {
       saveStudentToRoom(studentData.id, selectedRoom, currentUser.companyId);
-    }
-
-    // Atualizar o usuário na lista de usuários
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userExists = users.find((user: any) => user.id === studentData.id);
-
-    if (!userExists) {
-      const newUser = {
-        id: studentData.id,
-        name: studentData.name,
-        email: studentData.customFields?.email || "",
-        role: "USER",
-        companyId: currentUser?.companyId,
-        authorizedRooms: [selectedRoom],
-        status: "active",
-        createdAt: new Date().toISOString(),
-      };
-
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-    } else {
-      const updatedUsers = users.map((user: any) => {
-        if (user.id === studentData.id) {
-          return {
-            ...user,
-            name: studentData.name,
-            authorizedRooms: [selectedRoom],
-          };
-        }
-        return user;
-      });
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      saveStudentDetails(studentData, selectedRoom);
     }
 
     onSubmit(studentData);

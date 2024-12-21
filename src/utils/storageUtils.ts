@@ -3,7 +3,6 @@ interface StorageRoom {
   name: string;
   students: string[];
   companyId: string | null;
-  // ... outros campos da sala
 }
 
 export const saveStudentToRoom = (studentId: string, roomId: string, companyId: string | null) => {
@@ -34,4 +33,8 @@ export const removeStudentFromRoom = (studentId: string, roomId: string) => {
   });
   
   localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+};
+
+export const saveStudentDetails = (student: any, roomId: string) => {
+  localStorage.setItem(`student_${student.id}_${roomId}`, JSON.stringify(student));
 };
