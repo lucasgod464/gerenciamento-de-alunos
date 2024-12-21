@@ -1,47 +1,24 @@
-import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { User } from "@/types/user";
-import { useAuth } from "@/hooks/useAuth";
 import { UserFormFields } from "./UserFormFields";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { User } from "@/types/user";
 
-interface CreateUserDialogProps {
-  onUserCreated: (user: User) => void;
-}
-
-export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateUserDialog() {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
-
-  const generateUniqueId = () => {
-    return Math.floor(100000000 + Math.random() * 900000000).toString();
-  };
-
-  const generateStrongPassword = () => {
-    const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length));
-    }
-    return password;
-  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const uniqueId = generateUniqueId();
+    
+    const id = Math.random().toString(36).substr(2, 9);
+    const authorizedRoomsStr = formData.get("authorizedRooms") as string;
+    const authorizedRooms = authorizedRoomsStr ? JSON.parse(authorizedRoomsStr) : [];
+
     const newUser: User = {
-      id: uniqueId,
+      id,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       responsibleCategory: formData.get("responsibleCategory") as string,
@@ -51,33 +28,38 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
       companyId: currentUser?.companyId || null,
+      authorizedRooms,
     };
-    
-    onUserCreated(newUser);
-    setOpen(false);
+
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    localStorage.setItem("users", JSON.stringify([...users, newUser]));
+
     toast({
       title: "Usuário criado",
       description: "O usuário foi criado com sucesso.",
     });
+
+    // Fechar o diálogo
+    const closeButton = document.querySelector('[data-dialog-close]');
+    if (closeButton instanceof HTMLElement) {
+      closeButton.click();
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog>
       <DialogTrigger asChild>
-        <Button>Novo Usuário</Button>
+        <Button>Criar Usuário</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Criar Novo Usuário</DialogTitle>
-          <DialogDescription>
-            Preencha os dados abaixo para criar um novo usuário no sistema.
-          </DialogDescription>
+          <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <UserFormFields generateStrongPassword={generateStrongPassword} />
-          <Button type="submit" className="w-full">
-            Criar Usuário
-          </Button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <UserFormFields />
+          <div className="flex justify-end space-x-2">
+            <Button type="submit">Criar</Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

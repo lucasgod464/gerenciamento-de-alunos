@@ -26,32 +26,36 @@ export function UserRooms() {
       return;
     }
 
-    // Carregar usuários para obter as salas autorizadas
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const currentUserData = users.find((u: any) => 
-      u.id === user.id || u.email === user.email
-    );
-
-    console.log("Current user data:", currentUserData);
-
-    if (!currentUserData?.authorizedRooms?.length) {
-      console.log("No authorized rooms found for user");
-      setRooms([]);
-      return;
-    }
-
     // Carregar todas as salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     console.log("All rooms:", allRooms);
-    console.log("User's authorized rooms:", currentUserData.authorizedRooms);
 
-    // Filtrar apenas as salas que o usuário tem autorização
-    const authorizedRooms = allRooms.filter((room: Room) => 
-      currentUserData.authorizedRooms.includes(room.id) && room.status
+    // Carregar usuários para obter as salas autorizadas
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUserData = users.find((u: any) => u.id === user.id || u.email === user.email);
+
+    console.log("Current user data:", currentUserData);
+
+    // Filtrar salas da empresa do usuário que estão ativas
+    const companyRooms = allRooms.filter((room: Room) => 
+      room.companyId === user.companyId && 
+      room.status === true
     );
 
-    console.log("Filtered authorized rooms:", authorizedRooms);
-    setRooms(authorizedRooms);
+    console.log("Company rooms:", companyRooms);
+
+    // Se o usuário tem salas autorizadas, mostrar apenas essas
+    if (currentUserData?.authorizedRooms?.length) {
+      const authorizedRooms = companyRooms.filter((room: Room) =>
+        currentUserData.authorizedRooms.includes(room.id)
+      );
+      console.log("User's authorized rooms:", authorizedRooms);
+      setRooms(authorizedRooms);
+    } else {
+      // Se não tem salas autorizadas específicas, não mostrar nenhuma sala
+      console.log("No authorized rooms found");
+      setRooms([]);
+    }
   }, [user]);
 
   if (!user) {
