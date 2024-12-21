@@ -34,7 +34,7 @@ export function RoomSelectionFields({
     <div className="space-y-3">
       <Label className="text-base font-semibold">Salas Autorizadas</Label>
       <Card className="border-muted">
-        <CardContent className="p-4 space-y-4">
+        <CardContent className="p-3 space-y-3">
           <div className="relative">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
@@ -42,26 +42,27 @@ export function RoomSelectionFields({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-8 bg-background"
+              size="sm"
             />
           </div>
           
-          <ScrollArea className="h-[180px] pr-4">
-            <div className="space-y-2">
+          <ScrollArea className="h-[120px]">
+            <div className="grid grid-cols-2 gap-2 pr-2">
               {filteredRooms.map((room) => (
                 <label
                   key={room.id}
-                  className="flex items-center space-x-3 p-2 hover:bg-accent rounded-md cursor-pointer transition-colors"
+                  className="flex items-center space-x-2 p-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors text-sm"
                 >
                   <Checkbox
                     id={`room-${room.id}`}
                     checked={selectedRooms.includes(room.id)}
                     onCheckedChange={() => onRoomToggle(room.id)}
                   />
-                  <span className="text-sm">{room.name}</span>
+                  <span className="truncate">{room.name}</span>
                 </label>
               ))}
               {filteredRooms.length === 0 && (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="col-span-2 text-center text-muted-foreground py-4">
                   Nenhuma sala encontrada
                 </div>
               )}
