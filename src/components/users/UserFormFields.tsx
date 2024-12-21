@@ -11,11 +11,16 @@ import {
 import { CategorySelect } from "./CategorySelect";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface UserFormFieldsProps {
   generateStrongPassword?: () => void;
   defaultValues?: {
+    name?: string;
+    email?: string;
+    location?: string;
     specialization?: string;
+    status?: string;
     authorizedRooms?: string[];
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
@@ -63,6 +68,13 @@ export const UserFormFields = ({
     setRooms(companyRooms);
   }, [currentUser]);
 
+  useEffect(() => {
+    // Atualizar selectedRooms quando defaultValues mudar
+    if (defaultValues?.authorizedRooms) {
+      setSelectedRooms(defaultValues.authorizedRooms);
+    }
+  }, [defaultValues?.authorizedRooms]);
+
   const handleRoomToggle = (roomId: string) => {
     const updatedRooms = selectedRooms.includes(roomId)
       ? selectedRooms.filter(id => id !== roomId)
@@ -80,6 +92,7 @@ export const UserFormFields = ({
           id="name"
           name="name"
           placeholder="Digite o nome completo"
+          defaultValue={defaultValues?.name}
           required
         />
       </div>
@@ -90,6 +103,7 @@ export const UserFormFields = ({
           name="email"
           type="email"
           placeholder="Digite o email"
+          defaultValue={defaultValues?.email}
           required
         />
       </div>
@@ -127,6 +141,7 @@ export const UserFormFields = ({
           id="location"
           name="location"
           placeholder="Digite o local"
+          defaultValue={defaultValues?.location}
           required
         />
       </div>
@@ -150,21 +165,24 @@ export const UserFormFields = ({
         <div className="grid gap-2">
           {rooms.map((room) => (
             <div key={room.id} className="flex items-center space-x-2">
-              <input
-                type="checkbox"
+              <Checkbox
                 id={`room-${room.id}`}
                 checked={selectedRooms.includes(room.id)}
-                onChange={() => handleRoomToggle(room.id)}
-                className="h-4 w-4 rounded border-gray-300"
+                onCheckedChange={() => handleRoomToggle(room.id)}
               />
               <Label htmlFor={`room-${room.id}`}>{room.name}</Label>
             </div>
           ))}
         </div>
+        <input 
+          type="hidden" 
+          name="authorizedRooms" 
+          value={JSON.stringify(selectedRooms)} 
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
-        <Select name="status" defaultValue="active">
+        <Select name="status" defaultValue={defaultValues?.status || "active"}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione o status" />
           </SelectTrigger>

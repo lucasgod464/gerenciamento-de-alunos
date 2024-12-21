@@ -9,4 +9,5 @@ export interface User {
   createdAt: string;
   lastAccess: string;
   companyId: string | null;
+  authorizedRooms: string[];
 }
