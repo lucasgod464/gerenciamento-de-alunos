@@ -42,7 +42,6 @@ export function RoomSelectionFields({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-8 bg-background"
-              size="sm"
             />
           </div>
           

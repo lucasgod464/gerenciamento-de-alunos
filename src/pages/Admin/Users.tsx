@@ -30,35 +30,42 @@ const Users = () => {
     if (!currentUser?.companyId) return;
 
     // Load company-specific users
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const companyUsers = allUsers.filter((user: User) => user.companyId === currentUser.companyId);
-    setUsers(companyUsers);
+    const loadUsers = () => {
+      const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+      console.log("All users from localStorage:", allUsers);
+      const companyUsers = allUsers.filter((user: User) => user.companyId === currentUser.companyId);
+      console.log("Filtered company users:", companyUsers);
+      setUsers(companyUsers);
+    };
 
-    // Load company-specific categories
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const companyCategories = allCategories.filter((cat: any) => cat.companyId === currentUser.companyId);
-    setCategories(companyCategories);
+    // Initial load
+    loadUsers();
 
-    // Load company-specific specializations
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const companySpecializations = allSpecializations.filter(
-      (spec: any) => spec.companyId === currentUser.companyId
-    );
-    setSpecializations(companySpecializations);
+    // Set up localStorage event listener
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "users") {
+        loadUsers();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, [currentUser]);
 
   const handleUpdateUser = (updatedUser: User) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
     const otherUsers = allUsers.filter(
-      (user: User) => user.companyId !== currentUser?.companyId || user.id !== updatedUser.id
+      (user: User) => user.id !== updatedUser.id
     );
     
-    const newUsers = users.map(user => 
-      user.id === updatedUser.id ? updatedUser : user
-    );
+    localStorage.setItem("users", JSON.stringify([...otherUsers, updatedUser]));
     
-    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
-    setUsers(newUsers);
+    setUsers(prevUsers =>
+      prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
+    );
     
     toast({
       title: "Usuário atualizado",
@@ -68,14 +75,11 @@ const Users = () => {
 
   const handleDeleteUser = (id: string) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherUsers = allUsers.filter(
-      (user: User) => user.companyId !== currentUser?.companyId || user.id !== id
-    );
+    const updatedUsers = allUsers.filter((user: User) => user.id !== id);
     
-    const newUsers = users.filter(user => user.id !== id);
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
     
-    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
-    setUsers(newUsers);
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
     
     toast({
       title: "Usuário excluído",
@@ -85,20 +89,12 @@ const Users = () => {
   };
 
   const handleCreateUser = (newUser: User) => {
-    const userWithCompany = {
-      ...newUser,
-      companyId: currentUser?.companyId
-    };
-    
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherUsers = allUsers.filter(
-      (user: User) => user.companyId !== currentUser?.companyId
-    );
+    const updatedUsers = [...allUsers, newUser];
     
-    const newUsers = [...users, userWithCompany];
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
     
-    localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
-    setUsers(newUsers);
+    setUsers(prevUsers => [...prevUsers, newUser]);
     
     toast({
       title: "Usuário criado",
