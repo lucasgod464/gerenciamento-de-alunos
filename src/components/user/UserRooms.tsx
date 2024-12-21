@@ -29,6 +29,7 @@ export function UserRooms() {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     console.log("All rooms from localStorage:", allRooms);
     console.log("Current user ID:", user.id);
+    console.log("Current user email:", user.email);
 
     const authorizedRooms = allRooms.filter((room: Room) => {
       // Garante que authorizedUsers seja sempre um array
@@ -36,12 +37,16 @@ export function UserRooms() {
         ? room.authorizedUsers 
         : [];
 
-      // Verifica se o usuário está autorizado e a sala está ativa
-      const isAuthorized = roomAuthorizedUsers.includes(user.id) && room.status;
+      // Verifica se o usuário está autorizado (por ID ou email) e a sala está ativa
+      const isAuthorized = (
+        roomAuthorizedUsers.includes(user.id) || 
+        roomAuthorizedUsers.includes(user.email)
+      ) && room.status;
 
       console.log(`Room ${room.id} - ${room.name}:`, {
         authorizedUsers: roomAuthorizedUsers,
         currentUserId: user.id,
+        currentUserEmail: user.email,
         isAuthorized: isAuthorized,
         status: room.status
       });
