@@ -16,7 +16,16 @@ interface UserFormFieldsProps {
   generateStrongPassword?: () => void;
   defaultValues?: {
     specialization?: string;
+    authorizedRooms?: string[];
   };
+  onAuthorizedRoomsChange?: (roomIds: string[]) => void;
+}
+
+interface Room {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
 }
 
 interface Specialization {
@@ -26,19 +35,42 @@ interface Specialization {
   companyId: string | null;
 }
 
-export const UserFormFields = ({ generateStrongPassword, defaultValues }: UserFormFieldsProps) => {
+export const UserFormFields = ({ 
+  generateStrongPassword, 
+  defaultValues,
+  onAuthorizedRoomsChange 
+}: UserFormFieldsProps) => {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(defaultValues?.authorizedRooms || []);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
+    // Carregar especializações
     const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
     const companySpecializations = allSpecializations.filter(
       (spec: Specialization) => spec.companyId === currentUser.companyId && spec.status
     );
     setSpecializations(companySpecializations);
+
+    // Carregar salas
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter(
+      (room: Room) => room.companyId === currentUser.companyId && room.status
+    );
+    setRooms(companyRooms);
   }, [currentUser]);
+
+  const handleRoomToggle = (roomId: string) => {
+    const updatedRooms = selectedRooms.includes(roomId)
+      ? selectedRooms.filter(id => id !== roomId)
+      : [...selectedRooms, roomId];
+    
+    setSelectedRooms(updatedRooms);
+    onAuthorizedRoomsChange?.(updatedRooms);
+  };
 
   return (
     <>
@@ -112,6 +144,23 @@ export const UserFormFields = ({ generateStrongPassword, defaultValues }: UserFo
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="space-y-2">
+        <Label>Salas Autorizadas</Label>
+        <div className="grid gap-2">
+          {rooms.map((room) => (
+            <div key={room.id} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id={`room-${room.id}`}
+                checked={selectedRooms.includes(room.id)}
+                onChange={() => handleRoomToggle(room.id)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor={`room-${room.id}`}>{room.name}</Label>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="status">Status</Label>

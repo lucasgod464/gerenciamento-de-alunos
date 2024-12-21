@@ -19,7 +19,6 @@ interface Room {
   resources: string;
   status: boolean;
   companyId?: string | null;
-  authorizedUsers: string[];
 }
 
 interface RoomFormFieldsProps {
