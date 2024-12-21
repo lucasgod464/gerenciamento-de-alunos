@@ -25,6 +25,7 @@ import UserProfile from "./pages/User/Profile";
 import StudentsPage from "./pages/User/Students";
 import AttendancePage from "./pages/User/Attendance";
 import ReportsPage from "./pages/User/Reports";
+import MyRooms from "./pages/User/MyRooms";
 
 export const routes = [
   {
@@ -155,6 +156,14 @@ export const routes = [
     element: (
       <RoleGuard allowedRoles={["USER"]}>
         <AttendancePage />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/my-rooms",
+    element: (
+      <RoleGuard allowedRoles={["USER"]}>
+        <MyRooms />
       </RoleGuard>
     ),
   },
