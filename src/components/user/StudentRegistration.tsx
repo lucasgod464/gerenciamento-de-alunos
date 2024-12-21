@@ -25,47 +25,30 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
-    const savedStudents = localStorage.getItem("students");
-    if (savedStudents) {
-      const allStudents = JSON.parse(savedStudents);
-      const companyStudents = allStudents.filter(
-        (student: Student) => student.companyId === currentUser.companyId
-      );
-      setStudents(companyStudents);
-    }
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter(
+      (room: any) => room.companyId === currentUser.companyId
+    );
+
+    // Coletar todos os alunos de todas as salas
+    const allStudents: Student[] = [];
+    companyRooms.forEach((room: any) => {
+      if (room.students) {
+        allStudents.push(...room.students);
+      }
+    });
+
+    setStudents(allStudents);
+    setRooms(companyRooms);
   };
 
   useEffect(() => {
-    if (!currentUser?.companyId) return;
-
     loadStudents();
-
-    const storedRooms = localStorage.getItem("rooms");
-    if (storedRooms) {
-      const allRooms = JSON.parse(storedRooms);
-      const companyRooms = allRooms.filter(
-        (room: any) => room.companyId === currentUser.companyId
-      );
-      setRooms(companyRooms);
-    }
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    if (!currentUser?.companyId) return;
-
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
+    loadStudents(); // Recarregar a lista de alunos após adicionar um novo
     
-    const studentWithCompany = {
-      ...newStudent,
-      companyId: currentUser.companyId,
-    };
-    
-    allStudents.push(studentWithCompany);
-    localStorage.setItem("students", JSON.stringify(allStudents));
-    
-    setStudents(prev => [...prev, studentWithCompany]);
-
     toast({
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
@@ -73,25 +56,45 @@ export const StudentRegistration = () => {
   };
 
   const handleDeleteStudent = (id: string) => {
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
-    const updatedStudents = allStudents.filter((student: Student) => student.id !== id);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    setStudents(prev => prev.filter(student => student.id !== id));
+    // Encontrar e remover o aluno da sala correta
+    const updatedRooms = allRooms.map((room: any) => {
+      if (room.students) {
+        room.students = room.students.filter((student: Student) => student.id !== id);
+      }
+      return room;
+    });
+
+    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    loadStudents(); // Recarregar a lista de alunos após deletar
+    
+    toast({
+      title: "Sucesso",
+      description: "Aluno excluído com sucesso!",
+    });
   };
 
   const handleUpdateStudent = (updatedStudent: Student) => {
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
-    const updatedStudents = allStudents.map((student: Student) => 
-      student.id === updatedStudent.id ? updatedStudent : student
-    );
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    setStudents(prev => prev.map(student => 
-      student.id === updatedStudent.id ? updatedStudent : student
-    ));
+    // Atualizar o aluno na sala correta
+    const updatedRooms = allRooms.map((room: any) => {
+      if (room.id === updatedStudent.room && room.students) {
+        room.students = room.students.map((student: Student) =>
+          student.id === updatedStudent.id ? updatedStudent : student
+        );
+      }
+      return room;
+    });
+
+    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    loadStudents(); // Recarregar a lista de alunos após atualizar
+    
+    toast({
+      title: "Sucesso",
+      description: "Aluno atualizado com sucesso!",
+    });
   };
 
   const filteredStudents = students.filter((student) => {

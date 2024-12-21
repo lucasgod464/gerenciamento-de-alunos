@@ -58,40 +58,11 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     };
   }, [currentUser]);
 
-  const renderCustomField = (field: FormField) => {
-    const value = initialData?.customFields?.[field.name] || "";
-
-    switch (field.type) {
-      case "textarea":
-        return (
-          <Textarea
-            id={field.name}
-            name={field.name}
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-      case "email":
-      case "tel":
-      case "text":
-      default:
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type={field.type}
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Criar o estudante
+    // Criar o estudante com todas as informações necessárias
     const studentData: Student = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
@@ -106,38 +77,30 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       }, {}),
     };
 
-    // Atualizar o usuário na lista de usuários
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const userExists = users.find((user: any) => user.id === studentData.id);
+    // Salvar o estudante na sala específica
+    const rooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const roomIndex = rooms.findIndex((room: any) => room.id === selectedRoom);
 
-    if (!userExists) {
-      // Criar novo usuário associado ao estudante
-      const newUser = {
-        id: studentData.id,
-        name: studentData.name,
-        email: studentData.customFields?.email || "",
-        role: "USER",
-        companyId: currentUser?.companyId,
-        authorizedRooms: [selectedRoom],
-        status: "active",
-        createdAt: new Date().toISOString(),
-      };
+    if (roomIndex !== -1) {
+      // Inicializar o array de estudantes se não existir
+      if (!rooms[roomIndex].students) {
+        rooms[roomIndex].students = [];
+      }
 
-      users.push(newUser);
-      localStorage.setItem("users", JSON.stringify(users));
-    } else {
-      // Atualizar usuário existente
-      const updatedUsers = users.map((user: any) => {
-        if (user.id === studentData.id) {
-          return {
-            ...user,
-            name: studentData.name,
-            authorizedRooms: [selectedRoom],
-          };
-        }
-        return user;
-      });
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      // Verificar se é uma atualização ou nova adição
+      const existingStudentIndex = rooms[roomIndex].students.findIndex(
+        (student: Student) => student.id === studentData.id
+      );
+
+      if (existingStudentIndex !== -1) {
+        // Atualizar estudante existente
+        rooms[roomIndex].students[existingStudentIndex] = studentData;
+      } else {
+        // Adicionar novo estudante
+        rooms[roomIndex].students.push(studentData);
+      }
+
+      localStorage.setItem("rooms", JSON.stringify(rooms));
     }
 
     onSubmit(studentData);
@@ -195,7 +158,22 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       {customFields.map((field) => (
         <div key={field.id} className="space-y-2">
           <Label htmlFor={field.name}>{field.label}</Label>
-          {renderCustomField(field)}
+          {field.type === "textarea" ? (
+            <Textarea
+              id={field.name}
+              name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+            />
+          ) : (
+            <Input
+              id={field.name}
+              name={field.name}
+              type={field.type}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+            />
+          )}
         </div>
       ))}
 
