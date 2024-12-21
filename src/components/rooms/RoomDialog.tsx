@@ -15,7 +15,7 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  studyRoom: string;
+  category: string;
   capacity: number;
   resources: string;
   status: boolean;
@@ -35,24 +35,23 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
       name: "",
       schedule: "",
       location: "",
-      studyRoom: "",
+      category: "",
       capacity: 0,
       resources: "",
       status: true,
     }
   );
 
-  // Atualiza o estado do room quando editingRoom muda
   useEffect(() => {
     if (editingRoom) {
-      console.log("Editing room data:", editingRoom); // Debug log
+      console.log("Editing room data:", editingRoom);
       setRoom(editingRoom);
     } else {
       setRoom({
         name: "",
         schedule: "",
         location: "",
-        studyRoom: "",
+        category: "",
         capacity: 0,
         resources: "",
         status: true,

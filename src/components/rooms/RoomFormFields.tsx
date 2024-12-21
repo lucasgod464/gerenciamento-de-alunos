@@ -14,7 +14,7 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  studyRoom: string;
+  category: string;
   capacity: number;
   resources: string;
   status: boolean;
@@ -54,17 +54,17 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="studyRoom">Sala de Estudo</Label>
+        <Label htmlFor="category">Categoria</Label>
         <Select
-          value={room.studyRoom || ""}
-          onValueChange={(value) => onChange("studyRoom", value)}
+          value={room.category || ""}
+          onValueChange={(value) => onChange("category", value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecione uma sala de estudo" />
+            <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="study1">Estudo 1</SelectItem>
-            <SelectItem value="study2">Estudo 2</SelectItem>
+            <SelectItem value="category1">Categoria 1</SelectItem>
+            <SelectItem value="category2">Categoria 2</SelectItem>
           </SelectContent>
         </Select>
       </div>

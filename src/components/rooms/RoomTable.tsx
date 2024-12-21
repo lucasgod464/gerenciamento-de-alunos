@@ -14,7 +14,7 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  studyRoom: string;
+  category: string;
   capacity: number;
   resources: string;
   status: boolean;
@@ -35,7 +35,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
           <TableHead>Nome da Sala</TableHead>
           <TableHead>Horário</TableHead>
           <TableHead>Local</TableHead>
-          <TableHead>Sala de Estudo</TableHead>
+          <TableHead>Categoria</TableHead>
           <TableHead>Capacidade</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Ações</TableHead>
@@ -47,7 +47,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
             <TableCell>{room.name}</TableCell>
             <TableCell>{room.schedule}</TableCell>
             <TableCell>{room.location}</TableCell>
-            <TableCell>{room.studyRoom}</TableCell>
+            <TableCell>{room.category}</TableCell>
             <TableCell>{room.capacity}</TableCell>
             <TableCell>
               <span
