@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent } from "@/components/ui/card";
-import { DoorOpen } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Room {
   id: string;
@@ -13,6 +14,7 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
+  students: any[];
   authorizedUsers: string[];
 }
 
@@ -26,37 +28,33 @@ export function UserRooms() {
       return;
     }
 
-    // Carregar todas as salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    console.log("All rooms:", allRooms);
-
-    // Carregar usuários para obter as salas autorizadas
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const currentUserData = users.find((u: any) => u.id === user.id || u.email === user.email);
 
-    console.log("Current user data:", currentUserData);
-
-    // Filtrar salas da empresa do usuário que estão ativas
     const companyRooms = allRooms.filter((room: Room) => 
       room.companyId === user.companyId && 
       room.status === true
     );
 
-    console.log("Company rooms:", companyRooms);
-
-    // Se o usuário tem salas autorizadas, mostrar apenas essas
     if (currentUserData?.authorizedRooms?.length) {
       const authorizedRooms = companyRooms.filter((room: Room) =>
         currentUserData.authorizedRooms.includes(room.id)
       );
-      console.log("User's authorized rooms:", authorizedRooms);
       setRooms(authorizedRooms);
     } else {
-      // Se não tem salas autorizadas específicas, não mostrar nenhuma sala
-      console.log("No authorized rooms found");
       setRooms([]);
     }
   }, [user]);
+
+  const getStudentCount = (room: Room) => {
+    return room.students?.filter(student => typeof student === 'object').length || 0;
+  };
+
+  const getCapacityPercentage = (room: Room) => {
+    if (!room.capacity) return 0;
+    return Math.min((getStudentCount(room) / room.capacity) * 100, 100);
+  };
 
   if (!user) {
     return (
@@ -83,23 +81,61 @@ export function UserRooms() {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {rooms.map((room) => (
-        <Card key={room.id}>
-          <CardContent className="p-6">
+        <Card key={room.id} className="overflow-hidden">
+          <CardHeader className="bg-purple-50 dark:bg-purple-900/10">
             <div className="flex items-center gap-4">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <DoorOpen className="h-6 w-6 text-purple-600" />
+              <div className="p-2 bg-purple-100 rounded-lg dark:bg-purple-900/20">
+                <DoorOpen className="h-6 w-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h3 className="font-semibold">{room.name}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {room.location}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Horário: {room.schedule}
-                </p>
+                <CardTitle className="text-lg font-semibold">{room.name}</CardTitle>
+                {room.studyRoom && (
+                  <p className="text-sm text-muted-foreground">
+                    Sala de Estudo: {room.studyRoom}
+                  </p>
+                )}
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                <div className="flex-1">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm font-medium">
+                      {getStudentCount(room)} alunos
+                    </span>
+                    {room.capacity > 0 && (
+                      <span className="text-sm text-muted-foreground">
+                        Capacidade: {room.capacity}
+                      </span>
+                    )}
+                  </div>
+                  {room.capacity > 0 && (
+                    <Progress 
+                      value={getCapacityPercentage(room)} 
+                      className="h-2"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {room.schedule && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span className="text-sm">{room.schedule}</span>
+                </div>
+              )}
+
+              {room.location && (
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span className="text-sm">{room.location}</span>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
