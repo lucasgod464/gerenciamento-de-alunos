@@ -82,7 +82,7 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       }, {}),
     };
 
-    // Salvar o aluno na sala selecionada
+    // Salvar o aluno apenas na sala selecionada
     if (currentUser?.companyId) {
       saveStudentToRoom(studentData.id, selectedRoom, currentUser.companyId);
     }

@@ -25,14 +25,33 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
-    const savedStudents = localStorage.getItem("students");
-    if (savedStudents) {
-      const allStudents = JSON.parse(savedStudents);
-      const companyStudents = allStudents.filter(
-        (student: Student) => student.companyId === currentUser.companyId
-      );
-      setStudents(companyStudents);
-    }
+    const savedRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = savedRooms.filter(
+      (room: any) => room.companyId === currentUser.companyId
+    );
+    
+    // Coletar todos os alunos de todas as salas da empresa
+    const allStudents: Student[] = [];
+    companyRooms.forEach((room: any) => {
+      if (room.students) {
+        room.students.forEach((studentId: string) => {
+          // Adicionar o aluno apenas se ele ainda não estiver na lista
+          if (!allStudents.find(s => s.id === studentId)) {
+            allStudents.push({
+              id: studentId,
+              name: studentId, // Aqui você precisaria buscar os detalhes do aluno da sala
+              room: room.id,
+              status: "active",
+              birthDate: "",
+              createdAt: "",
+              companyId: currentUser.companyId
+            });
+          }
+        });
+      }
+    });
+    
+    setStudents(allStudents);
   };
 
   useEffect(() => {
@@ -51,21 +70,7 @@ export const StudentRegistration = () => {
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    if (!currentUser?.companyId) return;
-
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
-    
-    const studentWithCompany = {
-      ...newStudent,
-      companyId: currentUser.companyId,
-    };
-    
-    allStudents.push(studentWithCompany);
-    localStorage.setItem("students", JSON.stringify(allStudents));
-    
-    setStudents(prev => [...prev, studentWithCompany]);
-
+    setStudents(prev => [...prev, newStudent]);
     toast({
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
@@ -73,25 +78,33 @@ export const StudentRegistration = () => {
   };
 
   const handleDeleteStudent = (id: string) => {
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
-    const updatedStudents = allStudents.filter((student: Student) => student.id !== id);
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    // Remover o aluno de todas as salas
+    const savedRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const updatedRooms = savedRooms.map((room: any) => {
+      if (room.students) {
+        room.students = room.students.filter((studentId: string) => studentId !== id);
+      }
+      return room;
+    });
+    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
     
     setStudents(prev => prev.filter(student => student.id !== id));
+    
+    toast({
+      title: "Sucesso",
+      description: "Aluno excluído com sucesso!",
+    });
   };
 
   const handleUpdateStudent = (updatedStudent: Student) => {
-    const savedStudents = localStorage.getItem("students") || "[]";
-    const allStudents = JSON.parse(savedStudents);
-    const updatedStudents = allStudents.map((student: Student) => 
-      student.id === updatedStudent.id ? updatedStudent : student
-    );
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-    
     setStudents(prev => prev.map(student => 
       student.id === updatedStudent.id ? updatedStudent : student
     ));
+    
+    toast({
+      title: "Sucesso",
+      description: "Aluno atualizado com sucesso!",
+    });
   };
 
   const filteredStudents = students.filter((student) => {
