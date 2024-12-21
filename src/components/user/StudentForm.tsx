@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { RoomSelect } from "./RoomSelect";
+import { CustomFields } from "./CustomFields";
+import { saveStudentToRoom, removeStudentFromRoom } from "@/utils/storageUtils";
 import {
   Select,
   SelectContent,
@@ -58,40 +59,15 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     };
   }, [currentUser]);
 
-  const renderCustomField = (field: FormField) => {
-    const value = initialData?.customFields?.[field.name] || "";
-
-    switch (field.type) {
-      case "textarea":
-        return (
-          <Textarea
-            id={field.name}
-            name={field.name}
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-      case "email":
-      case "tel":
-      case "text":
-      default:
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type={field.type}
-            required={field.required}
-            defaultValue={value}
-          />
-        );
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Criar o estudante
+    // Se estiver editando, remover o aluno da sala antiga
+    if (initialData && initialData.room !== selectedRoom) {
+      removeStudentFromRoom(initialData.id, initialData.room);
+    }
+
     const studentData: Student = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
@@ -106,12 +82,16 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       }, {}),
     };
 
+    // Salvar o aluno na sala selecionada
+    if (currentUser?.companyId) {
+      saveStudentToRoom(studentData.id, selectedRoom, currentUser.companyId);
+    }
+
     // Atualizar o usuário na lista de usuários
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const userExists = users.find((user: any) => user.id === studentData.id);
 
     if (!userExists) {
-      // Criar novo usuário associado ao estudante
       const newUser = {
         id: studentData.id,
         name: studentData.name,
@@ -126,7 +106,6 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       users.push(newUser);
       localStorage.setItem("users", JSON.stringify(users));
     } else {
-      // Atualizar usuário existente
       const updatedUsers = users.map((user: any) => {
         if (user.id === studentData.id) {
           return {
@@ -192,12 +171,10 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
         />
       </div>
 
-      {customFields.map((field) => (
-        <div key={field.id} className="space-y-2">
-          <Label htmlFor={field.name}>{field.label}</Label>
-          {renderCustomField(field)}
-        </div>
-      ))}
+      <CustomFields 
+        fields={customFields} 
+        initialValues={initialData?.customFields}
+      />
 
       <Button type="submit" className="w-full">
         <Save className="mr-2 h-4 w-4" />
