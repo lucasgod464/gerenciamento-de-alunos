@@ -31,18 +31,33 @@ const Rooms = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
+  // Load rooms from localStorage when component mounts or currentUser changes
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    console.log("All rooms:", allRooms); // Debug log
+    console.log("Current user companyId:", currentUser.companyId); // Debug log
+    
     const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
+    console.log("Filtered company rooms:", companyRooms); // Debug log
+    
     setRooms(companyRooms);
   }, [currentUser]);
 
   const handleSave = (newRoom: Partial<Room>) => {
+    if (!currentUser?.companyId) {
+      toast({
+        title: "Erro",
+        description: "Usuário não está associado a uma empresa",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const otherRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser?.companyId
+      (room: Room) => room.companyId !== currentUser.companyId
     );
 
     if (editingRoom) {
@@ -61,9 +76,12 @@ const Rooms = () => {
       const newRoomWithId = { 
         id: Math.random().toString(36).substr(2, 9),
         ...newRoom,
-        companyId: currentUser?.companyId,
+        companyId: currentUser.companyId,
         authorizedUsers: newRoom.authorizedUsers || []
       } as Room;
+      
+      console.log("Saving new room:", newRoomWithId); // Debug log
+      
       const updatedRooms = [...rooms, newRoomWithId];
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
