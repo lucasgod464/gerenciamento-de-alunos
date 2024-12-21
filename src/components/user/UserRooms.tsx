@@ -18,16 +18,32 @@ interface Room {
   authorizedUsers: string[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
 export function UserRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user?.id) {
-      console.log("No user ID found");
+    if (!user?.id || !user?.companyId) {
+      console.log("No user ID or companyId found");
       return;
     }
 
+    // Carregar categorias
+    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
+    const companyCategories = allCategories.filter(
+      (cat: Category) => cat.companyId === user.companyId
+    );
+    setCategories(companyCategories);
+
+    // Carregar salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const currentUserData = users.find((u: any) => u.id === user.id || u.email === user.email);
@@ -54,6 +70,11 @@ export function UserRooms() {
   const getCapacityPercentage = (room: Room) => {
     if (!room.capacity) return 0;
     return Math.min((getStudentCount(room) / room.capacity) * 100, 100);
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : "Sem categoria";
   };
 
   if (!user) {
@@ -93,7 +114,7 @@ export function UserRooms() {
                 <CardTitle className="text-lg font-semibold">{room.name}</CardTitle>
                 {room.category && (
                   <p className="text-sm text-muted-foreground">
-                    Categoria: {room.category}
+                    Categoria: {getCategoryName(room.category)}
                   </p>
                 )}
               </div>

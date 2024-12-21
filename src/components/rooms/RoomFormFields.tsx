@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Room {
   id?: string;
@@ -21,12 +23,32 @@ interface Room {
   companyId?: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
 interface RoomFormFieldsProps {
   room: Partial<Room>;
   onChange: (field: keyof Room, value: any) => void;
 }
 
 export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.companyId) return;
+    
+    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
+    const companyCategories = allCategories.filter(
+      (cat: Category) => cat.companyId === user.companyId && cat.status === true
+    );
+    setCategories(companyCategories);
+  }, [user]);
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -63,8 +85,11 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="category1">Categoria 1</SelectItem>
-            <SelectItem value="category2">Categoria 2</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

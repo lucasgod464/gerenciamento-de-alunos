@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Room {
   id: string;
@@ -21,6 +23,13 @@ interface Room {
   companyId: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
 interface RoomTableProps {
   rooms: Room[];
   onEdit: (room: Room) => void;
@@ -28,6 +37,24 @@ interface RoomTableProps {
 }
 
 export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user?.companyId) return;
+    
+    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
+    const companyCategories = allCategories.filter(
+      (cat: Category) => cat.companyId === user.companyId
+    );
+    setCategories(companyCategories);
+  }, [user]);
+
+  const getCategoryName = (categoryId: string) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    return category ? category.name : "Sem categoria";
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -47,7 +74,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
             <TableCell>{room.name}</TableCell>
             <TableCell>{room.schedule}</TableCell>
             <TableCell>{room.location}</TableCell>
-            <TableCell>{room.category}</TableCell>
+            <TableCell>{getCategoryName(room.category)}</TableCell>
             <TableCell>{room.capacity}</TableCell>
             <TableCell>
               <span
