@@ -29,21 +29,27 @@ export function UserRooms() {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     console.log("All rooms from localStorage:", allRooms);
     console.log("Current user ID:", user.id);
+    console.log("Current user email:", user.email);
 
-    // Inicializa authorizedUsers como array vazio se não existir
     const authorizedRooms = allRooms.filter((room: Room) => {
-      // Garante que authorizedUsers seja sempre um array
-      const roomAuthorizedUsers = Array.isArray(room.authorizedUsers) 
-        ? room.authorizedUsers 
-        : [];
+      // Primeiro, verifica se o usuário está na lista de autorizados
+      const isInAuthorizedList = Array.isArray(room.authorizedUsers) && 
+                                room.authorizedUsers.includes(user.id);
 
-      // Verifica se o usuário está autorizado
-      const isAuthorized = roomAuthorizedUsers.includes(user.id) && room.status;
+      // Depois, verifica se o usuário é o criador da sala (tem o mesmo email)
+      const isRoomCreator = room.createdByEmail === user.email;
+
+      // A sala deve estar ativa e o usuário deve ser autorizado ou criador
+      const isAuthorized = room.status && (isInAuthorizedList || isRoomCreator);
       
       console.log(`Room ${room.id} - ${room.name}:`, {
-        authorizedUsers: roomAuthorizedUsers,
+        authorizedUsers: room.authorizedUsers,
         currentUserId: user.id,
-        isAuthorized: isAuthorized,
+        currentUserEmail: user.email,
+        createdByEmail: room.createdByEmail,
+        isInAuthorizedList,
+        isRoomCreator,
+        isAuthorized,
         status: room.status
       });
       
