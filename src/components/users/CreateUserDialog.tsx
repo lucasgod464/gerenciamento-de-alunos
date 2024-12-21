@@ -58,13 +58,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       <DialogTrigger asChild>
         <Button>Criar Usuário</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button type="submit">Criar</Button>
           </div>
         </form>
