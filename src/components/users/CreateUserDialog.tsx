@@ -6,10 +6,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 
-export function CreateUserDialog() {
+interface CreateUserDialogProps {
+  onUserCreated: (user: User) => void;
+}
+
+export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
@@ -38,20 +43,18 @@ export function CreateUserDialog() {
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     localStorage.setItem("users", JSON.stringify([...users, newUser]));
 
+    onUserCreated(newUser);
+    
     toast({
       title: "Usuário criado",
       description: "O usuário foi criado com sucesso.",
     });
 
-    // Fechar o diálogo
-    const closeButton = document.querySelector('[data-dialog-close]');
-    if (closeButton instanceof HTMLElement) {
-      closeButton.click();
-    }
+    setOpen(false);
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>Criar Usuário</Button>
       </DialogTrigger>
