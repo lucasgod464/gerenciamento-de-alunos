@@ -34,6 +34,9 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     if (!editingUser) return;
 
     const formData = new FormData(event.currentTarget);
+    const authorizedRoomsStr = formData.get("authorizedRooms") as string;
+    const authorizedRooms = authorizedRoomsStr ? JSON.parse(authorizedRoomsStr) : [];
+
     const updatedUser: User = {
       ...editingUser,
       name: formData.get("name") as string,
@@ -42,6 +45,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,
       status: formData.get("status") as "active" | "inactive",
+      authorizedRooms: authorizedRooms,
     };
 
     onUpdateUser(updatedUser);
@@ -57,6 +61,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
             <TableHead>Email</TableHead>
             <TableHead>Categoria Responsável</TableHead>
             <TableHead>Especialização</TableHead>
+            <TableHead>Salas Autorizadas</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Data de Cadastro</TableHead>
             <TableHead>Último Acesso</TableHead>

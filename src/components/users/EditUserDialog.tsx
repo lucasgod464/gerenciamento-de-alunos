@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
+import { useState } from "react";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -15,7 +16,26 @@ interface EditUserDialogProps {
 }
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(user?.authorizedRooms || []);
+
   if (!user) return null;
+
+  const handleAuthorizedRoomsChange = (roomIds: string[]) => {
+    setSelectedRooms(roomIds);
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    
+    // Adiciona as salas autorizadas ao formData
+    const updatedFormData = new FormData(event.currentTarget);
+    updatedFormData.append('authorizedRooms', JSON.stringify(selectedRooms));
+    
+    // Chama o onSubmit original com o evento modificado
+    const originalSubmit = onSubmit;
+    originalSubmit(event);
+  };
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
@@ -23,8 +43,18 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <UserFormFields defaultValues={{ specialization: user.specialization }} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <UserFormFields 
+            defaultValues={{
+              name: user.name,
+              email: user.email,
+              location: user.location,
+              specialization: user.specialization,
+              status: user.status,
+              authorizedRooms: user.authorizedRooms
+            }}
+            onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+          />
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
