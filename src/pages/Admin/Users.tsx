@@ -19,9 +19,9 @@ const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [roomFilter, setRoomFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [specializationFilter, setSpecializationFilter] = useState("all");
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
@@ -34,10 +34,10 @@ const Users = () => {
     const companyUsers = allUsers.filter((user: User) => user.companyId === currentUser.companyId);
     setUsers(companyUsers);
 
-    // Load company-specific rooms
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = allRooms.filter((room: any) => room.companyId === currentUser.companyId);
-    setRooms(companyRooms);
+    // Load company-specific categories
+    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
+    const companyCategories = allCategories.filter((cat: any) => cat.companyId === currentUser.companyId);
+    setCategories(companyCategories);
 
     // Load company-specific specializations
     const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
@@ -53,9 +53,9 @@ const Users = () => {
       (user: User) => user.companyId !== currentUser?.companyId || user.id !== updatedUser.id
     );
     
-    const newUsers = [...users.map(user => 
+    const newUsers = users.map(user => 
       user.id === updatedUser.id ? updatedUser : user
-    )];
+    );
     
     localStorage.setItem("users", JSON.stringify([...otherUsers, ...newUsers]));
     setUsers(newUsers);
@@ -111,11 +111,11 @@ const Users = () => {
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    const matchesRoom = roomFilter === "all" || user.responsibleRoom === roomFilter;
+    const matchesCategory = categoryFilter === "all" || user.responsibleCategory === categoryFilter;
     const matchesSpecialization =
       specializationFilter === "all" || user.specialization === specializationFilter;
 
-    return matchesSearch && matchesStatus && matchesRoom && matchesSpecialization;
+    return matchesSearch && matchesStatus && matchesCategory && matchesSpecialization;
   });
 
   return (
@@ -152,15 +152,15 @@ const Users = () => {
                     <SelectItem value="inactive">Inativo</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={roomFilter} onValueChange={setRoomFilter}>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Sala" />
+                    <SelectValue placeholder="Categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as Salas</SelectItem>
-                    {rooms.map((room) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.name}
+                    <SelectItem value="all">Todas as Categorias</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -9,12 +9,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CategorySelect } from "./CategorySelect";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserFormFieldsProps {
   generateStrongPassword?: () => void;
+  defaultValues?: {
+    specialization?: string;
+  };
 }
 
-export const UserFormFields = ({ generateStrongPassword }: UserFormFieldsProps) => {
+interface Specialization {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
+export const UserFormFields = ({ generateStrongPassword, defaultValues }: UserFormFieldsProps) => {
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+    
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const companySpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId === currentUser.companyId && spec.status
+    );
+    setSpecializations(companySpecializations);
+  }, [currentUser]);
+
   return (
     <>
       <div className="space-y-2">
@@ -75,13 +100,16 @@ export const UserFormFields = ({ generateStrongPassword }: UserFormFieldsProps) 
       </div>
       <div className="space-y-2">
         <Label htmlFor="specialization">Especialização</Label>
-        <Select name="specialization">
+        <Select name="specialization" defaultValue={defaultValues?.specialization}>
           <SelectTrigger>
             <SelectValue placeholder="Selecione a especialização" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="esp1">Especialização 1</SelectItem>
-            <SelectItem value="esp2">Especialização 2</SelectItem>
+            {specializations.map((spec) => (
+              <SelectItem key={spec.id} value={spec.id}>
+                {spec.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
