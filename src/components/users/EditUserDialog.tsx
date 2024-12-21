@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -16,7 +16,13 @@ interface EditUserDialogProps {
 }
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(user?.authorizedRooms || []);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user?.authorizedRooms) {
+      setSelectedRooms(user.authorizedRooms);
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -27,7 +33,11 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    // Chama o onSubmit original com o evento
+    // Adiciona as salas autorizadas ao formData
+    const formData = new FormData(event.currentTarget);
+    formData.set("authorizedRooms", JSON.stringify(selectedRooms));
+    
+    // Chama o onSubmit original com o evento atualizado
     onSubmit(event);
   };
 

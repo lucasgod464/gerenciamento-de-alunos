@@ -4,18 +4,22 @@ import { UserFormFields } from "./UserFormFields";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
+import { useState } from "react";
 
 export function CreateUserDialog() {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+
+  const handleAuthorizedRoomsChange = (roomIds: string[]) => {
+    setSelectedRooms(roomIds);
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
     const id = Math.random().toString(36).substr(2, 9);
-    const authorizedRoomsStr = formData.get("authorizedRooms") as string;
-    const authorizedRooms = authorizedRoomsStr ? JSON.parse(authorizedRoomsStr) : [];
 
     const newUser: User = {
       id,
@@ -28,7 +32,7 @@ export function CreateUserDialog() {
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
       companyId: currentUser?.companyId || null,
-      authorizedRooms,
+      authorizedRooms: selectedRooms,
     };
 
     const users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -56,7 +60,7 @@ export function CreateUserDialog() {
           <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <UserFormFields />
+          <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
           <div className="flex justify-end space-x-2">
             <Button type="submit">Criar</Button>
           </div>
