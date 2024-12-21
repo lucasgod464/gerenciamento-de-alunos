@@ -25,10 +25,24 @@ export function UserRooms() {
 
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const authorizedRooms = allRooms.filter((room: Room) => 
-      room.authorizedUsers.includes(user.id) && room.status
+      Array.isArray(room.authorizedUsers) && 
+      room.authorizedUsers.includes(user.id) && 
+      room.status
     );
     setRooms(authorizedRooms);
   }, [user]);
+
+  if (!user) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-center text-muted-foreground">
+            Carregando...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (rooms.length === 0) {
     return (
