@@ -9,7 +9,7 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  studyRoom: string;
+  category: string;
   capacity: number;
   resources: string;
   status: boolean;
@@ -91,9 +91,9 @@ export function UserRooms() {
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">{room.name}</CardTitle>
-                {room.studyRoom && (
+                {room.category && (
                   <p className="text-sm text-muted-foreground">
-                    Sala de Estudo: {room.studyRoom}
+                    Categoria: {room.category}
                   </p>
                 )}
               </div>
