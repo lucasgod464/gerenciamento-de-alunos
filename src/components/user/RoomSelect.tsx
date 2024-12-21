@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Room {
   id: string;
@@ -23,6 +19,8 @@ interface RoomSelectProps {
 
 export const RoomSelect = ({ value, onChange, required = false }: RoomSelectProps) => {
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -63,18 +61,56 @@ export const RoomSelect = ({ value, onChange, required = false }: RoomSelectProp
     loadAuthorizedRooms();
   }, [currentUser, value, onChange]);
 
+  const handleRoomToggle = (roomId: string) => {
+    const updatedRooms = selectedRooms.includes(roomId)
+      ? selectedRooms.filter(id => id !== roomId)
+      : [...selectedRooms, roomId];
+    
+    setSelectedRooms(updatedRooms);
+    // Atualiza o valor com a primeira sala selecionada (para manter compatibilidade)
+    onChange(updatedRooms[0] || "");
+  };
+
+  const filteredRooms = rooms.filter(room =>
+    room.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <Select value={value} onValueChange={onChange} required={required}>
-      <SelectTrigger>
-        <SelectValue placeholder="Selecione a sala" />
-      </SelectTrigger>
-      <SelectContent>
-        {rooms.map((room) => (
-          <SelectItem key={room.id} value={room.id}>
-            {room.name}
-          </SelectItem>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label>Salas Autorizadas</Label>
+        <Input
+          type="text"
+          placeholder="Buscar salas..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-2"
+        />
+      </div>
+      <div className="space-y-2 border rounded-md p-4 max-h-[200px] overflow-y-auto">
+        {filteredRooms.map((room) => (
+          <div key={room.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={room.id}
+              checked={selectedRooms.includes(room.id)}
+              onCheckedChange={() => handleRoomToggle(room.id)}
+            />
+            <Label htmlFor={room.id} className="cursor-pointer">
+              {room.name}
+            </Label>
+          </div>
         ))}
-      </SelectContent>
-    </Select>
+        {filteredRooms.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-2">
+            {searchTerm ? "Nenhuma sala encontrada" : "Nenhuma sala disponível"}
+          </p>
+        )}
+      </div>
+      {required && selectedRooms.length === 0 && (
+        <p className="text-sm text-destructive">
+          Selecione pelo menos uma sala
+        </p>
+      )}
+    </div>
   );
 };
