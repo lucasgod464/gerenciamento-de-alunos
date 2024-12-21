@@ -17,10 +17,57 @@ export const AdminProfile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  useEffect(() => {
-    if (user) {
+  // Função para buscar dados atualizados do usuário
+  const fetchUserData = () => {
+    if (!user?.id) return;
+
+    const session = JSON.parse(localStorage.getItem("session") || "{}");
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUser = users.find((u: any) => u.id === user.id);
+
+    // Se o usuário foi excluído, fazer logout
+    if (!currentUser && user.role !== "SUPER_ADMIN") {
+      logout();
+      window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
+      return;
+    }
+
+    // Atualizar email se houver mudança
+    if (currentUser?.email) {
+      setEmail(currentUser.email);
+      
+      // Atualizar sessão se necessário
+      if (session?.user?.email !== currentUser.email) {
+        session.user = {
+          ...session.user,
+          email: currentUser.email,
+        };
+        localStorage.setItem("session", JSON.stringify(session));
+      }
+    } else if (user.email) {
       setEmail(user.email);
     }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+
+    // Adicionar listener para mudanças no localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "users" || e.key === "session") {
+        fetchUserData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Verificar atualizações a cada 30 segundos
+    const interval = setInterval(fetchUserData, 30000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
   }, [user]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
@@ -53,12 +100,24 @@ export const AdminProfile = () => {
       return;
     }
 
+    // Atualizar dados no localStorage
     const session = JSON.parse(localStorage.getItem("session") || "{}");
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    
+    // Atualizar sessão
     session.user = {
       ...session.user,
       email: email,
     };
     localStorage.setItem("session", JSON.stringify(session));
+
+    // Atualizar usuário na lista de usuários se existir
+    if (user?.id && user.role !== "SUPER_ADMIN") {
+      const updatedUsers = users.map((u: any) => 
+        u.id === user.id ? { ...u, email: email } : u
+      );
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
 
     toast({
       title: "Sucesso",
