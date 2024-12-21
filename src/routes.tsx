@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RoleGuard } from "./components/auth/RoleGuard";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -27,7 +27,7 @@ import AttendancePage from "./pages/User/Attendance";
 import ReportsPage from "./pages/User/Reports";
 import MyRooms from "./pages/User/MyRooms";
 
-export const routes = [
+export const routes = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/login" replace />,
@@ -187,4 +187,4 @@ export const routes = [
     path: "*",
     element: <Navigate to="/login" replace />,
   },
-];
+]);
