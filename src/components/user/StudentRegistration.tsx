@@ -25,38 +25,14 @@ export const StudentRegistration = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
     
-    const savedRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = savedRooms.filter(
-      (room: any) => room.companyId === currentUser.companyId
-    );
-    
-    // Coletar todos os alunos de todas as salas da empresa
-    const allStudents: Student[] = [];
-    companyRooms.forEach((room: any) => {
-      if (room.students) {
-        const roomStudents = room.students.map((studentId: string) => {
-          // Buscar os detalhes do aluno no storage da sala
-          const studentDetails = localStorage.getItem(`student_${studentId}_${room.id}`);
-          if (studentDetails) {
-            const student = JSON.parse(studentDetails);
-            return {
-              ...student,
-              room: room.id
-            };
-          }
-          return null;
-        }).filter(Boolean); // Remove null values
-        
-        // Adicionar apenas alunos que ainda não estão na lista
-        roomStudents.forEach((student: Student) => {
-          if (!allStudents.find(s => s.id === student.id)) {
-            allStudents.push(student);
-          }
-        });
-      }
-    });
-    
-    setStudents(allStudents);
+    const savedStudents = localStorage.getItem("students");
+    if (savedStudents) {
+      const allStudents = JSON.parse(savedStudents);
+      const companyStudents = allStudents.filter(
+        (student: Student) => student.companyId === currentUser.companyId
+      );
+      setStudents(companyStudents);
+    }
   };
 
   useEffect(() => {
@@ -75,7 +51,21 @@ export const StudentRegistration = () => {
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    setStudents(prev => [...prev, newStudent]);
+    if (!currentUser?.companyId) return;
+
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
+    
+    const studentWithCompany = {
+      ...newStudent,
+      companyId: currentUser.companyId,
+    };
+    
+    allStudents.push(studentWithCompany);
+    localStorage.setItem("students", JSON.stringify(allStudents));
+    
+    setStudents(prev => [...prev, studentWithCompany]);
+
     toast({
       title: "Sucesso",
       description: "Aluno cadastrado com sucesso!",
@@ -83,38 +73,25 @@ export const StudentRegistration = () => {
   };
 
   const handleDeleteStudent = (id: string) => {
-    // Remover o aluno de todas as salas
-    const savedRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const updatedRooms = savedRooms.map((room: any) => {
-      if (room.students) {
-        room.students = room.students.filter((studentId: string) => studentId !== id);
-      }
-      return room;
-    });
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    
-    // Remover os detalhes do aluno de todas as salas
-    rooms.forEach(room => {
-      localStorage.removeItem(`student_${id}_${room.id}`);
-    });
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
+    const updatedStudents = allStudents.filter((student: Student) => student.id !== id);
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
     
     setStudents(prev => prev.filter(student => student.id !== id));
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno excluído com sucesso!",
-    });
   };
 
   const handleUpdateStudent = (updatedStudent: Student) => {
+    const savedStudents = localStorage.getItem("students") || "[]";
+    const allStudents = JSON.parse(savedStudents);
+    const updatedStudents = allStudents.map((student: Student) => 
+      student.id === updatedStudent.id ? updatedStudent : student
+    );
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
+    
     setStudents(prev => prev.map(student => 
       student.id === updatedStudent.id ? updatedStudent : student
     ));
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno atualizado com sucesso!",
-    });
   };
 
   const filteredStudents = students.filter((student) => {
