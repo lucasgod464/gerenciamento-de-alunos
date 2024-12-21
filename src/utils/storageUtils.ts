@@ -2,6 +2,7 @@ interface StorageRoom {
   id: string;
   name: string;
   students: string[];
+  companyId: string | null;
   // ... outros campos da sala
 }
 
