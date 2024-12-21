@@ -12,6 +12,8 @@ import { CategorySelect } from "./CategorySelect";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search } from "lucide-react";
 
 interface UserFormFieldsProps {
   generateStrongPassword?: () => void;
@@ -48,6 +50,7 @@ export const UserFormFields = ({
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>(defaultValues?.authorizedRooms || []);
+  const [searchQuery, setSearchQuery] = useState("");
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -69,7 +72,6 @@ export const UserFormFields = ({
   }, [currentUser]);
 
   useEffect(() => {
-    // Atualizar selectedRooms quando defaultValues mudar
     if (defaultValues?.authorizedRooms) {
       setSelectedRooms(defaultValues.authorizedRooms);
     }
@@ -83,6 +85,10 @@ export const UserFormFields = ({
     setSelectedRooms(updatedRooms);
     onAuthorizedRoomsChange?.(updatedRooms);
   };
+
+  const filteredRooms = rooms.filter(room => 
+    room.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
@@ -162,18 +168,39 @@ export const UserFormFields = ({
       </div>
       <div className="space-y-2">
         <Label>Salas Autorizadas</Label>
-        <div className="grid gap-2">
-          {rooms.map((room) => (
-            <div key={room.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`room-${room.id}`}
-                checked={selectedRooms.includes(room.id)}
-                onCheckedChange={() => handleRoomToggle(room.id)}
-              />
-              <Label htmlFor={`room-${room.id}`}>{room.name}</Label>
-            </div>
-          ))}
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar salas..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
         </div>
+        <ScrollArea className="h-[200px] border rounded-md p-2">
+          <div className="space-y-2">
+            {filteredRooms.map((room) => (
+              <div key={room.id} className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md">
+                <Checkbox
+                  id={`room-${room.id}`}
+                  checked={selectedRooms.includes(room.id)}
+                  onCheckedChange={() => handleRoomToggle(room.id)}
+                />
+                <Label 
+                  htmlFor={`room-${room.id}`}
+                  className="cursor-pointer flex-grow"
+                >
+                  {room.name}
+                </Label>
+              </div>
+            ))}
+            {filteredRooms.length === 0 && (
+              <div className="text-center text-muted-foreground py-4">
+                Nenhuma sala encontrada
+              </div>
+            )}
+          </div>
+        </ScrollArea>
         <input 
           type="hidden" 
           name="authorizedRooms" 
