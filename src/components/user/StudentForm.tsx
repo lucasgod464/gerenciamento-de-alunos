@@ -91,6 +91,7 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    // Criar o estudante
     const studentData: Student = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
@@ -104,6 +105,40 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
         return acc;
       }, {}),
     };
+
+    // Atualizar o usuário na lista de usuários
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const userExists = users.find((user: any) => user.id === studentData.id);
+
+    if (!userExists) {
+      // Criar novo usuário associado ao estudante
+      const newUser = {
+        id: studentData.id,
+        name: studentData.name,
+        email: studentData.customFields?.email || "",
+        role: "USER",
+        companyId: currentUser?.companyId,
+        authorizedRooms: [selectedRoom],
+        status: "active",
+        createdAt: new Date().toISOString(),
+      };
+
+      users.push(newUser);
+      localStorage.setItem("users", JSON.stringify(users));
+    } else {
+      // Atualizar usuário existente
+      const updatedUsers = users.map((user: any) => {
+        if (user.id === studentData.id) {
+          return {
+            ...user,
+            name: studentData.name,
+            authorizedRooms: [selectedRoom],
+          };
+        }
+        return user;
+      });
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
 
     onSubmit(studentData);
   };
