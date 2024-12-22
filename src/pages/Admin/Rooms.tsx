@@ -13,12 +13,11 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  category: string;
+  studyRoom: string;
   capacity: number;
   resources: string;
   status: boolean;
   companyId: string | null;
-  studyRoom: string;
   authorizedUsers: string[];
 }
 

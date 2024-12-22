@@ -21,8 +21,6 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
-  studyRoom: string;
-  authorizedUsers: string[];
 }
 
 interface Category {

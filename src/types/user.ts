@@ -2,7 +2,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string;
   responsibleCategory: string;
   location: string;
   specialization: string;

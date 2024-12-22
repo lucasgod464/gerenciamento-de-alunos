@@ -1,127 +1,102 @@
-import { FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useFormContext } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { BasicInfoFields } from "./fields/BasicInfoFields";
+import { CategoryFields } from "./fields/CategoryFields";
+import { RoomSelectionFields } from "./fields/RoomSelectionFields";
+import { StatusField } from "./fields/StatusField";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserFormFieldsProps {
-  onAuthorizedRoomsChange: (roomIds: string[]) => void;
-  password: string;
-  onPasswordChange: (password: string) => void;
+  generateStrongPassword?: () => void;
+  defaultValues?: {
+    name?: string;
+    email?: string;
+    location?: string;
+    specialization?: string;
+    status?: string;
+    authorizedRooms?: string[];
+  };
+  onAuthorizedRoomsChange?: (roomIds: string[]) => void;
 }
 
-export function UserFormFields({
+interface Room {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
+interface Specialization {
+  id: string;
+  name: string;
+  status: boolean;
+  companyId: string | null;
+}
+
+export const UserFormFields = ({
+  generateStrongPassword,
+  defaultValues,
   onAuthorizedRoomsChange,
-  password,
-  onPasswordChange,
-}: UserFormFieldsProps) {
-  const { control } = useFormContext();
+}: UserFormFieldsProps) => {
+  const [specializations, setSpecializations] = useState<Specialization[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(
+    defaultValues?.authorizedRooms || []
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
+    const allSpecializations = JSON.parse(
+      localStorage.getItem("specializations") || "[]"
+    );
+    const companySpecializations = allSpecializations.filter(
+      (spec: Specialization) =>
+        spec.companyId === currentUser.companyId && spec.status
+    );
+    setSpecializations(companySpecializations);
+
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter(
+      (room: Room) => room.companyId === currentUser.companyId && room.status
+    );
+    setRooms(companyRooms);
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (defaultValues?.authorizedRooms) {
+      setSelectedRooms(defaultValues.authorizedRooms);
+    }
+  }, [defaultValues?.authorizedRooms]);
+
+  const handleRoomToggle = (roomId: string) => {
+    const updatedRooms = selectedRooms.includes(roomId)
+      ? selectedRooms.filter((id) => id !== roomId)
+      : [...selectedRooms, roomId];
+
+    setSelectedRooms(updatedRooms);
+    onAuthorizedRoomsChange?.(updatedRooms);
+  };
 
   return (
-    <div className="space-y-4">
-      <FormField
-        control={control}
-        name="name"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome Completo</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o nome completo" {...field} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email</FormLabel>
-            <FormControl>
-              <Input type="email" placeholder="Digite o email" {...field} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="password"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Senha</FormLabel>
-            <FormControl>
-              <Input
-                type="password"
-                placeholder="Digite a senha"
-                value={password}
-                onChange={(e) => onPasswordChange(e.target.value)}
-              />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="location"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Local</FormLabel>
-            <FormControl>
-              <Input placeholder="Digite o local" {...field} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="specialization"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Especialização</FormLabel>
-            <FormControl>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione uma especialização" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="spec1">Especialização 1</SelectItem>
-                  <SelectItem value="spec2">Especialização 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={control}
-        name="status"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Status</FormLabel>
-            <FormControl>
-              <Select onValueChange={field.onChange} defaultValue={field.value || "active"}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </FormControl>
-          </FormItem>
-        )}
-      />
-    </div>
+    <ScrollArea className="h-[60vh] pr-4">
+      <div className="space-y-4">
+        <BasicInfoFields defaultValues={defaultValues} />
+        <CategoryFields
+          defaultValues={defaultValues}
+          specializations={specializations}
+        />
+        <RoomSelectionFields
+          rooms={rooms}
+          selectedRooms={selectedRooms}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onRoomToggle={handleRoomToggle}
+        />
+        <StatusField defaultValue={defaultValues?.status} />
+      </div>
+    </ScrollArea>
   );
-}
+};
