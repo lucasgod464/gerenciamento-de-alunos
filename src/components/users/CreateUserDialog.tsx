@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
+import { useForm, FormProvider } from "react-hook-form";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -16,27 +17,25 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
+  const methods = useForm();
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    
+  const handleSubmit = (data: any) => {
     const id = Math.random().toString(36).substr(2, 9);
     const finalPassword = password || "";
 
     const newUser: User = {
       id,
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
+      name: data.name,
+      email: data.email,
       password: finalPassword,
-      responsibleCategory: formData.get("responsibleCategory") as string,
-      location: formData.get("location") as string,
-      specialization: formData.get("specialization") as string,
-      status: formData.get("status") as "active" | "inactive",
+      responsibleCategory: data.responsibleCategory,
+      location: data.location,
+      specialization: data.specialization,
+      status: data.status || "active",
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
       companyId: currentUser?.companyId || null,
@@ -66,17 +65,18 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <UserFormFields 
-            onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
-            password={password}
-            onPasswordChange={setPassword}
-          />
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="submit">Criar</Button>
-          </div>
-        </form>
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(handleSubmit)} className="space-y-4">
+            <UserFormFields 
+              onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+              password={password}
+              onPasswordChange={setPassword}
+            />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="submit">Criar</Button>
+            </div>
+          </form>
+        </FormProvider>
       </DialogContent>
     </Dialog>
   );
