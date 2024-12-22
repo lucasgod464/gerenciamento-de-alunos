@@ -13,11 +13,12 @@ interface Room {
   name: string;
   schedule: string;
   location: string;
-  studyRoom: string;
+  category: string;
   capacity: number;
   resources: string;
   status: boolean;
   companyId: string | null;
+  studyRoom: string;
   authorizedUsers: string[];
 }
 
@@ -63,7 +64,12 @@ const Rooms = () => {
     if (editingRoom) {
       const updatedRooms = rooms.map(room => 
         room.id === editingRoom.id 
-          ? { ...editingRoom, ...newRoom }
+          ? { 
+              ...editingRoom, 
+              ...newRoom, 
+              studyRoom: editingRoom.studyRoom,
+              authorizedUsers: editingRoom.authorizedUsers 
+            }
           : room
       );
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
@@ -77,10 +83,9 @@ const Rooms = () => {
         id: Math.random().toString(36).substr(2, 9),
         ...newRoom,
         companyId: currentUser.companyId,
-        authorizedUsers: newRoom.authorizedUsers || []
+        studyRoom: "",
+        authorizedUsers: []
       } as Room;
-      
-      console.log("Saving new room:", newRoomWithId); // Debug log
       
       const updatedRooms = [...rooms, newRoomWithId];
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));

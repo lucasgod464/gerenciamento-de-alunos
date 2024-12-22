@@ -20,6 +20,8 @@ interface Room {
   resources: string;
   status: boolean;
   companyId: string | null;
+  studyRoom: string;
+  authorizedUsers: string[];
 }
 
 interface RoomDialogProps {
@@ -39,6 +41,8 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
       capacity: 0,
       resources: "",
       status: true,
+      studyRoom: "",
+      authorizedUsers: []
     }
   );
 
@@ -55,6 +59,8 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
         capacity: 0,
         resources: "",
         status: true,
+        studyRoom: "",
+        authorizedUsers: []
       });
     }
   }, [editingRoom]);
