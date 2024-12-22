@@ -18,6 +18,7 @@ interface UserFormFieldsProps {
     authorizedRooms?: string[];
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
+  isEditing?: boolean;
 }
 
 interface Room {
@@ -38,6 +39,7 @@ export const UserFormFields = ({
   generateStrongPassword,
   defaultValues,
   onAuthorizedRoomsChange,
+  isEditing,
 }: UserFormFieldsProps) => {
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -84,7 +86,7 @@ export const UserFormFields = ({
   return (
     <ScrollArea className="h-[60vh] pr-4">
       <div className="space-y-4">
-        <BasicInfoFields defaultValues={defaultValues} />
+        <BasicInfoFields defaultValues={defaultValues} isEditing={isEditing} />
         <CategoryFields
           defaultValues={defaultValues}
           specializations={specializations}
@@ -98,6 +100,7 @@ export const UserFormFields = ({
         />
         <StatusField defaultValue={defaultValues?.status} />
       </div>
+      <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
     </ScrollArea>
   );
 };

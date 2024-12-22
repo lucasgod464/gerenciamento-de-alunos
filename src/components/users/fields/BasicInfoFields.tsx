@@ -11,9 +11,10 @@ interface BasicInfoFieldsProps {
     password?: string;
     location?: string;
   };
+  isEditing?: boolean;
 }
 
-export function BasicInfoFields({ defaultValues }: BasicInfoFieldsProps) {
+export function BasicInfoFields({ defaultValues, isEditing }: BasicInfoFieldsProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -44,16 +45,18 @@ export function BasicInfoFields({ defaultValues }: BasicInfoFieldsProps) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <Label htmlFor="password">
+          {isEditing ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}
+        </Label>
         <div className="relative">
           <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Digite a senha"
-            defaultValue={defaultValues?.password}
+            placeholder={isEditing ? "Digite a nova senha" : "Digite a senha"}
+            defaultValue=""
             className="pr-10"
-            required
+            required={!isEditing}
           />
           <Button
             type="button"

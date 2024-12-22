@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
 import { useState, useEffect } from "react";
+import { hashPassword } from "@/utils/passwordUtils";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -30,10 +31,21 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     setSelectedRooms(roomIds);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     const formData = new FormData(event.currentTarget);
+    const newPassword = formData.get("password") as string;
+    
+    // Se uma nova senha foi fornecida, hash ela
+    if (newPassword && newPassword !== user.password) {
+      const hashedPassword = await hashPassword(newPassword);
+      formData.set("password", hashedPassword);
+    } else {
+      // Se nenhuma nova senha foi fornecida, mantenha a senha atual
+      formData.set("password", user.password);
+    }
+    
     formData.set("authorizedRooms", JSON.stringify(selectedRooms));
     
     onSubmit(event);
@@ -50,13 +62,14 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             defaultValues={{
               name: user.name,
               email: user.email,
-              password: user.password,
+              password: "", // Não mostrar a senha atual
               location: user.location,
               specialization: user.specialization,
               status: user.status,
               authorizedRooms: user.authorizedRooms
             }}
             onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+            isEditing={true}
           />
           <div className="flex justify-end space-x-2">
             <Button
