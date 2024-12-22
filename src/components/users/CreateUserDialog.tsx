@@ -16,6 +16,16 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
+  const generatePassword = () => {
+    const length = 8;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
+
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
@@ -25,11 +35,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const formData = new FormData(event.currentTarget);
     
     const id = Math.random().toString(36).substr(2, 9);
+    const password = generatePassword();
 
     const newUser: User = {
       id,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
+      password: password,
       responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,
@@ -47,7 +59,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     
     toast({
       title: "Usuário criado",
-      description: "O usuário foi criado com sucesso.",
+      description: `O usuário foi criado com sucesso. Senha: ${password}`,
     });
 
     setOpen(false);

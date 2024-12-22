@@ -36,11 +36,13 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     const formData = new FormData(event.currentTarget);
     const authorizedRoomsStr = formData.get("authorizedRooms") as string;
     const authorizedRooms = authorizedRoomsStr ? JSON.parse(authorizedRoomsStr) : [];
+    const password = formData.get("password") as string;
 
     const updatedUser: User = {
       ...editingUser,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
+      password: password,
       responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,

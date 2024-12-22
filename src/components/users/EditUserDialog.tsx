@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
 import { useState, useEffect } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -17,10 +20,15 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState(user?.password || "");
 
   useEffect(() => {
     if (user?.authorizedRooms) {
       setSelectedRooms(user.authorizedRooms);
+    }
+    if (user?.password) {
+      setPassword(user.password);
     }
   }, [user]);
 
@@ -33,12 +41,15 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    // Adiciona as salas autorizadas ao formData
     const formData = new FormData(event.currentTarget);
     formData.set("authorizedRooms", JSON.stringify(selectedRooms));
+    formData.set("password", password);
     
-    // Chama o onSubmit original com o evento atualizado
     onSubmit(event);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -59,6 +70,30 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             }}
             onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
           />
+          <div className="space-y-2">
+            <Label htmlFor="password">Senha</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-2 top-1/2 -translate-y-1/2"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </button>
+            </div>
+          </div>
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
