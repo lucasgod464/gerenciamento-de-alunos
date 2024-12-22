@@ -8,6 +8,8 @@ export function useAuth() {
       const storedSession = localStorage.getItem("session");
       return storedSession ? JSON.parse(storedSession) : null;
     },
+    staleTime: Infinity, // Prevent automatic refetching
+    cacheTime: Infinity, // Keep the data cached indefinitely
   });
 
   const login = async (email: string, password: string) => {
