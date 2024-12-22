@@ -33,9 +33,18 @@ const Users = () => {
     const loadUsers = () => {
       const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
       console.log("All users from localStorage:", allUsers);
-      const companyUsers = allUsers.filter((user: User) => user.companyId === currentUser.companyId);
-      console.log("Filtered company users:", companyUsers);
-      setUsers(companyUsers);
+      
+      // Remover duplicatas baseado no ID
+      const uniqueUsers = allUsers.reduce((acc: User[], current: User) => {
+        const exists = acc.find((user) => user.id === current.id);
+        if (!exists && current.companyId === currentUser.companyId) {
+          acc.push(current);
+        }
+        return acc;
+      }, []);
+      
+      console.log("Filtered company users:", uniqueUsers);
+      setUsers(uniqueUsers);
     };
 
     // Initial load
@@ -61,7 +70,8 @@ const Users = () => {
       (user: User) => user.id !== updatedUser.id
     );
     
-    localStorage.setItem("users", JSON.stringify([...otherUsers, updatedUser]));
+    const updatedUsers = [...otherUsers, updatedUser];
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
     
     setUsers(prevUsers =>
       prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
@@ -90,8 +100,15 @@ const Users = () => {
 
   const handleCreateUser = (newUser: User) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = [...allUsers, newUser];
     
+    // Verificar se já existe um usuário com o mesmo ID
+    const existingUser = allUsers.find((user: User) => user.id === newUser.id);
+    if (existingUser) {
+      // Gerar um novo ID único
+      newUser.id = Math.random().toString(36).substr(2, 9);
+    }
+    
+    const updatedUsers = [...allUsers, newUser];
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     
     setUsers(prevUsers => [...prevUsers, newUser]);
