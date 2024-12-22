@@ -1,19 +1,11 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { UserList } from "@/components/users/UserList";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
-import { Card, CardContent } from "@/components/ui/card";
+import { UsersHeader } from "@/components/users/UsersHeader";
+import { UsersFilters } from "@/components/users/UsersFilters";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -29,12 +21,8 @@ const Users = () => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    // Load company-specific users
     const loadUsers = () => {
       const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      console.log("All users from localStorage:", allUsers);
-      
-      // Remover duplicatas baseado no ID
       const uniqueUsers = allUsers.reduce((acc: User[], current: User) => {
         const exists = acc.find((user) => user.id === current.id);
         if (!exists && current.companyId === currentUser.companyId) {
@@ -43,14 +31,11 @@ const Users = () => {
         return acc;
       }, []);
       
-      console.log("Filtered company users:", uniqueUsers);
       setUsers(uniqueUsers);
     };
 
-    // Initial load
     loadUsers();
 
-    // Set up localStorage event listener
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "users") {
         loadUsers();
@@ -58,21 +43,15 @@ const Users = () => {
     };
 
     window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
   const handleUpdateUser = (updatedUser: User) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherUsers = allUsers.filter(
-      (user: User) => user.id !== updatedUser.id
-    );
-    
+    const otherUsers = allUsers.filter((user: User) => user.id !== updatedUser.id);
     const updatedUsers = [...otherUsers, updatedUser];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
     
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
     setUsers(prevUsers =>
       prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
     );
@@ -88,34 +67,12 @@ const Users = () => {
     const updatedUsers = allUsers.filter((user: User) => user.id !== id);
     
     localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
     setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
     
     toast({
       title: "Usuário excluído",
       description: "O usuário foi excluído com sucesso.",
       variant: "destructive",
-    });
-  };
-
-  const handleCreateUser = (newUser: User) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Verificar se já existe um usuário com o mesmo ID
-    const existingUser = allUsers.find((user: User) => user.id === newUser.id);
-    if (existingUser) {
-      // Gerar um novo ID único
-      newUser.id = Math.random().toString(36).substr(2, 9);
-    }
-    
-    const updatedUsers = [...allUsers, newUser];
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
-    setUsers(prevUsers => [...prevUsers, newUser]);
-    
-    toast({
-      title: "Usuário criado",
-      description: "O novo usuário foi criado com sucesso.",
     });
   };
 
@@ -134,70 +91,20 @@ const Users = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Usuários</h1>
-          <p className="text-muted-foreground">
-            Gerencie os usuários do sistema
-          </p>
-        </div>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-6">
-              <div className="flex justify-end">
-                <CreateUserDialog onUserCreated={handleCreateUser} />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-5">
-                <Input
-                  placeholder="Buscar por nome ou email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="md:col-span-2"
-                />
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="inactive">Inativo</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as Categorias</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select
-                  value={specializationFilter}
-                  onValueChange={setSpecializationFilter}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Especialização" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as Especializações</SelectItem>
-                    {specializations.map((spec) => (
-                      <SelectItem key={spec.id} value={spec.id}>
-                        {spec.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
+        
+        <UsersFilters
+          search={search}
+          onSearchChange={setSearch}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          specializationFilter={specializationFilter}
+          onSpecializationFilterChange={setSpecializationFilter}
+          categories={categories}
+          specializations={specializations}
+        />
 
         <UserList
           users={filteredUsers}
