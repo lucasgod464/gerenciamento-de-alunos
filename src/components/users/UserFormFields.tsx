@@ -31,12 +31,38 @@ export const UserFormFields = ({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const { user: currentUser } = useAuth();
+  const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
+  const [specializations, setSpecializations] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     if (defaultValues?.authorizedRooms) {
       setSelectedRooms(defaultValues.authorizedRooms);
     }
   }, [defaultValues?.authorizedRooms]);
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
+    // Load rooms from localStorage
+    const savedRooms = localStorage.getItem("rooms");
+    if (savedRooms) {
+      const allRooms = JSON.parse(savedRooms);
+      const companyRooms = allRooms.filter(
+        (room: any) => room.companyId === currentUser.companyId && room.status === true
+      );
+      setRooms(companyRooms);
+    }
+
+    // Load specializations from localStorage
+    const savedSpecializations = localStorage.getItem("specializations");
+    if (savedSpecializations) {
+      const allSpecializations = JSON.parse(savedSpecializations);
+      const companySpecializations = allSpecializations.filter(
+        (spec: any) => spec.companyId === currentUser.companyId && spec.status === true
+      );
+      setSpecializations(companySpecializations);
+    }
+  }, [currentUser]);
 
   const handleRoomToggle = (roomId: string) => {
     const updatedRooms = selectedRooms.includes(roomId)
@@ -51,8 +77,12 @@ export const UserFormFields = ({
     <ScrollArea className="h-[60vh] pr-4">
       <div className="space-y-4">
         <BasicInfoFields defaultValues={defaultValues} isEditing={isEditing} />
-        <CategoryFields defaultValues={defaultValues} />
+        <CategoryFields 
+          defaultValues={defaultValues} 
+          specializations={specializations}
+        />
         <RoomSelectionFields
+          rooms={rooms}
           selectedRooms={selectedRooms}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
