@@ -6,10 +6,25 @@ export function useAuth() {
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
       const storedSession = localStorage.getItem("session");
-      return storedSession ? JSON.parse(storedSession) : null;
+      if (!storedSession) return null;
+      
+      try {
+        const parsedSession = JSON.parse(storedSession);
+        // Verificar se a sessão é válida
+        if (!parsedSession?.user?.id || !parsedSession?.token) {
+          localStorage.removeItem("session");
+          return null;
+        }
+        return parsedSession;
+      } catch (error) {
+        localStorage.removeItem("session");
+        return null;
+      }
     },
     staleTime: Infinity, // Prevent automatic refetching
     gcTime: Infinity, // Keep the data cached indefinitely (formerly cacheTime)
+    refetchOnWindowFocus: false, // Prevent refetch on window focus
+    refetchOnMount: false, // Prevent refetch on component mount
   });
 
   const login = async (email: string, password: string) => {
@@ -101,7 +116,7 @@ export function useAuth() {
     localStorage.removeItem("session");
   };
 
-  const isAuthenticated = !!session;
+  const isAuthenticated = !!session?.user?.id && !!session?.token;
   const user = session?.user;
 
   const can = (permission: keyof typeof ROLE_PERMISSIONS[keyof typeof ROLE_PERMISSIONS]) => {
