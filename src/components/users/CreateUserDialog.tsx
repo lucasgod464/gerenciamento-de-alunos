@@ -30,6 +30,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       id,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
+      password: formData.get("password") as string,
       responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,
