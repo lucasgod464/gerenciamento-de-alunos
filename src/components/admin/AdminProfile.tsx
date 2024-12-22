@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { ProfileForm } from "./ProfileForm";
 
 export const AdminProfile = () => {
   const { user, logout } = useAuth();
@@ -17,57 +14,10 @@ export const AdminProfile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Função para buscar dados atualizados do usuário
-  const fetchUserData = () => {
-    if (!user?.id) return;
-
-    const session = JSON.parse(localStorage.getItem("session") || "{}");
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const currentUser = users.find((u: any) => u.id === user.id);
-
-    // Se o usuário foi excluído, fazer logout
-    if (!currentUser && user.role !== "SUPER_ADMIN") {
-      logout();
-      window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
-      return;
-    }
-
-    // Atualizar email se houver mudança
-    if (currentUser?.email) {
-      setEmail(currentUser.email);
-      
-      // Atualizar sessão se necessário
-      if (session?.user?.email !== currentUser.email) {
-        session.user = {
-          ...session.user,
-          email: currentUser.email,
-        };
-        localStorage.setItem("session", JSON.stringify(session));
-      }
-    } else if (user.email) {
+  useEffect(() => {
+    if (user) {
       setEmail(user.email);
     }
-  };
-
-  useEffect(() => {
-    fetchUserData();
-
-    // Adicionar listener para mudanças no localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "users" || e.key === "session") {
-        fetchUserData();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    // Verificar atualizações a cada 30 segundos
-    const interval = setInterval(fetchUserData, 30000);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
   }, [user]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
@@ -100,24 +50,12 @@ export const AdminProfile = () => {
       return;
     }
 
-    // Atualizar dados no localStorage
     const session = JSON.parse(localStorage.getItem("session") || "{}");
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    
-    // Atualizar sessão
     session.user = {
       ...session.user,
       email: email,
     };
     localStorage.setItem("session", JSON.stringify(session));
-
-    // Atualizar usuário na lista de usuários se existir
-    if (user?.id && user.role !== "SUPER_ADMIN") {
-      const updatedUsers = users.map((u: any) => 
-        u.id === user.id ? { ...u, email: email } : u
-      );
-      localStorage.setItem("users", JSON.stringify(updatedUsers));
-    }
 
     toast({
       title: "Sucesso",
@@ -131,7 +69,7 @@ export const AdminProfile = () => {
 
   const handleLogout = () => {
     logout();
-    window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
+    navigate("/login");
     toast({
       title: "Desconectado",
       description: "Sessão encerrada com sucesso",
@@ -149,65 +87,18 @@ export const AdminProfile = () => {
           <CardTitle>Meu Perfil</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Senha Atual</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nova Senha</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <Button type="submit" className="gap-2">
-                <Save className="w-4 h-4" />
-                Salvar Alterações
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </Button>
-            </div>
-          </form>
+          <ProfileForm
+            email={email}
+            currentPassword={currentPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            onEmailChange={(e) => setEmail(e.target.value)}
+            onCurrentPasswordChange={(e) => setCurrentPassword(e.target.value)}
+            onNewPasswordChange={(e) => setNewPassword(e.target.value)}
+            onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
+            onSubmit={handleUpdateProfile}
+            onLogout={handleLogout}
+          />
         </CardContent>
       </Card>
     </div>
