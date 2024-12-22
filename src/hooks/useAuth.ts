@@ -9,7 +9,7 @@ export function useAuth() {
       return storedSession ? JSON.parse(storedSession) : null;
     },
     staleTime: Infinity, // Prevent automatic refetching
-    cacheTime: Infinity, // Keep the data cached indefinitely
+    gcTime: Infinity, // Keep the data cached indefinitely (formerly cacheTime)
   });
 
   const login = async (email: string, password: string) => {
