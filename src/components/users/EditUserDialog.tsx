@@ -33,11 +33,9 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    // Adiciona as salas autorizadas ao formData
     const formData = new FormData(event.currentTarget);
     formData.set("authorizedRooms", JSON.stringify(selectedRooms));
     
-    // Chama o onSubmit original com o evento atualizado
     onSubmit(event);
   };
 
@@ -52,6 +50,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             defaultValues={{
               name: user.name,
               email: user.email,
+              password: user.password,
               location: user.location,
               specialization: user.specialization,
               status: user.status,

@@ -1,15 +1,25 @@
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 interface BasicInfoFieldsProps {
   defaultValues?: {
     name?: string;
     email?: string;
+    password?: string;
     location?: string;
   };
 }
 
 export function BasicInfoFields({ defaultValues }: BasicInfoFieldsProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <>
       <div className="space-y-2">
@@ -32,6 +42,33 @@ export function BasicInfoFields({ defaultValues }: BasicInfoFieldsProps) {
           defaultValue={defaultValues?.email}
           required
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Digite a senha"
+            defaultValue={defaultValues?.password}
+            className="pr-10"
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+            onClick={togglePasswordVisibility}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-gray-500" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-500" />
+            )}
+          </Button>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="location">Local</Label>
