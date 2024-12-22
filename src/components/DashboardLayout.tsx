@@ -1,7 +1,6 @@
 import { ReactNode } from "react";
 import { SidebarNav } from "./SidebarNav";
 import { AdminNav } from "./AdminNav";
-import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -9,9 +8,6 @@ interface DashboardLayoutProps {
 }
 
 export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
-  // Ativa o timeout de inatividade (30 minutos)
-  useIdleTimeout();
-
   return (
     <div className="min-h-screen flex">
       <div className="w-64 min-h-screen bg-white border-r">
