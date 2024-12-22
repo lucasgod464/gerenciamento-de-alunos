@@ -29,29 +29,6 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     }
   };
 
-  const handleEditSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!editingUser) return;
-
-    const formData = new FormData(event.currentTarget);
-    const authorizedRoomsStr = formData.get("authorizedRooms") as string;
-    const authorizedRooms = authorizedRoomsStr ? JSON.parse(authorizedRoomsStr) : [];
-
-    const updatedUser: User = {
-      ...editingUser,
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      responsibleCategory: formData.get("responsibleCategory") as string,
-      location: formData.get("location") as string,
-      specialization: formData.get("specialization") as string,
-      status: formData.get("status") as "active" | "inactive",
-      authorizedRooms: authorizedRooms,
-    };
-
-    onUpdateUser(updatedUser);
-    setEditingUser(null);
-  };
-
   return (
     <>
       <Table>
@@ -84,7 +61,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
       <EditUserDialog
         user={editingUser}
         onClose={() => setEditingUser(null)}
-        onSubmit={handleEditSubmit}
+        onSubmit={onUpdateUser}
       />
     </>
   );
