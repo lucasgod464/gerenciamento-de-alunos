@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
+import { hashPassword } from "@/utils/passwordUtils";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -20,17 +21,19 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     setSelectedRooms(roomIds);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
     const id = Math.random().toString(36).substr(2, 9);
+    const password = formData.get("password") as string;
+    const hashedPassword = await hashPassword(password);
 
     const newUser: User = {
       id,
       name: formData.get("name") as string,
       email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      password: hashedPassword,
       responsibleCategory: formData.get("responsibleCategory") as string,
       location: formData.get("location") as string,
       specialization: formData.get("specialization") as string,

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { User, AuthResponse, ROLE_PERMISSIONS } from "@/types/auth";
+import { comparePasswords } from "@/utils/passwordUtils";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -68,10 +69,14 @@ export function useAuth() {
     const foundUser = createdUsers.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
     
     // Login for emails created by super admin
-    if (foundEmail && password === "123456") {
+    if (foundEmail) {
       console.log("Found email in createdEmails:", foundEmail);
+      const isPasswordValid = foundEmail.password === password || await comparePasswords(password, foundEmail.password);
+      
+      if (!isPasswordValid) {
+        throw new Error("Invalid credentials");
+      }
 
-      // Normalize accessLevel to correct format
       let role = foundEmail.accessLevel.toUpperCase();
       if (role.includes("ADMIN") || role.includes("ADMINISTRADOR")) {
         role = "ADMIN";
@@ -99,8 +104,14 @@ export function useAuth() {
     }
 
     // Login for users created by admin
-    if (foundUser && password === "123456") {
+    if (foundUser) {
       console.log("Found user in users:", foundUser);
+      const isPasswordValid = foundUser.password === password || await comparePasswords(password, foundUser.password);
+      
+      if (!isPasswordValid) {
+        throw new Error("Invalid credentials");
+      }
+
       const response: AuthResponse = {
         user: {
           id: foundUser.id,
