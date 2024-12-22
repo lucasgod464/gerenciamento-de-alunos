@@ -46,14 +46,14 @@ export function BasicInfoFields({ defaultValues, isEditing }: BasicInfoFieldsPro
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">
-          {isEditing ? "Nova Senha (deixe em branco para manter a atual)" : "Senha"}
+          {isEditing ? "Nova Senha (opcional)" : "Senha"}
         </Label>
         <div className="relative">
           <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder={isEditing ? "Digite a nova senha" : "Digite a senha"}
+            placeholder={isEditing ? "Digite a nova senha se desejar alterá-la" : "Digite a senha"}
             defaultValue=""
             className="pr-10"
             required={!isEditing}
