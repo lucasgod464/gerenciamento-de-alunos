@@ -6,6 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { hashPassword } from "@/utils/passwordUtils";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userSchema, type UserFormData } from "@/schemas/userSchema";
+import { Form } from "@/components/ui/form";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -17,31 +21,42 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
+  const form = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      location: "",
+      specialization: "",
+      status: "active",
+      authorizedRooms: [],
+      responsibleCategory: "",
+    },
+  });
+
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
+    form.setValue("authorizedRooms", roomIds);
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    
+  const onSubmit = async (data: UserFormData) => {
+    const hashedPassword = await hashPassword(data.password as string);
     const id = Math.random().toString(36).substr(2, 9);
-    const password = formData.get("password") as string;
-    const hashedPassword = await hashPassword(password);
 
     const newUser: User = {
       id,
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
+      name: data.name,
+      email: data.email,
       password: hashedPassword,
-      responsibleCategory: formData.get("responsibleCategory") as string,
-      location: formData.get("location") as string,
-      specialization: formData.get("specialization") as string,
-      status: formData.get("status") as "active" | "inactive",
+      responsibleCategory: data.responsibleCategory,
+      location: data.location,
+      specialization: data.specialization,
+      status: data.status,
       createdAt: new Date().toLocaleDateString(),
       lastAccess: "-",
       companyId: currentUser?.companyId || null,
-      authorizedRooms: selectedRooms,
+      authorizedRooms: data.authorizedRooms,
     };
 
     const users = JSON.parse(localStorage.getItem("users") || "[]");
@@ -66,12 +81,14 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="submit">Criar</Button>
-          </div>
-        </form>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="submit">Criar</Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

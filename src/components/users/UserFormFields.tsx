@@ -5,9 +5,12 @@ import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { StatusField } from "./fields/StatusField";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { userSchema, type UserFormData } from "@/schemas/userSchema";
+import { Form } from "@/components/ui/form";
 
 interface UserFormFieldsProps {
-  generateStrongPassword?: () => void;
   defaultValues?: {
     name?: string;
     email?: string;
@@ -34,11 +37,26 @@ export const UserFormFields = ({
   const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
   const [specializations, setSpecializations] = useState<Array<{ id: string; name: string }>>([]);
 
+  const form = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      name: defaultValues?.name || "",
+      email: defaultValues?.email || "",
+      password: defaultValues?.password || "",
+      location: defaultValues?.location || "",
+      specialization: defaultValues?.specialization || "",
+      status: (defaultValues?.status as "active" | "inactive") || "active",
+      authorizedRooms: defaultValues?.authorizedRooms || [],
+      responsibleCategory: "",
+    },
+  });
+
   useEffect(() => {
     if (defaultValues?.authorizedRooms) {
       setSelectedRooms(defaultValues.authorizedRooms);
+      form.setValue("authorizedRooms", defaultValues.authorizedRooms);
     }
-  }, [defaultValues?.authorizedRooms]);
+  }, [defaultValues?.authorizedRooms, form]);
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -70,27 +88,39 @@ export const UserFormFields = ({
       : [...selectedRooms, roomId];
 
     setSelectedRooms(updatedRooms);
+    form.setValue("authorizedRooms", updatedRooms);
     onAuthorizedRoomsChange?.(updatedRooms);
   };
 
   return (
-    <ScrollArea className="h-[60vh] pr-4">
-      <div className="space-y-4">
-        <BasicInfoFields defaultValues={defaultValues} isEditing={isEditing} />
-        <CategoryFields 
-          defaultValues={defaultValues} 
-          specializations={specializations}
-        />
-        <RoomSelectionFields
-          rooms={rooms}
-          selectedRooms={selectedRooms}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onRoomToggle={handleRoomToggle}
-        />
-        <StatusField defaultValue={defaultValues?.status} />
-      </div>
-      <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
-    </ScrollArea>
+    <Form {...form}>
+      <ScrollArea className="h-[60vh] pr-4">
+        <div className="space-y-4">
+          <BasicInfoFields 
+            form={form}
+            defaultValues={defaultValues} 
+            isEditing={isEditing} 
+          />
+          <CategoryFields 
+            form={form}
+            defaultValues={defaultValues} 
+            specializations={specializations}
+          />
+          <RoomSelectionFields
+            form={form}
+            rooms={rooms}
+            selectedRooms={selectedRooms}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onRoomToggle={handleRoomToggle}
+          />
+          <StatusField 
+            form={form}
+            defaultValue={defaultValues?.status} 
+          />
+        </div>
+        <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
+      </ScrollArea>
+    </Form>
   );
 };
