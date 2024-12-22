@@ -60,15 +60,9 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <UserFormFields 
-            defaultValues={{
-              name: user.name,
-              email: user.email,
-              location: user.location,
-              specialization: user.specialization,
-              status: user.status,
-              authorizedRooms: user.authorizedRooms
-            }}
             onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+            password={password}
+            onPasswordChange={setPassword}
           />
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
