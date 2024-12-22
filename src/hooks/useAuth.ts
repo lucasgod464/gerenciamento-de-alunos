@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { User, AuthResponse, ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
-  const { data: session } = useQuery({
+  const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
       const storedSession = localStorage.getItem("session");
@@ -10,7 +10,6 @@ export function useAuth() {
       
       try {
         const parsedSession = JSON.parse(storedSession);
-        // Verificar se a sessão é válida
         if (!parsedSession?.user?.id || !parsedSession?.token) {
           localStorage.removeItem("session");
           return null;
@@ -21,10 +20,19 @@ export function useAuth() {
         return null;
       }
     },
-    staleTime: Infinity, // Prevent automatic refetching
-    gcTime: Infinity, // Keep the data cached indefinitely (formerly cacheTime)
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: false, // Prevent refetch on component mount
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    initialData: () => {
+      const storedSession = localStorage.getItem("session");
+      if (!storedSession) return null;
+      try {
+        return JSON.parse(storedSession);
+      } catch {
+        return null;
+      }
+    },
   });
 
   const login = async (email: string, password: string) => {
@@ -45,6 +53,7 @@ export function useAuth() {
         token: "super-admin-token",
       };
       localStorage.setItem("session", JSON.stringify(response));
+      await refetch();
       return response;
     }
 
@@ -85,6 +94,7 @@ export function useAuth() {
       
       console.log("Login response for createdEmail:", response);
       localStorage.setItem("session", JSON.stringify(response));
+      await refetch();
       return response;
     }
 
@@ -105,6 +115,7 @@ export function useAuth() {
       };
       console.log("Login response for user:", response);
       localStorage.setItem("session", JSON.stringify(response));
+      await refetch();
       return response;
     }
 

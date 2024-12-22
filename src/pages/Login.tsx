@@ -11,6 +11,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -21,14 +22,17 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsLoading(true);
 
     if (!validateEmail(email)) {
       setError("Por favor, insira um email válido");
+      setIsLoading(false);
       return;
     }
 
     if (password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres");
+      setIsLoading(false);
       return;
     }
 
@@ -36,24 +40,26 @@ const Login = () => {
       const response = await login(email, password);
       console.log("Login successful, redirecting based on role:", response.user.role);
       
+      toast.success("Login realizado com sucesso!");
+      
       switch (response.user.role) {
         case "SUPER_ADMIN":
-          navigate("/super-admin");
+          navigate("/super-admin", { replace: true });
           break;
         case "ADMIN":
-          navigate("/admin");
+          navigate("/admin", { replace: true });
           break;
         case "USER":
-          navigate("/user");
+          navigate("/user", { replace: true });
           break;
         default:
-          navigate("/login");
+          navigate("/login", { replace: true });
       }
-      
-      toast.success("Login realizado com sucesso!");
     } catch (error) {
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,6 +100,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
           
@@ -105,11 +112,12 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={isLoading}
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Entrar
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
       </div>
