@@ -50,14 +50,14 @@ export function AdminNav() {
           key={route.href}
           to={route.href}
           className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full min-w-[200px]",
             location.pathname === route.href
               ? "bg-gray-100 text-gray-900"
               : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
           )}
         >
-          <route.icon className="h-4 w-4" />
-          <span>{route.title}</span>
+          <route.icon className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{route.title}</span>
         </Link>
       ))}
     </nav>
