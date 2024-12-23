@@ -1,74 +1,68 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Save } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { ProfileHeader } from "./profile/ProfileHeader";
+import { ProfileForm } from "./profile/ProfileForm";
+import { LogoutButton } from "./profile/LogoutButton";
 
 export const AdminProfile = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string>("/placeholder.svg");
 
-  // Função para buscar dados atualizados do usuário
-  const fetchUserData = () => {
+  useEffect(() => {
     if (!user?.id) return;
 
     const session = JSON.parse(localStorage.getItem("session") || "{}");
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     const currentUser = users.find((u: any) => u.id === user.id);
 
-    // Se o usuário foi excluído, fazer logout
-    if (!currentUser && user.role !== "SUPER_ADMIN") {
-      logout();
-      window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
-      return;
-    }
-
-    // Atualizar email se houver mudança
     if (currentUser?.email) {
       setEmail(currentUser.email);
-      
-      // Atualizar sessão se necessário
-      if (session?.user?.email !== currentUser.email) {
-        session.user = {
-          ...session.user,
-          email: currentUser.email,
-        };
-        localStorage.setItem("session", JSON.stringify(session));
-      }
     } else if (user.email) {
       setEmail(user.email);
     }
-  };
 
-  useEffect(() => {
-    fetchUserData();
-
-    // Adicionar listener para mudanças no localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "users" || e.key === "session") {
-        fetchUserData();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    // Verificar atualizações a cada 30 segundos
-    const interval = setInterval(fetchUserData, 30000);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
+    if (user.profilePicture) {
+      setAvatarUrl(user.profilePicture);
+    }
   }, [user]);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Erro",
+          description: "A imagem deve ter menos de 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setAvatarUrl(result);
+        
+        const session = JSON.parse(localStorage.getItem("session") || "{}");
+        if (session.user) {
+          session.user.profilePicture = result;
+          localStorage.setItem("session", JSON.stringify(session));
+        }
+
+        toast({
+          title: "Sucesso",
+          description: "Foto de perfil atualizada com sucesso",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,18 +94,15 @@ export const AdminProfile = () => {
       return;
     }
 
-    // Atualizar dados no localStorage
     const session = JSON.parse(localStorage.getItem("session") || "{}");
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     
-    // Atualizar sessão
     session.user = {
       ...session.user,
       email: email,
     };
     localStorage.setItem("session", JSON.stringify(session));
 
-    // Atualizar usuário na lista de usuários se existir
     if (user?.id && user.role !== "SUPER_ADMIN") {
       const updatedUsers = users.map((u: any) => 
         u.id === user.id ? { ...u, email: email } : u
@@ -129,87 +120,29 @@ export const AdminProfile = () => {
     setConfirmPassword("");
   };
 
-  const handleLogout = () => {
-    logout();
-    window.location.href = "https://preview--gerenciamento-de-alunos.lovable.app/";
-    toast({
-      title: "Desconectado",
-      description: "Sessão encerrada com sucesso",
-    });
-  };
-
   if (!user) {
     return null;
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle>Meu Perfil</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Senha Atual</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">Nova Senha</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-between pt-4">
-              <Button type="submit" className="gap-2">
-                <Save className="w-4 h-4" />
-                Salvar Alterações
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleLogout}
-                className="gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <ProfileHeader
+        name={user.name}
+        avatarUrl={avatarUrl}
+        onImageUpload={handleImageUpload}
+      />
+      <ProfileForm
+        email={email}
+        currentPassword={currentPassword}
+        newPassword={newPassword}
+        confirmPassword={confirmPassword}
+        onEmailChange={(e) => setEmail(e.target.value)}
+        onCurrentPasswordChange={(e) => setCurrentPassword(e.target.value)}
+        onNewPasswordChange={(e) => setNewPassword(e.target.value)}
+        onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
+        onSubmit={handleUpdateProfile}
+      />
+      <LogoutButton />
     </div>
   );
 };
