@@ -55,20 +55,20 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
 
   return (
     <>
-      <div className="rounded-md border bg-background">
-        <ScrollArea className="relative w-full">
+      <div className="rounded-md border bg-background h-[calc(100vh-280px)]">
+        <ScrollArea className="h-full">
           <Table>
-            <TableHeader className="bg-background">
+            <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px]">Nome Completo</TableHead>
-                <TableHead className="w-[200px]">Email</TableHead>
-                <TableHead className="w-[150px]">Categoria Responsável</TableHead>
-                <TableHead className="w-[150px]">Especialização</TableHead>
-                <TableHead className="w-[150px]">Salas Autorizadas</TableHead>
-                <TableHead className="w-[100px]">Status</TableHead>
-                <TableHead className="w-[120px]">Data de Cadastro</TableHead>
-                <TableHead className="w-[120px]">Último Acesso</TableHead>
-                <TableHead className="w-[100px]">Ações</TableHead>
+                <TableHead className="w-[200px] bg-muted">Nome Completo</TableHead>
+                <TableHead className="w-[200px] bg-muted">Email</TableHead>
+                <TableHead className="w-[150px] bg-muted">Categoria Responsável</TableHead>
+                <TableHead className="w-[150px] bg-muted">Especialização</TableHead>
+                <TableHead className="w-[150px] bg-muted">Salas Autorizadas</TableHead>
+                <TableHead className="w-[100px] bg-muted">Status</TableHead>
+                <TableHead className="w-[120px] bg-muted">Data de Cadastro</TableHead>
+                <TableHead className="w-[120px] bg-muted">Último Acesso</TableHead>
+                <TableHead className="w-[100px] bg-muted">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
