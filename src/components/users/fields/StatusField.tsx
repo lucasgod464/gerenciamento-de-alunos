@@ -1,10 +1,4 @@
-import {
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,36 +6,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UseFormReturn } from "react-hook-form";
-import { UserFormData } from "@/schemas/userSchema";
 
 interface StatusFieldProps {
-  form: UseFormReturn<UserFormData>;
   defaultValue?: string;
 }
 
-export function StatusField({ form, defaultValue }: StatusFieldProps) {
+export function StatusField({ defaultValue }: StatusFieldProps) {
   return (
-    <FormField
-      control={form.control}
-      name="status"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Status</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
-            <FormControl>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o status" />
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              <SelectItem value="active">Ativo</SelectItem>
-              <SelectItem value="inactive">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
+    <div className="space-y-2">
+      <Label htmlFor="status">Status</Label>
+      <Select name="status" defaultValue={defaultValue || "active"}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione o status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="active">Ativo</SelectItem>
+          <SelectItem value="inactive">Inativo</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
