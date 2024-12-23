@@ -36,13 +36,14 @@ export function UsersFilters({
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="grid gap-4 md:grid-cols-5">
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="md:col-span-2"
-          />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2">
+            <Input
+              placeholder="Buscar por nome ou email..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />

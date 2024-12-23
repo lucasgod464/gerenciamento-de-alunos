@@ -1,5 +1,18 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Search, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -9,12 +22,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SpecializationHeader } from "@/components/specializations/SpecializationHeader";
-import { SpecializationFilters } from "@/components/specializations/SpecializationFilters";
-import { SpecializationTable } from "@/components/specializations/SpecializationTable";
 
 interface Specialization {
   id: string;
@@ -118,20 +125,71 @@ const Specializations = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <SpecializationHeader onOpenDialog={() => setIsDialogOpen(true)} />
-        
-        <SpecializationFilters
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-        />
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Especializações</h1>
+          <p className="text-muted-foreground">
+            Gerencie as especializações do sistema
+          </p>
+        </div>
 
-        <SpecializationTable
-          specializations={filteredSpecializations}
-          onToggleStatus={handleToggleStatus}
-          onDelete={handleDeleteSpecialization}
-        />
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar especializações..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              className="border rounded-md px-3 py-2"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
+            >
+              <option value="all">Todos</option>
+              <option value="active">Ativos</option>
+              <option value="inactive">Inativos</option>
+            </select>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Nova Especialização
+            </Button>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSpecializations.map((spec) => (
+                <TableRow key={spec.id}>
+                  <TableCell>{spec.name}</TableCell>
+                  <TableCell>
+                    <Switch
+                      checked={spec.status}
+                      onCheckedChange={() => handleToggleStatus(spec.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteSpecialization(spec.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -65,32 +65,34 @@ export function AdminNav() {
   const location = useLocation();
 
   return (
-    <nav className="border-r border-border bg-background w-64 min-h-screen">
-      <div className="border-b border-border px-4 py-3">
+    <Sidebar>
+      <SidebarHeader className="border-b border-border px-4 py-3">
         <h2 className="text-lg font-semibold">Painel Admin</h2>
-      </div>
-      <div className="px-2 py-2">
-        <ul className="space-y-1">
+      </SidebarHeader>
+      <SidebarContent className="px-2 py-1">
+        <SidebarMenu>
           {adminRoutes.map((route) => {
             const Icon = route.icon;
             return (
-              <li key={route.href}>
-                <Link
-                  to={route.href}
-                  className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent ${
-                    location.pathname === route.href
-                      ? "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span>{route.title}</span>
-                </Link>
-              </li>
+              <SidebarMenuItem key={route.href}>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to={route.href}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent ${
+                      location.pathname === route.href
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{route.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             );
           })}
-        </ul>
-      </div>
-    </nav>
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
   );
 }
