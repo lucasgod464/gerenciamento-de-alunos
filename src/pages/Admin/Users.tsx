@@ -90,38 +90,27 @@ const Users = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground">
-            Gerencie os usuários do sistema
-          </p>
-        </div>
+      <div className="space-y-6">
+        <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
+        
+        <UsersFilters
+          search={search}
+          onSearchChange={setSearch}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          categoryFilter={categoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
+          specializationFilter={specializationFilter}
+          onSpecializationFilterChange={setSpecializationFilter}
+          categories={categories}
+          specializations={specializations}
+        />
 
-        <div className="space-y-4">
-          <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
-          
-          <UsersFilters
-            search={search}
-            onSearchChange={setSearch}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
-            specializationFilter={specializationFilter}
-            onSpecializationFilterChange={setSpecializationFilter}
-            categories={categories}
-            specializations={specializations}
-          />
-
-          <div className="rounded-md border bg-card">
-            <UserList
-              users={filteredUsers}
-              onUpdateUser={handleUpdateUser}
-              onDeleteUser={handleDeleteUser}
-            />
-          </div>
-        </div>
+        <UserList
+          users={filteredUsers}
+          onUpdateUser={handleUpdateUser}
+          onDeleteUser={handleDeleteUser}
+        />
       </div>
     </DashboardLayout>
   );
