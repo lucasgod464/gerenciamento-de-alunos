@@ -7,6 +7,16 @@ import { RoomDialog } from "@/components/rooms/RoomDialog";
 import { RoomFilters } from "@/components/rooms/RoomFilters";
 import { RoomTable } from "@/components/rooms/RoomTable";
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Room {
   id: string;
@@ -29,20 +39,16 @@ const Rooms = () => {
   const [studyRoomFilter, setStudyRoomFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Load rooms from localStorage when component mounts or currentUser changes
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    console.log("All rooms:", allRooms); // Debug log
-    console.log("Current user companyId:", currentUser.companyId); // Debug log
-    
     const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
-    console.log("Filtered company rooms:", companyRooms); // Debug log
-    
     setRooms(companyRooms);
   }, [currentUser]);
 
@@ -105,13 +111,20 @@ const Rooms = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDeleteClick = (id: string) => {
+    setRoomToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!roomToDelete || !currentUser?.companyId) return;
+
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const updatedRooms = rooms.filter(room => room.id !== roomToDelete);
     const otherRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser?.companyId || room.id !== id
+      (room: Room) => room.companyId !== currentUser.companyId
     );
     
-    const updatedRooms = rooms.filter(room => room.id !== id);
     localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
     setRooms(updatedRooms);
     
@@ -120,6 +133,9 @@ const Rooms = () => {
       description: "A sala foi excluída com sucesso.",
       variant: "destructive",
     });
+
+    setDeleteDialogOpen(false);
+    setRoomToDelete(null);
   };
 
   const filteredRooms = rooms.filter(room => {
@@ -163,7 +179,7 @@ const Rooms = () => {
             <RoomTable
               rooms={filteredRooms}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick}
             />
           </div>
         </div>
@@ -174,6 +190,23 @@ const Rooms = () => {
           onSave={handleSave}
           editingRoom={editingRoom}
         />
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir esta sala? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteConfirm}>
+                Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
