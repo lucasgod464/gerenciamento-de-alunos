@@ -9,7 +9,6 @@ import { User } from "@/types/user";
 import { UserTableRow } from "./UserTableRow";
 import { EditUserDialog } from "./EditUserDialog";
 import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserListProps {
   users: User[];
@@ -55,9 +54,9 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
 
   return (
     <>
-      <ScrollArea className="relative w-full">
+      <div className="rounded-md border">
         <Table>
-          <TableHeader className="sticky top-0 bg-card">
+          <TableHeader>
             <TableRow>
               <TableHead className="w-[200px]">Nome Completo</TableHead>
               <TableHead className="w-[200px]">Email</TableHead>
@@ -82,7 +81,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
             ))}
           </TableBody>
         </Table>
-      </ScrollArea>
+      </div>
 
       <EditUserDialog
         user={editingUser}
