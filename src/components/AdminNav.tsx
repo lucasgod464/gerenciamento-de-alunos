@@ -1,28 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Users,
-  School,
-  Tags,
-  GraduationCap,
-  UserCircle,
-  FormInput,
-  FolderKanban,
-} from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { BarChart, Users, School, Tag, GraduationCap, UserCircle, FormInput } from "lucide-react";
 
 const adminRoutes = [
   {
     title: "Dashboard",
     href: "/admin",
-    icon: LayoutDashboard,
+    icon: BarChart,
   },
   {
     title: "Usuários",
@@ -37,12 +21,12 @@ const adminRoutes = [
   {
     title: "Categorias",
     href: "/admin/categories",
-    icon: FolderKanban,
+    icon: Tag,
   },
   {
     title: "Etiquetas",
     href: "/admin/tags",
-    icon: Tags,
+    icon: Tag,
   },
   {
     title: "Especializações",
@@ -65,31 +49,22 @@ export function AdminNav() {
   const location = useLocation();
 
   return (
-    <Sidebar>
-      <SidebarContent className="px-2 py-1">
-        <SidebarMenu>
-          {adminRoutes.map((route) => {
-            const Icon = route.icon;
-            return (
-              <SidebarMenuItem key={route.href}>
-                <SidebarMenuButton asChild>
-                  <Link
-                    to={route.href}
-                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all hover:bg-accent ${
-                      location.pathname === route.href
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="truncate">{route.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
-        </SidebarMenu>
-      </SidebarContent>
-    </Sidebar>
+    <nav className="grid items-start gap-2">
+      {adminRoutes.map((route) => (
+        <Link
+          key={route.href}
+          to={route.href}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
+            location.pathname === route.href
+              ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
+              : "hover:bg-gray-100 dark:hover:bg-gray-800"
+          )}
+        >
+          <route.icon className="h-4 w-4" />
+          <span>{route.title}</span>
+        </Link>
+      ))}
+    </nav>
   );
 }

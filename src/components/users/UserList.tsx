@@ -54,34 +54,32 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
 
   return (
     <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Nome Completo</TableHead>
-              <TableHead className="w-[200px]">Email</TableHead>
-              <TableHead className="w-[150px]">Categoria Responsável</TableHead>
-              <TableHead className="w-[150px]">Especialização</TableHead>
-              <TableHead className="w-[150px]">Salas Autorizadas</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead className="w-[120px]">Data de Cadastro</TableHead>
-              <TableHead className="w-[120px]">Último Acesso</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <UserTableRow
-                key={user.id}
-                user={user}
-                onEdit={setEditingUser}
-                onDelete={onDeleteUser}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome Completo</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Categoria Responsável</TableHead>
+            <TableHead>Especialização</TableHead>
+            <TableHead>Salas Autorizadas</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Data de Cadastro</TableHead>
+            <TableHead>Último Acesso</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <UserTableRow
+              key={user.id}
+              user={user}
+              onEdit={setEditingUser}
+              onDelete={onDeleteUser}
+              onStatusChange={handleStatusChange}
+            />
+          ))}
+        </TableBody>
+      </Table>
 
       <EditUserDialog
         user={editingUser}

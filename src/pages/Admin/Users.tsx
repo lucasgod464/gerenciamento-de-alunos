@@ -13,8 +13,8 @@ const Users = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [specializationFilter, setSpecializationFilter] = useState("all");
-  const [categories] = useState<{ id: string; name: string }[]>([]);
-  const [specializations] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -46,6 +46,36 @@ const Users = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
+  const handleUpdateUser = (updatedUser: User) => {
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const otherUsers = allUsers.filter((user: User) => user.id !== updatedUser.id);
+    const updatedUsers = [...otherUsers, updatedUser];
+    
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setUsers(prevUsers =>
+      prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
+    );
+    
+    toast({
+      title: "Usuário atualizado",
+      description: "As informações do usuário foram atualizadas com sucesso.",
+    });
+  };
+
+  const handleDeleteUser = (id: string) => {
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const updatedUsers = allUsers.filter((user: User) => user.id !== id);
+    
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+    
+    toast({
+      title: "Usuário excluído",
+      description: "O usuário foi excluído com sucesso.",
+      variant: "destructive",
+    });
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,7 +90,7 @@ const Users = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-4">
+      <div className="space-y-6">
         <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
         
         <UsersFilters
@@ -78,30 +108,8 @@ const Users = () => {
 
         <UserList
           users={filteredUsers}
-          onUpdateUser={(updatedUser) => {
-            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-            const otherUsers = allUsers.filter((u: User) => u.id !== updatedUser.id);
-            const updatedUsers = [...otherUsers, updatedUser];
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            setUsers(prevUsers =>
-              prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
-            );
-            toast({
-              title: "Usuário atualizado",
-              description: "As informações do usuário foram atualizadas com sucesso.",
-            });
-          }}
-          onDeleteUser={(id) => {
-            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-            const updatedUsers = allUsers.filter((user: User) => user.id !== id);
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-            toast({
-              title: "Usuário excluído",
-              description: "O usuário foi excluído com sucesso.",
-              variant: "destructive",
-            });
-          }}
+          onUpdateUser={handleUpdateUser}
+          onDeleteUser={handleDeleteUser}
         />
       </div>
     </DashboardLayout>

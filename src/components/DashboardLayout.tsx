@@ -1,25 +1,25 @@
 import { ReactNode } from "react";
+import { SidebarNav } from "./SidebarNav";
 import { AdminNav } from "./AdminNav";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 interface DashboardLayoutProps {
   children: ReactNode;
   role: "super-admin" | "admin" | "user";
 }
 
-export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
   return (
-    <SidebarProvider>
-      <div className="flex h-screen">
-        <div className="w-52 border-r border-border bg-background">
-          <AdminNav />
-        </div>
-        <main className="flex-1 bg-background overflow-auto">
-          <div className="h-full p-6">
-            {children}
+    <div className="min-h-screen flex">
+      <div className="w-64 min-h-screen bg-white border-r">
+        {role === "admin" ? (
+          <div className="p-4">
+            <AdminNav />
           </div>
-        </main>
+        ) : (
+          <SidebarNav role={role} />
+        )}
       </div>
-    </SidebarProvider>
+      <main className="flex-1 p-8 bg-gray-50">{children}</main>
+    </div>
   );
 };
