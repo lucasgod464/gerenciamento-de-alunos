@@ -46,36 +46,6 @@ const Users = () => {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
-  const handleUpdateUser = (updatedUser: User) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherUsers = allUsers.filter((user: User) => user.id !== updatedUser.id);
-    const updatedUsers = [...otherUsers, updatedUser];
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(prevUsers =>
-      prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
-    );
-    
-    toast({
-      title: "Usuário atualizado",
-      description: "As informações do usuário foram atualizadas com sucesso.",
-    });
-  };
-
-  const handleDeleteUser = (id: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = allUsers.filter((user: User) => user.id !== id);
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-    
-    toast({
-      title: "Usuário excluído",
-      description: "O usuário foi excluído com sucesso.",
-      variant: "destructive",
-    });
-  };
-
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -90,14 +60,7 @@ const Users = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="p-6 space-y-4">
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground">
-            Gerencie os usuários do sistema
-          </p>
-        </div>
-
+      <div className="space-y-4">
         <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
         
         <UsersFilters
@@ -115,8 +78,30 @@ const Users = () => {
 
         <UserList
           users={filteredUsers}
-          onUpdateUser={handleUpdateUser}
-          onDeleteUser={handleDeleteUser}
+          onUpdateUser={(updatedUser) => {
+            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+            const otherUsers = allUsers.filter((u: User) => u.id !== updatedUser.id);
+            const updatedUsers = [...otherUsers, updatedUser];
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            setUsers(prevUsers =>
+              prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
+            );
+            toast({
+              title: "Usuário atualizado",
+              description: "As informações do usuário foram atualizadas com sucesso.",
+            });
+          }}
+          onDeleteUser={(id) => {
+            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+            const updatedUsers = allUsers.filter((user: User) => user.id !== id);
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+            toast({
+              title: "Usuário excluído",
+              description: "O usuário foi excluído com sucesso.",
+              variant: "destructive",
+            });
+          }}
         />
       </div>
     </DashboardLayout>
