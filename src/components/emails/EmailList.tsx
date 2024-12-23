@@ -6,6 +6,7 @@ import { CreateEmailDialog } from "./CreateEmailDialog"
 import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
+import { useQuery } from "@tanstack/react-query"
 
 interface Email {
   id: string
@@ -36,6 +37,29 @@ export function EmailList({
   const { toast } = useToast()
   const { user } = useAuth()
 
+  // Buscar usuários criados pelos administradores
+  const { data: usersFromAdmins = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => {
+      const storedUsers = localStorage.getItem("users")
+      return storedUsers ? JSON.parse(storedUsers) : []
+    },
+  })
+
+  // Converter usuários para o formato de email
+  const usersAsEmails = usersFromAdmins.map((user: any) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    accessLevel: "Usuário Comum",
+    company: user.companyId,
+    createdAt: user.createdAt,
+  }))
+
+  // Combinar emails criados pelo super admin com usuários criados pelos admins
+  const allEmails = [...emails, ...usersAsEmails]
+
   const handleEmailCreated = (email: Email) => {
     onUpdateEmail(email)
     toast({
@@ -55,7 +79,7 @@ export function EmailList({
   }
 
   // Filtra os emails baseado no papel do usuário
-  const filteredEmails = emails.filter((email) => {
+  const filteredEmails = allEmails.filter((email) => {
     // Se for super admin, mostra todos os emails
     if (user?.role === "SUPER_ADMIN") {
       const matchesSearch =
