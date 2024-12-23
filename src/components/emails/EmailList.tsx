@@ -46,6 +46,15 @@ export function EmailList({
     },
   })
 
+  // Buscar emails criados pelo super admin
+  const { data: createdEmails = [] } = useQuery({
+    queryKey: ["createdEmails"],
+    queryFn: () => {
+      const storedEmails = localStorage.getItem("createdEmails")
+      return storedEmails ? JSON.parse(storedEmails) : []
+    },
+  })
+
   // Converter usuários para o formato de email
   const usersAsEmails = usersFromAdmins.map((user: any) => ({
     id: user.id,
@@ -57,8 +66,8 @@ export function EmailList({
     createdAt: user.createdAt,
   }))
 
-  // Combinar emails criados pelo super admin com usuários criados pelos admins
-  const allEmails = [...emails, ...usersAsEmails]
+  // Combinar todos os emails do sistema
+  const allEmails = [...emails, ...usersAsEmails, ...createdEmails]
 
   const handleEmailCreated = (email: Email) => {
     onUpdateEmail(email)
