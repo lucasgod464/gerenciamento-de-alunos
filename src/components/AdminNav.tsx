@@ -16,7 +16,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarProvider,
 } from "@/components/ui/sidebar";
 
 const adminRoutes = [
@@ -67,10 +66,10 @@ export function AdminNav() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b px-4 py-6">
-        <h2 className="text-lg font-semibold">Painel Admin</h2>
+      <SidebarHeader className="border-b border-border px-6 py-4">
+        <h2 className="text-xl font-semibold">Painel Admin</h2>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-2 py-2">
         <SidebarMenu>
           {adminRoutes.map((route) => {
             const Icon = route.icon;
@@ -79,13 +78,13 @@ export function AdminNav() {
                 <SidebarMenuButton asChild>
                   <Link
                     to={route.href}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                    className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all hover:bg-accent ${
                       location.pathname === route.href
-                        ? "bg-gray-100 text-primary dark:bg-gray-800"
-                        : "text-gray-500 dark:text-gray-400"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5" />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>

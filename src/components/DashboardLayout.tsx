@@ -8,18 +8,14 @@ interface DashboardLayoutProps {
   role: "super-admin" | "admin" | "user";
 }
 
-export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
+export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <div className="w-64 min-h-screen bg-white border-r dark:bg-gray-900 dark:border-gray-800">
-          {role === "admin" ? (
-            <AdminNav />
-          ) : (
-            <SidebarNav role={role} />
-          )}
+        <div className="w-72 min-h-screen border-r border-border bg-background">
+          <AdminNav />
         </div>
-        <main className="flex-1 p-8 bg-gray-50 dark:bg-gray-900">{children}</main>
+        <main className="flex-1 p-8 bg-muted/50">{children}</main>
       </div>
     </SidebarProvider>
   );
