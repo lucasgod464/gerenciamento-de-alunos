@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, School, Layers, GraduationCap, UserCircle, FormInput, Tag } from "lucide-react";
+import { LayoutDashboard, GraduationCap, Layers, School, Users, Tag, UserCircle } from "lucide-react";
 
 const adminRoutes = [
   {
@@ -9,14 +9,9 @@ const adminRoutes = [
     icon: LayoutDashboard,
   },
   {
-    title: "Usuários",
-    href: "/admin/users",
-    icon: Users,
-  },
-  {
-    title: "Salas",
-    href: "/admin/rooms",
-    icon: School,
+    title: "Especializações",
+    href: "/admin/specializations",
+    icon: GraduationCap,
   },
   {
     title: "Categorias",
@@ -24,19 +19,19 @@ const adminRoutes = [
     icon: Layers,
   },
   {
+    title: "Salas",
+    href: "/admin/rooms",
+    icon: School,
+  },
+  {
+    title: "Usuários",
+    href: "/admin/users",
+    icon: Users,
+  },
+  {
     title: "Etiquetas",
     href: "/admin/tags",
     icon: Tag,
-  },
-  {
-    title: "Especializações",
-    href: "/admin/specializations",
-    icon: GraduationCap,
-  },
-  {
-    title: "Formulários",
-    href: "/admin/form-builder",
-    icon: FormInput,
   },
   {
     title: "Meu Perfil",
