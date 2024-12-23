@@ -6,6 +6,7 @@ interface EmailSearchBarProps {
   onSearchChange: (value: string) => void
   onAccessLevelChange: (value: string) => void
   onCompanyChange: (value: string) => void
+  showCompanyFilter?: boolean
 }
 
 interface Company {
@@ -17,6 +18,7 @@ export function EmailSearchBar({
   onSearchChange,
   onAccessLevelChange,
   onCompanyChange,
+  showCompanyFilter = true,
 }: EmailSearchBarProps) {
   const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
@@ -39,23 +41,25 @@ export function EmailSearchBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Todos</SelectItem>
-          <SelectItem value="admin">Admin</SelectItem>
-          <SelectItem value="user">Usuário Comum</SelectItem>
+          <SelectItem value="Admin">Admin</SelectItem>
+          <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
         </SelectContent>
       </Select>
-      <Select defaultValue="all" onValueChange={onCompanyChange}>
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Empresa" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
-          {companies.map((company: Company) => (
-            <SelectItem key={company.id} value={company.id || "no-id"}>
-              {company.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {showCompanyFilter && (
+        <Select defaultValue="all" onValueChange={onCompanyChange}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Empresa" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas</SelectItem>
+            {companies.map((company: Company) => (
+              <SelectItem key={company.id} value={company.name}>
+                {company.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
     </div>
   )
 }

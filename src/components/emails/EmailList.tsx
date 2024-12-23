@@ -5,6 +5,7 @@ import { EmailSearchBar } from "./EmailSearchBar"
 import { CreateEmailDialog } from "./CreateEmailDialog"
 import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/useAuth"
 
 interface Email {
   id: string
@@ -33,6 +34,7 @@ export function EmailList({
   const [editingEmail, setEditingEmail] = useState<Email | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const handleEmailCreated = (email: Email) => {
     onUpdateEmail(email)
@@ -52,14 +54,27 @@ export function EmailList({
     setEditingEmail(null)
   }
 
+  // Filtra os emails baseado no papel do usuário
   const filteredEmails = emails.filter((email) => {
+    // Se for super admin, mostra todos os emails
+    if (user?.role === "SUPER_ADMIN") {
+      const matchesSearch =
+        email.name.toLowerCase().includes(search.toLowerCase()) ||
+        email.email.toLowerCase().includes(search.toLowerCase())
+      const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
+      const matchesCompany = !companyFilter || companyFilter === "all" || email.company === companyFilter
+
+      return matchesSearch && matchesAccessLevel && matchesCompany
+    }
+    
+    // Se for admin, mostra apenas os emails da sua empresa
+    const belongsToCompany = email.company === user?.companyId
     const matchesSearch =
       email.name.toLowerCase().includes(search.toLowerCase()) ||
       email.email.toLowerCase().includes(search.toLowerCase())
     const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
-    const matchesCompany = !companyFilter || companyFilter === "all" || email.company === companyFilter
 
-    return matchesSearch && matchesAccessLevel && matchesCompany
+    return belongsToCompany && matchesSearch && matchesAccessLevel
   })
 
   return (
@@ -73,6 +88,7 @@ export function EmailList({
         onSearchChange={setSearch}
         onAccessLevelChange={setAccessLevelFilter}
         onCompanyChange={setCompanyFilter}
+        showCompanyFilter={user?.role === "SUPER_ADMIN"}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
