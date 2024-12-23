@@ -13,11 +13,13 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <div className="flex min-h-screen">
         <AdminNav />
         <main className="flex-1 bg-muted/50">
-          <div className="mx-auto h-full p-6">
-            {children}
+          <div className="container mx-auto min-h-full p-6">
+            <div className="min-w-[800px]">
+              {children}
+            </div>
           </div>
         </main>
       </div>
     </SidebarProvider>
   );
-};
+}
