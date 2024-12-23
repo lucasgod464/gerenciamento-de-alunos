@@ -17,8 +17,6 @@ interface Room {
   schedule: string;
   location: string;
   category: string;
-  capacity: number;
-  resources: string;
   status: boolean;
   companyId?: string | null;
 }
@@ -34,6 +32,23 @@ interface RoomFormFieldsProps {
   room: Partial<Room>;
   onChange: (field: keyof Room, value: any) => void;
 }
+
+const timeSlots = [
+  "07:00 - 08:00",
+  "08:00 - 09:00",
+  "09:00 - 10:00",
+  "10:00 - 11:00",
+  "11:00 - 12:00",
+  "13:00 - 14:00",
+  "14:00 - 15:00",
+  "15:00 - 16:00",
+  "16:00 - 17:00",
+  "17:00 - 18:00",
+  "18:00 - 19:00",
+  "19:00 - 20:00",
+  "20:00 - 21:00",
+  "21:00 - 22:00",
+];
 
 export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -61,11 +76,21 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="schedule">Horário</Label>
-        <Input
-          id="schedule"
+        <Select
           value={room.schedule || ""}
-          onChange={(e) => onChange("schedule", e.target.value)}
-        />
+          onValueChange={(value) => onChange("schedule", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione um horário" />
+          </SelectTrigger>
+          <SelectContent>
+            {timeSlots.map((slot) => (
+              <SelectItem key={slot} value={slot}>
+                {slot}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="location">Local</Label>
@@ -92,23 +117,6 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="capacity">Capacidade</Label>
-        <Input
-          id="capacity"
-          type="number"
-          value={room.capacity || 0}
-          onChange={(e) => onChange("capacity", parseInt(e.target.value))}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="resources">Recursos</Label>
-        <Input
-          id="resources"
-          value={room.resources || ""}
-          onChange={(e) => onChange("resources", e.target.value)}
-        />
       </div>
       <div className="flex items-center space-x-2">
         <Label htmlFor="status">Status</Label>

@@ -4,8 +4,6 @@ export interface Room {
   schedule: string;
   location: string;
   category: string;
-  capacity: number;
-  resources: string;
   status: boolean;
   companyId: string | null;
   studyRoom: string;
