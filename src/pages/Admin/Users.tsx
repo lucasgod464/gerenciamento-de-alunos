@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
+import { useQuery } from "@tanstack/react-query";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -18,14 +19,48 @@ const Users = () => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
+  // Buscar usuários criados pelo Super Admin
+  const { data: superAdminCreatedUsers = [] } = useQuery({
+    queryKey: ["createdEmails"],
+    queryFn: () => {
+      const storedEmails = localStorage.getItem("createdEmails") || "[]";
+      const emails = JSON.parse(storedEmails);
+      return emails.filter((email: any) => 
+        email.accessLevel === "Usuário Comum" && 
+        email.company === currentUser?.companyId
+      ).map((email: any) => ({
+        id: email.id,
+        name: email.name,
+        email: email.email,
+        password: email.password,
+        responsibleCategory: "",
+        location: "",
+        specialization: "",
+        status: "active",
+        createdAt: email.createdAt,
+        lastAccess: "-",
+        companyId: email.company,
+        authorizedRooms: []
+      }));
+    }
+  });
+
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
     const loadUsers = () => {
       const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      const uniqueUsers = allUsers.reduce((acc: User[], current: User) => {
-        const exists = acc.find((user) => user.id === current.id);
-        if (!exists && current.companyId === currentUser.companyId) {
+      const adminCreatedUsers = allUsers.filter((user: User) => 
+        user.companyId === currentUser.companyId
+      );
+      
+      // Combinar usuários criados pelo admin com usuários criados pelo super admin
+      const combinedUsers = [...adminCreatedUsers, ...superAdminCreatedUsers];
+      
+      // Remover duplicatas baseado no email
+      const uniqueUsers = combinedUsers.reduce((acc: User[], current: User) => {
+        const exists = acc.find(user => user.email === current.email);
+        if (!exists) {
           acc.push(current);
         }
         return acc;
@@ -37,14 +72,14 @@ const Users = () => {
     loadUsers();
 
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "users") {
+      if (e.key === "users" || e.key === "createdEmails") {
         loadUsers();
       }
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [currentUser]);
+  }, [currentUser, superAdminCreatedUsers]);
 
   const handleUpdateUser = (updatedUser: User) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
