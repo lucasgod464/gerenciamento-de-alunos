@@ -36,13 +36,14 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   });
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
+    console.log("Rooms changed:", roomIds);
     setSelectedRooms(roomIds);
-    form.setValue("authorizedRooms", roomIds, {
-      shouldValidate: true,
-    });
   };
 
   const onSubmit = async (data: UserFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Selected rooms:", selectedRooms);
+
     try {
       if (!data.password) {
         toast({
@@ -71,6 +72,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         authorizedRooms: selectedRooms,
       };
 
+      console.log("Creating new user:", newUser);
+
       // Get existing users and filter out any with the same email
       const users = JSON.parse(localStorage.getItem("users") || "[]");
       const existingUserWithEmail = users.find((u: User) => u.email === data.email);
@@ -84,7 +87,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         return;
       }
 
-      localStorage.setItem("users", JSON.stringify([...users, newUser]));
+      const updatedUsers = [...users, newUser];
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+      
+      console.log("User created successfully");
       onUserCreated(newUser);
       
       toast({

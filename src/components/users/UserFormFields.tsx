@@ -53,16 +53,12 @@ export const UserFormFields = ({
   useEffect(() => {
     if (defaultValues?.authorizedRooms) {
       setSelectedRooms(defaultValues.authorizedRooms);
-      form.setValue("authorizedRooms", defaultValues.authorizedRooms, {
-        shouldValidate: true,
-      });
     }
-  }, [defaultValues?.authorizedRooms, form]);
+  }, [defaultValues?.authorizedRooms]);
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    // Load specializations from localStorage
     const savedSpecializations = localStorage.getItem("specializations");
     if (savedSpecializations) {
       const allSpecializations = JSON.parse(savedSpecializations);
@@ -78,10 +74,9 @@ export const UserFormFields = ({
       ? selectedRooms.filter((id) => id !== roomId)
       : [...selectedRooms, roomId];
 
+    console.log("Toggling room:", roomId, "Updated rooms:", updatedRooms);
+    
     setSelectedRooms(updatedRooms);
-    form.setValue("authorizedRooms", updatedRooms, {
-      shouldValidate: true,
-    });
     onAuthorizedRoomsChange?.(updatedRooms);
   };
 
