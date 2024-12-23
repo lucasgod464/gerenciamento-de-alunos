@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, School, Layers, GraduationCap, UserCircle, FormInput } from "lucide-react";
+import { LayoutDashboard, Users, School, Layers, GraduationCap, UserCircle, FormInput, Tag } from "lucide-react";
 
 const adminRoutes = [
   {
