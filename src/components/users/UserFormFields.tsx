@@ -34,7 +34,6 @@ export const UserFormFields = ({
   );
   const [searchQuery, setSearchQuery] = useState("");
   const { user: currentUser } = useAuth();
-  const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
   const [specializations, setSpecializations] = useState<Array<{ id: string; name: string }>>([]);
 
   const form = useForm<UserFormData>({
@@ -60,16 +59,6 @@ export const UserFormFields = ({
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
-
-    // Load rooms from localStorage
-    const savedRooms = localStorage.getItem("rooms");
-    if (savedRooms) {
-      const allRooms = JSON.parse(savedRooms);
-      const companyRooms = allRooms.filter(
-        (room: any) => room.companyId === currentUser.companyId && room.status === true
-      );
-      setRooms(companyRooms);
-    }
 
     // Load specializations from localStorage
     const savedSpecializations = localStorage.getItem("specializations");
@@ -108,7 +97,6 @@ export const UserFormFields = ({
           />
           <RoomSelectionFields
             form={form}
-            rooms={rooms}
             selectedRooms={selectedRooms}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
