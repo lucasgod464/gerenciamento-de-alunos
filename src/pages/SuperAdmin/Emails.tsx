@@ -2,73 +2,50 @@ import { DashboardLayout } from "@/components/DashboardLayout"
 import { EmailList } from "@/components/emails/EmailList"
 import { EmailStats } from "@/components/emails/EmailStats"
 import { useToast } from "@/hooks/use-toast"
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-
-interface Email {
-  id: string
-  name: string
-  email: string
-  accessLevel: "Admin" | "Usuário Comum"
-  company: string
-  createdAt: string
-}
+import { useQuery } from "@tanstack/react-query"
 
 const Emails = () => {
   const { toast } = useToast()
-  const queryClient = useQueryClient()
 
-  // Buscar emails do localStorage
   const { data: emails = [] } = useQuery({
-    queryKey: ["emails"],
+    queryKey: ["createdEmails"],
     queryFn: () => {
       const storedEmails = localStorage.getItem("createdEmails")
       return storedEmails ? JSON.parse(storedEmails) : []
     },
   })
 
-  // Mutation para atualizar email
-  const updateEmailMutation = useMutation({
-    mutationFn: async (updatedEmail: Email) => {
-      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-      const newEmails = currentEmails.map((email: Email) =>
-        email.id === updatedEmail.id ? updatedEmail : email
-      )
-      localStorage.setItem("createdEmails", JSON.stringify(newEmails))
-      return updatedEmail
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["emails"] })
-      toast({
-        title: "Email atualizado",
-        description: "As informações do email foram atualizadas com sucesso.",
-      })
-    },
-  })
+  const totalAdmins = emails.filter((email: any) => 
+    email.accessLevel === "Admin" || 
+    email.accessLevel === "Administrador"
+  ).length
 
-  // Mutation para deletar email
-  const deleteEmailMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-      const newEmails = currentEmails.filter((email: Email) => email.id !== id)
-      localStorage.setItem("createdEmails", JSON.stringify(newEmails))
-      return id
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["emails"] })
-      toast({
-        title: "Email excluído",
-        description: "O email foi excluído permanentemente.",
-        variant: "destructive",
-      })
-    },
-  })
+  const totalUsers = emails.filter((email: any) => 
+    email.accessLevel === "Usuário Comum" || 
+    email.accessLevel === "User"
+  ).length
 
-  const handleUpdateEmail = (updatedEmail: Email) => {
-    updateEmailMutation.mutate(updatedEmail)
+  const handleUpdateEmail = (updatedEmail: any) => {
+    const allEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+    const updatedEmails = allEmails.map((email: any) =>
+      email.id === updatedEmail.id ? updatedEmail : email
+    )
+    localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
+    toast({
+      title: "Email atualizado",
+      description: "As informações do email foram atualizadas com sucesso.",
+    })
   }
 
   const handleDeleteEmail = (id: string) => {
-    deleteEmailMutation.mutate(id)
+    const allEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
+    const updatedEmails = allEmails.filter((email: any) => email.id !== id)
+    localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
+    toast({
+      title: "Email excluído",
+      description: "O email foi excluído permanentemente.",
+      variant: "destructive",
+    })
   }
 
   return (
@@ -81,7 +58,11 @@ const Emails = () => {
           </p>
         </div>
 
-        <EmailStats totalEmails={emails.length} />
+        <EmailStats 
+          totalEmails={emails.length} 
+          totalAdmins={totalAdmins}
+          totalUsers={totalUsers}
+        />
 
         <EmailList
           emails={emails}
