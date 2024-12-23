@@ -55,34 +55,36 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
 
   return (
     <>
-      <ScrollArea className="relative w-full">
-        <Table>
-          <TableHeader className="sticky top-0 bg-card">
-            <TableRow>
-              <TableHead className="w-[200px]">Nome Completo</TableHead>
-              <TableHead className="w-[200px]">Email</TableHead>
-              <TableHead className="w-[150px]">Categoria Responsável</TableHead>
-              <TableHead className="w-[150px]">Especialização</TableHead>
-              <TableHead className="w-[150px]">Salas Autorizadas</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              <TableHead className="w-[120px]">Data de Cadastro</TableHead>
-              <TableHead className="w-[120px]">Último Acesso</TableHead>
-              <TableHead className="w-[100px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <UserTableRow
-                key={user.id}
-                user={user}
-                onEdit={setEditingUser}
-                onDelete={onDeleteUser}
-                onStatusChange={handleStatusChange}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+      <div className="rounded-md border bg-background">
+        <ScrollArea className="relative w-full">
+          <Table>
+            <TableHeader className="bg-background">
+              <TableRow>
+                <TableHead className="w-[200px]">Nome Completo</TableHead>
+                <TableHead className="w-[200px]">Email</TableHead>
+                <TableHead className="w-[150px]">Categoria Responsável</TableHead>
+                <TableHead className="w-[150px]">Especialização</TableHead>
+                <TableHead className="w-[150px]">Salas Autorizadas</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="w-[120px]">Data de Cadastro</TableHead>
+                <TableHead className="w-[120px]">Último Acesso</TableHead>
+                <TableHead className="w-[100px]">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.map((user) => (
+                <UserTableRow
+                  key={user.id}
+                  user={user}
+                  onEdit={setEditingUser}
+                  onDelete={onDeleteUser}
+                  onStatusChange={handleStatusChange}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      </div>
 
       <EditUserDialog
         user={editingUser}
