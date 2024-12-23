@@ -14,8 +14,8 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         <div className="w-52 min-h-screen border-r border-border bg-background">
           <AdminNav />
         </div>
-        <main className="flex-1 p-4 lg:p-6 bg-muted/50 overflow-x-auto">
-          <div className="container mx-auto max-w-[1400px] min-w-[600px] px-0">
+        <main className="flex-1 bg-muted/50 overflow-x-auto">
+          <div className="container mx-auto max-w-[1400px] min-w-[600px]">
             {children}
           </div>
         </main>
