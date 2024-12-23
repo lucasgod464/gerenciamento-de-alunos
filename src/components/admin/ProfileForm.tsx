@@ -38,7 +38,6 @@ export const ProfileForm = ({
           value={email}
           onChange={onEmailChange}
           required
-          placeholder="seu@email.com"
         />
       </div>
 
@@ -50,7 +49,6 @@ export const ProfileForm = ({
           value={currentPassword}
           onChange={onCurrentPasswordChange}
           required
-          placeholder="Digite sua senha atual"
         />
       </div>
 
@@ -61,7 +59,6 @@ export const ProfileForm = ({
           type="password"
           value={newPassword}
           onChange={onNewPasswordChange}
-          placeholder="Digite a nova senha (opcional)"
         />
       </div>
 
@@ -72,7 +69,6 @@ export const ProfileForm = ({
           type="password"
           value={confirmPassword}
           onChange={onConfirmPasswordChange}
-          placeholder="Confirme a nova senha"
         />
       </div>
 
