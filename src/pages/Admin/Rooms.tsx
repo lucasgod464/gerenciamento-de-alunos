@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoomDialog } from "@/components/rooms/RoomDialog";
 import { RoomFilters } from "@/components/rooms/RoomFilters";
 import { RoomTable } from "@/components/rooms/RoomTable";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 interface Room {
   id: string;
@@ -30,28 +30,24 @@ const Rooms = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
 
-  // Load rooms from localStorage when component mounts or currentUser changes
   useEffect(() => {
     if (!currentUser?.companyId) return;
     
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    console.log("All rooms:", allRooms); // Debug log
-    console.log("Current user companyId:", currentUser.companyId); // Debug log
+    console.log("All rooms:", allRooms);
+    console.log("Current user companyId:", currentUser.companyId);
     
     const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
-    console.log("Filtered company rooms:", companyRooms); // Debug log
+    console.log("Filtered company rooms:", companyRooms);
     
     setRooms(companyRooms);
   }, [currentUser]);
 
   const handleSave = (newRoom: Partial<Room>) => {
     if (!currentUser?.companyId) {
-      toast({
-        title: "Erro",
-        description: "Usuário não está associado a uma empresa",
-        variant: "destructive",
+      toast.error("Erro", {
+        description: "Usuário não está associado a uma empresa"
       });
       return;
     }
@@ -74,9 +70,8 @@ const Rooms = () => {
       );
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
-      toast({
-        title: "Sala atualizada",
-        description: "A sala foi atualizada com sucesso.",
+      toast.success("Sala atualizada", {
+        description: "A sala foi atualizada com sucesso."
       });
     } else {
       const newRoomWithId = { 
@@ -90,9 +85,8 @@ const Rooms = () => {
       const updatedRooms = [...rooms, newRoomWithId];
       localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
-      toast({
-        title: "Sala criada",
-        description: "A nova sala foi criada com sucesso.",
+      toast.success("Sala criada", {
+        description: "A nova sala foi criada com sucesso."
       });
     }
     
@@ -115,10 +109,8 @@ const Rooms = () => {
     localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
     setRooms(updatedRooms);
     
-    toast({
-      title: "Sala excluída",
-      description: "A sala foi excluída com sucesso.",
-      variant: "destructive",
+    toast.error("Sala excluída", {
+      description: "A sala foi excluída com sucesso."
     });
   };
 
