@@ -66,10 +66,10 @@ export function AdminNav() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-border px-6 py-4">
-        <h2 className="text-xl font-semibold">Painel Admin</h2>
+      <SidebarHeader className="border-b border-border px-4 py-3">
+        <h2 className="text-lg font-semibold">Painel Admin</h2>
       </SidebarHeader>
-      <SidebarContent className="px-2 py-2">
+      <SidebarContent className="px-2 py-1">
         <SidebarMenu>
           {adminRoutes.map((route) => {
             const Icon = route.icon;
@@ -78,13 +78,13 @@ export function AdminNav() {
                 <SidebarMenuButton asChild>
                   <Link
                     to={route.href}
-                    className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all hover:bg-accent ${
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent ${
                       location.pathname === route.href
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4 w-4" />
                     <span>{route.title}</span>
                   </Link>
                 </SidebarMenuButton>

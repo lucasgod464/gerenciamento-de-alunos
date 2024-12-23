@@ -12,10 +12,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <div className="w-72 min-h-screen border-r border-border bg-background">
+        <div className="w-64 min-h-screen border-r border-border bg-background">
           <AdminNav />
         </div>
-        <main className="flex-1 p-8 bg-muted/50">{children}</main>
+        <main className="flex-1 p-6 bg-muted/50">
+          <div className="mx-auto max-w-7xl">{children}</div>
+        </main>
       </div>
     </SidebarProvider>
   );
