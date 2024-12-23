@@ -13,6 +13,7 @@ export const AdminProfile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -20,60 +21,129 @@ export const AdminProfile = () => {
     }
   }, [user]);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (currentPassword !== "123456") {
+  const validateForm = () => {
+    if (!email) {
       toast({
-        title: "Erro",
-        description: "Senha atual incorreta",
+        title: "Campo obrigatório",
+        description: "O email é obrigatório",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    if (newPassword !== confirmPassword) {
+    if (!email.includes("@")) {
       toast({
-        title: "Erro",
-        description: "As senhas não coincidem",
+        title: "Email inválido",
+        description: "Por favor, insira um email válido",
         variant: "destructive",
       });
-      return;
+      return false;
+    }
+
+    if (!currentPassword) {
+      toast({
+        title: "Campo obrigatório",
+        description: "A senha atual é obrigatória",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (currentPassword !== "123456") {
+      toast({
+        title: "Senha incorreta",
+        description: "A senha atual está incorreta",
+        variant: "destructive",
+      });
+      return false;
     }
 
     if (newPassword && newPassword.length < 6) {
       toast({
-        title: "Erro",
+        title: "Senha muito curta",
         description: "A nova senha deve ter pelo menos 6 caracteres",
         variant: "destructive",
       });
-      return;
+      return false;
     }
 
-    const session = JSON.parse(localStorage.getItem("session") || "{}");
-    session.user = {
-      ...session.user,
-      email: email,
-    };
-    localStorage.setItem("session", JSON.stringify(session));
+    if (newPassword && !confirmPassword) {
+      toast({
+        title: "Confirmação necessária",
+        description: "Por favor, confirme a nova senha",
+        variant: "destructive",
+      });
+      return false;
+    }
 
-    toast({
-      title: "Sucesso",
-      description: "Perfil atualizado com sucesso",
-    });
+    if (newPassword && newPassword !== confirmPassword) {
+      toast({
+        title: "Senhas diferentes",
+        description: "A nova senha e a confirmação não coincidem",
+        variant: "destructive",
+      });
+      return false;
+    }
 
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+    return true;
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+
+      if (!validateForm()) {
+        return;
+      }
+
+      const session = JSON.parse(localStorage.getItem("session") || "{}");
+      session.user = {
+        ...session.user,
+        email: email,
+      };
+      localStorage.setItem("session", JSON.stringify(session));
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso",
+      });
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar o perfil. Tente novamente.",
+        variant: "destructive",
+      });
+      console.error("Error updating profile:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-    toast({
-      title: "Desconectado",
-      description: "Sessão encerrada com sucesso",
-    });
+    try {
+      logout();
+      navigate("/login");
+      toast({
+        title: "Desconectado",
+        description: "Sessão encerrada com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer logout. Tente novamente.",
+        variant: "destructive",
+      });
+      console.error("Error during logout:", error);
+    }
   };
 
   if (!user) {
