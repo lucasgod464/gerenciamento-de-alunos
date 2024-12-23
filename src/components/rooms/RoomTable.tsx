@@ -10,18 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-
-interface Room {
-  id: string;
-  name: string;
-  schedule: string;
-  location: string;
-  category: string;
-  capacity: number;
-  resources: string;
-  status: boolean;
-  companyId: string | null;
-}
+import { Room } from "@/types/room";
 
 interface Category {
   id: string;
@@ -61,9 +50,8 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
         <TableRow>
           <TableHead>Nome da Sala</TableHead>
           <TableHead>Horário</TableHead>
-          <TableHead>Local</TableHead>
+          <TableHead>Endereço</TableHead>
           <TableHead>Categoria</TableHead>
-          <TableHead>Capacidade</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Ações</TableHead>
         </TableRow>
@@ -75,7 +63,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
             <TableCell>{room.schedule}</TableCell>
             <TableCell>{room.location}</TableCell>
             <TableCell>{getCategoryName(room.category)}</TableCell>
-            <TableCell>{room.capacity}</TableCell>
             <TableCell>
               <span
                 className={`px-2 py-1 rounded-full text-xs ${

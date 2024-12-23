@@ -82,7 +82,6 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           <Input
             id="startTime"
             type="time"
-            step="60"
             value={startTime}
             onChange={(e) => handleTimeChange("start", e.target.value)}
             className="w-full"
@@ -93,7 +92,6 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           <Input
             id="endTime"
             type="time"
-            step="60"
             value={endTime}
             onChange={(e) => handleTimeChange("end", e.target.value)}
             className="w-full"
@@ -101,7 +99,7 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="location">Local</Label>
+        <Label htmlFor="location">Endereço</Label>
         <Input
           id="location"
           value={room.location || ""}
