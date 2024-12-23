@@ -90,7 +90,7 @@ const Users = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="h-full p-6 space-y-6">
+      <div className="space-y-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
           <p className="text-muted-foreground">
@@ -114,11 +114,13 @@ const Users = () => {
             specializations={specializations}
           />
 
-          <UserList
-            users={filteredUsers}
-            onUpdateUser={handleUpdateUser}
-            onDeleteUser={handleDeleteUser}
-          />
+          <div className="rounded-md border bg-card">
+            <UserList
+              users={filteredUsers}
+              onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
+            />
+          </div>
         </div>
       </div>
     </DashboardLayout>
