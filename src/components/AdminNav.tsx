@@ -66,8 +66,8 @@ export function AdminNav() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-border px-4 py-3">
-        <h2 className="text-lg font-semibold">Painel Admin</h2>
+      <SidebarHeader className="border-b border-border px-3 py-2">
+        <h2 className="text-base font-semibold">Painel Admin</h2>
       </SidebarHeader>
       <SidebarContent className="px-2 py-1">
         <SidebarMenu>
@@ -78,14 +78,14 @@ export function AdminNav() {
                 <SidebarMenuButton asChild>
                   <Link
                     to={route.href}
-                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all hover:bg-accent ${
+                    className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-all hover:bg-accent ${
                       location.pathname === route.href
                         ? "bg-accent text-accent-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    <span>{route.title}</span>
+                    <span className="truncate">{route.title}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
