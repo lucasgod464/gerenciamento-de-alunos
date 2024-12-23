@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query"
 const Emails = () => {
   const { toast } = useToast()
 
+  // Buscar emails criados pelo super admin
   const { data: emails = [] } = useQuery({
     queryKey: ["createdEmails"],
     queryFn: () => {
@@ -15,12 +16,35 @@ const Emails = () => {
     },
   })
 
-  const totalAdmins = emails.filter((email: any) => 
+  // Buscar usuários criados pelos administradores
+  const { data: usersFromAdmins = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => {
+      const storedUsers = localStorage.getItem("users")
+      return storedUsers ? JSON.parse(storedUsers) : []
+    },
+  })
+
+  // Converter usuários para o formato de email
+  const usersAsEmails = usersFromAdmins.map((user: any) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password: user.password,
+    accessLevel: "Usuário Comum",
+    company: user.companyId,
+    createdAt: user.createdAt,
+  }))
+
+  // Combinar todos os emails do sistema
+  const allEmails = [...emails, ...usersAsEmails]
+
+  const totalAdmins = allEmails.filter((email: any) => 
     email.accessLevel === "Admin" || 
     email.accessLevel === "Administrador"
   ).length
 
-  const totalUsers = emails.filter((email: any) => 
+  const totalUsers = allEmails.filter((email: any) => 
     email.accessLevel === "Usuário Comum" || 
     email.accessLevel === "User"
   ).length
@@ -59,7 +83,7 @@ const Emails = () => {
         </div>
 
         <EmailStats 
-          totalEmails={emails.length} 
+          totalEmails={allEmails.length} 
           totalAdmins={totalAdmins}
           totalUsers={totalUsers}
         />
