@@ -10,9 +10,9 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
   return (
     <div className="min-h-screen flex">
-      <div className="w-64 min-h-screen bg-white border-r">
+      <div className="w-64 bg-white border-r">
         {role === "admin" ? (
-          <div className="p-4">
+          <div className="p-6">
             <AdminNav />
           </div>
         ) : (
