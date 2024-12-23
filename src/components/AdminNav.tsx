@@ -44,20 +44,20 @@ export function AdminNav() {
   const location = useLocation();
 
   return (
-    <nav className="grid items-start gap-1">
+    <nav className="flex flex-col space-y-1 w-full">
       {adminRoutes.map((route) => (
         <Link
           key={route.href}
           to={route.href}
           className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors w-full min-w-[200px]",
+            "flex items-center w-full px-4 py-3 text-sm font-medium transition-colors rounded-lg",
             location.pathname === route.href
               ? "bg-gray-100 text-gray-900"
               : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
           )}
         >
-          <route.icon className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{route.title}</span>
+          <route.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+          <span className="flex-1">{route.title}</span>
         </Link>
       ))}
     </nav>
