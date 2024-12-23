@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard,
   Building2,
   Mail,
   UserCircle,
@@ -43,9 +42,9 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
 
   const userLinks = [
     {
-      title: "Dashboard",
-      href: "/user",
-      icon: LayoutDashboard,
+      title: "Relatórios",
+      href: "/user/reports",
+      icon: BarChart,
     },
     {
       title: "Cadastro de Alunos",
@@ -61,11 +60,6 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
       title: "Minhas Salas",
       href: "/user/my-rooms",
       icon: DoorOpen,
-    },
-    {
-      title: "Relatórios",
-      href: "/user/reports",
-      icon: BarChart,
     },
     {
       title: "Meu Perfil",
