@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserFormFields } from "./UserFormFields";
 import { useToast } from "@/hooks/use-toast";
@@ -37,12 +37,23 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
-    form.setValue("authorizedRooms", roomIds);
+    form.setValue("authorizedRooms", roomIds, {
+      shouldValidate: true,
+    });
   };
 
   const onSubmit = async (data: UserFormData) => {
     try {
-      const hashedPassword = await hashPassword(data.password as string);
+      if (!data.password) {
+        toast({
+          title: "Erro",
+          description: "A senha é obrigatória.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const hashedPassword = await hashPassword(data.password);
       const id = Math.random().toString(36).substr(2, 9);
 
       const newUser: User = {
@@ -57,7 +68,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         createdAt: new Date().toLocaleDateString(),
         lastAccess: "-",
         companyId: currentUser?.companyId || null,
-        authorizedRooms: data.authorizedRooms,
+        authorizedRooms: selectedRooms,
       };
 
       // Get existing users and filter out any with the same email
@@ -83,6 +94,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       setOpen(false);
       form.reset();
+      setSelectedRooms([]);
     } catch (error) {
       console.error("Error creating user:", error);
       toast({
@@ -101,10 +113,16 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Criar Usuário</DialogTitle>
+          <DialogDescription>
+            Preencha os dados do novo usuário
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
+            <UserFormFields 
+              onAuthorizedRoomsChange={handleAuthorizedRoomsChange} 
+              isEditing={false}
+            />
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="submit">Criar</Button>
             </div>

@@ -53,7 +53,9 @@ export const UserFormFields = ({
   useEffect(() => {
     if (defaultValues?.authorizedRooms) {
       setSelectedRooms(defaultValues.authorizedRooms);
-      form.setValue("authorizedRooms", defaultValues.authorizedRooms);
+      form.setValue("authorizedRooms", defaultValues.authorizedRooms, {
+        shouldValidate: true,
+      });
     }
   }, [defaultValues?.authorizedRooms, form]);
 
@@ -77,7 +79,9 @@ export const UserFormFields = ({
       : [...selectedRooms, roomId];
 
     setSelectedRooms(updatedRooms);
-    form.setValue("authorizedRooms", updatedRooms);
+    form.setValue("authorizedRooms", updatedRooms, {
+      shouldValidate: true,
+    });
     onAuthorizedRoomsChange?.(updatedRooms);
   };
 
@@ -107,7 +111,6 @@ export const UserFormFields = ({
             defaultValue={defaultValues?.status} 
           />
         </div>
-        <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
       </ScrollArea>
     </Form>
   );
