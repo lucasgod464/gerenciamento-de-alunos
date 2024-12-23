@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, School, Tag, GraduationCap, UserCircle, FormInput } from "lucide-react";
+import { LayoutDashboard, Users, School, Layers, GraduationCap, UserCircle, FormInput } from "lucide-react";
 
 const adminRoutes = [
   {
@@ -21,7 +21,7 @@ const adminRoutes = [
   {
     title: "Categorias",
     href: "/admin/categories",
-    icon: Tag,
+    icon: Layers,
   },
   {
     title: "Etiquetas",
@@ -34,7 +34,7 @@ const adminRoutes = [
     icon: GraduationCap,
   },
   {
-    title: "Construtor de Formulário",
+    title: "Formulários",
     href: "/admin/form-builder",
     icon: FormInput,
   },
