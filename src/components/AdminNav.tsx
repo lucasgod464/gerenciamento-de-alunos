@@ -1,12 +1,29 @@
 import { Link, useLocation } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { BarChart, Users, School, Tag, GraduationCap, UserCircle, FormInput } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  School,
+  Tags,
+  GraduationCap,
+  UserCircle,
+  FormInput,
+  FolderKanban,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+} from "@/components/ui/sidebar";
 
 const adminRoutes = [
   {
     title: "Dashboard",
     href: "/admin",
-    icon: BarChart,
+    icon: LayoutDashboard,
   },
   {
     title: "Usuários",
@@ -21,12 +38,12 @@ const adminRoutes = [
   {
     title: "Categorias",
     href: "/admin/categories",
-    icon: Tag,
+    icon: FolderKanban,
   },
   {
     title: "Etiquetas",
     href: "/admin/tags",
-    icon: Tag,
+    icon: Tags,
   },
   {
     title: "Especializações",
@@ -49,22 +66,34 @@ export function AdminNav() {
   const location = useLocation();
 
   return (
-    <nav className="grid items-start gap-2">
-      {adminRoutes.map((route) => (
-        <Link
-          key={route.href}
-          to={route.href}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50",
-            location.pathname === route.href
-              ? "bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-50"
-              : "hover:bg-gray-100 dark:hover:bg-gray-800"
-          )}
-        >
-          <route.icon className="h-4 w-4" />
-          <span>{route.title}</span>
-        </Link>
-      ))}
-    </nav>
+    <Sidebar>
+      <SidebarHeader className="border-b px-4 py-6">
+        <h2 className="text-lg font-semibold">Painel Admin</h2>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {adminRoutes.map((route) => {
+            const Icon = route.icon;
+            return (
+              <SidebarMenuItem key={route.href}>
+                <SidebarMenuButton asChild>
+                  <Link
+                    to={route.href}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                      location.pathname === route.href
+                        ? "bg-gray-100 text-primary dark:bg-gray-800"
+                        : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{route.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
   );
 }
