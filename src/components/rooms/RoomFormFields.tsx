@@ -10,16 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
-
-interface Room {
-  id?: string;
-  name: string;
-  schedule: string;
-  location: string;
-  category: string;
-  status: boolean;
-  companyId?: string | null;
-}
+import { Room } from "@/types/room";
 
 interface Category {
   id: string;
@@ -32,20 +23,6 @@ interface RoomFormFieldsProps {
   room: Partial<Room>;
   onChange: (field: keyof Room, value: any) => void;
 }
-
-const generateTimeOptions = () => {
-  const times = [];
-  for (let hour = 7; hour <= 22; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const formattedHour = hour.toString().padStart(2, '0');
-      const formattedMinute = minute.toString().padStart(2, '0');
-      times.push(`${formattedHour}:${formattedMinute}`);
-    }
-  }
-  return times;
-};
-
-const timeOptions = generateTimeOptions();
 
 export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -72,6 +49,10 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
   }, [room.schedule]);
 
   const handleTimeChange = (type: "start" | "end", value: string) => {
+    // Validação básica do formato da hora
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!timeRegex.test(value)) return;
+
     if (type === "start") {
       setStartTime(value);
       if (endTime) {
@@ -98,39 +79,25 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="startTime">Horário Início</Label>
-          <Select
+          <Input
+            id="startTime"
+            type="time"
+            step="60"
             value={startTime}
-            onValueChange={(value) => handleTimeChange("start", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Horário início" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeOptions.map((time) => (
-                <SelectItem key={`start-${time}`} value={time}>
-                  {time}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(e) => handleTimeChange("start", e.target.value)}
+            className="w-full"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="endTime">Horário Fim</Label>
-          <Select
+          <Input
+            id="endTime"
+            type="time"
+            step="60"
             value={endTime}
-            onValueChange={(value) => handleTimeChange("end", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Horário fim" />
-            </SelectTrigger>
-            <SelectContent>
-              {timeOptions.map((time) => (
-                <SelectItem key={`end-${time}`} value={time}>
-                  {time}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(e) => handleTimeChange("end", e.target.value)}
+            className="w-full"
+          />
         </div>
       </div>
       <div className="space-y-2">
