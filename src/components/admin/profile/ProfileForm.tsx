@@ -33,7 +33,7 @@ export const ProfileForm = ({
         <CardTitle>Informações de Conta</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -45,35 +45,43 @@ export const ProfileForm = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Senha Atual</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={onCurrentPasswordChange}
-              required
-            />
-          </div>
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Alterar Senha</h3>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <Label htmlFor="currentPassword" className="text-xs">Senha Atual</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={onCurrentPasswordChange}
+                  required
+                  className="mt-1"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nova Senha</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={onNewPasswordChange}
-            />
-          </div>
+              <div>
+                <Label htmlFor="newPassword" className="text-xs">Nova Senha</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={onNewPasswordChange}
+                  className="mt-1"
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={onConfirmPasswordChange}
-            />
+              <div>
+                <Label htmlFor="confirmPassword" className="text-xs">Confirmar Nova Senha</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={onConfirmPasswordChange}
+                  className="mt-1"
+                />
+              </div>
+            </div>
           </div>
 
           <Button type="submit" className="w-full gap-2">
