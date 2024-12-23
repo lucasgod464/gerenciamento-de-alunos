@@ -7,22 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useAuth } from "@/hooks/useAuth";
 import { RoomFormFields } from "./RoomFormFields";
-
-interface Room {
-  id: string;
-  name: string;
-  schedule: string;
-  location: string;
-  category: string;
-  capacity: number;
-  resources: string;
-  status: boolean;
-  companyId: string | null;
-  studyRoom: string;
-  authorizedUsers: string[];
-}
+import { Room } from "@/types/room";
 
 interface RoomDialogProps {
   isOpen: boolean;
@@ -38,8 +24,6 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
       schedule: "",
       location: "",
       category: "",
-      capacity: 0,
-      resources: "",
       status: true,
       studyRoom: "",
       authorizedUsers: []
@@ -48,7 +32,6 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
 
   useEffect(() => {
     if (editingRoom) {
-      console.log("Editing room data:", editingRoom);
       setRoom(editingRoom);
     } else {
       setRoom({
@@ -56,8 +39,6 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
         schedule: "",
         location: "",
         category: "",
-        capacity: 0,
-        resources: "",
         status: true,
         studyRoom: "",
         authorizedUsers: []

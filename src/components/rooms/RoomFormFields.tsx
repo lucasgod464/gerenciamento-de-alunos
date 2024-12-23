@@ -33,25 +33,24 @@ interface RoomFormFieldsProps {
   onChange: (field: keyof Room, value: any) => void;
 }
 
-const timeSlots = [
-  "07:00 - 08:00",
-  "08:00 - 09:00",
-  "09:00 - 10:00",
-  "10:00 - 11:00",
-  "11:00 - 12:00",
-  "13:00 - 14:00",
-  "14:00 - 15:00",
-  "15:00 - 16:00",
-  "16:00 - 17:00",
-  "17:00 - 18:00",
-  "18:00 - 19:00",
-  "19:00 - 20:00",
-  "20:00 - 21:00",
-  "21:00 - 22:00",
-];
+const generateTimeOptions = () => {
+  const times = [];
+  for (let hour = 7; hour <= 22; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      const formattedHour = hour.toString().padStart(2, '0');
+      const formattedMinute = minute.toString().padStart(2, '0');
+      times.push(`${formattedHour}:${formattedMinute}`);
+    }
+  }
+  return times;
+};
+
+const timeOptions = generateTimeOptions();
 
 export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -64,6 +63,28 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
     setCategories(companyCategories);
   }, [user]);
 
+  useEffect(() => {
+    if (room.schedule) {
+      const [start, end] = room.schedule.split(" - ");
+      setStartTime(start);
+      setEndTime(end);
+    }
+  }, [room.schedule]);
+
+  const handleTimeChange = (type: "start" | "end", value: string) => {
+    if (type === "start") {
+      setStartTime(value);
+      if (endTime) {
+        onChange("schedule", `${value} - ${endTime}`);
+      }
+    } else {
+      setEndTime(value);
+      if (startTime) {
+        onChange("schedule", `${startTime} - ${value}`);
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -74,23 +95,43 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           onChange={(e) => onChange("name", e.target.value)}
         />
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="schedule">Horário</Label>
-        <Select
-          value={room.schedule || ""}
-          onValueChange={(value) => onChange("schedule", value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione um horário" />
-          </SelectTrigger>
-          <SelectContent>
-            {timeSlots.map((slot) => (
-              <SelectItem key={slot} value={slot}>
-                {slot}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="startTime">Horário Início</Label>
+          <Select
+            value={startTime}
+            onValueChange={(value) => handleTimeChange("start", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Horário início" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeOptions.map((time) => (
+                <SelectItem key={`start-${time}`} value={time}>
+                  {time}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="endTime">Horário Fim</Label>
+          <Select
+            value={endTime}
+            onValueChange={(value) => handleTimeChange("end", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Horário fim" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeOptions.map((time) => (
+                <SelectItem key={`end-${time}`} value={time}>
+                  {time}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="location">Local</Label>
