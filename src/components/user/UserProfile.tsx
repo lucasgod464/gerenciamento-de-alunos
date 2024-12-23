@@ -1,96 +1,156 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { LogOut, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { ProfileHeader } from "./ProfileHeader";
-import { ProfileForm } from "./ProfileForm";
-import { SecuritySettings } from "./SecuritySettings";
-import { NotificationSettings } from "./NotificationSettings";
 
 export const UserProfile = () => {
-  const { user } = useAuth();
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false
-  });
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: ""
-  });
-  const [avatarUrl, setAvatarUrl] = useState<string>("/placeholder.svg");
+  const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name || "",
-        email: user.email || ""
-      }));
-      if (user.profilePicture) {
-        setAvatarUrl(user.profilePicture);
-      }
+      setName(user.name || "");
+      setEmail(user.email);
     }
   }, [user]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Validação do nome
+      if (!name.trim()) {
         toast({
           title: "Erro",
-          description: "A imagem deve ter menos de 5MB",
-          variant: "destructive"
+          description: "O nome é obrigatório",
+          variant: "destructive",
         });
         return;
       }
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setAvatarUrl(result);
-        
-        const session = JSON.parse(localStorage.getItem("session") || "{}");
-        if (session.user) {
-          session.user.profilePicture = result;
-          localStorage.setItem("session", JSON.stringify(session));
+
+      // Validação do email
+      if (!email.trim()) {
+        toast({
+          title: "Erro",
+          description: "O email é obrigatório",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira um email válido",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validação da senha atual
+      if (!currentPassword) {
+        toast({
+          title: "Erro",
+          description: "A senha atual é obrigatória",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (currentPassword !== "123456") {
+        toast({
+          title: "Erro",
+          description: "Senha atual incorreta",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validação da nova senha
+      if (newPassword) {
+        if (newPassword.length < 6) {
+          toast({
+            title: "Erro",
+            description: "A nova senha deve ter pelo menos 6 caracteres",
+            variant: "destructive",
+          });
+          return;
         }
 
-        toast({
-          title: "Sucesso",
-          description: "Foto de perfil atualizada com sucesso"
-        });
+        if (newPassword !== confirmPassword) {
+          toast({
+            title: "Erro",
+            description: "As senhas não coincidem",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      const session = JSON.parse(localStorage.getItem("session") || "{}");
+      session.user = {
+        ...session.user,
+        name: name,
+        email: email,
       };
-      reader.readAsDataURL(file);
+      localStorage.setItem("session", JSON.stringify(session));
+
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso",
+      });
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar o perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const session = JSON.parse(localStorage.getItem("session") || "{}");
-    if (session.user) {
-      session.user = {
-        ...session.user,
-        name: formData.name,
-        email: formData.email
-      };
-      localStorage.setItem("session", JSON.stringify(session));
-      
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
       toast({
-        title: "Sucesso",
-        description: "Perfil atualizado com sucesso"
+        title: "Desconectado",
+        description: "Sessão encerrada com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer logout",
+        variant: "destructive",
       });
     }
   };
@@ -100,35 +160,94 @@ export const UserProfile = () => {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Informações Pessoais</CardTitle>
+          <CardTitle>Meu Perfil</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <ProfileHeader
-            name={user.name}
-            avatarUrl={avatarUrl}
-            onImageUpload={handleImageUpload}
-          />
-          <ProfileForm
-            formData={formData}
-            onInputChange={handleInputChange}
-            onSubmit={handleSubmit}
-          />
+        <CardContent>
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Digite seu nome"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Digite seu email"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Senha Atual</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Digite sua senha atual"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha (opcional)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme a nova senha"
+              />
+            </div>
+
+            <div className="flex justify-between pt-4">
+              <Button 
+                type="submit" 
+                className="gap-2"
+                disabled={isSubmitting}
+              >
+                <Save className="w-4 h-4" />
+                {isSubmitting ? "Salvando..." : "Salvar Alterações"}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleLogout}
+                className="gap-2"
+                disabled={isSubmitting}
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
-
-      <div className="space-y-4">
-        <SecuritySettings
-          formData={formData}
-          onInputChange={handleInputChange}
-        />
-        <NotificationSettings
-          notifications={notifications}
-          setNotifications={setNotifications}
-        />
-      </div>
     </div>
   );
 };

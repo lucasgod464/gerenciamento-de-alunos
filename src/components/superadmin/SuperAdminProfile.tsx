@@ -16,6 +16,7 @@ export const SuperAdminProfile = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -23,60 +24,122 @@ export const SuperAdminProfile = () => {
     }
   }, [user]);
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (currentPassword !== "123456") {
-      toast({
-        title: "Erro",
-        description: "Senha atual incorreta",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      toast({
-        title: "Erro",
-        description: "As senhas não coincidem",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (newPassword && newPassword.length < 6) {
-      toast({
-        title: "Erro",
-        description: "A nova senha deve ter pelo menos 6 caracteres",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const session = JSON.parse(localStorage.getItem("session") || "{}");
-    session.user = {
-      ...session.user,
-      email: email,
-    };
-    localStorage.setItem("session", JSON.stringify(session));
-
-    toast({
-      title: "Sucesso",
-      description: "Perfil atualizado com sucesso",
-    });
-
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-    toast({
-      title: "Desconectado",
-      description: "Sessão encerrada com sucesso",
-    });
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Validação do email
+      if (!email.trim()) {
+        toast({
+          title: "Erro",
+          description: "O email é obrigatório",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!validateEmail(email)) {
+        toast({
+          title: "Erro",
+          description: "Por favor, insira um email válido",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validação da senha atual
+      if (!currentPassword) {
+        toast({
+          title: "Erro",
+          description: "A senha atual é obrigatória",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (currentPassword !== "123456") {
+        toast({
+          title: "Erro",
+          description: "Senha atual incorreta",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validação da nova senha
+      if (newPassword) {
+        if (newPassword.length < 6) {
+          toast({
+            title: "Erro",
+            description: "A nova senha deve ter pelo menos 6 caracteres",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          toast({
+            title: "Erro",
+            description: "As senhas não coincidem",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      const session = JSON.parse(localStorage.getItem("session") || "{}");
+      session.user = {
+        ...session.user,
+        email: email,
+      };
+      localStorage.setItem("session", JSON.stringify(session));
+
+      toast({
+        title: "Sucesso",
+        description: "Perfil atualizado com sucesso",
+      });
+
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar o perfil",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+      toast({
+        title: "Desconectado",
+        description: "Sessão encerrada com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao fazer logout",
+        variant: "destructive",
+      });
+    }
   };
 
   if (!user) {
@@ -98,6 +161,7 @@ export const SuperAdminProfile = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="Digite seu email"
                 required
               />
             </div>
@@ -109,6 +173,7 @@ export const SuperAdminProfile = () => {
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Digite sua senha atual"
                 required
               />
             </div>
@@ -120,6 +185,7 @@ export const SuperAdminProfile = () => {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha (opcional)"
               />
             </div>
 
@@ -130,19 +196,25 @@ export const SuperAdminProfile = () => {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirme a nova senha"
               />
             </div>
 
             <div className="flex justify-between pt-4">
-              <Button type="submit" className="gap-2">
+              <Button 
+                type="submit" 
+                className="gap-2"
+                disabled={isSubmitting}
+              >
                 <Save className="w-4 h-4" />
-                Salvar Alterações
+                {isSubmitting ? "Salvando..." : "Salvar Alterações"}
               </Button>
               <Button
                 type="button"
                 variant="destructive"
                 onClick={handleLogout}
                 className="gap-2"
+                disabled={isSubmitting}
               >
                 <LogOut className="w-4 h-4" />
                 Sair
