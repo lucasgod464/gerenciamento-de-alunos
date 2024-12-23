@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -63,46 +65,69 @@ const Users = () => {
       <div className="space-y-4">
         <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
         
-        <UsersFilters
-          search={search}
-          onSearchChange={setSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          specializationFilter={specializationFilter}
-          onSpecializationFilterChange={setSpecializationFilter}
-          categories={categories}
-          specializations={specializations}
-        />
+        <Tabs defaultValue="list" className="w-full">
+          <TabsList className="w-full border-b rounded-none px-0 h-12">
+            <TabsTrigger 
+              value="list" 
+              className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              Lista de Usuários
+            </TabsTrigger>
+            <TabsTrigger 
+              value="filters" 
+              className="flex-1 rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary"
+            >
+              Filtros
+            </TabsTrigger>
+          </TabsList>
 
-        <UserList
-          users={filteredUsers}
-          onUpdateUser={(updatedUser) => {
-            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-            const otherUsers = allUsers.filter((u: User) => u.id !== updatedUser.id);
-            const updatedUsers = [...otherUsers, updatedUser];
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            setUsers(prevUsers =>
-              prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
-            );
-            toast({
-              title: "Usuário atualizado",
-              description: "As informações do usuário foram atualizadas com sucesso.",
-            });
-          }}
-          onDeleteUser={(id) => {
-            const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-            const updatedUsers = allUsers.filter((user: User) => user.id !== id);
-            localStorage.setItem("users", JSON.stringify(updatedUsers));
-            setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-            toast({
-              title: "Usuário excluído",
-              description: "O usuário foi excluído com sucesso.",
-              variant: "destructive",
-            });
-          }}
-        />
+          <TabsContent value="list" className="mt-4">
+            <Card className="border-0 shadow-none">
+              <UserList
+                users={filteredUsers}
+                onUpdateUser={(updatedUser) => {
+                  const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+                  const otherUsers = allUsers.filter((u: User) => u.id !== updatedUser.id);
+                  const updatedUsers = [...otherUsers, updatedUser];
+                  localStorage.setItem("users", JSON.stringify(updatedUsers));
+                  setUsers(prevUsers =>
+                    prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
+                  );
+                  toast({
+                    title: "Usuário atualizado",
+                    description: "As informações do usuário foram atualizadas com sucesso.",
+                  });
+                }}
+                onDeleteUser={(id) => {
+                  const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+                  const updatedUsers = allUsers.filter((user: User) => user.id !== id);
+                  localStorage.setItem("users", JSON.stringify(updatedUsers));
+                  setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
+                  toast({
+                    title: "Usuário excluído",
+                    description: "O usuário foi excluído com sucesso.",
+                    variant: "destructive",
+                  });
+                }}
+              />
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="filters" className="mt-4">
+            <UsersFilters
+              search={search}
+              onSearchChange={setSearch}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              specializationFilter={specializationFilter}
+              onSpecializationFilterChange={setSpecializationFilter}
+              categories={categories}
+              specializations={specializations}
+            />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
