@@ -41,35 +41,56 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   };
 
   const onSubmit = async (data: UserFormData) => {
-    const hashedPassword = await hashPassword(data.password as string);
-    const id = Math.random().toString(36).substr(2, 9);
+    try {
+      const hashedPassword = await hashPassword(data.password as string);
+      const id = Math.random().toString(36).substr(2, 9);
 
-    const newUser: User = {
-      id,
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-      responsibleCategory: data.responsibleCategory,
-      location: data.location,
-      specialization: data.specialization,
-      status: data.status,
-      createdAt: new Date().toLocaleDateString(),
-      lastAccess: "-",
-      companyId: currentUser?.companyId || null,
-      authorizedRooms: data.authorizedRooms,
-    };
+      const newUser: User = {
+        id,
+        name: data.name,
+        email: data.email,
+        password: hashedPassword,
+        responsibleCategory: data.responsibleCategory,
+        location: data.location,
+        specialization: data.specialization,
+        status: data.status,
+        createdAt: new Date().toLocaleDateString(),
+        lastAccess: "-",
+        companyId: currentUser?.companyId || null,
+        authorizedRooms: data.authorizedRooms,
+      };
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    localStorage.setItem("users", JSON.stringify([...users, newUser]));
+      // Get existing users and filter out any with the same email
+      const users = JSON.parse(localStorage.getItem("users") || "[]");
+      const existingUserWithEmail = users.find((u: User) => u.email === data.email);
+      
+      if (existingUserWithEmail) {
+        toast({
+          title: "Erro",
+          description: "Já existe um usuário com este email.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    onUserCreated(newUser);
-    
-    toast({
-      title: "Usuário criado",
-      description: "O usuário foi criado com sucesso.",
-    });
+      localStorage.setItem("users", JSON.stringify([...users, newUser]));
+      onUserCreated(newUser);
+      
+      toast({
+        title: "Usuário criado",
+        description: "O usuário foi criado com sucesso.",
+      });
 
-    setOpen(false);
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao criar o usuário.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

@@ -6,6 +6,8 @@ import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { UseFormReturn } from "react-hook-form";
 import { UserFormData } from "@/schemas/userSchema";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect, useState } from "react";
 import {
   FormField,
   FormItem,
@@ -17,11 +19,11 @@ interface Room {
   id: string;
   name: string;
   status: boolean;
+  companyId: string | null;
 }
 
 interface RoomSelectionFieldsProps {
   form: UseFormReturn<UserFormData>;
-  rooms: Room[];
   selectedRooms: string[];
   searchQuery: string;
   onSearchChange: (value: string) => void;
@@ -30,12 +32,24 @@ interface RoomSelectionFieldsProps {
 
 export function RoomSelectionFields({
   form,
-  rooms,
   selectedRooms,
   searchQuery,
   onSearchChange,
   onRoomToggle,
 }: RoomSelectionFieldsProps) {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter(
+      (room: Room) => room.companyId === currentUser.companyId && room.status === true
+    );
+    setRooms(companyRooms);
+  }, [currentUser]);
+
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
