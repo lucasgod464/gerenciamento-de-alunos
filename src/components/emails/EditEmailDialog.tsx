@@ -24,7 +24,7 @@ interface Email {
   name: string
   email: string
   password: string
-  accessLevel: "Admin" | "Usuário Comum"
+  accessLevel: "Administrador" | "Usuário Comum"
   company: string
   createdAt: string
 }
@@ -117,13 +117,13 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
             <Label htmlFor="accessLevel">Nível de Acesso</Label>
             <Select
               value={formData.accessLevel}
-              onValueChange={(value) => setFormData({ ...formData, accessLevel: value as "Admin" | "Usuário Comum" })}
+              onValueChange={(value) => setFormData({ ...formData, accessLevel: value as "Administrador" | "Usuário Comum" })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o nível de acesso" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Administrador">Administrador</SelectItem>
                 <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
               </SelectContent>
             </Select>
