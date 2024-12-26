@@ -2,10 +2,11 @@ import { DashboardLayout } from "@/components/DashboardLayout"
 import { EmailList } from "@/components/emails/EmailList"
 import { EmailStats } from "@/components/emails/EmailStats"
 import { useToast } from "@/hooks/use-toast"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 const Emails = () => {
   const { toast } = useToast()
+  const queryClient = useQueryClient()
 
   // Buscar emails criados pelo super admin
   const { data: emails = [] } = useQuery({
@@ -55,6 +56,7 @@ const Emails = () => {
       email.id === updatedEmail.id ? updatedEmail : email
     )
     localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
+    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
     toast({
       title: "Email atualizado",
       description: "As informações do email foram atualizadas com sucesso.",
@@ -65,6 +67,7 @@ const Emails = () => {
     const allEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
     const updatedEmails = allEmails.filter((email: any) => email.id !== id)
     localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
+    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
     toast({
       title: "Email excluído",
       description: "O email foi excluído permanentemente.",

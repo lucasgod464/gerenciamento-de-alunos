@@ -6,7 +6,7 @@ import { CreateEmailDialog } from "./CreateEmailDialog"
 import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 
 interface Email {
   id: string
@@ -36,6 +36,7 @@ export function EmailList({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
   const { user } = useAuth()
+  const queryClient = useQueryClient()
 
   // Buscar usuários criados pelos administradores
   const { data: usersFromAdmins = [] } = useQuery({
@@ -70,6 +71,7 @@ export function EmailList({
   const allEmails = [...emails, ...usersAsEmails, ...createdEmails]
 
   const handleEmailCreated = (email: Email) => {
+    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
     onUpdateEmail(email)
     toast({
       title: "Email criado",
@@ -83,6 +85,7 @@ export function EmailList({
   }
 
   const handleEmailUpdated = (email: Email) => {
+    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
     onUpdateEmail(email)
     setEditingEmail(null)
   }
