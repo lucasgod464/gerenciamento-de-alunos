@@ -31,7 +31,6 @@ export function EmailList({
 }: EmailListProps) {
   const [search, setSearch] = useState("")
   const [accessLevelFilter, setAccessLevelFilter] = useState("")
-  const [companyFilter, setCompanyFilter] = useState("")
   const [editingEmail, setEditingEmail] = useState<Email | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const { toast } = useToast()
@@ -67,8 +66,11 @@ export function EmailList({
     createdAt: user.createdAt,
   }))
 
-  // Combinar todos os emails do sistema
-  const allEmails = [...emails, ...usersAsEmails, ...createdEmails]
+  // Combinar emails sem duplicação
+  const allEmails = [...usersAsEmails, ...createdEmails]
+  const uniqueEmails = allEmails.filter((email, index, self) =>
+    index === self.findIndex((e) => e.id === email.id)
+  )
 
   const handleEmailCreated = (email: Email) => {
     queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
@@ -90,27 +92,20 @@ export function EmailList({
     setEditingEmail(null)
   }
 
-  // Filtra os emails baseado no papel do usuário
-  const filteredEmails = allEmails.filter((email) => {
-    // Se for super admin, mostra todos os emails
-    if (user?.role === "SUPER_ADMIN") {
-      const matchesSearch =
-        email.name.toLowerCase().includes(search.toLowerCase()) ||
-        email.email.toLowerCase().includes(search.toLowerCase())
-      const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
-      const matchesCompany = !companyFilter || companyFilter === "all" || email.company === companyFilter
-
-      return matchesSearch && matchesAccessLevel && matchesCompany
-    }
-    
-    // Se for admin, mostra apenas os emails da sua empresa
-    const belongsToCompany = email.company === user?.companyId
+  // Filtra os emails baseado no papel do usuário e nos filtros aplicados
+  const filteredEmails = uniqueEmails.filter((email) => {
     const matchesSearch =
       email.name.toLowerCase().includes(search.toLowerCase()) ||
-      email.email.toLowerCase().includes(search.toLowerCase())
+      email.email.toLowerCase().includes(search.toLowerCase()) ||
+      email.company.toLowerCase().includes(search.toLowerCase())
+    
     const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
 
-    return belongsToCompany && matchesSearch && matchesAccessLevel
+    if (user?.role === "SUPER_ADMIN") {
+      return matchesSearch && matchesAccessLevel
+    }
+    
+    return email.company === user?.companyId && matchesSearch && matchesAccessLevel
   })
 
   return (
@@ -123,8 +118,6 @@ export function EmailList({
       <EmailSearchBar
         onSearchChange={setSearch}
         onAccessLevelChange={setAccessLevelFilter}
-        onCompanyChange={setCompanyFilter}
-        showCompanyFilter={user?.role === "SUPER_ADMIN"}
       />
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
