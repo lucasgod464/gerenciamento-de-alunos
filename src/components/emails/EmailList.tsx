@@ -8,7 +8,6 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
-// Updated Email interface to match the one used in EditEmailDialog
 interface Email {
   id: string
   name: string
@@ -93,7 +92,6 @@ export function EmailList({
     setEditingEmail(null)
   }
 
-  // Filtra os emails baseado no papel do usuário e nos filtros aplicados
   const filteredEmails = uniqueEmails.filter((email) => {
     const matchesSearch =
       email.name.toLowerCase().includes(search.toLowerCase()) ||
