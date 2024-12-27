@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 // Super Admin
 import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
 import SuperAdminCompanies from "./pages/SuperAdmin/Companies";
+import SuperAdminRooms from "./pages/SuperAdmin/Rooms";
 import SuperAdminEmails from "./pages/SuperAdmin/Emails";
 import SuperAdminProfile from "./pages/SuperAdmin/Profile";
 
@@ -50,6 +51,14 @@ export const routes = createBrowserRouter([
     element: (
       <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
         <SuperAdminCompanies />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/super-admin/rooms",
+    element: (
+      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
+        <SuperAdminRooms />
       </RoleGuard>
     ),
   },
