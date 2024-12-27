@@ -5,9 +5,6 @@ import {
   Building2,
   Mail,
   UserCircle,
-  GraduationCap,
-  ClipboardCheck,
-  BarChart,
   DoorOpen,
 } from "lucide-react";
 
@@ -28,6 +25,11 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
       title: "Empresas",
       href: "/super-admin/companies",
       icon: Building2,
+    },
+    {
+      title: "Salas",
+      href: "/super-admin/rooms",
+      icon: DoorOpen,
     },
     {
       title: "E-mails",
