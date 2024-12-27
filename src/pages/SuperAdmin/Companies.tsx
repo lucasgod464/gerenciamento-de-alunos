@@ -1,6 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout"
 import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
+import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useCompanies } from "@/hooks/useCompanies"
 import { useToast } from "@/components/ui/use-toast"
 import { Company } from "@/components/companies/CompanyList"
