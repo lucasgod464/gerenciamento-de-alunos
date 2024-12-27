@@ -13,7 +13,7 @@ interface Email {
   name: string
   email: string
   password: string
-  accessLevel: "Admin" | "Usuário Comum"
+  accessLevel: "Administrador" | "Usuário Comum"
   company: string
   createdAt: string
 }

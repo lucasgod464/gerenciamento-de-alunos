@@ -6,6 +6,7 @@ import { DashboardLayout } from "@/components/DashboardLayout"
 import { useState } from "react"
 import { useCompanies } from "@/hooks/useCompanies"
 import { useToast } from "@/components/ui/use-toast"
+import { Company } from "@/components/companies/CompanyList"
 
 const Companies = () => {
   const [search, setSearch] = useState("")

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { CompanyTableRow } from "./CompanyTableRow"
 import { CompanyFilters } from "./CompanyFilters"
 
-interface Company {
+export interface Company {
   id: string
   name: string
   document: string

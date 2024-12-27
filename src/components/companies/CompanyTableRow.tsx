@@ -13,19 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
-interface Company {
-  id: string
-  name: string
-  document: string
-  usersLimit: number
-  currentUsers: number
-  roomsLimit: number
-  currentRooms: number
-  status: "Ativa" | "Inativa"
-  createdAt: string
-  publicFolderPath: string
-}
+import { Company } from "./CompanyList"
 
 interface CompanyTableRowProps {
   company: Company
