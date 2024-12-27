@@ -35,6 +35,7 @@ export function CompanyList({
 }: CompanyListProps) {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [statusFilter, setStatusFilter] = useState("all")
+  const [search, setSearch] = useState("")
 
   const handleUpdateCompany = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -58,7 +59,12 @@ export function CompanyList({
       (statusFilter === "active" && company.status === "Ativa") ||
       (statusFilter === "inactive" && company.status === "Inativa")
 
-    return matchesStatus
+    const matchesSearch = 
+      company.name.toLowerCase().includes(search.toLowerCase()) ||
+      company.id.includes(search) ||
+      company.document.includes(search)
+
+    return matchesStatus && matchesSearch
   })
 
   return (
@@ -66,6 +72,8 @@ export function CompanyList({
       <CompanyFilters
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
+        searchValue={search}
+        onSearchChange={setSearch}
       />
       
       <div className="bg-white rounded-lg shadow overflow-hidden">
