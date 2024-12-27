@@ -6,6 +6,9 @@ import {
   Mail,
   UserCircle,
   DoorOpen,
+  BarChart2,
+  GraduationCap,
+  ClipboardCheck,
 } from "lucide-react";
 
 interface SidebarNavProps {
@@ -47,7 +50,7 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
     {
       title: "Relatórios",
       href: "/user/reports",
-      icon: BarChart,
+      icon: BarChart2,
     },
     {
       title: "Cadastro de Alunos",
