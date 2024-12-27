@@ -30,11 +30,6 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
       icon: Building2,
     },
     {
-      title: "Salas",
-      href: "/super-admin/rooms",
-      icon: DoorOpen,
-    },
-    {
       title: "E-mails",
       href: "/super-admin/emails",
       icon: Mail,

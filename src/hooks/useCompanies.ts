@@ -1,17 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-
-interface Company {
-  id: string
-  name: string
-  document: string
-  usersLimit: number
-  currentUsers: number
-  roomsLimit: number
-  currentRooms: number
-  status: "Ativa" | "Inativa"
-  createdAt: string
-  publicFolderPath: string
-}
+import { Company } from "@/components/companies/CompanyList"
 
 // Funções auxiliares para localStorage
 const getStoredCompanies = (): Company[] => {
@@ -19,10 +7,10 @@ const getStoredCompanies = (): Company[] => {
   if (!stored) return []
   
   const companies = JSON.parse(stored)
-  // Ensure status is either "Ativa" or "Inativa"
   return companies.map((company: any) => ({
     ...company,
-    status: company.status === "Ativa" ? "Ativa" : "Inativa"
+    status: company.status === "Ativa" ? "Ativa" : "Inativa",
+    storageUsed: company.storageUsed || 0
   }))
 }
 
@@ -36,7 +24,17 @@ export function useCompanies() {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      return getStoredCompanies()
+      const companies = getStoredCompanies()
+      
+      // Calculate real-time stats
+      const rooms = JSON.parse(localStorage.getItem("rooms") || "[]")
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+      
+      return companies.map(company => ({
+        ...company,
+        currentUsers: users.filter((user: any) => user.companyId === company.id).length,
+        currentRooms: rooms.filter((room: any) => room.companyId === company.id).length,
+      }))
     },
     staleTime: Infinity,
   })
