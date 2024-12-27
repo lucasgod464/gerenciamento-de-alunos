@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
+// Updated Email interface to match the one used in EditEmailDialog
 interface Email {
   id: string
   name: string
