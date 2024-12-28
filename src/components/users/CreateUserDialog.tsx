@@ -27,7 +27,9 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     
     const id = Math.random().toString(36).substr(2, 9);
     const password = formData.get("password") as string;
+    console.log("Password before hashing:", password); // Log para debug
     const hashedPassword = await hashPassword(password);
+    console.log("Password after hashing:", hashedPassword); // Log para debug
 
     const newUser: User = {
       id,
@@ -43,6 +45,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       companyId: currentUser?.companyId || null,
       authorizedRooms: selectedRooms,
     };
+
+    console.log("New user being saved:", newUser); // Log para debug
 
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     localStorage.setItem("users", JSON.stringify([...users, newUser]));

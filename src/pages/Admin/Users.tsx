@@ -12,10 +12,6 @@ const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [specializationFilter, setSpecializationFilter] = useState("all");
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
-  const [specializations, setSpecializations] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -116,11 +112,8 @@ const Users = () => {
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || user.responsibleCategory === categoryFilter;
-    const matchesSpecialization =
-      specializationFilter === "all" || user.specialization === specializationFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory && matchesSpecialization;
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -133,12 +126,6 @@ const Users = () => {
           onSearchChange={setSearch}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          specializationFilter={specializationFilter}
-          onSpecializationFilterChange={setSpecializationFilter}
-          categories={categories}
-          specializations={specializations}
         />
 
         <UserList
