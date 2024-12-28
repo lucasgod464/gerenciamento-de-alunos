@@ -8,7 +8,9 @@ import {
   Users, 
   Tag, 
   UserCircle,
-  FormInput 
+  FormInput,
+  UserPlus,
+  Bell
 } from "lucide-react";
 
 const adminRoutes = [
@@ -16,6 +18,21 @@ const adminRoutes = [
     title: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Inscrição Online",
+    href: "/admin/enrollment",
+    icon: UserPlus,
+  },
+  {
+    title: "Alunos Total",
+    href: "/admin/students-total",
+    icon: Users,
+  },
+  {
+    title: "Avisos",
+    href: "/admin/notifications",
+    icon: Bell,
   },
   {
     title: "Especializações",

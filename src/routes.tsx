@@ -19,6 +19,9 @@ import AdminCategories from "./pages/Admin/Categories";
 import AdminTags from "./pages/Admin/Tags";
 import AdminSpecializations from "./pages/Admin/Specializations";
 import AdminFormBuilder from "./pages/Admin/FormBuilder";
+import AdminEnrollment from "./pages/Admin/Enrollment";
+import AdminStudentsTotal from "./pages/Admin/StudentsTotal";
+import AdminNotifications from "./pages/Admin/Notifications";
 
 // User
 import UserDashboard from "./pages/User/Dashboard";
@@ -84,6 +87,30 @@ export const routes = createBrowserRouter([
     element: (
       <RoleGuard allowedRoles={["ADMIN"]}>
         <AdminDashboard />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/enrollment",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminEnrollment />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/students-total",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminStudentsTotal />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/admin/notifications",
+    element: (
+      <RoleGuard allowedRoles={["ADMIN"]}>
+        <AdminNotifications />
       </RoleGuard>
     ),
   },
