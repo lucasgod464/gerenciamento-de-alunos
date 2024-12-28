@@ -21,41 +21,46 @@ const Rooms = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!currentUser?.companyId) return;
+    if (!currentUser) return;
     
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
-    setRooms(companyRooms);
+    // Se for admin, mostrar todas as salas, caso contrário filtrar por empresa
+    const filteredRooms = currentUser.role === "ADMIN" 
+      ? allRooms 
+      : allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
+    
+    setRooms(filteredRooms);
   }, [currentUser]);
 
   const handleSave = (newRoom: Partial<Room>) => {
-    if (!currentUser?.companyId) {
+    if (!currentUser) {
       toast({
         title: "Erro",
-        description: "Usuário não está associado a uma empresa",
+        description: "Usuário não está autenticado",
         variant: "destructive",
       });
       return;
     }
 
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const otherRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser.companyId
-    );
 
     if (editingRoom) {
-      const updatedRooms = rooms.map(room => 
+      const updatedRooms = allRooms.map((room: Room) => 
         room.id === editingRoom.id 
           ? { 
               ...editingRoom, 
-              ...newRoom, 
+              ...newRoom,
               studyRoom: editingRoom.studyRoom,
-              authorizedUsers: editingRoom.authorizedUsers 
+              authorizedUsers: editingRoom.authorizedUsers,
+              students: editingRoom.students || []
             }
           : room
       );
-      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
-      setRooms(updatedRooms);
+      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      setRooms(currentUser.role === "ADMIN" 
+        ? updatedRooms 
+        : updatedRooms.filter(room => room.companyId === currentUser.companyId)
+      );
       toast({
         title: "Sala atualizada",
         description: "A sala foi atualizada com sucesso.",
@@ -66,12 +71,16 @@ const Rooms = () => {
         ...newRoom,
         companyId: currentUser.companyId,
         studyRoom: "",
-        authorizedUsers: []
+        authorizedUsers: [],
+        students: []
       } as Room;
       
-      const updatedRooms = [...rooms, newRoomWithId];
-      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
-      setRooms(updatedRooms);
+      const updatedRooms = [...allRooms, newRoomWithId];
+      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      setRooms(currentUser.role === "ADMIN" 
+        ? updatedRooms 
+        : updatedRooms.filter(room => room.companyId === currentUser.companyId)
+      );
       toast({
         title: "Sala criada",
         description: "A nova sala foi criada com sucesso.",
@@ -93,25 +102,16 @@ const Rooms = () => {
   };
 
   const handleDeleteConfirm = () => {
-    if (!roomToDelete || !currentUser?.companyId) return;
+    if (!roomToDelete || !currentUser) return;
 
-    // Get all rooms from localStorage
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const updatedRooms = allRooms.filter((room: Room) => room.id !== roomToDelete);
     
-    // Filter out the room to delete from the current company's rooms
-    const updatedCompanyRooms = rooms.filter(room => room.id !== roomToDelete);
-    
-    // Filter out all rooms from the current company
-    const otherCompaniesRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser.companyId
+    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    setRooms(currentUser.role === "ADMIN" 
+      ? updatedRooms 
+      : updatedRooms.filter(room => room.companyId === currentUser.companyId)
     );
-    
-    // Combine other companies' rooms with updated company rooms
-    const finalRooms = [...otherCompaniesRooms, ...updatedCompanyRooms];
-    
-    // Update localStorage and state
-    localStorage.setItem("rooms", JSON.stringify(finalRooms));
-    setRooms(updatedCompanyRooms);
     
     toast({
       title: "Sala excluída",
