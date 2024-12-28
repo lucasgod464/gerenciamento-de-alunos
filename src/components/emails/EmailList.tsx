@@ -51,8 +51,8 @@ export function EmailList({
     id: user.id,
     name: user.name,
     email: user.email,
-    password: user.password || "********", // Ensure password field is always present
-    accessLevel: "Usuário Comum" as const,
+    password: user.password || "********",
+    accessLevel: "Usuário Comum" as "Administrador" | "Usuário Comum",
     company: user.companyId,
     createdAt: user.createdAt,
   }))
