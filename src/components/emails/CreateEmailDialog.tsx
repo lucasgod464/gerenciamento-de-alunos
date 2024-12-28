@@ -46,7 +46,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
 
   // Mutation para criar email
   const createEmailMutation = useMutation({
-    mutationFn: (newEmail: Email) => {
+    mutationFn: async (newEmail: Email): Promise<Email> => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const updatedEmails = [...currentEmails, newEmail]
       localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
