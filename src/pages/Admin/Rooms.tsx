@@ -13,7 +13,6 @@ const Rooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
-  const [studyRoomFilter, setStudyRoomFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -125,26 +124,34 @@ const Rooms = () => {
   };
 
   const filteredRooms = rooms.filter(room => {
-    const matchesSearch = 
-      room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      room.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchFields = [
+      room.name.toLowerCase(),
+      room.schedule.toLowerCase(),
+      room.location.toLowerCase(),
+      room.category.toLowerCase()
+    ];
+    
+    const matchesSearch = searchTerm === "" || 
+      searchFields.some(field => field.includes(searchTerm.toLowerCase()));
+      
     const matchesStatus = statusFilter === "all" 
       ? true 
       : statusFilter === "active" ? room.status : !room.status;
-    const matchesStudyRoom = studyRoomFilter === "all" || room.studyRoom === studyRoomFilter;
-    return matchesSearch && matchesStatus && matchesStudyRoom;
+      
+    return matchesSearch && matchesStatus;
   });
 
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Salas</h1>
-            <p className="text-muted-foreground">
-              Gerencie as salas do sistema
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold mb-2">Salas</h1>
+          <p className="text-muted-foreground">
+            Gerencie as salas do sistema
+          </p>
+        </div>
+
+        <div className="flex justify-end">
           <Button onClick={() => setIsDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Nova Sala
@@ -157,8 +164,6 @@ const Rooms = () => {
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusFilterChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
-            studyRoomFilter={studyRoomFilter}
-            onStudyRoomFilterChange={setStudyRoomFilter}
           />
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
