@@ -19,6 +19,7 @@ import {
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
+import { Email } from "@/types/email"
 
 interface Company {
   id: string
@@ -26,7 +27,7 @@ interface Company {
 }
 
 interface CreateEmailDialogProps {
-  onEmailCreated: (email: any) => void
+  onEmailCreated: (email: Email) => void
 }
 
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {

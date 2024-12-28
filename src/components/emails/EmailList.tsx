@@ -7,16 +7,7 @@ import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-
-export interface Email {
-  id: string
-  name: string
-  email: string
-  password: string
-  accessLevel: "Administrador" | "Usuário Comum"
-  company: string
-  createdAt: string
-}
+import { Email } from "@/types/email"
 
 interface EmailListProps {
   emails: Email[]

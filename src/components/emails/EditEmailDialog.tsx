@@ -18,16 +18,7 @@ import {
 import { useState, useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-
-interface Email {
-  id: string
-  name: string
-  email: string
-  password: string
-  accessLevel: "Administrador" | "Usuário Comum"
-  company: string
-  createdAt: string
-}
+import { Email } from "@/types/email"
 
 interface EditEmailDialogProps {
   email: Email | null
