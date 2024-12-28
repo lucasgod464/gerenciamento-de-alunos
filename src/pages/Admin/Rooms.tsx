@@ -21,10 +21,12 @@ const Rooms = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get all rooms from localStorage, regardless of company
+    if (!currentUser?.companyId) return;
+    
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    setRooms(allRooms);
-  }, []);
+    const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
+    setRooms(companyRooms);
+  }, [currentUser]);
 
   const handleSave = (newRoom: Partial<Room>) => {
     if (!currentUser?.companyId) {
@@ -37,19 +39,22 @@ const Rooms = () => {
     }
 
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const otherRooms = allRooms.filter(
+      (room: Room) => room.companyId !== currentUser.companyId
+    );
 
     if (editingRoom) {
-      const updatedRooms = allRooms.map((room: Room) => 
+      const updatedRooms = rooms.map(room => 
         room.id === editingRoom.id 
           ? { 
               ...editingRoom, 
-              ...newRoom,
+              ...newRoom, 
               studyRoom: editingRoom.studyRoom,
               authorizedUsers: editingRoom.authorizedUsers 
             }
           : room
       );
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
       toast({
         title: "Sala atualizada",
@@ -61,12 +66,11 @@ const Rooms = () => {
         ...newRoom,
         companyId: currentUser.companyId,
         studyRoom: "",
-        authorizedUsers: [],
-        students: []
+        authorizedUsers: []
       } as Room;
       
-      const updatedRooms = [...allRooms, newRoomWithId];
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      const updatedRooms = [...rooms, newRoomWithId];
+      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
       setRooms(updatedRooms);
       toast({
         title: "Sala criada",
@@ -89,13 +93,25 @@ const Rooms = () => {
   };
 
   const handleDeleteConfirm = () => {
-    if (!roomToDelete) return;
+    if (!roomToDelete || !currentUser?.companyId) return;
 
+    // Get all rooms from localStorage
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const updatedRooms = allRooms.filter((room: Room) => room.id !== roomToDelete);
     
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    setRooms(updatedRooms);
+    // Filter out the room to delete from the current company's rooms
+    const updatedCompanyRooms = rooms.filter(room => room.id !== roomToDelete);
+    
+    // Filter out all rooms from the current company
+    const otherCompaniesRooms = allRooms.filter(
+      (room: Room) => room.companyId !== currentUser.companyId
+    );
+    
+    // Combine other companies' rooms with updated company rooms
+    const finalRooms = [...otherCompaniesRooms, ...updatedCompanyRooms];
+    
+    // Update localStorage and state
+    localStorage.setItem("rooms", JSON.stringify(finalRooms));
+    setRooms(updatedCompanyRooms);
     
     toast({
       title: "Sala excluída",
