@@ -25,20 +25,29 @@ export default function SuperAdminRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoomStudents, setSelectedRoomStudents] = useState<any[]>([]);
   const [isStudentsDialogOpen, setIsStudentsDialogOpen] = useState(false);
+  const [selectedRoomName, setSelectedRoomName] = useState("");
 
   useEffect(() => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     setRooms(allRooms);
   }, []);
 
-  const handleViewStudents = (roomId: string) => {
+  const handleViewStudents = (roomId: string, roomName: string) => {
+    console.log("Buscando alunos para a sala:", roomId);
     const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    const roomStudents = allStudents.filter((student: any) => student.room === roomId);
+    console.log("Todos os alunos:", allStudents);
+    
+    const roomStudents = allStudents.filter((student: any) => {
+      console.log("Comparando:", student.room, roomId);
+      return student.room === roomId;
+    });
+    
+    console.log("Alunos filtrados:", roomStudents);
     setSelectedRoomStudents(roomStudents);
+    setSelectedRoomName(roomName);
     setIsStudentsDialogOpen(true);
   };
 
-  // Filter rooms based on search term
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -55,7 +64,6 @@ export default function SuperAdminRooms() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -66,7 +74,6 @@ export default function SuperAdminRooms() {
           />
         </div>
 
-        {/* Rooms Table */}
         <div className="border rounded-lg bg-white">
           <Table>
             <TableHeader>
@@ -99,7 +106,7 @@ export default function SuperAdminRooms() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleViewStudents(room.id)}
+                      onClick={() => handleViewStudents(room.id, room.name)}
                       title="Ver alunos"
                     >
                       <List className="h-4 w-4" />
@@ -111,11 +118,10 @@ export default function SuperAdminRooms() {
           </Table>
         </div>
 
-        {/* Students Dialog */}
         <Dialog open={isStudentsDialogOpen} onOpenChange={setIsStudentsDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Alunos da Sala</DialogTitle>
+              <DialogTitle>Alunos da Sala: {selectedRoomName}</DialogTitle>
               <DialogDescription>
                 Lista de alunos matriculados nesta sala
               </DialogDescription>
