@@ -9,6 +9,7 @@ import { Room } from "@/types/room";
 import { Student } from "@/types/student";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomStudentsDialogProps {
   room: Room | null;
@@ -24,6 +25,7 @@ export function RoomStudentsDialog({
   const [students, setStudents] = useState<Student[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser?.companyId || !room) return;
@@ -69,27 +71,45 @@ export function RoomStudentsDialog({
     setStudents(prev => prev.filter(student => student.id !== id));
   };
 
-  const handleUpdateStudent = (updatedStudent: Student) => {
+  const handleTransferStudent = (studentId: string, newRoomId: string) => {
+    if (!room || !currentUser?.companyId) return;
+
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
+    const studentToTransfer = students.find(s => s.id === studentId);
+
+    if (!studentToTransfer) return;
+
+    // Remove student from current room
     const updatedRooms = allRooms.map((r: Room) => {
-      if (r.id === room?.id) {
+      if (r.id === room.id) {
         return {
           ...r,
-          students: (r.students || []).map((student: Student) =>
-            student.id === updatedStudent.id ? updatedStudent : student
-          )
+          students: (r.students || []).filter((s: Student) => s.id !== studentId)
+        };
+      }
+      // Add student to new room
+      if (r.id === newRoomId) {
+        const updatedStudent = {
+          ...studentToTransfer,
+          room: newRoomId
+        };
+        return {
+          ...r,
+          students: [...(r.students || []), updatedStudent]
         };
       }
       return r;
     });
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    setStudents(prev =>
-      prev.map(student =>
-        student.id === updatedStudent.id ? updatedStudent : student
-      )
-    );
+    
+    // Update local state
+    setStudents(prev => prev.filter(s => s.id !== studentId));
+
+    toast({
+      title: "Aluno transferido",
+      description: "O aluno foi transferido para a nova sala com sucesso.",
+    });
   };
 
   return (
@@ -103,9 +123,10 @@ export function RoomStudentsDialog({
         <div className="mt-4">
           <StudentTable
             students={students}
-            rooms={rooms}
+            rooms={rooms.filter(r => r.id !== room?.id)} // Exclude current room
             onDeleteStudent={handleDeleteStudent}
-            onUpdateStudent={handleUpdateStudent}
+            onTransferStudent={handleTransferStudent}
+            currentRoomId={room?.id}
           />
         </div>
       </DialogContent>
