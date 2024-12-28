@@ -34,18 +34,36 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   useEffect(() => {
     if (!user?.companyId) return;
     
+    // Carregar categorias
     const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
     const companyCategories = allCategories.filter(
       (cat: Category) => cat.companyId === user.companyId
     );
     setCategories(companyCategories);
 
-    // Carregar usuários
+    // Carregar usuários (incluindo os criados pelo super admin)
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
+    
+    // Filtrar usuários da empresa atual
     const companyUsers = allUsers.filter(
       (u: User) => u.companyId === user.companyId
     );
-    setUsers(companyUsers);
+    
+    // Filtrar emails criados para a empresa atual
+    const companyEmails = createdEmails.filter(
+      (e: any) => e.company === user.companyId && e.accessLevel.toUpperCase() === "USER"
+    ).map((e: any) => ({
+      id: e.id,
+      name: e.name,
+      email: e.email,
+      companyId: e.company
+    }));
+    
+    // Combinar as duas listas de usuários
+    const combinedUsers = [...companyUsers, ...companyEmails];
+    console.log("Usuários combinados:", combinedUsers);
+    setUsers(combinedUsers);
   }, [user]);
 
   const getCategoryName = (categoryId: string) => {
@@ -54,9 +72,19 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   };
 
   const getAuthorizedUsers = (room: Room) => {
+    console.log("Sala:", room);
+    console.log("Usuários autorizados da sala:", room.authorizedUsers);
+    console.log("Lista de usuários disponíveis:", users);
+    
+    if (!room.authorizedUsers || room.authorizedUsers.length === 0) {
+      return "Nenhum usuário vinculado";
+    }
+
     const authorizedUsers = users.filter(user => 
-      room.authorizedUsers?.includes(user.id)
+      room.authorizedUsers.includes(user.id)
     );
+    
+    console.log("Usuários autorizados encontrados:", authorizedUsers);
     return authorizedUsers.map(user => user.name).join(", ") || "Nenhum usuário vinculado";
   };
 
