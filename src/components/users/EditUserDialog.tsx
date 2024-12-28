@@ -9,15 +9,17 @@ import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
 import { useState, useEffect } from "react";
 import { hashPassword } from "@/utils/passwordUtils";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditUserDialogProps {
   user: User | null;
   onClose: () => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (updatedUser: User) => void;
 }
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user?.authorizedRooms) {
@@ -25,31 +27,46 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     }
   }, [user]);
 
-  if (!user) return null;
-
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
+    if (!user) return;
+
     const formData = new FormData(event.currentTarget);
     const newPassword = formData.get("password") as string;
-    
-    // Se uma nova senha foi fornecida, hash ela
-    if (newPassword && newPassword !== user.password) {
-      const hashedPassword = await hashPassword(newPassword);
-      formData.set("password", hashedPassword);
-    } else {
-      // Se nenhuma nova senha foi fornecida, mantenha a senha atual
-      formData.set("password", user.password);
+
+    try {
+      const updatedUser: User = {
+        ...user,
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        password: newPassword ? await hashPassword(newPassword) : user.password,
+        responsibleCategory: formData.get("responsibleCategory") as string,
+        location: formData.get("location") as string,
+        specialization: formData.get("specialization") as string,
+        status: formData.get("status") as "active" | "inactive",
+        authorizedRooms: selectedRooms,
+      };
+
+      onSubmit(updatedUser);
+      toast({
+        title: "Usuário atualizado",
+        description: "As informações do usuário foram atualizadas com sucesso.",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Ocorreu um erro ao atualizar o usuário.",
+        variant: "destructive",
+      });
     }
-    
-    formData.set("authorizedRooms", JSON.stringify(selectedRooms));
-    
-    onSubmit(event);
   };
+
+  if (!user) return null;
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
@@ -62,7 +79,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             defaultValues={{
               name: user.name,
               email: user.email,
-              password: "", // Não mostrar a senha atual
+              password: "",
               location: user.location,
               specialization: user.specialization,
               status: user.status,
