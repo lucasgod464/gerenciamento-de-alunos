@@ -11,6 +11,7 @@ import { Pencil, Trash2, Users } from "lucide-react";
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface RoomTableProps {
   rooms: Room[];
@@ -21,10 +22,24 @@ interface RoomTableProps {
 export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [isStudentsDialogOpen, setIsStudentsDialogOpen] = useState(false);
+  const { user: currentUser } = useAuth();
 
   const handleShowStudents = (room: Room) => {
     setSelectedRoom(room);
     setIsStudentsDialogOpen(true);
+  };
+
+  const getAuthorizedUserNames = (room: Room) => {
+    if (!currentUser?.companyId) return "Nenhum usuário vinculado";
+
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const authorizedUsers = allUsers.filter((user: any) => 
+      user.companyId === currentUser.companyId && 
+      user.authorizedRooms?.includes(room.id)
+    );
+
+    if (authorizedUsers.length === 0) return "Nenhum usuário vinculado";
+    return authorizedUsers.map(user => user.name).join(", ");
   };
 
   return (
@@ -49,11 +64,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
               <TableCell>{room.schedule}</TableCell>
               <TableCell>{room.location}</TableCell>
               <TableCell>{room.category}</TableCell>
-              <TableCell>
-                {room.authorizedUsers?.length > 0
-                  ? room.authorizedUsers.join(", ")
-                  : "Nenhum usuário vinculado"}
-              </TableCell>
+              <TableCell>{getAuthorizedUserNames(room)}</TableCell>
               <TableCell>
                 <Button
                   variant="ghost"

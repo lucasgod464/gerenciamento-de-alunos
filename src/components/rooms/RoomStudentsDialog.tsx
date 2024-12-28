@@ -36,13 +36,14 @@ export function RoomStudentsDialog({
     setRooms(companyRooms);
 
     // Carregar alunos da sala específica
-    const roomStudents = companyRooms
-      .find((r: Room) => r.id === room.id)
-      ?.students || [];
-    
-    setStudents(roomStudents.filter((student: Student) => 
-      student.companyId === currentUser.companyId
-    ));
+    const currentRoom = companyRooms.find((r: Room) => r.id === room.id);
+    if (currentRoom && currentRoom.students) {
+      setStudents(currentRoom.students.filter((student: Student) => 
+        student.companyId === currentUser.companyId
+      ));
+    } else {
+      setStudents([]);
+    }
   }, [currentUser, room]);
 
   const handleDeleteStudent = (id: string) => {
@@ -59,8 +60,6 @@ export function RoomStudentsDialog({
     });
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    
-    // Atualizar a lista local de alunos
     setStudents(prev => prev.filter(student => student.id !== id));
   };
 
@@ -80,8 +79,6 @@ export function RoomStudentsDialog({
     });
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    
-    // Atualizar a lista local de alunos
     setStudents(prev =>
       prev.map(student =>
         student.id === updatedStudent.id ? updatedStudent : student
