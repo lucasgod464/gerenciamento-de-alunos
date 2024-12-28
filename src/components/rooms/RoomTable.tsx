@@ -57,7 +57,8 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       id: e.id,
       name: e.name,
       email: e.email,
-      companyId: e.company
+      companyId: e.company,
+      authorizedRooms: [] // Adicionando campo necessário
     }));
     
     // Combinar as duas listas de usuários
@@ -72,20 +73,20 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   };
 
   const getAuthorizedUsers = (room: Room) => {
-    console.log("Sala:", room);
-    console.log("Usuários autorizados da sala:", room.authorizedUsers);
-    console.log("Lista de usuários disponíveis:", users);
+    console.log("Verificando sala:", room.id);
     
-    if (!room.authorizedUsers || room.authorizedUsers.length === 0) {
+    // Encontrar usuários que têm esta sala em seus authorizedRooms
+    const authorizedUsers = users.filter(user => 
+      user.authorizedRooms?.includes(room.id)
+    );
+    
+    console.log("Usuários autorizados para sala", room.id, ":", authorizedUsers);
+    
+    if (authorizedUsers.length === 0) {
       return "Nenhum usuário vinculado";
     }
 
-    const authorizedUsers = users.filter(user => 
-      room.authorizedUsers.includes(user.id)
-    );
-    
-    console.log("Usuários autorizados encontrados:", authorizedUsers);
-    return authorizedUsers.map(user => user.name).join(", ") || "Nenhum usuário vinculado";
+    return authorizedUsers.map(user => user.name).join(", ");
   };
 
   return (
