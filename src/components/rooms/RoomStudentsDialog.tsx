@@ -38,7 +38,13 @@ export function RoomStudentsDialog({
     // Carregar alunos da sala específica
     const currentRoom = companyRooms.find((r: Room) => r.id === room.id);
     if (currentRoom && currentRoom.students) {
-      setStudents(currentRoom.students.filter((student: Student) => 
+      const roomStudents = currentRoom.students.map((student: any) => ({
+        ...student,
+        birthDate: student.birthDate || "",
+        room: student.room || room.id,
+        createdAt: student.createdAt || new Date().toISOString(),
+      }));
+      setStudents(roomStudents.filter((student: Student) => 
         student.companyId === currentUser.companyId
       ));
     } else {

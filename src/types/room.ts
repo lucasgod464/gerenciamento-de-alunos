@@ -1,3 +1,5 @@
+import { Student } from "./student";
+
 export interface Room {
   id: string;
   name: string;
@@ -8,11 +10,5 @@ export interface Room {
   companyId: string | null;
   studyRoom: string;
   authorizedUsers: string[];
-  students: Array<{
-    id: string;
-    name: string;
-    email: string;
-    status: string;
-    companyId: string;
-  }>;
+  students: Student[];
 }
