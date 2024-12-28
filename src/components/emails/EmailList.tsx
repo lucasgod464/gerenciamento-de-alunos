@@ -47,12 +47,12 @@ export function EmailList({
   })
 
   // Converter usuários para o formato de email
-  const usersAsEmails = usersFromAdmins.map((user: any) => ({
+  const usersAsEmails: Email[] = usersFromAdmins.map((user: any) => ({
     id: user.id,
     name: user.name,
     email: user.email,
-    password: user.password || "", // Ensure password is always present
-    accessLevel: "Usuário Comum" as const,
+    password: user.password || "",
+    accessLevel: "Usuário Comum",
     company: user.companyId,
     createdAt: user.createdAt,
   }))

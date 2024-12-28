@@ -46,13 +46,13 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
 
   // Mutation para criar email
   const createEmailMutation = useMutation({
-    mutationFn: (newEmail: any) => {
+    mutationFn: (newEmail: Email) => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const updatedEmails = [...currentEmails, newEmail]
       localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
       return newEmail
     },
-    onSuccess: (newEmail) => {
+    onSuccess: (newEmail: Email) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] })
       onEmailCreated(newEmail)
       setOpen(false)
@@ -76,7 +76,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    const newEmail = {
+    const newEmail: Email = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       email: formData.get("email") as string,
