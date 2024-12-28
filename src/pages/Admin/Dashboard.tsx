@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserStats } from "@/components/users/UserStats";
 import { RoomStats } from "@/components/rooms/RoomStats";
 import { StudyStats } from "@/components/studies/StudyStats";
-import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 
 const AdminDashboard = () => {
   const { user: currentUser } = useAuth();
@@ -60,8 +59,6 @@ const AdminDashboard = () => {
           <RoomStats totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
           <StudyStats totalStudies={stats.totalStudies} activeStudies={stats.activeStudies} />
         </div>
-
-        <DashboardTabs />
       </div>
     </DashboardLayout>
   );
