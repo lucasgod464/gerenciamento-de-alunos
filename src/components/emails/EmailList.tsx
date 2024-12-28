@@ -72,9 +72,9 @@ export function EmailList({
     index === self.findIndex((e) => e.id === email.id)
   )
 
-  const handleEmailCreated = (email: Email) => {
+  const handleEmailCreated = (newEmail: Email) => {
     queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    onUpdateEmail(email)
+    onUpdateEmail(newEmail)
     toast({
       title: "Email criado",
       description: "O email foi criado com sucesso.",
@@ -86,9 +86,9 @@ export function EmailList({
     setIsEditDialogOpen(true)
   }
 
-  const handleEmailUpdated = (email: Email) => {
+  const handleEmailUpdated = (updatedEmail: Email) => {
     queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    onUpdateEmail(email)
+    onUpdateEmail(updatedEmail)
     setEditingEmail(null)
   }
 
@@ -151,4 +151,3 @@ export function EmailList({
       />
     </div>
   )
-}
