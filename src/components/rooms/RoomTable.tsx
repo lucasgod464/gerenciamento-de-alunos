@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface Category {
@@ -61,8 +62,8 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   };
 
   const handleViewStudents = (roomId: string) => {
-    const students = JSON.parse(localStorage.getItem("students") || "[]");
-    const roomStudents = students.filter((student: any) => student.room === roomId);
+    const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    const roomStudents = allStudents.filter((student: any) => student.room === roomId);
     setSelectedRoomStudents(roomStudents);
     setIsStudentsDialogOpen(true);
   };
@@ -138,6 +139,9 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Alunos da Sala</DialogTitle>
+            <DialogDescription>
+              Lista de alunos matriculados nesta sala
+            </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
             {selectedRoomStudents.length > 0 ? (
