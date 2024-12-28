@@ -10,18 +10,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, List } from "lucide-react";
 import { Room } from "@/types/room";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function SuperAdminRooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [selectedRoomStudents, setSelectedRoomStudents] = useState<any[]>([]);
+  const [isStudentsDialogOpen, setIsStudentsDialogOpen] = useState(false);
 
   useEffect(() => {
-    // Get all rooms from localStorage
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     setRooms(allRooms);
   }, []);
+
+  const handleViewStudents = (roomId: string) => {
+    const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    const roomStudents = allStudents.filter((student: any) => student.room === roomId);
+    setSelectedRoomStudents(roomStudents);
+    setIsStudentsDialogOpen(true);
+  };
 
   // Filter rooms based on search term
   const filteredRooms = rooms.filter((room) =>
@@ -60,6 +75,7 @@ export default function SuperAdminRooms() {
                 <TableHead>Empresa</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Tipo</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -79,11 +95,47 @@ export default function SuperAdminRooms() {
                     </span>
                   </TableCell>
                   <TableCell>{room.studyRoom || "Não definido"}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewStudents(room.id)}
+                      title="Ver alunos"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        {/* Students Dialog */}
+        <Dialog open={isStudentsDialogOpen} onOpenChange={setIsStudentsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alunos da Sala</DialogTitle>
+              <DialogDescription>
+                Lista de alunos matriculados nesta sala
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              {selectedRoomStudents.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedRoomStudents.map((student) => (
+                    <li key={student.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                      <List className="h-4 w-4 text-gray-500" />
+                      <span>{student.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-center text-gray-500">Nenhum aluno vinculado a esta sala</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
