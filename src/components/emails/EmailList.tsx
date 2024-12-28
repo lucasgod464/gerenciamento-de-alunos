@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 
-interface Email {
+export interface Email {
   id: string
   name: string
   email: string
@@ -60,8 +60,8 @@ export function EmailList({
     id: user.id,
     name: user.name,
     email: user.email,
-    password: user.password,
-    accessLevel: "Usuário Comum",
+    password: user.password || "", // Ensure password is always present
+    accessLevel: "Usuário Comum" as const,
     company: user.companyId,
     createdAt: user.createdAt,
   }))
