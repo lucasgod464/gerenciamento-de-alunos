@@ -31,7 +31,7 @@ export function CompanyTableRow({
   const { toast } = useToast()
 
   const handleStatusChange = () => {
-    const updatedCompany = {
+    const updatedCompany: Company = {
       ...company,
       status: company.status === "Ativa" ? "Inativa" : "Ativa"
     }
