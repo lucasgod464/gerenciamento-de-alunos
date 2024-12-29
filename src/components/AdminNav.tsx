@@ -60,7 +60,7 @@ const adminRoutes = [
     icon: Tag,
   },
   {
-    title: "Construtor de Formulário",
+    title: "Formulário",
     href: "/admin/form-builder",
     icon: FormInput,
   },
