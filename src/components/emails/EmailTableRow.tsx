@@ -22,6 +22,9 @@ interface EmailTableRowProps {
 }
 
 export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
+  // Add isCompanyActive check - this should be replaced with actual company status check
+  const isCompanyActive = email.company === "YuccieBot" // This is temporary, replace with actual logic
+
   return (
     <TableRow className="hover:bg-gray-50 transition-colors">
       <TableCell>
@@ -57,7 +60,12 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
       </TableCell>
       <TableCell>
         <span className="inline-flex items-center">
-          <span className="w-2 h-2 rounded-full mr-2 bg-green-400"></span>
+          <span 
+            className={cn(
+              "w-2 h-2 rounded-full mr-2",
+              isCompanyActive ? "bg-green-400" : "bg-[#ea384c]"
+            )}
+          ></span>
           {email.company}
         </span>
       </TableCell>
