@@ -156,27 +156,30 @@ export default function SuperAdminRooms() {
         </div>
 
         {/* Rooms Table */}
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[200px]">Nome da Sala</TableHead>
-                  <TableHead>Empresa</TableHead>
-                  <TableHead>Status</TableHead>
+                <TableRow className="border-b border-gray-100 hover:bg-transparent">
+                  <TableHead className="w-[200px] text-sm font-semibold text-gray-700">Nome da Sala</TableHead>
+                  <TableHead className="text-sm font-semibold text-gray-700">Empresa</TableHead>
+                  <TableHead className="text-sm font-semibold text-gray-700">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRooms.map((room) => (
-                  <TableRow key={room.id} className="hover:bg-muted/50">
-                    <TableCell className="font-medium">{room.name}</TableCell>
-                    <TableCell>{room.companyId || "Sem empresa"}</TableCell>
+                  <TableRow 
+                    key={room.id} 
+                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                  >
+                    <TableCell className="font-medium text-gray-900">{room.name}</TableCell>
+                    <TableCell className="text-gray-600">{room.companyId || "Sem empresa"}</TableCell>
                     <TableCell>
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                           room.status
-                            ? "bg-green-100 text-green-800"
-                            : "bg-orange-100 text-orange-800"
+                            ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                            : "bg-orange-50 text-orange-700 ring-1 ring-orange-600/20"
                         }`}
                       >
                         {room.status ? "Ativa" : "Inativa"}
@@ -186,7 +189,10 @@ export default function SuperAdminRooms() {
                 ))}
                 {filteredRooms.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
+                    <TableCell 
+                      colSpan={3} 
+                      className="text-center py-8 text-gray-500 bg-gray-50/50"
+                    >
                       Nenhuma sala encontrada
                     </TableCell>
                   </TableRow>
