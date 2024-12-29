@@ -29,29 +29,34 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   const userTags = getUserTags(userName);
 
   return (
-    <div className="flex items-center gap-2">
-      <span>{userName}</span>
-      <div className="flex gap-1">
-        {userTags.map((tag: any) => (
-          <TooltipProvider key={tag.id}>
-            <Tooltip>
-              <TooltipTrigger>
-                <Tag 
-                  className="h-4 w-4" 
-                  style={{ 
-                    color: tag.color,
-                    fill: tag.color,
-                    fillOpacity: 0.2,
-                  }} 
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{tag.name}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
+    <div className="space-y-2">
+      <span className="text-sm">{userName}</span>
+      {userTags.length > 0 && (
+        <div className="flex flex-wrap gap-2 pl-2">
+          {userTags.map((tag: any) => (
+            <TooltipProvider key={tag.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    className="flex items-center gap-1 px-2 py-1 rounded-full text-xs"
+                    style={{ 
+                      backgroundColor: `${tag.color}20`,
+                      color: tag.color,
+                      border: `1px solid ${tag.color}40`
+                    }}
+                  >
+                    <Tag className="h-3 w-3" />
+                    <span>{tag.name}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Tag: {tag.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
