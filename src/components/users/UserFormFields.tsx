@@ -8,7 +8,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface UserFormFieldsProps {
-  generateStrongPassword?: () => void;
   defaultValues?: {
     name?: string;
     email?: string;
@@ -18,6 +17,7 @@ interface UserFormFieldsProps {
     status?: string;
     authorizedRooms?: string[];
     tags?: string[];
+    responsibleCategory?: string;
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
   onTagsChange?: (tagIds: string[]) => void;
