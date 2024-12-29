@@ -60,22 +60,22 @@ export const RoomCard = ({
         
         <Separator className="my-2" />
         
-        <div className="space-y-4">
-          <div className="flex flex-col items-center text-center">
-            <Users className="h-5 w-5 mb-1" />
-            <span className="text-xs">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span className="text-sm">
               {getStudentsCount(room)} alunos
             </span>
           </div>
 
-          <div className="flex flex-col items-center text-center">
-            <Clock className="h-5 w-5 mb-1" />
-            <span className="text-xs">{room.schedule}</span>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span className="text-sm">{room.schedule}</span>
           </div>
 
-          <div className="flex flex-col items-center text-center">
-            <MapPin className="h-5 w-5 mb-1" />
-            <span className="text-xs">{room.location}</span>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            <span className="text-sm">{room.location}</span>
           </div>
         </div>
       </CardContent>
