@@ -31,8 +31,12 @@ export function CompanyTableRow({
   const { toast } = useToast()
 
   const handleStatusChange = () => {
-    // Here you would typically call an API to update the company status
-    // For now, we'll just show a toast
+    const updatedCompany = {
+      ...company,
+      status: company.status === "Ativa" ? "Inativa" : "Ativa"
+    }
+    onEdit(updatedCompany)
+    
     toast({
       title: "Status atualizado",
       description: `A empresa ${company.name} foi ${company.status === "Ativa" ? "desativada" : "ativada"}.`,
@@ -76,9 +80,8 @@ export function CompanyTableRow({
           checked={company.status === "Ativa"}
           onCheckedChange={handleStatusChange}
           className={cn(
-            company.status === "Ativa" 
-              ? "bg-green-500 hover:bg-green-600" 
-              : "bg-red-500 hover:bg-red-600"
+            "data-[state=checked]:bg-green-500 data-[state=checked]:hover:bg-green-600",
+            "data-[state=unchecked]:bg-red-500 data-[state=unchecked]:hover:bg-red-600"
           )}
         />
       </td>
