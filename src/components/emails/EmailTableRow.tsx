@@ -1,6 +1,6 @@
 import { TableCell, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   AlertDialog,
@@ -23,30 +23,44 @@ interface EmailTableRowProps {
 
 export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
   return (
-    <TableRow>
+    <TableRow className="hover:bg-gray-50 transition-colors">
       <TableCell>
-        <div>
-          <div className="font-medium">{email.name}</div>
-          <div className="text-sm text-gray-500">
-            {email.email}
-            <br />
-            ID: {email.id}
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "w-10 h-10 rounded-full flex items-center justify-center",
+            email.accessLevel === "Admin" ? "bg-purple-100" : "bg-blue-100"
+          )}>
+            <Mail className={cn(
+              "w-5 h-5",
+              email.accessLevel === "Admin" ? "text-purple-600" : "text-blue-600"
+            )} />
+          </div>
+          <div>
+            <div className="font-medium">{email.name}</div>
+            <div className="text-sm text-gray-500">
+              {email.email}
+            </div>
           </div>
         </div>
       </TableCell>
       <TableCell>
         <span
           className={cn(
-            "px-2 py-1 rounded-full text-sm",
+            "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
             email.accessLevel === "Admin"
-              ? "bg-blue-100 text-blue-800"
-              : "bg-gray-100 text-gray-800"
+              ? "bg-purple-100 text-purple-800"
+              : "bg-blue-100 text-blue-800"
           )}
         >
           {email.accessLevel}
         </span>
       </TableCell>
-      <TableCell>{email.company}</TableCell>
+      <TableCell>
+        <span className="inline-flex items-center">
+          <span className="w-2 h-2 rounded-full mr-2 bg-green-400"></span>
+          {email.company}
+        </span>
+      </TableCell>
       <TableCell>{email.createdAt}</TableCell>
       <TableCell>
         <div className="flex justify-end space-x-2">
@@ -54,8 +68,9 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
             variant="ghost"
             size="icon"
             onClick={() => onEdit(email)}
+            className="hover:bg-gray-100"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-4 h-4 text-gray-600" />
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
