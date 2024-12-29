@@ -14,6 +14,7 @@ interface Tag {
   name: string;
   color: string;
   status: boolean;
+  companyId: string;
 }
 
 export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFieldsProps) {
@@ -23,13 +24,12 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    const savedTags = localStorage.getItem("tags");
+    const storageKey = `company_${currentUser.companyId}_tags`;
+    const savedTags = localStorage.getItem(storageKey);
     if (savedTags) {
-      const allTags = JSON.parse(savedTags);
-      const companyTags = allTags.filter((tag: Tag) => 
-        tag.companyId === currentUser.companyId && tag.status
-      );
-      setTags(companyTags);
+      const parsedTags = JSON.parse(savedTags);
+      const activeTags = parsedTags.filter((tag: Tag) => tag.status);
+      setTags(activeTags);
     }
   }, [currentUser]);
 
