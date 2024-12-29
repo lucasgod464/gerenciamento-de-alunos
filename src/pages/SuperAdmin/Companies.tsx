@@ -24,14 +24,9 @@ const Companies = () => {
     })
   }
 
-  const totalUsers = companies.reduce(
-    (acc, company) => acc + company.currentUsers,
-    0
-  )
-  const totalRooms = companies.reduce(
-    (acc, company) => acc + company.currentRooms,
-    0
-  )
+  // Calculate statistics
+  const activeCompanies = companies.filter(company => company.status === "Ativa").length
+  const inactiveCompanies = companies.filter(company => company.status === "Inativa").length
 
   if (isLoading) {
     return <div>Carregando...</div>
@@ -49,8 +44,8 @@ const Companies = () => {
 
         <CompanyStats
           totalCompanies={companies.length}
-          totalUsers={totalUsers}
-          totalRooms={totalRooms}
+          activeCompanies={activeCompanies}
+          inactiveCompanies={inactiveCompanies}
         />
 
         <div className="flex justify-between items-center">
