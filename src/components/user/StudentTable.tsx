@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Student } from "@/types/student";
 import { useState } from "react";
 import { StudentForm } from "./StudentForm";
@@ -16,7 +16,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface StudentTableProps {
@@ -24,8 +23,6 @@ interface StudentTableProps {
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
   onUpdateStudent?: (student: Student) => void;
-  onTransferStudent?: (studentId: string, newRoomId: string) => void;
-  currentRoomId?: string;
 }
 
 export function StudentTable({
@@ -33,28 +30,8 @@ export function StudentTable({
   rooms,
   onDeleteStudent,
   onUpdateStudent,
-  onTransferStudent,
-  currentRoomId,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [isTransferMode, setIsTransferMode] = useState(false);
-
-  const getRoomName = (roomId: string) => {
-    const room = rooms.find(room => room.id === roomId);
-    return room?.name || "Sala não encontrada";
-  };
-
-  const handleEditClick = (student: Student) => {
-    setEditingStudent(student);
-    setIsTransferMode(true);
-  };
-
-  const handleTransfer = (studentId: string, newRoomId: string) => {
-    if (onTransferStudent) {
-      onTransferStudent(studentId, newRoomId);
-    }
-    setEditingStudent(null);
-  };
 
   const handleSubmit = (student: Student) => {
     if (onUpdateStudent) {
@@ -91,23 +68,13 @@ export function StudentTable({
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditClick(student)}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Transferir Aluno
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDeleteStudent(student.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDeleteStudent(student.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
@@ -117,17 +84,11 @@ export function StudentTable({
       <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Transferir Aluno</DialogTitle>
-            <DialogDescription>
-              Selecione a sala para onde deseja transferir o aluno
-            </DialogDescription>
+            <DialogTitle>Editar Aluno</DialogTitle>
           </DialogHeader>
           {editingStudent && (
             <StudentForm
               initialData={editingStudent}
-              isTransferMode={true}
-              availableRooms={rooms}
-              onTransfer={handleTransfer}
               onSubmit={handleSubmit}
             />
           )}
