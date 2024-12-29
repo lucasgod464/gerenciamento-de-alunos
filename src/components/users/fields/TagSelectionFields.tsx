@@ -4,18 +4,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tag } from "@/types/category";
 
 interface TagSelectionFieldsProps {
   selectedTags: string[];
   onTagToggle: (tagId: string) => void;
-}
-
-interface Tag {
-  id: string;
-  name: string;
-  color: string;
-  status: boolean;
-  companyId: string;
 }
 
 export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFieldsProps) {
@@ -25,10 +18,11 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    const storageKey = `company_${currentUser.companyId}_tags`;
-    const savedTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    const activeTags = savedTags.filter((tag: Tag) => tag.status);
-    setTags(activeTags);
+    const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    const companyTags = allTags.filter((tag: Tag) => 
+      tag.companyId === currentUser.companyId && tag.status
+    );
+    setTags(companyTags);
   }, [currentUser]);
 
   return (
@@ -39,7 +33,7 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
           <ScrollArea className="h-[120px]">
             <div className="space-y-2">
               {tags.map((tag) => (
-                <label
+                <div
                   key={tag.id}
                   className="flex items-center space-x-2 p-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors"
                 >
@@ -52,8 +46,13 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
                     className="w-4 h-4 rounded-full"
                     style={{ backgroundColor: tag.color }}
                   />
-                  <span className="text-sm">{tag.name}</span>
-                </label>
+                  <label
+                    htmlFor={`tag-${tag.id}`}
+                    className="text-sm cursor-pointer flex-1"
+                  >
+                    {tag.name}
+                  </label>
+                </div>
               ))}
               {tags.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">

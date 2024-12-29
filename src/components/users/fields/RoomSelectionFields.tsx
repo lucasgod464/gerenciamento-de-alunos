@@ -59,17 +59,22 @@ export function RoomSelectionFields({
           <ScrollArea className="h-[120px]">
             <div className="grid grid-cols-2 gap-2 pr-2">
               {filteredRooms.map((room) => (
-                <label
+                <div
                   key={room.id}
-                  className="flex items-center space-x-2 p-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors text-sm"
+                  className="flex items-center space-x-2 p-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors"
                 >
                   <Checkbox
                     id={`room-${room.id}`}
                     checked={selectedRooms.includes(room.id)}
                     onCheckedChange={() => handleRoomToggle(room.id)}
                   />
-                  <span className="truncate">{room.name}</span>
-                </label>
+                  <label
+                    htmlFor={`room-${room.id}`}
+                    className="text-sm cursor-pointer flex-1"
+                  >
+                    {room.name}
+                  </label>
+                </div>
               ))}
               {filteredRooms.length === 0 && (
                 <div className="col-span-2 text-center text-muted-foreground py-4">
