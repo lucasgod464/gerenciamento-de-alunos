@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
 import { CompanyDataUsage } from "./CompanyDataUsage"
@@ -14,6 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Company } from "./CompanyList"
+import { useToast } from "@/components/ui/use-toast"
 
 interface CompanyTableRowProps {
   company: Company
@@ -26,6 +28,17 @@ export function CompanyTableRow({
   onDelete,
   onEdit,
 }: CompanyTableRowProps) {
+  const { toast } = useToast()
+
+  const handleStatusChange = () => {
+    // Here you would typically call an API to update the company status
+    // For now, we'll just show a toast
+    toast({
+      title: "Status atualizado",
+      description: `A empresa ${company.name} foi ${company.status === "Ativa" ? "desativada" : "ativada"}.`,
+    })
+  }
+
   return (
     <tr className="hover:bg-gray-50 transition-colors">
       <td className="p-4">
@@ -59,20 +72,15 @@ export function CompanyTableRow({
         </div>
       </td>
       <td className="p-4">
-        <span
+        <Switch
+          checked={company.status === "Ativa"}
+          onCheckedChange={handleStatusChange}
           className={cn(
-            "px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1",
-            company.status === "Ativa"
-              ? "bg-green-100 text-green-800"
-              : "bg-red-100 text-red-800"
+            company.status === "Ativa" 
+              ? "bg-green-500 hover:bg-green-600" 
+              : "bg-red-500 hover:bg-red-600"
           )}
-        >
-          <span className={cn(
-            "w-1.5 h-1.5 rounded-full",
-            company.status === "Ativa" ? "bg-green-600" : "bg-red-600"
-          )} />
-          {company.status}
-        </span>
+        />
       </td>
       <td className="p-4 text-gray-500">{company.createdAt}</td>
       <td className="p-4">
