@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Category } from "@/types/category";
 
 interface UserTableRowProps {
   user: User;
@@ -45,6 +46,7 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
   const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
   const [userTags, setUserTags] = useState<Tag[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [categoryName, setCategoryName] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -54,6 +56,11 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       .map((room: Room) => room.name);
     
     setAuthorizedRoomNames(userRooms);
+
+    // Buscar o nome da categoria
+    const categories: Category[] = JSON.parse(localStorage.getItem("categories") || "[]");
+    const category = categories.find(cat => cat.id === user.responsibleCategory);
+    setCategoryName(category?.name || "Categoria não encontrada");
 
     if (user.companyId) {
       const storageKey = `company_${user.companyId}_tags`;
@@ -91,7 +98,7 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       <TableRow>
         <TableCell className="font-medium">{user.name}</TableCell>
         <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>{user.responsibleCategory}</TableCell>
+        <TableCell>{categoryName}</TableCell>
         <TableCell>{user.specialization}</TableCell>
         <TableCell>
           <div className="max-w-[200px] overflow-hidden text-sm">
@@ -176,14 +183,4 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       </AlertDialog>
     </>
   );
-}
-
-function getContrastColor(hexcolor: string) {
-  const r = parseInt(hexcolor.slice(1, 3), 16);
-  const g = parseInt(hexcolor.slice(3, 5), 16);
-  const b = parseInt(hexcolor.slice(5, 7), 16);
-  
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  
-  return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
