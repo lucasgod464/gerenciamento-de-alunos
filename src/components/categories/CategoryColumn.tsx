@@ -1,20 +1,40 @@
 import { Room } from "@/types/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Users, Edit2, Trash2, GraduationCap } from "lucide-react";
+import { School, Users, Edit2, Trash2, GraduationCap, MoveRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface CategoryColumnProps {
   category: Category;
   rooms: Room[];
+  categories: Category[];
   onEdit: () => void;
   onDelete: () => void;
+  onTransferRooms: (roomIds: string[], targetCategoryId: string) => void;
 }
 
-export const CategoryColumn = ({ category, rooms, onEdit, onDelete }: CategoryColumnProps) => {
+export const CategoryColumn = ({ 
+  category, 
+  rooms, 
+  categories,
+  onEdit, 
+  onDelete,
+  onTransferRooms 
+}: CategoryColumnProps) => {
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
 
   const getAuthorizedUserNames = (room: Room) => {
     if (!currentUser?.companyId) return "Nenhum usuário vinculado";
@@ -35,6 +55,33 @@ export const CategoryColumn = ({ category, rooms, onEdit, onDelete }: CategoryCo
 
   const getStudentsCount = (room: Room) => {
     return room.students?.length || 0;
+  };
+
+  const handleTransferRooms = (targetCategoryId: string) => {
+    if (selectedRooms.length === 0) {
+      toast({
+        title: "Selecione as salas",
+        description: "Selecione pelo menos uma sala para transferir.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    onTransferRooms(selectedRooms, targetCategoryId);
+    setSelectedRooms([]);
+    
+    toast({
+      title: "Salas transferidas",
+      description: "As salas selecionadas foram transferidas com sucesso.",
+    });
+  };
+
+  const toggleRoomSelection = (roomId: string) => {
+    setSelectedRooms(prev => 
+      prev.includes(roomId) 
+        ? prev.filter(id => id !== roomId)
+        : [...prev, roomId]
+    );
   };
 
   return (
@@ -83,10 +130,39 @@ export const CategoryColumn = ({ category, rooms, onEdit, onDelete }: CategoryCo
             </span>
           </div>
         </div>
+
+        {rooms.length > 0 && (
+          <div className="mb-4 p-3 bg-white/30 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <MoveRight className="h-4 w-4" />
+              <span className="text-sm font-medium">Transferir salas para:</span>
+            </div>
+            <Select onValueChange={handleTransferRooms}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories
+                  .filter(cat => cat.id !== category.id)
+                  .map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         
         <div className="space-y-3">
           {rooms.map((room) => (
-            <Card key={room.id} className="bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors">
+            <Card 
+              key={room.id} 
+              className={`bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors cursor-pointer ${
+                selectedRooms.includes(room.id) ? 'ring-2 ring-primary' : ''
+              }`}
+              onClick={() => toggleRoomSelection(room.id)}
+            >
               <CardHeader className="p-4">
                 <CardTitle className="text-sm font-medium flex items-center justify-between">
                   <div className="flex items-center gap-2">
