@@ -64,64 +64,64 @@ export default function SuperAdminRooms() {
 
   return (
     <DashboardLayout role="super-admin">
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-6 space-y-8">
         <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Salas</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Salas</h1>
             <p className="text-muted-foreground">
               Gerencie e monitore todas as salas do sistema
             </p>
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-4">
-            <Card className="bg-white/50 backdrop-blur-sm border-primary/20">
+          <div className="grid gap-6 md:grid-cols-4">
+            <Card className="bg-white shadow-md border-primary/10 hover:border-primary/30 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
                 <School2 className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalRooms}</div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   Distribuídas em {stats.totalCompanies} empresas
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/50 backdrop-blur-sm border-green-500/20">
+            <Card className="bg-white shadow-md border-green-500/10 hover:border-green-500/30 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
                 <Activity className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.activeRooms}</div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   {((stats.activeRooms / stats.totalRooms) * 100).toFixed(1)}% do total
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/50 backdrop-blur-sm border-orange-500/20">
+            <Card className="bg-white shadow-md border-orange-500/10 hover:border-orange-500/30 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Salas Inativas</CardTitle>
                 <Building2 className="h-4 w-4 text-orange-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalRooms - stats.activeRooms}</div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   {((stats.totalRooms - stats.activeRooms) / stats.totalRooms * 100).toFixed(1)}% do total
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="bg-white/50 backdrop-blur-sm border-blue-500/20">
+            <Card className="bg-white shadow-md border-blue-500/10 hover:border-blue-500/30 transition-colors">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
                 <GraduationCap className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.totalStudents}</div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   Média de {(stats.totalStudents / stats.totalRooms || 0).toFixed(1)} por sala
                 </p>
               </CardContent>
@@ -132,19 +132,19 @@ export default function SuperAdminRooms() {
         {/* Filters */}
         <div className="flex gap-4 items-center">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome da sala ou empresa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+              className="pl-9 h-10"
             />
           </div>
           <Select
             value={filterType}
             onValueChange={setFilterType}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] h-10">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
@@ -156,27 +156,27 @@ export default function SuperAdminRooms() {
         </div>
 
         {/* Rooms Table */}
-        <Card className="border-0 shadow-sm">
+        <Card className="border border-gray-100 shadow-sm overflow-hidden">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-gray-100 hover:bg-transparent">
-                  <TableHead className="w-[200px] text-sm font-semibold text-gray-700">Nome da Sala</TableHead>
-                  <TableHead className="text-sm font-semibold text-gray-700">Empresa</TableHead>
-                  <TableHead className="text-sm font-semibold text-gray-700">Status</TableHead>
+                <TableRow className="bg-gray-50/50">
+                  <TableHead className="w-[200px] py-4 text-sm font-semibold text-gray-700">Nome da Sala</TableHead>
+                  <TableHead className="py-4 text-sm font-semibold text-gray-700">Empresa</TableHead>
+                  <TableHead className="py-4 text-sm font-semibold text-gray-700">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRooms.map((room) => (
                   <TableRow 
                     key={room.id} 
-                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
                   >
-                    <TableCell className="font-medium text-gray-900">{room.name}</TableCell>
-                    <TableCell className="text-gray-600">{room.companyId || "Sem empresa"}</TableCell>
-                    <TableCell>
+                    <TableCell className="py-4 font-medium text-gray-900">{room.name}</TableCell>
+                    <TableCell className="py-4 text-gray-600">{room.companyId || "Sem empresa"}</TableCell>
+                    <TableCell className="py-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
                           room.status
                             ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
                             : "bg-orange-50 text-orange-700 ring-1 ring-orange-600/20"
@@ -191,7 +191,7 @@ export default function SuperAdminRooms() {
                   <TableRow>
                     <TableCell 
                       colSpan={3} 
-                      className="text-center py-8 text-gray-500 bg-gray-50/50"
+                      className="h-32 text-center text-gray-500"
                     >
                       Nenhuma sala encontrada
                     </TableCell>
