@@ -14,7 +14,7 @@ interface UserWithTagsProps {
 export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   const getUserTags = (userName: string) => {
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    const allTags = JSON.parse(localStorage.getItem(`company_${companyId}_tags`) || "[]");
     
     // Busca case insensitive do usuário
     const user = allUsers.find((u: any) => 
@@ -44,29 +44,31 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm">{userName}</span>
-      <div className="flex gap-1">
-        {userTags.map((tag: any) => (
-          <TooltipProvider key={tag.id}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="cursor-pointer">
-                  <Tag 
-                    className="h-4 w-4" 
-                    style={{ 
-                      color: tag.color,
-                      fill: tag.color,
-                      fillOpacity: 0.2,
-                    }} 
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{tag.name}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-      </div>
+      {userTags.length > 0 && (
+        <div className="flex gap-1">
+          {userTags.map((tag: any) => (
+            <TooltipProvider key={tag.id}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="cursor-pointer">
+                    <Tag 
+                      className="h-4 w-4" 
+                      style={{ 
+                        color: tag.color,
+                        fill: tag.color,
+                        fillOpacity: 0.2,
+                      }} 
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tag.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
