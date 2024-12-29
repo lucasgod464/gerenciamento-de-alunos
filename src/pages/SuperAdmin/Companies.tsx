@@ -14,7 +14,6 @@ const Companies = () => {
     createCompany,
     updateCompany,
     deleteCompany,
-    resetCompany,
   } = useCompanies()
 
   const handleCreateCompany = (newCompany: Company) => {
@@ -63,7 +62,6 @@ const Companies = () => {
           companies={companies}
           onUpdateCompany={updateCompany}
           onDeleteCompany={deleteCompany}
-          onResetCompany={resetCompany}
         />
       </div>
     </DashboardLayout>
