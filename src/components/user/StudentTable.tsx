@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Trash2, ArrowRight } from "lucide-react";
 import { Student } from "@/types/student";
 import { useState } from "react";
 import { StudentForm } from "./StudentForm";
@@ -56,6 +56,13 @@ export function StudentTable({
     setEditingStudent(null);
   };
 
+  const handleSubmit = (student: Student) => {
+    if (onUpdateStudent) {
+      onUpdateStudent(student);
+    }
+    setEditingStudent(null);
+  };
+
   return (
     <>
       <Table>
@@ -86,11 +93,12 @@ export function StudentTable({
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleEditClick(student)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <ArrowRight className="mr-2 h-4 w-4" />
+                    Transferir Aluno
                   </Button>
                   <Button
                     variant="ghost"
@@ -120,6 +128,7 @@ export function StudentTable({
               isTransferMode={true}
               availableRooms={rooms}
               onTransfer={handleTransfer}
+              onSubmit={handleSubmit}
             />
           )}
         </DialogContent>
