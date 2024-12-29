@@ -65,6 +65,10 @@ export function CategoryDialog({
     });
   };
 
+  const handleColorPickerClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Impede que o clique se propague para elementos pai
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -100,7 +104,11 @@ export function CategoryDialog({
                   onClick={() => setSelectedColor(color)}
                 />
               ))}
-              <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+              <Popover 
+                open={showColorPicker} 
+                onOpenChange={setShowColorPicker}
+                modal={true} // Força o popover a ser modal
+              >
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -117,9 +125,25 @@ export function CategoryDialog({
                     />
                   </button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-3">
+                <PopoverContent 
+                  className="w-auto p-3" 
+                  onClick={handleColorPickerClick}
+                  onPointerDownOutside={(e) => {
+                    // Previne o fechamento ao clicar dentro do color picker
+                    if (e.target instanceof Element && 
+                        (e.target.closest('.react-colorful') || 
+                         e.target.closest('input'))) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
                   <div className="space-y-3">
-                    <HexColorPicker color={selectedColor} onChange={setSelectedColor} />
+                    <div className="react-colorful-wrapper">
+                      <HexColorPicker 
+                        color={selectedColor} 
+                        onChange={setSelectedColor}
+                      />
+                    </div>
                     <Input
                       type="text"
                       value={selectedColor}
