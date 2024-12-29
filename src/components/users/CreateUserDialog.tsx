@@ -1,11 +1,17 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { UserFormFields } from "./UserFormFields";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
+import { UserFormFields } from "./UserFormFields";
 import { useState } from "react";
 import { hashPassword } from "@/utils/passwordUtils";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;

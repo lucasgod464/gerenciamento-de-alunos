@@ -25,11 +25,10 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
-    const companyTags = allTags.filter((tag: Tag) => 
-      tag.companyId === currentUser.companyId && tag.status
-    );
-    setTags(companyTags);
+    const storageKey = `company_${currentUser.companyId}_tags`;
+    const savedTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const activeTags = savedTags.filter((tag: Tag) => tag.status);
+    setTags(activeTags);
   }, [currentUser]);
 
   return (
