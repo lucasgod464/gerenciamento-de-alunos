@@ -19,6 +19,7 @@ import { useState, useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { Email } from "@/types/email"
+import { Eye, EyeOff } from "lucide-react"
 
 interface EditEmailDialogProps {
   email: Email | null
@@ -31,10 +32,13 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
   const { toast } = useToast()
   const queryClient = useQueryClient()
   const [formData, setFormData] = useState<Email | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
 
   useEffect(() => {
     if (email) {
       setFormData(email)
+      setNewPassword("")
     }
   }, [email])
 
@@ -50,7 +54,10 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
     mutationFn: async (updatedEmail: Email) => {
       const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
       const newEmails = currentEmails.map((e: Email) =>
-        e.id === updatedEmail.id ? updatedEmail : e
+        e.id === updatedEmail.id ? {
+          ...updatedEmail,
+          password: newPassword ? newPassword : e.password
+        } : e
       )
       localStorage.setItem("createdEmails", JSON.stringify(newEmails))
       return updatedEmail
@@ -103,6 +110,32 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Nova Senha (opcional)</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha se desejar alterá-la"
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="accessLevel">Nível de Acesso</Label>
