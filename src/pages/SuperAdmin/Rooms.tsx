@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Search, Building2, Users, School2, Activity } from "lucide-react";
+import { Search, Building2, Users, School2, Activity, GraduationCap } from "lucide-react";
 import { Room } from "@/types/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -29,6 +29,7 @@ export default function SuperAdminRooms() {
     totalRooms: 0,
     activeRooms: 0,
     totalCompanies: 0,
+    totalStudents: 0,
   });
 
   useEffect(() => {
@@ -39,11 +40,15 @@ export default function SuperAdminRooms() {
     // Calculate stats
     const activeRooms = allRooms.filter((room: Room) => room.status).length;
     const uniqueCompanies = new Set(allRooms.map((room: Room) => room.companyId)).size;
+    const totalStudents = allRooms.reduce((acc: number, room: Room) => {
+      return acc + (room.students?.length || 0);
+    }, 0);
 
     setStats({
       totalRooms: allRooms.length,
       activeRooms,
       totalCompanies: uniqueCompanies,
+      totalStudents,
     });
   }, []);
 
@@ -69,7 +74,7 @@ export default function SuperAdminRooms() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <Card className="bg-white/50 backdrop-blur-sm border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
@@ -105,6 +110,19 @@ export default function SuperAdminRooms() {
                 <div className="text-2xl font-bold">{stats.totalRooms - stats.activeRooms}</div>
                 <p className="text-xs text-muted-foreground">
                   {((stats.totalRooms - stats.activeRooms) / stats.totalRooms * 100).toFixed(1)}% do total
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white/50 backdrop-blur-sm border-blue-500/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
+                <GraduationCap className="h-4 w-4 text-blue-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalStudents}</div>
+                <p className="text-xs text-muted-foreground">
+                  Média de {(stats.totalStudents / stats.totalRooms || 0).toFixed(1)} por sala
                 </p>
               </CardContent>
             </Card>
