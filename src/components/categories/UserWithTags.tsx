@@ -29,31 +29,29 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   const userTags = getUserTags(userName);
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex items-center gap-2">
       <span>{userName}</span>
-      {userTags.length > 0 && (
-        <div className="flex flex-wrap gap-1 ml-2">
-          {userTags.map((tag: any) => (
-            <TooltipProvider key={tag.id}>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Tag 
-                    className="h-4 w-4" 
-                    style={{ 
-                      color: tag.color,
-                      fill: tag.color,
-                      fillOpacity: 0.2,
-                    }} 
-                  />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{tag.name}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          ))}
-        </div>
-      )}
+      <div className="flex gap-1">
+        {userTags.map((tag: any) => (
+          <TooltipProvider key={tag.id}>
+            <Tooltip>
+              <TooltipTrigger>
+                <Tag 
+                  className="h-4 w-4" 
+                  style={{ 
+                    color: tag.color,
+                    fill: tag.color,
+                    fillOpacity: 0.2,
+                  }} 
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{tag.name}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ))}
+      </div>
     </div>
   );
 };
