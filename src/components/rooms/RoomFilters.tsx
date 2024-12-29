@@ -1,12 +1,11 @@
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 interface RoomFiltersProps {
-  searchTerm: string
-  onSearchChange: (value: string) => void
-  statusFilter: string
-  onStatusFilterChange: (value: string) => void
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (value: string) => void;
 }
 
 export function RoomFilters({
@@ -16,29 +15,25 @@ export function RoomFilters({
   onStatusFilterChange,
 }: RoomFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+    <div className="flex gap-4">
       <div className="relative flex-1">
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nome ou empresa..."
+          placeholder="Buscar por nome, horário, endereço ou categoria..."
           className="pl-8"
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
-      <Select
+      <select
+        className="border rounded-md px-3 py-2"
         value={statusFilter}
-        onValueChange={onStatusFilterChange}
+        onChange={(e) => onStatusFilterChange(e.target.value)}
       >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filtrar por status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos Status</SelectItem>
-          <SelectItem value="active">Ativas</SelectItem>
-          <SelectItem value="inactive">Inativas</SelectItem>
-        </SelectContent>
-      </Select>
+        <option value="all">Todos Status</option>
+        <option value="active">Ativas</option>
+        <option value="inactive">Inativas</option>
+      </select>
     </div>
-  )
+  );
 }
