@@ -33,6 +33,11 @@ export function StudentTable({
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
+  const getRoomName = (roomId: string) => {
+    const room = rooms.find(room => room.id === roomId);
+    return room ? room.name : 'Sala não encontrada';
+  };
+
   const handleSubmit = (student: Student) => {
     if (onUpdateStudent) {
       onUpdateStudent(student);
@@ -47,6 +52,7 @@ export function StudentTable({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Data de Nascimento</TableHead>
+            <TableHead>Sala</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -56,6 +62,7 @@ export function StudentTable({
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birthDate}</TableCell>
+              <TableCell>{getRoomName(student.room)}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
