@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -54,8 +53,9 @@ export default function SuperAdminRooms() {
 
   // Filter rooms based on search term and type
   const filteredRooms = rooms.filter((room) => {
-    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (room.companyId || "").toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = 
+      room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (room.companyId || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || 
                          (filterType === "active" && room.status) ||
                          (filterType === "inactive" && !room.status);
@@ -134,7 +134,7 @@ export default function SuperAdminRooms() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar salas..."
+              placeholder="Buscar por nome da sala ou empresa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8"
@@ -164,7 +164,6 @@ export default function SuperAdminRooms() {
                   <TableHead className="w-[200px]">Nome da Sala</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Tipo</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -183,12 +182,11 @@ export default function SuperAdminRooms() {
                         {room.status ? "Ativa" : "Inativa"}
                       </span>
                     </TableCell>
-                    <TableCell>{room.studyRoom || "Não definido"}</TableCell>
                   </TableRow>
                 ))}
                 {filteredRooms.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                    <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">
                       Nenhuma sala encontrada
                     </TableCell>
                   </TableRow>
