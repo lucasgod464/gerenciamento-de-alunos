@@ -1,11 +1,3 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Room } from "@/types/room";
 
@@ -15,61 +7,66 @@ interface RoomsTableProps {
 
 export function RoomsTable({ rooms }: RoomsTableProps) {
   return (
-    <Card className="border border-gray-100 shadow-sm overflow-hidden">
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-              <TableHead className="w-[300px] py-4 text-sm font-semibold text-gray-700">
-                Nome da Sala
-              </TableHead>
-              <TableHead className="py-4 text-sm font-semibold text-gray-700">
-                Empresa
-              </TableHead>
-              <TableHead className="py-4 text-sm font-semibold text-gray-700 text-right pr-6">
-                Status
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rooms.length > 0 ? (
-              rooms.map((room) => (
-                <TableRow 
-                  key={room.id} 
-                  className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
-                >
-                  <TableCell className="py-4 font-medium text-gray-900">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {rooms.length > 0 ? (
+        rooms.map((room) => (
+          <Card 
+            key={room.id} 
+            className="transition-all duration-200 hover:shadow-lg border border-gray-100"
+          >
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold text-lg text-gray-900">
                     {room.name}
-                  </TableCell>
-                  <TableCell className="py-4 text-gray-600">
-                    {room.companyId || "Sem empresa"}
-                  </TableCell>
-                  <TableCell className="py-4 text-right pr-6">
-                    <span
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        room.status
-                          ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
-                          : "bg-orange-50 text-orange-700 ring-1 ring-orange-600/20"
-                      }`}
-                    >
-                      {room.status ? "Ativa" : "Inativa"}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell 
-                  colSpan={3} 
-                  className="h-32 text-center text-gray-500"
-                >
-                  Nenhuma sala encontrada
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                  </h3>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      room.status
+                        ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+                        : "bg-orange-50 text-orange-700 ring-1 ring-orange-600/20"
+                    }`}
+                  >
+                    {room.status ? "Ativa" : "Inativa"}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <span className="font-medium mr-2">Empresa:</span>
+                    <span>{room.companyId || "Sem empresa"}</span>
+                  </div>
+                  
+                  {room.schedule && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="font-medium mr-2">Horário:</span>
+                      <span>{room.schedule}</span>
+                    </div>
+                  )}
+                  
+                  {room.location && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="font-medium mr-2">Local:</span>
+                      <span>{room.location}</span>
+                    </div>
+                  )}
+                  
+                  {room.category && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <span className="font-medium mr-2">Categoria:</span>
+                      <span>{room.category}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      ) : (
+        <div className="col-span-full flex items-center justify-center h-32 text-gray-500">
+          Nenhuma sala encontrada
+        </div>
+      )}
+    </div>
   );
 }
