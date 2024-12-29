@@ -22,8 +22,10 @@ interface EmailTableRowProps {
 }
 
 export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
-  // Add isCompanyActive check - this should be replaced with actual company status check
-  const isCompanyActive = email.company === "YuccieBot" // This is temporary, replace with actual logic
+  // Buscar empresas do localStorage e verificar o status
+  const companies = JSON.parse(localStorage.getItem("companies") || "[]")
+  const company = companies.find((c: any) => c.id === email.company || c.name === email.company)
+  const isCompanyActive = company ? company.status === "Ativa" : false
 
   return (
     <TableRow className="hover:bg-gray-50 transition-colors">
