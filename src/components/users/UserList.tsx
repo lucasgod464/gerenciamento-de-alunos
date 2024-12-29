@@ -39,15 +39,16 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome Completo</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Categoria Responsável</TableHead>
-            <TableHead>Especialização</TableHead>
-            <TableHead>Salas Autorizadas</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Data de Cadastro</TableHead>
-            <TableHead>Último Acesso</TableHead>
-            <TableHead>Ações</TableHead>
+            <TableHead className="w-[200px]">Nome Completo</TableHead>
+            <TableHead className="w-[200px]">Email</TableHead>
+            <TableHead className="w-[150px]">Categoria</TableHead>
+            <TableHead className="w-[150px]">Especialização</TableHead>
+            <TableHead className="w-[200px]">Salas Autorizadas</TableHead>
+            <TableHead className="w-[150px]">Etiquetas</TableHead>
+            <TableHead className="w-[100px] text-center">Status</TableHead>
+            <TableHead className="w-[120px]">Cadastro</TableHead>
+            <TableHead className="w-[120px]">Último Acesso</TableHead>
+            <TableHead className="w-[100px] text-center">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
