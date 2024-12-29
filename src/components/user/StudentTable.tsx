@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface StudentTableProps {
@@ -36,10 +37,23 @@ export function StudentTable({
   currentRoomId,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [isTransferMode, setIsTransferMode] = useState(false);
 
   const getRoomName = (roomId: string) => {
     const room = rooms.find(room => room.id === roomId);
     return room?.name || "Sala não encontrada";
+  };
+
+  const handleEditClick = (student: Student) => {
+    setEditingStudent(student);
+    setIsTransferMode(true);
+  };
+
+  const handleTransfer = (studentId: string, newRoomId: string) => {
+    if (onTransferStudent) {
+      onTransferStudent(studentId, newRoomId);
+    }
+    setEditingStudent(null);
   };
 
   return (
@@ -49,7 +63,6 @@ export function StudentTable({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Data de Nascimento</TableHead>
-            <TableHead>Sala</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -59,7 +72,6 @@ export function StudentTable({
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birthDate}</TableCell>
-              <TableCell>{getRoomName(student.room)}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
@@ -76,7 +88,7 @@ export function StudentTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setEditingStudent(student)}
+                    onClick={() => handleEditClick(student)}
                   >
                     <Pencil className="h-4 w-4" />
                   </Button>
@@ -97,17 +109,17 @@ export function StudentTable({
       <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Aluno</DialogTitle>
+            <DialogTitle>Transferir Aluno</DialogTitle>
+            <DialogDescription>
+              Selecione a sala para onde deseja transferir o aluno
+            </DialogDescription>
           </DialogHeader>
           {editingStudent && (
             <StudentForm
               initialData={editingStudent}
-              onSubmit={(updatedStudent) => {
-                if (onUpdateStudent) {
-                  onUpdateStudent(updatedStudent);
-                }
-                setEditingStudent(null);
-              }}
+              isTransferMode={true}
+              availableRooms={rooms}
+              onTransfer={handleTransfer}
             />
           )}
         </DialogContent>

@@ -7,7 +7,6 @@ import { Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
-import { RoomSelect } from "./RoomSelect";
 import {
   Select,
   SelectContent,
@@ -19,9 +18,18 @@ import {
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
   initialData?: Student;
+  isTransferMode?: boolean;
+  availableRooms?: { id: string; name: string }[];
+  onTransfer?: (studentId: string, newRoomId: string) => void;
 }
 
-export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
+export const StudentForm = ({ 
+  onSubmit, 
+  initialData,
+  isTransferMode = false,
+  availableRooms = [],
+  onTransfer
+}: StudentFormProps) => {
   const [status, setStatus] = useState<"active" | "inactive">(
     initialData?.status || "active"
   );
@@ -60,9 +68,14 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (isTransferMode && onTransfer && initialData) {
+      onTransfer(initialData.id, selectedRoom);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     
-    // Criar o estudante com todas as informações necessárias
     const studentData: Student = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
@@ -77,109 +90,94 @@ export const StudentForm = ({ onSubmit, initialData }: StudentFormProps) => {
       }, {}),
     };
 
-    // Salvar o estudante na sala específica
-    const rooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const roomIndex = rooms.findIndex((room: any) => room.id === selectedRoom);
-
-    if (roomIndex !== -1) {
-      // Inicializar o array de estudantes se não existir
-      if (!rooms[roomIndex].students) {
-        rooms[roomIndex].students = [];
-      }
-
-      // Verificar se é uma atualização ou nova adição
-      const existingStudentIndex = rooms[roomIndex].students.findIndex(
-        (student: Student) => student.id === studentData.id
-      );
-
-      if (existingStudentIndex !== -1) {
-        // Atualizar estudante existente
-        rooms[roomIndex].students[existingStudentIndex] = studentData;
-      } else {
-        // Adicionar novo estudante
-        rooms[roomIndex].students.push(studentData);
-      }
-
-      localStorage.setItem("rooms", JSON.stringify(rooms));
-    }
-
     onSubmit(studentData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Nome Completo</Label>
-        <Input
-          id="fullName"
-          name="fullName"
-          type="text"
-          required
-          defaultValue={initialData?.name}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="birthDate">Data de Nascimento</Label>
-        <Input
-          id="birthDate"
-          name="birthDate"
-          type="date"
-          required
-          defaultValue={initialData?.birthDate}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Status</Label>
-        <Select
-          value={status}
-          onValueChange={(value: "active" | "inactive") => setStatus(value)}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Ativo</SelectItem>
-            <SelectItem value="inactive">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="room">Sala</Label>
-        <RoomSelect
-          value={selectedRoom}
-          onChange={setSelectedRoom}
-          required
-        />
-      </div>
-
-      {customFields.map((field) => (
-        <div key={field.id} className="space-y-2">
-          <Label htmlFor={field.name}>{field.label}</Label>
-          {field.type === "textarea" ? (
-            <Textarea
-              id={field.name}
-              name={field.name}
-              required={field.required}
-              defaultValue={initialData?.customFields?.[field.name]}
-            />
-          ) : (
+      {!isTransferMode ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Nome Completo</Label>
             <Input
-              id={field.name}
-              name={field.name}
-              type={field.type}
-              required={field.required}
-              defaultValue={initialData?.customFields?.[field.name]}
+              id="fullName"
+              name="fullName"
+              type="text"
+              required
+              defaultValue={initialData?.name}
             />
-          )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Data de Nascimento</Label>
+            <Input
+              id="birthDate"
+              name="birthDate"
+              type="date"
+              required
+              defaultValue={initialData?.birthDate}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select
+              value={status}
+              onValueChange={(value: "active" | "inactive") => setStatus(value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {customFields.map((field) => (
+            <div key={field.id} className="space-y-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              {field.type === "textarea" ? (
+                <Textarea
+                  id={field.name}
+                  name={field.name}
+                  required={field.required}
+                  defaultValue={initialData?.customFields?.[field.name]}
+                />
+              ) : (
+                <Input
+                  id={field.name}
+                  name={field.name}
+                  type={field.type}
+                  required={field.required}
+                  defaultValue={initialData?.customFields?.[field.name]}
+                />
+              )}
+            </div>
+          ))}
+        </>
+      ) : (
+        <div className="space-y-2">
+          <Label>Transferir para Sala</Label>
+          <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione a sala para transferência" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableRooms.map((room) => (
+                <SelectItem key={room.id} value={room.id}>
+                  {room.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-      ))}
+      )}
 
       <Button type="submit" className="w-full">
         <Save className="mr-2 h-4 w-4" />
-        {initialData ? "Salvar Alterações" : "Adicionar Aluno"}
+        {isTransferMode ? "Transferir Aluno" : initialData ? "Salvar Alterações" : "Adicionar Aluno"}
       </Button>
     </form>
   );
