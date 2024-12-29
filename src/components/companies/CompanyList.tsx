@@ -24,14 +24,12 @@ interface CompanyListProps {
   companies: Company[]
   onUpdateCompany: (company: Company) => void
   onDeleteCompany: (id: string) => void
-  onResetCompany: (id: string) => void
 }
 
 export function CompanyList({
   companies,
   onUpdateCompany,
   onDeleteCompany,
-  onResetCompany,
 }: CompanyListProps) {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [statusFilter, setStatusFilter] = useState("all")
@@ -68,30 +66,31 @@ export function CompanyList({
         onStatusFilterChange={setStatusFilter}
       />
       
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left p-4">EMPRESA</th>
-              <th className="text-left p-4">USUÁRIOS</th>
-              <th className="text-left p-4">SALAS</th>
-              <th className="text-left p-4">STATUS</th>
-              <th className="text-left p-4">CRIADO EM</th>
-              <th className="text-right p-4">AÇÕES</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCompanies.map((company) => (
-              <CompanyTableRow
-                key={company.id}
-                company={company}
-                onDelete={onDeleteCompany}
-                onReset={onResetCompany}
-                onEdit={(company) => setEditingCompany(company)}
-              />
-            ))}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left p-4 font-medium text-gray-600">EMPRESA</th>
+                <th className="text-left p-4 font-medium text-gray-600">USUÁRIOS</th>
+                <th className="text-left p-4 font-medium text-gray-600">SALAS</th>
+                <th className="text-left p-4 font-medium text-gray-600">STATUS</th>
+                <th className="text-left p-4 font-medium text-gray-600">CRIADO EM</th>
+                <th className="text-right p-4 font-medium text-gray-600">AÇÕES</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredCompanies.map((company) => (
+                <CompanyTableRow
+                  key={company.id}
+                  company={company}
+                  onDelete={onDeleteCompany}
+                  onEdit={(company) => setEditingCompany(company)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <Dialog

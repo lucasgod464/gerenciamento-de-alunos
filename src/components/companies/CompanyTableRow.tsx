@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Pencil, Trash2, Folder } from "lucide-react"
+import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
 import { CompanyDataUsage } from "./CompanyDataUsage"
 import {
   AlertDialog,
@@ -27,39 +27,54 @@ export function CompanyTableRow({
   onEdit,
 }: CompanyTableRowProps) {
   return (
-    <tr className="border-b">
+    <tr className="hover:bg-gray-50 transition-colors">
       <td className="p-4">
-        <div>
-          <div className="font-medium">{company.name}</div>
-          <div className="text-sm text-gray-500">
-            ID: {company.id}
-            <br />
-            <span className="flex items-center gap-1">
-              <Folder className="w-4 h-4" />
-              {company.publicFolderPath}
-            </span>
+        <div className="flex items-start gap-3">
+          <div className="bg-primary/10 p-2 rounded-lg">
+            <Building2 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{company.name}</div>
+            <div className="text-sm text-gray-500">
+              ID: {company.id}
+              <br />
+              <span className="flex items-center gap-1 text-gray-400">
+                <Folder className="w-4 h-4" />
+                {company.publicFolderPath}
+              </span>
+            </div>
           </div>
         </div>
       </td>
       <td className="p-4">
-        {company.currentUsers}/{company.usersLimit}
+        <div className="flex items-center gap-2">
+          <Users2 className="w-4 h-4 text-blue-500" />
+          <span>{company.currentUsers}/{company.usersLimit}</span>
+        </div>
       </td>
       <td className="p-4">
-        {company.currentRooms}/{company.roomsLimit}
+        <div className="flex items-center gap-2">
+          <DoorOpen className="w-4 h-4 text-purple-500" />
+          <span>{company.currentRooms}/{company.roomsLimit}</span>
+        </div>
       </td>
       <td className="p-4">
         <span
           className={cn(
-            "px-2 py-1 rounded-full text-sm",
+            "px-3 py-1 rounded-full text-sm font-medium inline-flex items-center gap-1",
             company.status === "Ativa"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
           )}
         >
+          <span className={cn(
+            "w-1.5 h-1.5 rounded-full",
+            company.status === "Ativa" ? "bg-green-600" : "bg-red-600"
+          )} />
           {company.status}
         </span>
       </td>
-      <td className="p-4">{company.createdAt}</td>
+      <td className="p-4 text-gray-500">{company.createdAt}</td>
       <td className="p-4">
         <div className="flex justify-end space-x-2">
           <CompanyDataUsage company={company} />
@@ -68,6 +83,7 @@ export function CompanyTableRow({
             variant="ghost"
             size="icon"
             onClick={() => onEdit(company)}
+            className="hover:bg-blue-50 hover:text-blue-600"
           >
             <Pencil className="w-4 h-4" />
           </Button>
@@ -77,7 +93,7 @@ export function CompanyTableRow({
               <Button
                 variant="ghost"
                 size="icon"
-                className="hover:bg-red-100 hover:text-red-600"
+                className="hover:bg-red-50 hover:text-red-600"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
