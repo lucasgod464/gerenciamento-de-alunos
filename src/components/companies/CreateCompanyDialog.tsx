@@ -40,9 +40,9 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       document: formData.get("document") as string,
-      usersLimit: Number(formData.get("usersLimit")),
+      usersLimit: Number(formData.get("usersLimit")) || 5, // Default to 5 if not specified
       currentUsers: 0,
-      roomsLimit: Number(formData.get("roomsLimit")),
+      roomsLimit: Number(formData.get("roomsLimit")) || 5, // Default to 5 if not specified
       currentRooms: 0,
       status: "Ativa" as const,
       createdAt: new Date().toLocaleDateString(),
@@ -95,7 +95,8 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
               name="usersLimit"
               type="number"
               min="1"
-              placeholder="0"
+              placeholder="5"
+              defaultValue="5"
               required
             />
           </div>
@@ -106,7 +107,8 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
               name="roomsLimit"
               type="number"
               min="1"
-              placeholder="0"
+              placeholder="5"
+              defaultValue="5"
               required
             />
           </div>

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Pencil, Trash2, RotateCcw, Folder } from "lucide-react"
+import { Pencil, Trash2, Folder } from "lucide-react"
 import { CompanyDataUsage } from "./CompanyDataUsage"
 import {
   AlertDialog,
@@ -18,14 +18,12 @@ import { Company } from "./CompanyList"
 interface CompanyTableRowProps {
   company: Company
   onDelete: (id: string) => void
-  onReset: (id: string) => void
   onEdit: (company: Company) => void
 }
 
 export function CompanyTableRow({
   company,
   onDelete,
-  onReset,
   onEdit,
 }: CompanyTableRowProps) {
   return (
@@ -73,34 +71,6 @@ export function CompanyTableRow({
           >
             <Pencil className="w-4 h-4" />
           </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-yellow-100 hover:text-yellow-600"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Resetar Empresa</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Isso irá restaurar a empresa para as configurações
-                  padrão. Todos os dados serão mantidos, mas os
-                  contadores serão zerados.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onReset(company.id)}>
-                  Resetar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
