@@ -1,14 +1,12 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { BasicInfoFields } from "./fields/BasicInfoFields";
-import { CategoryFields } from "./fields/CategoryFields";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CategorySelect } from "./CategorySelect";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
-import { StatusField } from "./fields/StatusField";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
-import { useState, useEffect } from "react";
+import { StatusField } from "./fields/StatusField";
 import { useAuth } from "@/hooks/useAuth";
 
 interface UserFormFieldsProps {
-  generateStrongPassword?: () => void;
   defaultValues?: {
     name?: string;
     email?: string;
@@ -18,94 +16,112 @@ interface UserFormFieldsProps {
     status?: string;
     authorizedRooms?: string[];
     tags?: string[];
+    responsibleCategory?: string;
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
   onTagsChange?: (tagIds: string[]) => void;
   isEditing?: boolean;
 }
 
-export const UserFormFields = ({
-  defaultValues,
+export function UserFormFields({
+  defaultValues = {},
   onAuthorizedRoomsChange,
   onTagsChange,
-  isEditing,
-}: UserFormFieldsProps) => {
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    defaultValues?.authorizedRooms || []
-  );
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    defaultValues?.tags || []
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  isEditing = false,
+}: UserFormFieldsProps) {
   const { user: currentUser } = useAuth();
-  const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
-  const [specializations, setSpecializations] = useState<Array<{ id: string; name: string }>>([]);
-
-  useEffect(() => {
-    if (!currentUser?.companyId) return;
-
-    // Load rooms from localStorage
-    const savedRooms = localStorage.getItem("rooms");
-    if (savedRooms) {
-      const allRooms = JSON.parse(savedRooms);
-      const companyRooms = allRooms.filter(
-        (room: any) => room.companyId === currentUser.companyId && room.status === true
-      );
-      setRooms(companyRooms);
-    }
-
-    // Load specializations from localStorage
-    const savedSpecializations = localStorage.getItem("specializations");
-    if (savedSpecializations) {
-      const allSpecializations = JSON.parse(savedSpecializations);
-      const companySpecializations = allSpecializations.filter(
-        (spec: any) => spec.companyId === currentUser.companyId && spec.status === true
-      );
-      setSpecializations(companySpecializations);
-    }
-  }, [currentUser]);
-
-  const handleRoomToggle = (roomId: string) => {
-    const updatedRooms = selectedRooms.includes(roomId)
-      ? selectedRooms.filter((id) => id !== roomId)
-      : [...selectedRooms, roomId];
-
-    setSelectedRooms(updatedRooms);
-    onAuthorizedRoomsChange?.(updatedRooms);
-  };
-
-  const handleTagToggle = (tagId: string) => {
-    const updatedTags = selectedTags.includes(tagId)
-      ? selectedTags.filter((id) => id !== tagId)
-      : [...selectedTags, tagId];
-
-    setSelectedTags(updatedTags);
-    onTagsChange?.(updatedTags);
-  };
 
   return (
-    <ScrollArea className="h-[60vh] pr-4">
-      <div className="space-y-4">
-        <BasicInfoFields defaultValues={defaultValues} isEditing={isEditing} />
-        <CategoryFields 
-          defaultValues={defaultValues} 
-          specializations={specializations}
-        />
-        <RoomSelectionFields
-          rooms={rooms}
-          selectedRooms={selectedRooms}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onRoomToggle={handleRoomToggle}
-        />
-        <TagSelectionFields
-          selectedTags={selectedTags}
-          onTagToggle={handleTagToggle}
-        />
-        <StatusField defaultValue={defaultValues?.status} />
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Nome</Label>
+          <Input
+            id="name"
+            name="name"
+            defaultValue={defaultValues.name}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={defaultValues.email}
+            required
+          />
+        </div>
       </div>
-      <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
-      <input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
-    </ScrollArea>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">Senha {isEditing && "(deixe em branco para manter a atual)"}</Label>
+        <Input
+          id="password"
+          name="password"
+          type="password"
+          defaultValue={defaultValues.password}
+          required={!isEditing}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="responsibleCategory">Categoria Responsável</Label>
+        <CategorySelect
+          value={defaultValues.responsibleCategory || ""}
+          onChange={(value) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'responsibleCategory';
+            input.value = value;
+            document.querySelector('form')?.appendChild(input);
+          }}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="location">Localização</Label>
+          <Input
+            id="location"
+            name="location"
+            defaultValue={defaultValues.location}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="specialization">Especialização</Label>
+          <Input
+            id="specialization"
+            name="specialization"
+            defaultValue={defaultValues.specialization}
+          />
+        </div>
+      </div>
+
+      <StatusField defaultValue={defaultValues.status} />
+
+      <RoomSelectionFields
+        selectedRooms={defaultValues.authorizedRooms || []}
+        onRoomToggle={(roomIds) => {
+          if (onAuthorizedRoomsChange) {
+            onAuthorizedRoomsChange(roomIds);
+          }
+        }}
+      />
+
+      <TagSelectionFields
+        selectedTags={defaultValues.tags || []}
+        onTagToggle={(tagId) => {
+          if (onTagsChange) {
+            const currentTags = defaultValues.tags || [];
+            const newTags = currentTags.includes(tagId)
+              ? currentTags.filter((id) => id !== tagId)
+              : [...currentTags, tagId];
+            onTagsChange(newTags);
+          }
+        }}
+      />
+    </div>
   );
-};
+}

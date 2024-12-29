@@ -1,70 +1,68 @@
-import { useEffect, useState } from "react"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/hooks/useAuth"
-import { Tag as TagIcon } from "lucide-react"
-
-interface Tag {
-  id: string
-  name: string
-  color: string
-  status: boolean
-}
+import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tag } from "@/types/category";
 
 interface TagSelectionFieldsProps {
-  selectedTags: string[]
-  onTagToggle: (tagId: string) => void
+  selectedTags: string[];
+  onTagToggle: (tagId: string) => void;
 }
 
 export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFieldsProps) {
-  const [tags, setTags] = useState<Tag[]>([])
-  const { user: currentUser } = useAuth()
+  const [tags, setTags] = useState<Tag[]>([]);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    if (!currentUser?.companyId) return
+    if (!currentUser?.companyId) return;
 
-    const storageKey = `company_${currentUser.companyId}_tags`
-    const savedTags = localStorage.getItem(storageKey)
-    if (savedTags) {
-      const parsedTags = JSON.parse(savedTags)
-      const activeTags = parsedTags.filter((tag: Tag) => tag.status)
-      setTags(activeTags)
-    }
-  }, [currentUser])
+    const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
+    const companyTags = allTags.filter((tag: Tag) => 
+      tag.companyId === currentUser.companyId && tag.status
+    );
+    setTags(companyTags);
+  }, [currentUser]);
 
   return (
     <div className="space-y-2">
-      <Label>Etiquetas</Label>
-      <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-        <div className="space-y-4">
-          {tags.map((tag) => (
-            <div key={tag.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`tag-${tag.id}`}
-                checked={selectedTags.includes(tag.id)}
-                onCheckedChange={() => onTagToggle(tag.id)}
-              />
-              <div
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: tag.color }}
-              />
-              <TagIcon className="h-4 w-4" style={{ color: tag.color }} />
-              <label
-                htmlFor={`tag-${tag.id}`}
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                {tag.name}
-              </label>
+      <Label className="text-base font-semibold">Etiquetas</Label>
+      <Card className="border-muted">
+        <CardContent className="p-3">
+          <ScrollArea className="h-[120px]">
+            <div className="space-y-2">
+              {tags.map((tag) => (
+                <div
+                  key={tag.id}
+                  className="flex items-center space-x-2 p-1.5 hover:bg-accent rounded-md cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    id={`tag-${tag.id}`}
+                    checked={selectedTags.includes(tag.id)}
+                    onCheckedChange={() => onTagToggle(tag.id)}
+                  />
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  <label
+                    htmlFor={`tag-${tag.id}`}
+                    className="text-sm cursor-pointer flex-1"
+                  >
+                    {tag.name}
+                  </label>
+                </div>
+              ))}
+              {tags.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Nenhuma etiqueta disponível
+                </p>
+              )}
             </div>
-          ))}
-          {tags.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma etiqueta disponível
-            </p>
-          )}
-        </div>
-      </ScrollArea>
+          </ScrollArea>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
