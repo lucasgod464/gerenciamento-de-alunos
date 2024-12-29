@@ -1,34 +1,44 @@
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-interface Room {
-  id: string;
-  name: string;
-  status: boolean;
-}
+import { useAuth } from "@/hooks/useAuth";
 
 interface RoomSelectionFieldsProps {
-  rooms: Room[];
   selectedRooms: string[];
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
-  onRoomToggle: (roomId: string) => void;
+  onRoomToggle: (roomIds: string[]) => void;
 }
 
 export function RoomSelectionFields({
-  rooms,
   selectedRooms,
-  searchQuery,
-  onSearchChange,
   onRoomToggle,
 }: RoomSelectionFieldsProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user: currentUser } = useAuth();
+  const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
+
+  // Load rooms from localStorage on component mount
+  useState(() => {
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter((room: any) => 
+      room.companyId === currentUser?.companyId && room.status
+    );
+    setRooms(companyRooms);
+  });
+
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleRoomToggle = (roomId: string) => {
+    const updatedRooms = selectedRooms.includes(roomId)
+      ? selectedRooms.filter(id => id !== roomId)
+      : [...selectedRooms, roomId];
+    onRoomToggle(updatedRooms);
+  };
 
   return (
     <div className="space-y-3">
@@ -40,7 +50,7 @@ export function RoomSelectionFields({
             <Input
               placeholder="Buscar salas..."
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 bg-background"
             />
           </div>
@@ -55,7 +65,7 @@ export function RoomSelectionFields({
                   <Checkbox
                     id={`room-${room.id}`}
                     checked={selectedRooms.includes(room.id)}
-                    onCheckedChange={() => onRoomToggle(room.id)}
+                    onCheckedChange={() => handleRoomToggle(room.id)}
                   />
                   <span className="truncate">{room.name}</span>
                 </label>
@@ -69,7 +79,6 @@ export function RoomSelectionFields({
           </ScrollArea>
         </CardContent>
       </Card>
-      <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
     </div>
   );
 }
