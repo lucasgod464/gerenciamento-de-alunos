@@ -81,7 +81,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       password: formData.get("password") as string,
-      accessLevel: formData.get("accessLevel") as "Administrador" | "Usuário Comum",
+      accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
       company: formData.get("company") as string,
       createdAt: new Date().toLocaleDateString(),
     }
@@ -150,7 +150,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
                 <SelectValue placeholder="Selecione o nível de acesso" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Administrador">Administrador</SelectItem>
+                <SelectItem value="Admin">Administrador</SelectItem>
                 <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
               </SelectContent>
             </Select>
