@@ -3,6 +3,8 @@ import { Category } from "@/types/category";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { HexColorPicker } from "react-colorful";
+import { Palette } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +13,11 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const PRESET_COLORS = [
   "#9b87f5", // Primary Purple
@@ -39,6 +46,7 @@ export function CategoryDialog({
 }: CategoryDialogProps) {
   const [name, setName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (category) {
@@ -84,13 +92,44 @@ export function CategoryDialog({
               {PRESET_COLORS.map((color) => (
                 <button
                   key={color}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
-                    selectedColor === color ? 'border-primary scale-110' : 'border-transparent scale-100'
+                  type="button"
+                  className={`w-8 h-8 rounded-lg transition-all duration-200 ${
+                    selectedColor === color ? "ring-2 ring-offset-2 ring-black scale-110" : ""
                   }`}
                   style={{ backgroundColor: color }}
                   onClick={() => setSelectedColor(color)}
                 />
               ))}
+              <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className={`w-8 h-8 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors gap-1 group ${
+                      showColorPicker ? "border-primary" : ""
+                    }`}
+                    style={{ 
+                      backgroundColor: selectedColor !== PRESET_COLORS.find(c => c === selectedColor) ? selectedColor : 'transparent'
+                    }}
+                  >
+                    <Palette 
+                      size={16} 
+                      className={`${selectedColor !== PRESET_COLORS.find(c => c === selectedColor) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
+                    />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3">
+                  <div className="space-y-3">
+                    <HexColorPicker color={selectedColor} onChange={setSelectedColor} />
+                    <Input
+                      type="text"
+                      value={selectedColor}
+                      onChange={(e) => setSelectedColor(e.target.value)}
+                      className="mt-2"
+                      placeholder="#000000"
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
