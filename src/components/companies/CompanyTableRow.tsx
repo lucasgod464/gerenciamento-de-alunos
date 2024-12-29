@@ -21,12 +21,14 @@ interface CompanyTableRowProps {
   company: Company
   onDelete: (id: string) => void
   onEdit: (company: Company) => void
+  onUpdateStatus: (company: Company) => void
 }
 
 export function CompanyTableRow({
   company,
   onDelete,
   onEdit,
+  onUpdateStatus,
 }: CompanyTableRowProps) {
   const { toast } = useToast()
 
@@ -36,8 +38,7 @@ export function CompanyTableRow({
       status: company.status === "Ativa" ? "Inativa" : "Ativa"
     }
     
-    // Call onEdit with the updated company, but don't open the edit dialog
-    onEdit(updatedCompany)
+    onUpdateStatus(updatedCompany)
     
     toast({
       title: "Status atualizado",

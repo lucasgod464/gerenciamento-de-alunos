@@ -51,6 +51,10 @@ export function CompanyList({
     setEditingCompany(null)
   }
 
+  const handleUpdateStatus = (updatedCompany: Company) => {
+    onUpdateCompany(updatedCompany)
+  }
+
   const filteredCompanies = companies.filter((company) => {
     const matchesStatus = 
       statusFilter === "all" ||
@@ -93,6 +97,7 @@ export function CompanyList({
                   company={company}
                   onDelete={onDeleteCompany}
                   onEdit={(company) => setEditingCompany(company)}
+                  onUpdateStatus={handleUpdateStatus}
                 />
               ))}
             </tbody>
