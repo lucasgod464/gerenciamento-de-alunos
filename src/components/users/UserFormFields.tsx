@@ -18,6 +18,7 @@ interface UserFormFieldsProps {
     status?: string;
     authorizedRooms?: string[];
     tags?: string[];
+    responsibleCategory?: string;
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
   onTagsChange?: (tagIds: string[]) => void;

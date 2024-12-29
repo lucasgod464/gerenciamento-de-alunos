@@ -21,7 +21,8 @@ interface StudentTableProps {
   students: Student[];
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
-  onTransferStudent: (studentId: string, newRoomId: string) => void;
+  onTransferStudent?: (studentId: string, newRoomId: string) => void;
+  onUpdateStudent: (student: Student) => void;
   currentRoomId?: string;
 }
 
@@ -30,6 +31,7 @@ export function StudentTable({
   rooms,
   onDeleteStudent,
   onTransferStudent,
+  onUpdateStudent,
   currentRoomId,
 }: StudentTableProps) {
   return (
@@ -61,7 +63,11 @@ export function StudentTable({
             </TableCell>
             <TableCell>
               <Select
-                onValueChange={(value) => onTransferStudent(student.id, value)}
+                onValueChange={(value) => {
+                  if (onTransferStudent) {
+                    onTransferStudent(student.id, value);
+                  }
+                }}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Transferir aluno" />
