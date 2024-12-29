@@ -1,6 +1,6 @@
 import { Room } from "@/types/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Users } from "lucide-react";
+import { School, Users, Clock, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { UserWithTags } from "./UserWithTags";
 
@@ -32,14 +32,12 @@ export const RoomCard = ({
       onClick={() => onToggleSelection(room.id)}
     >
       <CardHeader className="p-4">
-        <CardTitle className="text-sm font-medium flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <School className="h-4 w-4" />
-            {room.name}
-          </div>
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <School className="h-4 w-4" />
+          {room.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-2">
+      <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-4">
         <div>
           <div className="flex items-center gap-2 text-sm mb-1">
             <Users className="h-4 w-4" />
@@ -62,20 +60,22 @@ export const RoomCard = ({
         
         <Separator className="my-2" />
         
-        <div className="flex items-center gap-2">
-          <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
-            {getStudentsCount(room)} alunos
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="font-medium text-xs text-foreground/70">Horário</p>
-            <p>{room.schedule}</p>
+        <div className="space-y-4">
+          <div className="flex flex-col items-center text-center">
+            <Users className="h-5 w-5 mb-1" />
+            <span className="text-xs">
+              {getStudentsCount(room)} alunos
+            </span>
           </div>
-          <div>
-            <p className="font-medium text-xs text-foreground/70">Local</p>
-            <p>{room.location}</p>
+
+          <div className="flex flex-col items-center text-center">
+            <Clock className="h-5 w-5 mb-1" />
+            <span className="text-xs">{room.schedule}</span>
+          </div>
+
+          <div className="flex flex-col items-center text-center">
+            <MapPin className="h-5 w-5 mb-1" />
+            <span className="text-xs">{room.location}</span>
           </div>
         </div>
       </CardContent>
