@@ -1,7 +1,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Tag } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { User } from "@/types/user";
 import { useEffect, useState } from "react";
 import {
@@ -15,11 +15,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
 
 interface UserTableRowProps {
   user: User;
@@ -102,23 +97,16 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
         <TableCell>
           <div className="flex flex-wrap gap-1 max-w-[150px]">
             {userTags.map((tag) => (
-              <HoverCard key={tag.id}>
-                <HoverCardTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-6 w-6 p-0"
-                    style={{
-                      color: tag.color,
-                    }}
-                  >
-                    <Tag className="h-4 w-4" />
-                  </Button>
-                </HoverCardTrigger>
-                <HoverCardContent className="w-auto p-2">
-                  <span>{tag.name}</span>
-                </HoverCardContent>
-              </HoverCard>
+              <span
+                key={tag.id}
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{
+                  backgroundColor: tag.color,
+                  color: getContrastColor(tag.color),
+                }}
+              >
+                {tag.name}
+              </span>
             ))}
             {userTags.length === 0 && (
               <span className="text-muted-foreground text-xs">

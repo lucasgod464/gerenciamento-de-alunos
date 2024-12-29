@@ -10,5 +10,4 @@ export interface Student {
   createdAt: string;
   companyId: string | null;
   customFields?: Record<string, string>;
-  authorizedRooms?: string[];
 }
