@@ -37,11 +37,27 @@ export const StudentForm = ({
     initialData?.room || ""
   );
   const [customFields, setCustomFields] = useState<FormField[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
+    // Carregar salas autorizadas
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const currentUserData = users.find((u: any) => 
+      u.id === currentUser.id || u.email === currentUser.email
+    );
+    
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const authorizedRooms = allRooms.filter((room: any) => 
+      room.companyId === currentUser.companyId && 
+      currentUserData?.authorizedRooms?.includes(room.id)
+    );
+    
+    setRooms(authorizedRooms);
+
+    // Carregar campos customizados
     const loadCustomFields = () => {
       const savedFields = localStorage.getItem("formFields");
       if (savedFields) {
@@ -117,6 +133,22 @@ export const StudentForm = ({
               required
               defaultValue={initialData?.birthDate}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Sala</Label>
+            <Select value={selectedRoom} onValueChange={setSelectedRoom} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma sala" />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

@@ -39,6 +39,8 @@ export const StudentRegistration = () => {
       currentUserData?.authorizedRooms?.includes(room.id)
     );
 
+    setRooms(authorizedRooms);
+
     // Coletar todos os alunos das salas autorizadas
     const authorizedStudents: Student[] = [];
     authorizedRooms.forEach((room: any) => {
@@ -51,7 +53,6 @@ export const StudentRegistration = () => {
     });
 
     setStudents(authorizedStudents);
-    setRooms(authorizedRooms);
   };
 
   useEffect(() => {
@@ -59,7 +60,26 @@ export const StudentRegistration = () => {
   }, [currentUser]);
 
   const handleAddStudent = (newStudent: Student) => {
-    loadStudents(); // Recarregar a lista de alunos após adicionar um novo
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    
+    // Encontrar a sala onde o aluno será adicionado
+    const updatedRooms = allRooms.map((room: any) => {
+      if (room.id === newStudent.room) {
+        // Inicializar o array de alunos se não existir
+        if (!room.students) {
+          room.students = [];
+        }
+        // Adicionar o novo aluno à sala
+        room.students.push(newStudent);
+      }
+      return room;
+    });
+
+    // Atualizar o localStorage
+    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    
+    // Recarregar a lista de alunos
+    loadStudents();
     
     toast({
       title: "Sucesso",
@@ -86,7 +106,7 @@ export const StudentRegistration = () => {
     });
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    loadStudents(); // Recarregar a lista de alunos após deletar
+    loadStudents();
     
     toast({
       title: "Sucesso",
@@ -117,7 +137,7 @@ export const StudentRegistration = () => {
     });
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    loadStudents(); // Recarregar a lista de alunos após atualizar
+    loadStudents();
     
     toast({
       title: "Sucesso",
