@@ -40,7 +40,7 @@ export const CategorySelect = ({ value, onChange }: CategorySelectProps) => {
   }, [currentUser]);
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} name="responsibleCategory">
       <SelectTrigger>
         <SelectValue placeholder="Selecione a categoria" />
       </SelectTrigger>

@@ -19,16 +19,22 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user?.authorizedRooms) {
-      setSelectedRooms(user.authorizedRooms);
+    if (user) {
+      setSelectedRooms(user.authorizedRooms || []);
+      setSelectedTags(user.tags || []);
     }
   }, [user]);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
+  };
+
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -49,6 +55,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         specialization: formData.get("specialization") as string,
         status: formData.get("status") as "active" | "inactive",
         authorizedRooms: selectedRooms,
+        tags: selectedTags,
       };
 
       onSubmit(updatedUser);
@@ -83,9 +90,12 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
               location: user.location,
               specialization: user.specialization,
               status: user.status,
-              authorizedRooms: user.authorizedRooms
+              authorizedRooms: user.authorizedRooms,
+              tags: user.tags,
+              responsibleCategory: user.responsibleCategory
             }}
             onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+            onTagsChange={handleTagsChange}
             isEditing={true}
           />
           <div className="flex justify-end space-x-2">

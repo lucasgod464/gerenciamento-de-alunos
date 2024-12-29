@@ -11,6 +11,7 @@ import {
 interface CategoryFieldsProps {
   defaultValues?: {
     specialization?: string;
+    responsibleCategory?: string;
   };
   specializations: Array<{ id: string; name: string }>;
 }
@@ -20,7 +21,10 @@ export function CategoryFields({ defaultValues, specializations }: CategoryField
     <>
       <div className="space-y-2">
         <Label htmlFor="responsibleCategory">Categoria Responsável</Label>
-        <CategorySelect value="" onChange={() => {}} />
+        <CategorySelect 
+          value={defaultValues?.responsibleCategory || ""} 
+          onChange={() => {}}
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="specialization">Especialização</Label>
