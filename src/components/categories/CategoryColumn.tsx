@@ -1,6 +1,5 @@
 import { Room } from "@/types/room";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Users, Edit2, Trash2, GraduationCap, MoveRight } from "lucide-react";
+import { Edit2, Trash2, School, GraduationCap, MoveRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { RoomCard } from "./RoomCard";
 
 interface CategoryColumnProps {
   category: Category;
@@ -156,45 +156,15 @@ export const CategoryColumn = ({
         
         <div className="space-y-3">
           {rooms.map((room) => (
-            <Card 
-              key={room.id} 
-              className={`bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors cursor-pointer ${
-                selectedRooms.includes(room.id) ? 'ring-2 ring-primary' : ''
-              }`}
-              onClick={() => toggleRoomSelection(room.id)}
-            >
-              <CardHeader className="p-4">
-                <CardTitle className="text-sm font-medium flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <School className="h-4 w-4" />
-                    {room.name}
-                  </div>
-                  <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
-                    {getStudentsCount(room)} alunos
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <p className="font-medium text-xs text-foreground/70">Horário</p>
-                    <p>{room.schedule}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-xs text-foreground/70">Local</p>
-                    <p>{room.location}</p>
-                  </div>
-                </div>
-                <Separator className="my-2" />
-                <div>
-                  <div className="flex items-center gap-2 text-sm mb-1">
-                    <Users className="h-4 w-4" />
-                    <span className="font-medium text-xs text-foreground/70">Usuários Vinculados</span>
-                  </div>
-                  <p className="pl-6 text-sm">{getAuthorizedUserNames(room)}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <RoomCard
+              key={room.id}
+              room={room}
+              isSelected={selectedRooms.includes(room.id)}
+              companyId={currentUser?.companyId || ""}
+              onToggleSelection={toggleRoomSelection}
+              getAuthorizedUserNames={getAuthorizedUserNames}
+              getStudentsCount={getStudentsCount}
+            />
           ))}
         </div>
       </div>
