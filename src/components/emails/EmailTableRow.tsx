@@ -13,15 +13,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
-interface Email {
-  id: string
-  name: string
-  email: string
-  accessLevel: "Admin" | "Usuário Comum"
-  company: string
-  createdAt: string
-}
+import { Email } from "@/types/email"
 
 interface EmailTableRowProps {
   email: Email

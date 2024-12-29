@@ -22,7 +22,9 @@ interface StudentTableProps {
   students: Student[];
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
-  onUpdateStudent: (student: Student) => void;
+  onUpdateStudent?: (student: Student) => void;
+  onTransferStudent?: (studentId: string, newRoomId: string) => void;
+  currentRoomId?: string;
 }
 
 export function StudentTable({
@@ -30,6 +32,8 @@ export function StudentTable({
   rooms,
   onDeleteStudent,
   onUpdateStudent,
+  onTransferStudent,
+  currentRoomId,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
@@ -99,7 +103,9 @@ export function StudentTable({
             <StudentForm
               initialData={editingStudent}
               onSubmit={(updatedStudent) => {
-                onUpdateStudent(updatedStudent);
+                if (onUpdateStudent) {
+                  onUpdateStudent(updatedStudent);
+                }
                 setEditingStudent(null);
               }}
             />
