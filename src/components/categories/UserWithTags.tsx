@@ -13,27 +13,17 @@ interface UserWithTagsProps {
 
 export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   const getUserTags = (userName: string) => {
-    // First, get all users to find the specific user
     const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
     const user = allUsers.find((u: any) => 
-      u.name.toLowerCase() === userName.toLowerCase() && 
-      u.companyId === companyId
+      u.name === userName && u.companyId === companyId
     );
     
-    // If user not found or has no tags, return empty array
-    if (!user?.tags?.length) {
-      console.log(`No tags found for user: ${userName}`);
-      return [];
-    }
+    if (!user?.tags?.length) return [];
 
-    // Get all tags and filter for user's tags
     const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
-    const userTags = user.tags
+    return user.tags
       .map((tagId: string) => allTags.find((tag: any) => tag.id === tagId))
       .filter(Boolean);
-    
-    console.log(`Found tags for ${userName}:`, userTags);
-    return userTags;
   };
 
   const userTags = getUserTags(userName);
