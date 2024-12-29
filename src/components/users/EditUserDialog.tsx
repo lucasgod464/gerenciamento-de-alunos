@@ -77,7 +77,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
 
   return (
     <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-2xl">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
@@ -98,7 +98,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             onTagsChange={handleTagsChange}
             isEditing={true}
           />
-          <div className="flex justify-end space-x-2 sticky bottom-0 bg-background py-4 border-t">
+          <div className="flex justify-end space-x-2">
             <Button
               type="button"
               variant="outline"
