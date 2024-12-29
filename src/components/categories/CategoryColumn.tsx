@@ -14,6 +14,7 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { RoomCard } from "./RoomCard";
+import { DeleteCategoryDialog } from "./DeleteCategoryDialog";
 
 interface CategoryColumnProps {
   category: Category;
@@ -35,6 +36,7 @@ export const CategoryColumn = ({
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const getAuthorizedUserNames = (room: Room) => {
     if (!currentUser?.companyId) return "Nenhum usuário vinculado";
@@ -76,6 +78,15 @@ export const CategoryColumn = ({
     });
   };
 
+  const handleDeleteConfirm = () => {
+    onDelete();
+    setIsDeleteDialogOpen(false);
+    toast({
+      title: "Categoria excluída",
+      description: "A categoria foi excluída com sucesso.",
+    });
+  };
+
   const toggleRoomSelection = (roomId: string) => {
     setSelectedRooms(prev => 
       prev.includes(roomId) 
@@ -107,7 +118,7 @@ export const CategoryColumn = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onDelete}
+              onClick={() => setIsDeleteDialogOpen(true)}
               className="hover:bg-white/20"
             >
               <Trash2 className="h-4 w-4" />
@@ -168,6 +179,13 @@ export const CategoryColumn = ({
           ))}
         </div>
       </div>
+
+      <DeleteCategoryDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        categoryName={category.name}
+      />
     </div>
   );
 };
