@@ -12,6 +12,7 @@ import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Student } from "@/types/student";
 
 interface RoomTableProps {
   rooms: Room[];
@@ -20,13 +21,25 @@ interface RoomTableProps {
 }
 
 export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedRoomStudents, setSelectedRoomStudents] = useState<Student[]>([]);
+  const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isStudentsDialogOpen, setIsStudentsDialogOpen] = useState(false);
   const { user: currentUser } = useAuth();
 
   const handleShowStudents = (room: Room) => {
-    setSelectedRoom(room);
+    setSelectedRoomStudents(room.students || []);
+    setSelectedRoomId(room.id);
     setIsStudentsDialogOpen(true);
+  };
+
+  const handleDeleteStudent = (studentId: string) => {
+    // Implementation for deleting student
+    console.log("Delete student:", studentId);
+  };
+
+  const handleTransferStudent = (studentId: string, newRoomId: string) => {
+    // Implementation for transferring student
+    console.log("Transfer student:", studentId, "to room:", newRoomId);
   };
 
   const getAuthorizedUserNames = (room: Room) => {
@@ -108,9 +121,13 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       </Table>
 
       <RoomStudentsDialog
-        room={selectedRoom}
-        isOpen={isStudentsDialogOpen}
+        open={isStudentsDialogOpen}
         onOpenChange={setIsStudentsDialogOpen}
+        students={selectedRoomStudents}
+        rooms={rooms}
+        currentRoomId={selectedRoomId}
+        onDeleteStudent={handleDeleteStudent}
+        onTransferStudent={handleTransferStudent}
       />
     </>
   );

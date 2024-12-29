@@ -9,6 +9,7 @@ import {
 import { StudentTable } from "@/components/user/StudentTable";
 import { Student } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
+import { Room } from "@/types/room";
 
 interface RoomStudentsDialogProps {
   open: boolean;
