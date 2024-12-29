@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -12,16 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus, Trash2, Edit2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { SpecializationDialog } from "@/components/specializations/SpecializationDialog";
+import { DeleteConfirmDialog } from "@/components/specializations/DeleteConfirmDialog";
 
 interface Specialization {
   id: string;
@@ -35,7 +29,9 @@ const Specializations = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newSpecializationName, setNewSpecializationName] = useState("");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedSpecialization, setSelectedSpecialization] = useState<Specialization | null>(null);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -49,8 +45,8 @@ const Specializations = () => {
     setSpecializations(companySpecializations);
   }, [currentUser]);
 
-  const handleCreateSpecialization = () => {
-    if (!newSpecializationName.trim()) {
+  const handleCreateSpecialization = (name: string) => {
+    if (!name.trim()) {
       toast({
         title: "Erro",
         description: "O nome da especialização é obrigatório.",
@@ -66,7 +62,7 @@ const Specializations = () => {
 
     const newSpecialization: Specialization = {
       id: Math.random().toString(36).substr(2, 9),
-      name: newSpecializationName,
+      name: name,
       status: true,
       companyId: currentUser?.companyId
     };
@@ -80,17 +76,47 @@ const Specializations = () => {
       description: "A especialização foi criada com sucesso.",
     });
 
-    setNewSpecializationName("");
     setIsDialogOpen(false);
   };
 
-  const handleDeleteSpecialization = (id: string) => {
+  const handleEditSpecialization = (name: string) => {
+    if (!selectedSpecialization) return;
+
     const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
     const otherSpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== id
+      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== selectedSpecialization.id
+    );
+
+    const updatedSpecialization = {
+      ...selectedSpecialization,
+      name
+    };
+
+    const updatedSpecializations = specializations.map(spec =>
+      spec.id === selectedSpecialization.id ? updatedSpecialization : spec
+    );
+
+    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
+    setSpecializations(updatedSpecializations);
+
+    toast({
+      title: "Especialização atualizada",
+      description: "A especialização foi atualizada com sucesso.",
+    });
+
+    setIsEditDialogOpen(false);
+    setSelectedSpecialization(null);
+  };
+
+  const handleDeleteSpecialization = () => {
+    if (!selectedSpecialization) return;
+
+    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
+    const otherSpecializations = allSpecializations.filter(
+      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== selectedSpecialization.id
     );
     
-    const updatedSpecializations = specializations.filter(spec => spec.id !== id);
+    const updatedSpecializations = specializations.filter(spec => spec.id !== selectedSpecialization.id);
     localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
     setSpecializations(updatedSpecializations);
     
@@ -98,6 +124,9 @@ const Specializations = () => {
       title: "Especialização excluída",
       description: "A especialização foi excluída com sucesso.",
     });
+
+    setIsDeleteDialogOpen(false);
+    setSelectedSpecialization(null);
   };
 
   const handleToggleStatus = (id: string) => {
@@ -148,7 +177,7 @@ const Specializations = () => {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
             >
-              <option value="all">Todos</option>
+              <option value="all">Todos os status</option>
               <option value="active">Ativos</option>
               <option value="inactive">Inativos</option>
             </select>
@@ -180,7 +209,20 @@ const Specializations = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleDeleteSpecialization(spec.id)}
+                      onClick={() => {
+                        setSelectedSpecialization(spec);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedSpecialization(spec);
+                        setIsDeleteDialogOpen(true);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -192,32 +234,33 @@ const Specializations = () => {
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova Especialização</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome da Especialização</Label>
-              <Input
-                id="name"
-                value={newSpecializationName}
-                onChange={(e) => setNewSpecializationName(e.target.value)}
-                placeholder="Digite o nome da especialização"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleCreateSpecialization}>
-              Criar Especialização
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SpecializationDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleCreateSpecialization}
+        mode="create"
+      />
+
+      <SpecializationDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setSelectedSpecialization(null);
+        }}
+        onSave={handleEditSpecialization}
+        initialName={selectedSpecialization?.name}
+        mode="edit"
+      />
+
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedSpecialization(null);
+        }}
+        onConfirm={handleDeleteSpecialization}
+        specializationName={selectedSpecialization?.name || ""}
+      />
     </DashboardLayout>
   );
 };
