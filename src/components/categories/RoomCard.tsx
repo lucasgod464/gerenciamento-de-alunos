@@ -37,23 +37,9 @@ export const RoomCard = ({
             <School className="h-4 w-4" />
             {room.name}
           </div>
-          <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
-            {getStudentsCount(room)} alunos
-          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-2">
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="font-medium text-xs text-foreground/70">Horário</p>
-            <p>{room.schedule}</p>
-          </div>
-          <div>
-            <p className="font-medium text-xs text-foreground/70">Local</p>
-            <p>{room.location}</p>
-          </div>
-        </div>
-        <Separator className="my-2" />
         <div>
           <div className="flex items-center gap-2 text-sm mb-1">
             <Users className="h-4 w-4" />
@@ -71,6 +57,25 @@ export const RoomCard = ({
             ) : (
               <p className="text-sm">Nenhum usuário vinculado</p>
             )}
+          </div>
+        </div>
+        
+        <Separator className="my-2" />
+        
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-white/60 px-2 py-1 rounded-full">
+            {getStudentsCount(room)} alunos
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <p className="font-medium text-xs text-foreground/70">Horário</p>
+            <p>{room.schedule}</p>
+          </div>
+          <div>
+            <p className="font-medium text-xs text-foreground/70">Local</p>
+            <p>{room.location}</p>
           </div>
         </div>
       </CardContent>
