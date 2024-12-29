@@ -7,9 +7,16 @@ import { Category } from "@/types/category";
 interface CategoriesKanbanProps {
   categories: Category[];
   companyId: string | null;
+  onEditCategory: (category: Category) => void;
+  onDeleteCategory: (categoryId: string) => void;
 }
 
-export const CategoriesKanban = ({ categories, companyId }: CategoriesKanbanProps) => {
+export const CategoriesKanban = ({ 
+  categories, 
+  companyId,
+  onEditCategory,
+  onDeleteCategory 
+}: CategoriesKanbanProps) => {
   const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
@@ -25,12 +32,14 @@ export const CategoriesKanban = ({ categories, companyId }: CategoriesKanbanProp
 
   return (
     <ScrollArea className="w-full whitespace-nowrap rounded-md border">
-      <div className="flex flex-wrap gap-6 p-4">
+      <div className="flex gap-6 p-4">
         {categories.map((category) => (
           <CategoryColumn
             key={category.id}
             category={category}
             rooms={rooms.filter((room) => room.category === category.id)}
+            onEdit={() => onEditCategory(category)}
+            onDelete={() => onDeleteCategory(category.id)}
           />
         ))}
       </div>

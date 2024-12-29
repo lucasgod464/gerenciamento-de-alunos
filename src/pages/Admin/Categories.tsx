@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { CategoriesKanban } from "@/components/categories/CategoriesKanban";
 import { Category } from "@/types/category";
@@ -34,6 +35,7 @@ const Categories = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -47,7 +49,7 @@ const Categories = () => {
     setCategories(companyCategories);
   }, [currentUser]);
 
-  const handleCreateCategory = () => {
+  const handleCreateOrUpdateCategory = () => {
     if (!newCategoryName.trim()) {
       toast({
         title: "Erro",
@@ -62,26 +64,66 @@ const Categories = () => {
       (cat: Category) => cat.companyId !== currentUser?.companyId
     );
 
-    const newCategory: Category = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newCategoryName,
-      status: true,
-      companyId: currentUser?.companyId,
-      color: selectedColor,
-    };
-    
-    const updatedCategories = [...categories, newCategory];
-    localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
-    setCategories(updatedCategories);
-    
-    toast({
-      title: "Categoria criada",
-      description: "A categoria foi criada com sucesso.",
-    });
+    if (editingCategory) {
+      // Update existing category
+      const updatedCategories = categories.map(cat => 
+        cat.id === editingCategory.id 
+          ? { ...cat, name: newCategoryName, color: selectedColor }
+          : cat
+      );
+      setCategories(updatedCategories);
+      localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
+      toast({
+        title: "Categoria atualizada",
+        description: "A categoria foi atualizada com sucesso.",
+      });
+    } else {
+      // Create new category
+      const newCategory: Category = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newCategoryName,
+        status: true,
+        companyId: currentUser?.companyId,
+        color: selectedColor,
+      };
+      
+      const updatedCategories = [...categories, newCategory];
+      localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
+      setCategories(updatedCategories);
+      
+      toast({
+        title: "Categoria criada",
+        description: "A categoria foi criada com sucesso.",
+      });
+    }
 
     setNewCategoryName("");
     setSelectedColor(PRESET_COLORS[0]);
     setIsDialogOpen(false);
+    setEditingCategory(null);
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setSelectedColor(category.color || PRESET_COLORS[0]);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteCategory = (categoryId: string) => {
+    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
+    const otherCategories = allCategories.filter(
+      (cat: Category) => cat.companyId !== currentUser?.companyId
+    );
+    
+    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+    localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
+    setCategories(updatedCategories);
+    
+    toast({
+      title: "Categoria excluída",
+      description: "A categoria foi excluída com sucesso.",
+    });
   };
 
   const filteredCategories = categories.filter(cat =>
@@ -109,7 +151,12 @@ const Categories = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => {
+              setEditingCategory(null);
+              setNewCategoryName("");
+              setSelectedColor(PRESET_COLORS[0]);
+              setIsDialogOpen(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Categoria
             </Button>
@@ -118,6 +165,8 @@ const Categories = () => {
           <CategoriesKanban 
             categories={filteredCategories}
             companyId={currentUser?.companyId || null}
+            onEditCategory={handleEditCategory}
+            onDeleteCategory={handleDeleteCategory}
           />
         </div>
       </div>
@@ -125,7 +174,12 @@ const Categories = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nova Categoria</DialogTitle>
+            <DialogTitle>{editingCategory ? "Editar Categoria" : "Nova Categoria"}</DialogTitle>
+            <DialogDescription>
+              {editingCategory 
+                ? "Edite os detalhes da categoria existente" 
+                : "Preencha os detalhes para criar uma nova categoria"}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -154,11 +208,16 @@ const Categories = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsDialogOpen(false);
+              setEditingCategory(null);
+              setNewCategoryName("");
+              setSelectedColor(PRESET_COLORS[0]);
+            }}>
               Cancelar
             </Button>
-            <Button onClick={handleCreateCategory}>
-              Criar Categoria
+            <Button onClick={handleCreateOrUpdateCategory}>
+              {editingCategory ? "Salvar Alterações" : "Criar Categoria"}
             </Button>
           </DialogFooter>
         </DialogContent>
