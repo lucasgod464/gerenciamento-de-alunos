@@ -35,6 +35,8 @@ export function CompanyTableRow({
       ...company,
       status: company.status === "Ativa" ? "Inativa" : "Ativa"
     }
+    
+    // Call onEdit with the updated company, but don't open the edit dialog
     onEdit(updatedCompany)
     
     toast({
