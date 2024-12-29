@@ -2,13 +2,14 @@ import { Room } from "@/types/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, Users } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Category } from "@/types/category";
 
 interface CategoryColumnProps {
-  name: string;
+  category: Category;
   rooms: Room[];
 }
 
-export const CategoryColumn = ({ name, rooms }: CategoryColumnProps) => {
+export const CategoryColumn = ({ category, rooms }: CategoryColumnProps) => {
   const { user: currentUser } = useAuth();
 
   const getAuthorizedUserNames = (room: Room) => {
@@ -29,9 +30,15 @@ export const CategoryColumn = ({ name, rooms }: CategoryColumnProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-4 min-w-[350px] bg-gray-50 p-4 rounded-lg">
+    <div 
+      className="flex flex-col gap-4 min-w-[350px] p-4 rounded-lg transition-colors"
+      style={{ 
+        backgroundColor: category.color || '#f3f4f6',
+        opacity: 0.9
+      }}
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">{name}</h3>
+        <h3 className="text-lg font-semibold">{category.name}</h3>
         <span className="text-sm text-muted-foreground">
           {rooms.length} {rooms.length === 1 ? 'sala' : 'salas'}
         </span>
@@ -39,7 +46,7 @@ export const CategoryColumn = ({ name, rooms }: CategoryColumnProps) => {
       
       <div className="space-y-3">
         {rooms.map((room) => (
-          <Card key={room.id} className="bg-white">
+          <Card key={room.id} className="bg-white/90 backdrop-blur-sm">
             <CardHeader className="p-4">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <School className="h-4 w-4" />

@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { Room } from "@/types/room";
 import { CategoryColumn } from "./CategoryColumn";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-
-interface Category {
-  id: string;
-  name: string;
-  status: boolean;
-  companyId: string | null;
-}
+import { Category } from "@/types/category";
 
 interface CategoriesKanbanProps {
   categories: Category[];
@@ -31,11 +25,11 @@ export const CategoriesKanban = ({ categories, companyId }: CategoriesKanbanProp
 
   return (
     <ScrollArea className="w-full whitespace-nowrap rounded-md border">
-      <div className="flex gap-6 p-4">
+      <div className="flex flex-wrap gap-6 p-4">
         {categories.map((category) => (
           <CategoryColumn
             key={category.id}
-            name={category.name}
+            category={category}
             rooms={rooms.filter((room) => room.category === category.id)}
           />
         ))}

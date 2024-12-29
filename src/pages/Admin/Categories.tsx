@@ -14,19 +14,26 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { CategoriesKanban } from "@/components/categories/CategoriesKanban";
+import { Category } from "@/types/category";
 
-interface Category {
-  id: string;
-  name: string;
-  status: boolean;
-  companyId: string | null;
-}
+const PRESET_COLORS = [
+  "#9b87f5", // Primary Purple
+  "#D6BCFA", // Light Purple
+  "#F2FCE2", // Soft Green
+  "#FEF7CD", // Soft Yellow
+  "#FEC6A1", // Soft Orange
+  "#E5DEFF", // Soft Purple
+  "#FFDEE2", // Soft Pink
+  "#FDE1D3", // Soft Peach
+  "#D3E4FD", // Soft Blue
+];
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -59,7 +66,8 @@ const Categories = () => {
       id: Math.random().toString(36).substr(2, 9),
       name: newCategoryName,
       status: true,
-      companyId: currentUser?.companyId
+      companyId: currentUser?.companyId,
+      color: selectedColor,
     };
     
     const updatedCategories = [...categories, newCategory];
@@ -72,6 +80,7 @@ const Categories = () => {
     });
 
     setNewCategoryName("");
+    setSelectedColor(PRESET_COLORS[0]);
     setIsDialogOpen(false);
   };
 
@@ -127,6 +136,21 @@ const Categories = () => {
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder="Digite o nome da categoria"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Cor da Categoria</Label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      selectedColor === color ? 'border-primary scale-110' : 'border-transparent scale-100'
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setSelectedColor(color)}
+                  />
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
