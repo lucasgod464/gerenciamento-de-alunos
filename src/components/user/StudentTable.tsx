@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight } from "lucide-react";
+import { Trash2, ArrowRight, Pencil } from "lucide-react";
 import { Student } from "@/types/student";
 import { useState } from "react";
 import { StudentForm } from "./StudentForm";
@@ -26,6 +26,7 @@ interface StudentTableProps {
   onUpdateStudent?: (student: Student) => void;
   onTransferStudent?: (studentId: string, newRoomId: string) => void;
   currentRoomId?: string;
+  showTransferOption?: boolean;
 }
 
 export function StudentTable({
@@ -35,6 +36,7 @@ export function StudentTable({
   onUpdateStudent,
   onTransferStudent,
   currentRoomId,
+  showTransferOption = false,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isTransferMode, setIsTransferMode] = useState(false);
@@ -45,8 +47,13 @@ export function StudentTable({
   };
 
   const handleEditClick = (student: Student) => {
-    setEditingStudent(student);
-    setIsTransferMode(true);
+    if (showTransferOption) {
+      setEditingStudent(student);
+      setIsTransferMode(true);
+    } else {
+      setEditingStudent(student);
+      setIsTransferMode(false);
+    }
   };
 
   const handleTransfer = (studentId: string, newRoomId: string) => {
@@ -70,6 +77,7 @@ export function StudentTable({
           <TableRow>
             <TableHead>Nome</TableHead>
             <TableHead>Data de Nascimento</TableHead>
+            <TableHead>Sala</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
@@ -79,6 +87,7 @@ export function StudentTable({
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birthDate}</TableCell>
+              <TableCell>{getRoomName(student.room)}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
@@ -92,14 +101,26 @@ export function StudentTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEditClick(student)}
-                  >
-                    <ArrowRight className="mr-2 h-4 w-4" />
-                    Transferir Aluno
-                  </Button>
+                  {showTransferOption && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditClick(student)}
+                    >
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Transferir Aluno
+                    </Button>
+                  )}
+                  {!showTransferOption && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditClick(student)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -117,15 +138,19 @@ export function StudentTable({
       <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Transferir Aluno</DialogTitle>
+            <DialogTitle>
+              {isTransferMode ? "Transferir Aluno" : "Editar Aluno"}
+            </DialogTitle>
             <DialogDescription>
-              Selecione a sala para onde deseja transferir o aluno
+              {isTransferMode
+                ? "Selecione a sala para onde deseja transferir o aluno"
+                : "Edite as informações do aluno"}
             </DialogDescription>
           </DialogHeader>
           {editingStudent && (
             <StudentForm
               initialData={editingStudent}
-              isTransferMode={true}
+              isTransferMode={isTransferMode}
               availableRooms={rooms}
               onTransfer={handleTransfer}
               onSubmit={handleSubmit}
