@@ -1,5 +1,5 @@
 import { Room } from "@/types/room";
-import { Edit2, Trash2, School, GraduationCap, MoveRight, Tag as TagIcon } from "lucide-react";
+import { Edit2, Trash2, School, GraduationCap, MoveRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,6 @@ import {
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { RoomCard } from "./RoomCard";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface CategoryColumnProps {
   category: Category;
@@ -53,22 +47,6 @@ export const CategoryColumn = ({
 
     if (authorizedUsers.length === 0) return "Nenhum usuário vinculado";
     return authorizedUsers.map(user => user.name).join(", ");
-  };
-
-  const getUserTags = (userName: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const allTags = JSON.parse(localStorage.getItem("tags") || "[]");
-    
-    const user = allUsers.find((u: any) => 
-      u.name.toLowerCase() === userName.toLowerCase() && 
-      u.companyId === currentUser?.companyId
-    );
-    
-    if (!user?.tags?.length) return [];
-
-    return user.tags
-      .map((tagId: string) => allTags.find((tag: any) => tag.id === tagId))
-      .filter(Boolean);
   };
 
   const getTotalStudents = () => {
@@ -178,57 +156,15 @@ export const CategoryColumn = ({
         
         <div className="space-y-3">
           {rooms.map((room) => (
-            <div key={room.id} className="bg-white/40 p-3 rounded-lg">
-              <RoomCard
-                room={room}
-                isSelected={selectedRooms.includes(room.id)}
-                companyId={currentUser?.companyId || ""}
-                onToggleSelection={toggleRoomSelection}
-                getAuthorizedUserNames={getAuthorizedUserNames}
-                getStudentsCount={getStudentsCount}
-              />
-              
-              {/* Novo bloco para exibir as etiquetas dos usuários */}
-              <div className="mt-2 p-2 bg-white/30 rounded">
-                <div className="flex items-center gap-2 mb-1">
-                  <TagIcon className="h-4 w-4" />
-                  <span className="text-sm font-medium">Etiquetas dos usuários:</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {getAuthorizedUserNames(room).split(", ").map((userName) => {
-                    const userTags = getUserTags(userName);
-                    if (userTags.length === 0) return null;
-                    
-                    return (
-                      <div key={userName} className="flex items-center gap-1">
-                        <span className="text-xs text-gray-600">{userName}:</span>
-                        <div className="flex gap-1">
-                          {userTags.map((tag: any) => (
-                            <TooltipProvider key={tag.id}>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <TagIcon 
-                                    className="h-4 w-4 cursor-help" 
-                                    style={{ 
-                                      color: tag.color,
-                                      fill: tag.color,
-                                      fillOpacity: 0.2
-                                    }} 
-                                  />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>{tag.name}</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
+            <RoomCard
+              key={room.id}
+              room={room}
+              isSelected={selectedRooms.includes(room.id)}
+              companyId={currentUser?.companyId || ""}
+              onToggleSelection={toggleRoomSelection}
+              getAuthorizedUserNames={getAuthorizedUserNames}
+              getStudentsCount={getStudentsCount}
+            />
           ))}
         </div>
       </div>
