@@ -60,7 +60,7 @@ export const RoomCard = ({
         
         <Separator className="my-2" />
         
-        <div className="space-y-4">
+        <div className="space-y-2">
           <div>
             <div className="flex items-center gap-2 text-sm mb-1">
               <Users className="h-4 w-4" />
