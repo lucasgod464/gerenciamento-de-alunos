@@ -39,12 +39,15 @@ export function CompanyTableRow({
     
     toast({
       title: "Status atualizado",
-      description: `A empresa ${company.name} foi ${company.status === "Ativa" ? "desativada" : "ativada"}.`,
+      description: `A empresa ${company.name} foi ${updatedCompany.status === "Ativa" ? "ativada" : "desativada"}.`,
     })
   }
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
+    <tr className={cn(
+      "hover:bg-gray-50 transition-colors",
+      company.status === "Inativa" && "bg-gray-50 opacity-75"
+    )}>
       <td className="p-4">
         <div className="flex items-start gap-3">
           <div className="bg-primary/10 p-2 rounded-lg">
@@ -80,8 +83,8 @@ export function CompanyTableRow({
           checked={company.status === "Ativa"}
           onCheckedChange={handleStatusChange}
           className={cn(
-            "data-[state=checked]:bg-green-500 data-[state=checked]:hover:bg-green-600",
-            "data-[state=unchecked]:bg-red-500 data-[state=unchecked]:hover:bg-red-600"
+            "data-[state=checked]:bg-green-500",
+            "data-[state=unchecked]:bg-red-500"
           )}
         />
       </td>
@@ -95,6 +98,7 @@ export function CompanyTableRow({
             size="icon"
             onClick={() => onEdit(company)}
             className="hover:bg-blue-50 hover:text-blue-600"
+            disabled={company.status === "Inativa"}
           >
             <Pencil className="w-4 h-4" />
           </Button>
