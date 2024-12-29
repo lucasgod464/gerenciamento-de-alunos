@@ -1,21 +1,11 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Search, Plus, Trash2, Edit2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { SpecializationDialog } from "@/components/specializations/SpecializationDialog";
 import { DeleteConfirmDialog } from "@/components/specializations/DeleteConfirmDialog";
+import { SpecializationList } from "@/components/specializations/SpecializationList";
+import { SpecializationHeader } from "@/components/specializations/SpecializationHeader";
 
 interface Specialization {
   id: string;
@@ -154,84 +144,26 @@ const Specializations = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Especializações</h1>
-          <p className="text-muted-foreground">
-            Gerencie as especializações do sistema
-          </p>
-        </div>
+        <SpecializationHeader
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
+          onNewClick={() => setIsDialogOpen(true)}
+        />
 
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar especializações..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select
-              className="border rounded-md px-3 py-2"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-            >
-              <option value="all">Todos os status</option>
-              <option value="active">Ativos</option>
-              <option value="inactive">Inativos</option>
-            </select>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Especialização
-            </Button>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSpecializations.map((spec) => (
-                <TableRow key={spec.id}>
-                  <TableCell>{spec.name}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={spec.status}
-                      onCheckedChange={() => handleToggleStatus(spec.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedSpecialization(spec);
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        setSelectedSpecialization(spec);
-                        setIsDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <SpecializationList
+          specializations={filteredSpecializations}
+          onEdit={(spec) => {
+            setSelectedSpecialization(spec);
+            setIsEditDialogOpen(true);
+          }}
+          onDelete={(spec) => {
+            setSelectedSpecialization(spec);
+            setIsDeleteDialogOpen(true);
+          }}
+          onToggleStatus={handleToggleStatus}
+        />
       </div>
 
       <SpecializationDialog
