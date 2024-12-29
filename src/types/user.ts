@@ -11,4 +11,5 @@ export interface User {
   lastAccess: string;
   companyId: string | null;
   authorizedRooms: string[];
+  tags: string[]; // Adding tags field
 }

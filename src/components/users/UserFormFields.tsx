@@ -3,6 +3,7 @@ import { BasicInfoFields } from "./fields/BasicInfoFields";
 import { CategoryFields } from "./fields/CategoryFields";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { StatusField } from "./fields/StatusField";
+import { TagSelectionFields } from "./fields/TagSelectionFields";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -16,29 +17,29 @@ interface UserFormFieldsProps {
     specialization?: string;
     status?: string;
     authorizedRooms?: string[];
+    tags?: string[];
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
+  onTagsChange?: (tagIds: string[]) => void;
   isEditing?: boolean;
 }
 
 export const UserFormFields = ({
   defaultValues,
   onAuthorizedRoomsChange,
+  onTagsChange,
   isEditing,
 }: UserFormFieldsProps) => {
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues?.authorizedRooms || []
   );
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    defaultValues?.tags || []
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const { user: currentUser } = useAuth();
   const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
   const [specializations, setSpecializations] = useState<Array<{ id: string; name: string }>>([]);
-
-  useEffect(() => {
-    if (defaultValues?.authorizedRooms) {
-      setSelectedRooms(defaultValues.authorizedRooms);
-    }
-  }, [defaultValues?.authorizedRooms]);
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -73,6 +74,15 @@ export const UserFormFields = ({
     onAuthorizedRoomsChange?.(updatedRooms);
   };
 
+  const handleTagToggle = (tagId: string) => {
+    const updatedTags = selectedTags.includes(tagId)
+      ? selectedTags.filter((id) => id !== tagId)
+      : [...selectedTags, tagId];
+
+    setSelectedTags(updatedTags);
+    onTagsChange?.(updatedTags);
+  };
+
   return (
     <ScrollArea className="h-[60vh] pr-4">
       <div className="space-y-4">
@@ -88,9 +98,14 @@ export const UserFormFields = ({
           onSearchChange={setSearchQuery}
           onRoomToggle={handleRoomToggle}
         />
+        <TagSelectionFields
+          selectedTags={selectedTags}
+          onTagToggle={handleTagToggle}
+        />
         <StatusField defaultValue={defaultValues?.status} />
       </div>
       <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
+      <input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
     </ScrollArea>
   );
 };

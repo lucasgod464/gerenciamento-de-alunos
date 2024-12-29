@@ -15,10 +15,15 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
+  };
+
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -27,9 +32,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     
     const id = Math.random().toString(36).substr(2, 9);
     const password = formData.get("password") as string;
-    console.log("Password before hashing:", password); // Log para debug
     const hashedPassword = await hashPassword(password);
-    console.log("Password after hashing:", hashedPassword); // Log para debug
 
     const newUser: User = {
       id,
@@ -44,9 +47,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       lastAccess: "-",
       companyId: currentUser?.companyId || null,
       authorizedRooms: selectedRooms,
+      tags: selectedTags,
     };
-
-    console.log("New user being saved:", newUser); // Log para debug
 
     const users = JSON.parse(localStorage.getItem("users") || "[]");
     localStorage.setItem("users", JSON.stringify([...users, newUser]));
@@ -71,7 +73,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           <DialogTitle>Criar Usuário</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <UserFormFields onAuthorizedRoomsChange={handleAuthorizedRoomsChange} />
+          <UserFormFields 
+            onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
+            onTagsChange={handleTagsChange}
+          />
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="submit">Criar</Button>
           </div>

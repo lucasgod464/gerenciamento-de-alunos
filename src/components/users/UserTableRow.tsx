@@ -29,8 +29,15 @@ interface Room {
   status: boolean;
 }
 
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTableRowProps) {
   const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
+  const [userTags, setUserTags] = useState<Tag[]>([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
@@ -41,7 +48,21 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       .map((room: Room) => room.name);
     
     setAuthorizedRoomNames(userRooms);
-  }, [user.authorizedRooms]);
+
+    // Load tags
+    if (user.companyId) {
+      const storageKey = `company_${user.companyId}_tags`;
+      const savedTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const userTagDetails = savedTags
+        .filter((tag: Tag) => user.tags?.includes(tag.id))
+        .map((tag: Tag) => ({
+          id: tag.id,
+          name: tag.name,
+          color: tag.color,
+        }));
+      setUserTags(userTagDetails);
+    }
+  }, [user]);
 
   const handleDelete = () => {
     onDelete(user.id);
@@ -72,6 +93,27 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
             {authorizedRoomNames.length > 0 
               ? authorizedRoomNames.join(", ")
               : "Nenhuma sala autorizada"}
+          </div>
+        </TableCell>
+        <TableCell>
+          <div className="flex flex-wrap gap-1 max-w-[200px]">
+            {userTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs"
+                style={{
+                  backgroundColor: tag.color,
+                  color: getContrastColor(tag.color),
+                }}
+              >
+                {tag.name}
+              </span>
+            ))}
+            {userTags.length === 0 && (
+              <span className="text-muted-foreground text-sm">
+                Sem etiquetas
+              </span>
+            )}
           </div>
         </TableCell>
         <TableCell>
@@ -120,4 +162,17 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       </AlertDialog>
     </>
   );
+}
+
+// Utility function to determine text color based on background color
+function getContrastColor(hexcolor: string) {
+  // Convert hex to RGB
+  const r = parseInt(hexcolor.slice(1, 3), 16);
+  const g = parseInt(hexcolor.slice(3, 5), 16);
+  const b = parseInt(hexcolor.slice(5, 7), 16);
+  
+  // Calculate luminance
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  
+  return luminance > 0.5 ? '#000000' : '#FFFFFF';
 }
