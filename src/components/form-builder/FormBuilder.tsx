@@ -58,37 +58,26 @@ export const FormBuilder = () => {
 
   // Load fields from localStorage on component mount
   useEffect(() => {
-    const loadFields = () => {
+    const savedFields = localStorage.getItem(FORM_FIELDS_KEY);
+    if (savedFields) {
       try {
-        const savedFields = localStorage.getItem(FORM_FIELDS_KEY);
-        if (savedFields) {
-          const parsedFields = JSON.parse(savedFields);
-          // Ensure default fields are always present
-          const mergedFields = defaultFields.concat(
-            parsedFields.filter((field: FormField) => 
-              !defaultFields.some(defaultField => defaultField.id === field.id)
-            )
-          );
-          setFields(mergedFields);
-        } else {
-          // If no saved fields, use defaults
-          setFields(defaultFields);
-          localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(defaultFields));
-        }
+        const parsedFields = JSON.parse(savedFields);
+        // Ensure we keep both default fields and custom fields
+        const customFields = parsedFields.filter(
+          (field: FormField) => !defaultFields.some(df => df.id === field.id)
+        );
+        setFields([...defaultFields, ...customFields]);
       } catch (error) {
-        console.error("Error loading form fields:", error);
+        console.error("Error parsing saved fields:", error);
         setFields(defaultFields);
       }
-    };
-
-    loadFields();
+    }
   }, []);
 
   // Save fields to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(fields));
-      // Dispatch custom event to notify other components
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
       console.error("Error saving form fields:", error);
