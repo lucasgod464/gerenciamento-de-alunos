@@ -3,16 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Search, Plus, Trash2 } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -22,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { CategoriesKanban } from "@/components/categories/CategoriesKanban";
 
 interface Category {
   id: string;
@@ -33,7 +25,6 @@ interface Category {
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const { toast } = useToast();
@@ -84,43 +75,9 @@ const Categories = () => {
     setIsDialogOpen(false);
   };
 
-  const handleDeleteCategory = (id: string) => {
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const otherCategories = allCategories.filter(
-      (cat: Category) => cat.companyId !== currentUser?.companyId || cat.id !== id
-    );
-    
-    const updatedCategories = categories.filter(cat => cat.id !== id);
-    localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
-    setCategories(updatedCategories);
-    
-    toast({
-      title: "Categoria excluída",
-      description: "A categoria foi excluída com sucesso.",
-    });
-  };
-
-  const handleToggleStatus = (id: string) => {
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const otherCategories = allCategories.filter(
-      (cat: Category) => cat.companyId !== currentUser?.companyId || cat.id !== id
-    );
-    
-    const updatedCategories = categories.map(cat =>
-      cat.id === id ? { ...cat, status: !cat.status } : cat
-    );
-    
-    localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
-    setCategories(updatedCategories);
-  };
-
-  const filteredCategories = categories.filter(cat => {
-    const matchesSearch = cat.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" 
-      ? true 
-      : statusFilter === "active" ? cat.status : !cat.status;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredCategories = categories.filter(cat =>
+    cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <DashboardLayout role="admin">
@@ -143,52 +100,16 @@ const Categories = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <select
-              className="border rounded-md px-3 py-2"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "all" | "active" | "inactive")}
-            >
-              <option value="all">Todos</option>
-              <option value="active">Ativos</option>
-              <option value="inactive">Inativos</option>
-            </select>
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Nova Categoria
             </Button>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell>{category.name}</TableCell>
-                  <TableCell>
-                    <Switch
-                      checked={category.status}
-                      onCheckedChange={() => handleToggleStatus(category.id)}
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteCategory(category.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <CategoriesKanban 
+            categories={filteredCategories}
+            companyId={currentUser?.companyId || null}
+          />
         </div>
       </div>
 
