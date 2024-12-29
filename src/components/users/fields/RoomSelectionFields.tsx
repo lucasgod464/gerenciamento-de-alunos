@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,14 +20,15 @@ export function RoomSelectionFields({
   const { user: currentUser } = useAuth();
   const [rooms, setRooms] = useState<Array<{ id: string; name: string; status: boolean }>>([]);
 
-  // Load rooms from localStorage on component mount
-  useState(() => {
+  useEffect(() => {
+    if (!currentUser?.companyId) return;
+
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const companyRooms = allRooms.filter((room: any) => 
-      room.companyId === currentUser?.companyId && room.status
+      room.companyId === currentUser.companyId && room.status
     );
     setRooms(companyRooms);
-  });
+  }, [currentUser]);
 
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())

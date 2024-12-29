@@ -23,12 +23,13 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    const storageKey = `company_${currentUser.companyId}_tags`;
-    const savedTags = localStorage.getItem(storageKey);
+    const savedTags = localStorage.getItem("tags");
     if (savedTags) {
-      const parsedTags = JSON.parse(savedTags);
-      const activeTags = parsedTags.filter((tag: Tag) => tag.status);
-      setTags(activeTags);
+      const allTags = JSON.parse(savedTags);
+      const companyTags = allTags.filter((tag: Tag) => 
+        tag.companyId === currentUser.companyId && tag.status
+      );
+      setTags(companyTags);
     }
   }, [currentUser]);
 

@@ -103,17 +103,23 @@ export function UserFormFields({
 
       <RoomSelectionFields
         selectedRooms={defaultValues.authorizedRooms || []}
-        onRoomToggle={(roomIds) => onAuthorizedRoomsChange?.(roomIds)}
+        onRoomToggle={(roomIds) => {
+          if (onAuthorizedRoomsChange) {
+            onAuthorizedRoomsChange(roomIds);
+          }
+        }}
       />
 
       <TagSelectionFields
         selectedTags={defaultValues.tags || []}
         onTagToggle={(tagId) => {
-          const currentTags = defaultValues.tags || [];
-          const newTags = currentTags.includes(tagId)
-            ? currentTags.filter((id) => id !== tagId)
-            : [...currentTags, tagId];
-          onTagsChange?.(newTags);
+          if (onTagsChange) {
+            const currentTags = defaultValues.tags || [];
+            const newTags = currentTags.includes(tagId)
+              ? currentTags.filter((id) => id !== tagId)
+              : [...currentTags, tagId];
+            onTagsChange(newTags);
+          }
         }}
       />
     </div>
