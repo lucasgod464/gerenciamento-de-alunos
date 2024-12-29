@@ -66,7 +66,7 @@ export const RoomCard = ({
               <Users className="h-4 w-4" />
               <span className="font-medium text-xs text-foreground/70">Total de Alunos</span>
             </div>
-            <div className="pl-6">
+            <div className="pl-6 text-left">
               <span className="text-sm">{getStudentsCount(room)} alunos</span>
             </div>
           </div>
@@ -76,7 +76,7 @@ export const RoomCard = ({
               <Clock className="h-4 w-4" />
               <span className="font-medium text-xs text-foreground/70">Horário</span>
             </div>
-            <div className="pl-6">
+            <div className="pl-6 text-left">
               <span className="text-sm">{room.schedule}</span>
             </div>
           </div>
@@ -86,7 +86,7 @@ export const RoomCard = ({
               <MapPin className="h-4 w-4" />
               <span className="font-medium text-xs text-foreground/70">Local</span>
             </div>
-            <div className="pl-6">
+            <div className="pl-6 text-left">
               <span className="text-sm">{room.location}</span>
             </div>
           </div>
