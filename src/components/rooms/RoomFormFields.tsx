@@ -11,6 +11,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { Room } from "@/types/room";
+import { MapPin } from "lucide-react";
 
 interface Category {
   id: string;
@@ -74,6 +75,7 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           id="name"
           value={room.name || ""}
           onChange={(e) => onChange("name", e.target.value)}
+          className="transition-all duration-200 hover:border-primary focus:border-primary"
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -84,7 +86,7 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
             type="time"
             value={startTime}
             onChange={(e) => handleTimeChange("start", e.target.value)}
-            className="w-full"
+            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
           />
         </div>
         <div className="space-y-2">
@@ -94,17 +96,22 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
             type="time"
             value={endTime}
             onChange={(e) => handleTimeChange("end", e.target.value)}
-            className="w-full"
+            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
           />
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="location">Endereço</Label>
-        <Input
-          id="location"
-          value={room.location || ""}
-          onChange={(e) => onChange("location", e.target.value)}
-        />
+        <div className="relative">
+          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            id="location"
+            value={room.location || ""}
+            onChange={(e) => onChange("location", e.target.value)}
+            className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
+            placeholder="Digite o endereço completo da sala..."
+          />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
@@ -112,7 +119,7 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           value={room.category || ""}
           onValueChange={(value) => onChange("category", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="transition-all duration-200 hover:border-primary focus:border-primary">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
