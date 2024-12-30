@@ -18,6 +18,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentTableProps {
   students: Student[];
@@ -40,6 +41,7 @@ export function StudentTable({
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isTransferMode, setIsTransferMode] = useState(false);
+  const { toast } = useToast();
 
   const getRoomName = (roomId: string) => {
     const room = rooms.find(room => room.id === roomId);
@@ -53,6 +55,22 @@ export function StudentTable({
     } else {
       setEditingStudent(student);
       setIsTransferMode(false);
+    }
+  };
+
+  const handleDelete = (studentId: string) => {
+    try {
+      onDeleteStudent(studentId);
+      toast({
+        title: "Sucesso",
+        description: "Aluno excluído com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir aluno",
+        variant: "destructive",
+      });
     }
   };
 
@@ -124,7 +142,7 @@ export function StudentTable({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => onDeleteStudent(student.id)}
+                    onClick={() => handleDelete(student.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
