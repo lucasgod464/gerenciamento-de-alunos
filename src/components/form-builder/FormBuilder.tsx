@@ -93,6 +93,24 @@ export const FormBuilder = () => {
     });
   };
 
+  const handleDeleteField = (id: string) => {
+    const defaultFieldIds = defaultFields.map(field => field.id);
+    if (defaultFieldIds.includes(id)) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível excluir campos padrão do formulário.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFields(prevFields => prevFields.filter(field => field.id !== id));
+    toast({
+      title: "Campo removido",
+      description: "O campo foi removido com sucesso.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -103,7 +121,7 @@ export const FormBuilder = () => {
             Adicionar Campo
           </Button>
         </div>
-        <FormPreview fields={fields} />
+        <FormPreview fields={fields} onDeleteField={handleDeleteField} />
       </Card>
 
       <AddFieldDialog
