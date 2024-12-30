@@ -18,31 +18,49 @@ const AdminStudentsTotal = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
 
+    // Carregar alunos das salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const companyRooms = allRooms.filter((room: any) => 
       room.companyId === currentUser.companyId
     );
 
     // Coletar todos os alunos de todas as salas da empresa
-    const allStudents: Student[] = [];
+    const roomStudents: Student[] = [];
     companyRooms.forEach((room: any) => {
       if (room.students && Array.isArray(room.students)) {
-        const roomStudents = room.students.filter((student: any) => 
+        const students = room.students.filter((student: any) => 
           typeof student === 'object' && student.companyId === currentUser.companyId
         ).map(student => ({
           ...student,
           room: room.id
         }));
-        allStudents.push(...roomStudents);
+        roomStudents.push(...students);
       }
     });
 
-    setStudents(allStudents);
+    // Carregar alunos do formulário público (sem sala)
+    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    const companyFormStudents = formStudents.filter((student: Student) => 
+      !student.room && (!student.companyId || student.companyId === currentUser.companyId)
+    );
+
+    // Combinar todos os alunos
+    setStudents([...roomStudents, ...companyFormStudents]);
     setRooms(companyRooms.map(room => ({ id: room.id, name: room.name })));
   };
 
   useEffect(() => {
     loadStudents();
+    
+    // Adicionar listener para mudanças no localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "students" || e.key === "rooms") {
+        loadStudents();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [currentUser]);
 
   const handleDeleteStudent = (id: string) => {
@@ -127,13 +145,13 @@ const AdminStudentsTotal = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
               <StudentTable 
-                students={studentsWithoutRoom}
+                students={students.filter(s => !s.room)}
                 rooms={rooms}
                 onDeleteStudent={handleDeleteStudent}
                 onTransferStudent={handleTransferStudent}
                 showTransferOption={true}
               />
-              {studentsWithoutRoom.length === 0 && (
+              {students.filter(s => !s.room).length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   Nenhum aluno sem sala encontrado
                 </p>
@@ -146,13 +164,13 @@ const AdminStudentsTotal = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
               <StudentTable 
-                students={studentsWithRoom}
+                students={students.filter(s => s.room)}
                 rooms={rooms}
                 onDeleteStudent={handleDeleteStudent}
                 onTransferStudent={handleTransferStudent}
                 showTransferOption={true}
               />
-              {studentsWithRoom.length === 0 && (
+              {students.filter(s => s.room).length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   Nenhum aluno com sala encontrado
                 </p>

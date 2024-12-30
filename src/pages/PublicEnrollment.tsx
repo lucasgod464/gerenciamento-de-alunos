@@ -1,121 +1,94 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { FormField } from "@/types/form";
-
-const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
+import { Student } from "@/types/student";
+import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 const PublicEnrollment = () => {
   const [fields, setFields] = useState<FormField[]>([]);
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const { toast } = useToast();
 
-  // Função para carregar os campos
-  const loadFields = () => {
-    try {
-      const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
-      console.log("Carregando campos do formulário:", savedFields);
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedFields = localStorage.getItem("enrollmentFields");
       if (savedFields) {
-        const parsedFields = JSON.parse(savedFields);
-        setFields(parsedFields);
-        console.log("Campos carregados com sucesso:", parsedFields);
+        setFields(JSON.parse(savedFields));
       }
-    } catch (error) {
-      console.error("Erro ao carregar campos do formulário:", error);
-      setFields([]);
-    }
-  };
-
-  // Carregar campos inicialmente
-  useEffect(() => {
-    loadFields();
-  }, []);
-
-  // Ouvir mudanças nos campos
-  useEffect(() => {
-    window.addEventListener('enrollmentFieldsUpdated', loadFields);
-    window.addEventListener('storage', (e) => {
-      if (e.key === ENROLLMENT_FIELDS_KEY) {
-        loadFields();
-      }
-    });
-    
-    return () => {
-      window.removeEventListener('enrollmentFieldsUpdated', loadFields);
-      window.removeEventListener('storage', loadFields);
     };
+
+    handleStorageChange();
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    const studentData = {
-      id: Math.random().toString(36).substr(2, 9),
+
+    // Criar novo aluno com os dados do formulário
+    const newStudent: Student = {
+      id: uuidv4(),
+      name: formData.nome_completo || "",
+      birthDate: "",
+      room: "", // Sem sala inicialmente
+      status: "active",
       createdAt: new Date().toISOString(),
       companyId: null,
-      customFields: Object.fromEntries(formData.entries()),
+      customFields: formData
     };
 
-    // Salvar os dados do aluno
-    const submissions = JSON.parse(localStorage.getItem("enrollmentSubmissions") || "[]");
-    submissions.push(studentData);
-    localStorage.setItem("enrollmentSubmissions", JSON.stringify(submissions));
+    // Salvar o novo aluno no localStorage
+    const existingStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    const updatedStudents = [...existingStudents, newStudent];
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
 
-    alert("Inscrição realizada com sucesso!");
-    (e.target as HTMLFormElement).reset();
+    // Mostrar mensagem de sucesso
+    toast({
+      title: "Sucesso!",
+      description: "Inscrição realizada com sucesso.",
+    });
+
+    // Limpar formulário
+    setFormData({});
+  };
+
+  const handleInputChange = (fieldName: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle>Formulário de Inscrição</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
+          <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {fields.map((field) => (
-              <div key={field.id} className="space-y-2">
-                <label
-                  htmlFor={field.name}
-                  className="block text-sm font-medium text-gray-700"
+              <div key={field.id}>
+                <label 
+                  htmlFor={field.name} 
+                  className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  {field.label}
-                  {field.required && <span className="text-red-500">*</span>}
+                  {field.label} {field.required && "*"}
                 </label>
-                {field.type === "textarea" ? (
-                  <textarea
-                    id={field.name}
-                    name={field.name}
-                    required={field.required}
-                    className="w-full p-2 border rounded-md"
-                  />
-                ) : field.type === "select" ? (
-                  <select
-                    id={field.name}
-                    name={field.name}
-                    required={field.required}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    {field.options?.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type={field.type}
-                    id={field.name}
-                    name={field.name}
-                    required={field.required}
-                    className="w-full p-2 border rounded-md"
-                  />
-                )}
+                <Input
+                  id={field.name}
+                  type={field.type}
+                  required={field.required}
+                  value={formData[field.name] || ""}
+                  onChange={(e) => handleInputChange(field.name, e.target.value)}
+                  className="w-full"
+                />
               </div>
             ))}
-            <button
-              type="submit"
-              className="w-full bg-primary text-white p-2 rounded-md hover:bg-primary/90 transition-colors"
-            >
+            <Button type="submit" className="w-full">
               Enviar Inscrição
-            </button>
+            </Button>
           </form>
         </CardContent>
       </Card>
