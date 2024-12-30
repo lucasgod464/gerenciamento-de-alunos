@@ -62,13 +62,19 @@ export const EnrollmentFormBuilder = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+    try {
+      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      // Dispara um evento para notificar outras partes da aplicação sobre a mudança
+      window.dispatchEvent(new Event('formFieldsUpdated'));
+    } catch (error) {
+      console.error("Erro ao salvar campos do construtor:", error);
+    }
   }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     if (editingField) {
       const updatedFields = fields.map((f) =>
-        f.id === editingField.id ? { ...field, id: f.id, order: f.order } : f
+        f.id === editingField.id ? { ...f, ...field } : f
       );
       setFields(updatedFields);
       setEditingField(undefined);

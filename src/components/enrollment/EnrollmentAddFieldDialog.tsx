@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +33,16 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
   const [options, setOptions] = useState<string[]>(editingField?.options || []);
   const [newOption, setNewOption] = useState("");
 
+  // Atualiza os estados quando o campo em edição muda
+  useEffect(() => {
+    if (editingField) {
+      setLabel(editingField.label);
+      setType(editingField.type);
+      setRequired(editingField.required);
+      setOptions(editingField.options || []);
+    }
+  }, [editingField]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAddField({
@@ -46,6 +56,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
     setType("text");
     setRequired(false);
     setOptions([]);
+    setNewOption("");
   };
 
   const addOption = () => {

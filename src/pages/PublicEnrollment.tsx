@@ -20,16 +20,16 @@ const PublicEnrollment = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const handleStorageChange = () => {
+    const loadFields = () => {
       const savedFields = localStorage.getItem("enrollmentFields");
       if (savedFields) {
         setFields(JSON.parse(savedFields));
       }
     };
 
-    handleStorageChange();
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    loadFields();
+    window.addEventListener("formFieldsUpdated", loadFields);
+    return () => window.removeEventListener("formFieldsUpdated", loadFields);
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -103,7 +103,6 @@ const PublicEnrollment = () => {
             value={formData[field.name] || ""}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             className="w-full bg-white"
-            placeholder="dd/mm/aaaa"
           />
         );
       default:
@@ -138,7 +137,7 @@ const PublicEnrollment = () => {
                 {renderField(field)}
               </div>
             ))}
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="w-full">
               Enviar Inscrição
             </Button>
           </form>
