@@ -1,6 +1,42 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, Users, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormBuilder } from "@/components/form-builder/FormBuilder";
+
+// Componente FormBuilder específico para a aba de Inscrição Online
+const EnrollmentFormBuilder = () => {
+  return (
+    <FormBuilder 
+      storageKey="enrollmentFormFields"
+      defaultFields={[
+        {
+          id: "name",
+          name: "fullName",
+          label: "Nome Completo",
+          type: "text",
+          required: false,
+          order: 0,
+        },
+        {
+          id: "email",
+          name: "email",
+          label: "Email",
+          type: "email",
+          required: false,
+          order: 1,
+        },
+        {
+          id: "phone",
+          name: "phone",
+          label: "Telefone",
+          type: "tel",
+          required: false,
+          order: 2,
+        }
+      ]}
+    />
+  );
+};
 
 export function DashboardTabs() {
   return (
@@ -26,9 +62,7 @@ export function DashboardTabs() {
             <CardTitle>Inscrição Online</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              Conteúdo da aba Inscrição Online será implementado aqui.
-            </p>
+            <EnrollmentFormBuilder />
           </CardContent>
         </Card>
       </TabsContent>

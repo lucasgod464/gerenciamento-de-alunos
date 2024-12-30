@@ -9,7 +9,7 @@ const PublicEnrollment = () => {
 
   useEffect(() => {
     const loadFields = () => {
-      const savedFields = localStorage.getItem("formFields");
+      const savedFields = localStorage.getItem("enrollmentFormFields");
       if (savedFields) {
         setFields(JSON.parse(savedFields));
       }
@@ -29,35 +29,30 @@ const PublicEnrollment = () => {
     const studentData = {
       id: Math.random().toString(36).substr(2, 9),
       name: formData.get("fullName") as string,
-      birthDate: formData.get("birthDate") as string,
-      status: formData.get("status") as "active" | "inactive",
-      room: "",
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
       createdAt: new Date().toISOString(),
-      companyId: null,
       customFields: {},
     };
 
     // Adicionar campos customizados
     fields.forEach((field) => {
-      if (!["fullName", "birthDate", "status", "room"].includes(field.name)) {
+      if (!["fullName", "email", "phone"].includes(field.name)) {
         (studentData.customFields as any)[field.name] = formData.get(field.name);
       }
     });
 
     // Salvar os dados do aluno
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const firstRoom = allRooms[0];
-    if (firstRoom) {
-      firstRoom.students = [...(firstRoom.students || []), studentData];
-      localStorage.setItem("rooms", JSON.stringify(allRooms));
-      
-      toast({
-        title: "Inscrição realizada",
-        description: "Sua inscrição foi realizada com sucesso!",
-      });
-      
-      (e.target as HTMLFormElement).reset();
-    }
+    const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
+    enrollments.push(studentData);
+    localStorage.setItem("enrollments", JSON.stringify(enrollments));
+    
+    toast({
+      title: "Inscrição realizada",
+      description: "Sua inscrição foi realizada com sucesso!",
+    });
+    
+    (e.target as HTMLFormElement).reset();
   };
 
   if (fields.length === 0) {
