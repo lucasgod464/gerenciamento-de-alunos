@@ -16,34 +16,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 interface AddFieldDialogProps {
   open: boolean;
   onClose: () => void;
   onAddField: (field: Omit<FormField, "id" | "order">) => void;
+  editingField?: FormField;
 }
 
-export const AddFieldDialog = ({ open, onClose, onAddField }: AddFieldDialogProps) => {
-  const [label, setLabel] = useState("");
-  const [type, setType] = useState<"text" | "email" | "tel" | "textarea">("text");
+export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddFieldDialogProps) => {
+  const [label, setLabel] = useState(editingField?.label || "");
+  const [type, setType] = useState<"text" | "email" | "tel" | "textarea">(editingField?.type || "text");
+  const [required, setRequired] = useState(editingField?.required || false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAddField({
       label,
       type,
-      required: false,
+      required,
       name: label.toLowerCase().replace(/\s+/g, "_"),
     });
     setLabel("");
     setType("text");
+    setRequired(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Campo</DialogTitle>
+          <DialogTitle>{editingField ? "Editar Campo" : "Adicionar Novo Campo"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -69,11 +73,21 @@ export const AddFieldDialog = ({ open, onClose, onAddField }: AddFieldDialogProp
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="required"
+              checked={required}
+              onCheckedChange={setRequired}
+            />
+            <Label htmlFor="required">Campo Obrigatório</Label>
+          </div>
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit">Adicionar</Button>
+            <Button type="submit">
+              {editingField ? "Salvar" : "Adicionar"}
+            </Button>
           </div>
         </form>
       </DialogContent>
