@@ -38,10 +38,10 @@ const AdminStudentsTotal = () => {
       }
     });
 
-    // Carregar alunos sem sala
+    // Carregar alunos sem sala do localStorage
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const companyFormStudents = formStudents.filter((student: Student) => 
-      !student.room && student.companyId === currentUser.companyId
+      !student.room && (!student.companyId || student.companyId === currentUser.companyId)
     );
 
     // Combinar todos os alunos
@@ -51,86 +51,81 @@ const AdminStudentsTotal = () => {
   useEffect(() => {
     loadStudents();
     
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "students" || e.key === "rooms") {
-        loadStudents();
-      }
+    // Adicionar listeners para mudanças no localStorage
+    const handleStorageChange = () => {
+      loadStudents();
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener("studentAdded", handleStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("studentAdded", handleStorageChange);
+    };
   }, [currentUser]);
 
   const handleDeleteStudent = (id: string) => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.companyId === currentUser?.companyId && room.students) {
-        room.students = room.students.filter((student: Student) => student.id !== id);
-      }
-      return room;
-    });
+    try {
+      // Remover aluno das salas
+      const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+      const updatedRooms = allRooms.map((room: any) => {
+        if (room.students) {
+          room.students = room.students.filter((student: Student) => student.id !== id);
+        }
+        return room;
+      });
+      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
 
-    const updatedFormStudents = formStudents.filter((student: Student) => student.id !== id);
+      // Remover aluno da lista de alunos sem sala
+      const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
+      const updatedFormStudents = formStudents.filter((student: Student) => student.id !== id);
+      localStorage.setItem("students", JSON.stringify(updatedFormStudents));
 
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    localStorage.setItem("students", JSON.stringify(updatedFormStudents));
-    
-    loadStudents();
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno excluído com sucesso!",
-    });
+      loadStudents();
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno excluído com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir aluno:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir aluno",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTransferStudent = (studentId: string, newRoomId: string) => {
-    console.log("Iniciando transferência do aluno:", studentId, "para sala:", newRoomId);
-    
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    
-    let studentToTransfer: Student | null = null;
-    let studentFound = false;
-    
-    // Procurar e remover o aluno da sala atual ou da lista de alunos sem sala
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.students && !studentFound) {
-        const student = room.students.find((s: Student) => s.id === studentId);
-        if (student) {
-          studentToTransfer = { ...student };
-          studentFound = true;
-          room.students = room.students.filter((s: Student) => s.id !== studentId);
-        }
-      }
-      return room;
-    });
-
-    if (!studentFound) {
-      const formStudent = formStudents.find((s: Student) => s.id === studentId);
-      if (formStudent) {
-        studentToTransfer = { ...formStudent };
+    try {
+      // Buscar o aluno na lista de alunos sem sala
+      const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
+      const studentToTransfer = formStudents.find((s: Student) => s.id === studentId);
+      
+      if (studentToTransfer) {
+        // Remover o aluno da lista de alunos sem sala
         const updatedFormStudents = formStudents.filter((s: Student) => s.id !== studentId);
         localStorage.setItem("students", JSON.stringify(updatedFormStudents));
-      }
-    }
 
-    if (studentToTransfer) {
-      // Adicionar o aluno à nova sala
-      const targetRoomIndex = updatedRooms.findIndex((room: any) => room.id === newRoomId);
-      if (targetRoomIndex !== -1) {
-        if (!updatedRooms[targetRoomIndex].students) {
-          updatedRooms[targetRoomIndex].students = [];
-        }
-        updatedRooms[targetRoomIndex].students.push({
-          ...studentToTransfer,
-          room: newRoomId
+        // Adicionar o aluno à sala selecionada
+        const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+        const updatedRooms = allRooms.map((room: any) => {
+          if (room.id === newRoomId) {
+            if (!room.students) {
+              room.students = [];
+            }
+            room.students.push({
+              ...studentToTransfer,
+              room: newRoomId,
+              companyId: currentUser?.companyId
+            });
+          }
+          return room;
         });
 
         localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-        
-        // Recarregar os dados imediatamente após a transferência
         loadStudents();
 
         toast({
@@ -138,6 +133,13 @@ const AdminStudentsTotal = () => {
           description: "Aluno transferido com sucesso!",
         });
       }
+    } catch (error) {
+      console.error("Erro ao transferir aluno:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao transferir aluno",
+        variant: "destructive",
+      });
     }
   };
 

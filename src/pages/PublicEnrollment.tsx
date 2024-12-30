@@ -40,7 +40,7 @@ const PublicEnrollment = () => {
       customFields: formData
     };
 
-    // Salvar o novo aluno no localStorage
+    // Salvar o novo aluno diretamente no localStorage
     const existingStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const updatedStudents = [...existingStudents, newStudent];
     localStorage.setItem("students", JSON.stringify(updatedStudents));
@@ -53,6 +53,9 @@ const PublicEnrollment = () => {
 
     // Limpar formulário
     setFormData({});
+    
+    // Disparar evento para atualizar outras partes da aplicação
+    window.dispatchEvent(new Event('studentAdded'));
   };
 
   const handleInputChange = (fieldName: string, value: string) => {
