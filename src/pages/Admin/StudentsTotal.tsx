@@ -31,7 +31,7 @@ const AdminStudentsTotal = () => {
           typeof student === 'object' && student.companyId === currentUser.companyId
         ).map(student => ({
           ...student,
-          room: room.id // Garantir que cada aluno tenha a referência da sala
+          room: room.id
         }));
         allStudents.push(...roomStudents);
       }
@@ -48,7 +48,6 @@ const AdminStudentsTotal = () => {
   const handleDeleteStudent = (id: string) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     
-    // Encontrar e remover o aluno de todas as salas da empresa
     const updatedRooms = allRooms.map((room: any) => {
       if (room.companyId === currentUser?.companyId && room.students) {
         room.students = room.students.filter((student: Student) => student.id !== id);
@@ -70,7 +69,6 @@ const AdminStudentsTotal = () => {
     let studentToTransfer: Student | null = null;
     let oldRoomId: string | null = null;
 
-    // Encontrar o aluno e sua sala atual
     allRooms.forEach((room: any) => {
       if (room.students) {
         const student = room.students.find((s: Student) => s.id === studentId);
@@ -83,14 +81,11 @@ const AdminStudentsTotal = () => {
 
     if (!studentToTransfer || !oldRoomId) return;
 
-    // Atualizar as salas
     const updatedRooms = allRooms.map((room: any) => {
       if (room.id === oldRoomId) {
-        // Remover o aluno da sala antiga
         room.students = room.students.filter((s: Student) => s.id !== studentId);
       }
       if (room.id === newRoomId) {
-        // Adicionar o aluno à nova sala
         const updatedStudent = { ...studentToTransfer, room: newRoomId };
         room.students = [...(room.students || []), updatedStudent];
       }
@@ -110,32 +105,61 @@ const AdminStudentsTotal = () => {
     student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const studentsWithRoom = filteredStudents.filter(student => student.room);
+  const studentsWithoutRoom = filteredStudents.filter(student => !student.room);
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Alunos Total</h1>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div className="relative max-w-md">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar alunos..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
+        <div className="relative max-w-md mb-6">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar alunos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Coluna de Alunos sem Sala */}
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
               <StudentTable 
-                students={filteredStudents}
+                students={studentsWithoutRoom}
                 rooms={rooms}
                 onDeleteStudent={handleDeleteStudent}
                 onTransferStudent={handleTransferStudent}
                 showTransferOption={true}
               />
-            </div>
-          </CardContent>
-        </Card>
+              {studentsWithoutRoom.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">
+                  Nenhum aluno sem sala encontrado
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Coluna de Alunos com Sala */}
+          <Card>
+            <CardContent className="pt-6">
+              <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
+              <StudentTable 
+                students={studentsWithRoom}
+                rooms={rooms}
+                onDeleteStudent={handleDeleteStudent}
+                onTransferStudent={handleTransferStudent}
+                showTransferOption={true}
+              />
+              {studentsWithRoom.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">
+                  Nenhum aluno com sala encontrado
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </DashboardLayout>
   );
