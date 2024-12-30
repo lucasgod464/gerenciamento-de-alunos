@@ -29,13 +29,21 @@ export const FormBuilder = () => {
       order: 1,
     },
     {
-      id: "batizado",
-      name: "batizado",
-      label: "Batizado",
+      id: "sala",
+      name: "sala",
+      label: "Sala",
       type: "select",
       required: true,
       order: 2,
-      options: ["Sim", "Não"]
+    },
+    {
+      id: "status",
+      name: "status",
+      label: "Status",
+      type: "select",
+      required: true,
+      order: 3,
+      options: ["Ativo", "Inativo"]
     }
   ];
 
