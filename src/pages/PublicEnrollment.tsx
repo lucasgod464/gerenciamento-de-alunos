@@ -2,22 +2,29 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/types/form";
 
+const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
+
 const PublicEnrollment = () => {
   const [fields, setFields] = useState<FormField[]>([]);
 
   useEffect(() => {
     const loadFields = () => {
-      const savedFields = localStorage.getItem("formFields");
-      if (savedFields) {
-        setFields(JSON.parse(savedFields));
+      try {
+        const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+        if (savedFields) {
+          setFields(JSON.parse(savedFields));
+        }
+      } catch (error) {
+        console.error("Error loading form fields:", error);
+        setFields([]);
       }
     };
 
     loadFields();
-    window.addEventListener('formFieldsUpdated', loadFields);
+    window.addEventListener('enrollmentFieldsUpdated', loadFields);
     
     return () => {
-      window.removeEventListener('formFieldsUpdated', loadFields);
+      window.removeEventListener('enrollmentFieldsUpdated', loadFields);
     };
   }, []);
 
@@ -26,22 +33,15 @@ const PublicEnrollment = () => {
     const formData = new FormData(e.currentTarget);
     const studentData = {
       id: Math.random().toString(36).substr(2, 9),
-      name: formData.get("fullName") as string,
-      birthDate: formData.get("birthDate") as string,
-      status: formData.get("status") as "active" | "inactive",
-      room: "",
       createdAt: new Date().toISOString(),
       companyId: null,
-      customFields: {},
+      customFields: Object.fromEntries(formData.entries()),
     };
 
     // Salvar os dados do aluno
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const firstRoom = allRooms[0];
-    if (firstRoom) {
-      firstRoom.students = [...(firstRoom.students || []), studentData];
-      localStorage.setItem("rooms", JSON.stringify(allRooms));
-    }
+    const submissions = JSON.parse(localStorage.getItem("enrollmentSubmissions") || "[]");
+    submissions.push(studentData);
+    localStorage.setItem("enrollmentSubmissions", JSON.stringify(submissions));
 
     alert("Inscrição realizada com sucesso!");
     (e.target as HTMLFormElement).reset();

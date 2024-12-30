@@ -34,6 +34,8 @@ export const EnrollmentFormBuilder = () => {
   useEffect(() => {
     try {
       localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      // Disparar um evento customizado para notificar outras partes da aplicação
+      window.dispatchEvent(new Event('enrollmentFieldsUpdated'));
       console.info("Enrollment fields saved to localStorage:", fields);
     } catch (error) {
       console.error("Error saving enrollment form fields:", error);
