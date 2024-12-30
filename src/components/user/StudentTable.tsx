@@ -6,19 +6,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight, Pencil, Info } from "lucide-react";
 import { Student } from "@/types/student";
 import { useState } from "react";
 import { StudentForm } from "./StudentForm";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { StudentTableActions } from "./StudentTableActions";
+import { StudentInfoDialog } from "./StudentInfoDialog";
 
 interface StudentTableProps {
   students: Student[];
@@ -119,42 +113,13 @@ export function StudentTable({
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowingInfo(student)}
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
-                  {showTransferOption && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(student)}
-                    >
-                      <ArrowRight className="mr-2 h-4 w-4" />
-                      Transferir Aluno
-                    </Button>
-                  )}
-                  {!showTransferOption && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClick(student)}
-                    >
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Editar
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(student.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                <StudentTableActions
+                  student={student}
+                  showTransferOption={showTransferOption}
+                  onInfoClick={setShowingInfo}
+                  onEditClick={handleEditClick}
+                  onDeleteClick={handleDelete}
+                />
               </TableCell>
             </TableRow>
           ))}
@@ -185,28 +150,10 @@ export function StudentTable({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!showingInfo} onOpenChange={() => setShowingInfo(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Informações do Aluno</DialogTitle>
-            <DialogDescription>
-              Dados fornecidos durante a inscrição
-            </DialogDescription>
-          </DialogHeader>
-          {showingInfo && showingInfo.customFields && (
-            <div className="space-y-4">
-              {Object.entries(showingInfo.customFields).map(([key, value]) => (
-                <div key={key} className="flex flex-col space-y-1.5">
-                  <label className="font-semibold capitalize">
-                    {key.replace(/_/g, " ")}
-                  </label>
-                  <p className="text-sm text-muted-foreground">{value}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <StudentInfoDialog 
+        student={showingInfo} 
+        onClose={() => setShowingInfo(null)} 
+      />
     </>
   );
 }
