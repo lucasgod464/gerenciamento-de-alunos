@@ -12,7 +12,7 @@ interface FormPreviewProps {
 
 export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewProps) => {
   // Lista de campos obrigatórios do sistema
-  const systemFields = ["name", "birthDate", "room", "status"];
+  const systemFields = ["nome_completo", "data_nascimento", "sala", "status"];
 
   return (
     <div className="space-y-4">
