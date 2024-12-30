@@ -7,58 +7,47 @@ import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
 import { useToast } from "@/hooks/use-toast";
 
-const FORM_FIELDS_KEY = "formFields";
+const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 
 export const FormBuilder = () => {
   const { toast } = useToast();
   const defaultFields: FormField[] = [
     {
-      id: "name",
-      name: "fullName",
+      id: "nome_completo",
+      name: "nome_completo",
       label: "Nome Completo",
       type: "text",
       required: true,
       order: 0,
     },
     {
-      id: "birthDate",
-      name: "birthDate",
+      id: "data_nascimento",
+      name: "data_nascimento",
       label: "Data de Nascimento",
       type: "date",
       required: true,
       order: 1,
     },
     {
-      id: "status",
-      name: "status",
-      label: "Status",
+      id: "batizado",
+      name: "batizado",
+      label: "Batizado",
       type: "select",
       required: true,
       order: 2,
-      options: ["Ativo", "Inativo"]
-    },
-    {
-      id: "room",
-      name: "room",
-      label: "Sala",
-      type: "select",
-      required: true,
-      order: 3,
-      options: []
-    },
+      options: ["Sim", "Não"]
+    }
   ];
 
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
 
-  // Load fields from localStorage on component mount
   useEffect(() => {
     const loadFields = () => {
       try {
-        const savedFields = localStorage.getItem(FORM_FIELDS_KEY);
+        const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Ensure default fields are always present
           const mergedFields = defaultFields.concat(
             parsedFields.filter((field: FormField) => 
               !defaultFields.some(defaultField => defaultField.id === field.id)
@@ -66,9 +55,8 @@ export const FormBuilder = () => {
           );
           setFields(mergedFields);
         } else {
-          // If no saved fields, use defaults
           setFields(defaultFields);
-          localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(defaultFields));
+          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(defaultFields));
         }
       } catch (error) {
         console.error("Error loading form fields:", error);
@@ -79,11 +67,9 @@ export const FormBuilder = () => {
     loadFields();
   }, []);
 
-  // Save fields to localStorage whenever they change
   useEffect(() => {
     try {
-      localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(fields));
-      // Dispatch custom event to notify other components
+      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
       console.error("Error saving form fields:", error);
@@ -107,21 +93,6 @@ export const FormBuilder = () => {
     });
   };
 
-  const handleDeleteField = (id: string) => {
-    const defaultFieldIds = ["name", "birthDate", "status", "room"];
-    if (defaultFieldIds.includes(id)) {
-      return;
-    }
-    
-    const updatedFields = fields.filter((field) => field.id !== id);
-    setFields(updatedFields);
-    
-    toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
-    });
-  };
-
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -132,7 +103,7 @@ export const FormBuilder = () => {
             Adicionar Campo
           </Button>
         </div>
-        <FormPreview fields={fields} onDeleteField={handleDeleteField} />
+        <FormPreview fields={fields} />
       </Card>
 
       <AddFieldDialog

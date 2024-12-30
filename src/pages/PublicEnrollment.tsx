@@ -82,7 +82,7 @@ const PublicEnrollment = () => {
             value={formData[field.name] || ""}
             onValueChange={(value) => handleInputChange(field.name, value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full bg-white">
               <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
             </SelectTrigger>
             <SelectContent>
@@ -94,6 +94,18 @@ const PublicEnrollment = () => {
             </SelectContent>
           </Select>
         );
+      case "date":
+        return (
+          <Input
+            id={field.name}
+            type="date"
+            required={field.required}
+            value={formData[field.name] || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            className="w-full bg-white"
+            placeholder="dd/mm/aaaa"
+          />
+        );
       default:
         return (
           <Input
@@ -102,7 +114,8 @@ const PublicEnrollment = () => {
             required={field.required}
             value={formData[field.name] || ""}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
-            className="w-full"
+            className="w-full bg-white"
+            placeholder={`Digite ${field.label.toLowerCase()}`}
           />
         );
     }
@@ -110,9 +123,9 @@ const PublicEnrollment = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
+      <Card className="w-full max-w-md">
         <CardContent className="p-6">
-          <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
+          <h1 className="text-2xl font-bold text-center mb-6">Formulário de Inscrição</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {sortedFields.map((field) => (
               <div key={field.id}>
@@ -125,7 +138,7 @@ const PublicEnrollment = () => {
                 {renderField(field)}
               </div>
             ))}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
               Enviar Inscrição
             </Button>
           </form>
