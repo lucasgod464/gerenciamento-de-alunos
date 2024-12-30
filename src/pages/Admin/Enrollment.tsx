@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
-import { FormBuilder } from "@/components/form-builder/FormBuilder";
 
 const AdminEnrollment = () => {
   const enrollmentUrl = `${window.location.origin}/enrollment`;
@@ -46,7 +45,10 @@ const AdminEnrollment = () => {
             <CardTitle>Configuração do Formulário</CardTitle>
           </CardHeader>
           <CardContent>
-            <FormBuilder />
+            <p className="text-muted-foreground">
+              Configure os campos do formulário na aba "Formulário" no menu lateral.
+              As alterações serão refletidas automaticamente no formulário de inscrição.
+            </p>
           </CardContent>
         </Card>
       </div>
