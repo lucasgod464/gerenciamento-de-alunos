@@ -17,30 +17,34 @@ const AdminStudentsTotal = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
 
+    // Carregar todas as salas da empresa
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const companyRooms = allRooms.filter((room: any) => 
       room.companyId === currentUser.companyId
     );
-    setRooms(companyRooms.map(room => ({ id: room.id, name: room.name })));
+    setRooms(companyRooms.map((room: any) => ({ id: room.id, name: room.name })));
 
-    const roomStudents: Student[] = [];
+    // Carregar alunos das salas
+    let roomStudents: Student[] = [];
     companyRooms.forEach((room: any) => {
       if (room.students && Array.isArray(room.students)) {
-        const students = room.students.filter((student: any) => 
-          typeof student === 'object' && student.companyId === currentUser.companyId
-        ).map(student => ({
-          ...student,
-          room: room.id
-        }));
-        roomStudents.push(...students);
+        const students = room.students
+          .filter((student: any) => student.companyId === currentUser.companyId)
+          .map((student: Student) => ({
+            ...student,
+            room: room.id
+          }));
+        roomStudents = [...roomStudents, ...students];
       }
     });
 
+    // Carregar alunos sem sala
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const companyFormStudents = formStudents.filter((student: Student) => 
-      !student.room && (!student.companyId || student.companyId === currentUser.companyId)
+      !student.room && student.companyId === currentUser.companyId
     );
 
+    // Combinar todos os alunos
     setStudents([...roomStudents, ...companyFormStudents]);
   };
 
@@ -90,7 +94,7 @@ const AdminStudentsTotal = () => {
     let studentToTransfer: Student | null = null;
     let studentFound = false;
     
-    // Procurar nas salas primeiro
+    // Procurar e remover o aluno da sala atual ou da lista de alunos sem sala
     const updatedRooms = allRooms.map((room: any) => {
       if (room.students && !studentFound) {
         const student = room.students.find((s: Student) => s.id === studentId);
@@ -103,7 +107,6 @@ const AdminStudentsTotal = () => {
       return room;
     });
 
-    // Se não encontrou nas salas, procurar na lista de alunos sem sala
     if (!studentFound) {
       const formStudent = formStudents.find((s: Student) => s.id === studentId);
       if (formStudent) {
@@ -114,6 +117,7 @@ const AdminStudentsTotal = () => {
     }
 
     if (studentToTransfer) {
+      // Adicionar o aluno à nova sala
       const targetRoomIndex = updatedRooms.findIndex((room: any) => room.id === newRoomId);
       if (targetRoomIndex !== -1) {
         if (!updatedRooms[targetRoomIndex].students) {
@@ -125,19 +129,15 @@ const AdminStudentsTotal = () => {
         });
 
         localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-        loadStudents(); // Recarrega os dados imediatamente após a transferência
+        
+        // Recarregar os dados imediatamente após a transferência
+        loadStudents();
 
         toast({
           title: "Sucesso",
           description: "Aluno transferido com sucesso!",
         });
       }
-    } else {
-      toast({
-        title: "Erro",
-        description: "Não foi possível encontrar o aluno para transferência",
-        variant: "destructive",
-      });
     }
   };
 
