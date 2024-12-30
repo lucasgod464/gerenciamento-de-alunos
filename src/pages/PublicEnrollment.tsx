@@ -32,7 +32,7 @@ const PublicEnrollment = () => {
     const newStudent: Student = {
       id: uuidv4(),
       name: formData.nome_completo || "",
-      birthDate: "",
+      birthDate: formData.data_nascimento || "", // Agora salvamos a data de nascimento
       room: "", // Sem sala inicialmente
       status: "active",
       createdAt: new Date().toISOString(),
@@ -65,13 +65,22 @@ const PublicEnrollment = () => {
     }));
   };
 
+  // Ordenar os campos para garantir que nome e data de nascimento apareçam primeiro
+  const sortedFields = [...fields].sort((a, b) => {
+    if (a.name === "nome_completo") return -1;
+    if (b.name === "nome_completo") return 1;
+    if (a.name === "data_nascimento") return -1;
+    if (b.name === "data_nascimento") return 1;
+    return a.order - b.order;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {fields.map((field) => (
+            {sortedFields.map((field) => (
               <div key={field.id}>
                 <label 
                   htmlFor={field.name} 
