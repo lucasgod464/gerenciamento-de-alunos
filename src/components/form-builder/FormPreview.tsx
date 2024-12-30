@@ -1,15 +1,16 @@
 import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface FormPreviewProps {
   fields: FormField[];
   onDeleteField: (id: string) => void;
+  onEditField: (field: FormField) => void;
 }
 
-export const FormPreview = ({ fields, onDeleteField }: FormPreviewProps) => {
+export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewProps) => {
   return (
     <div className="space-y-4">
       {fields.map((field) => (
@@ -36,13 +37,24 @@ export const FormPreview = ({ fields, onDeleteField }: FormPreviewProps) => {
                 )}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDeleteField(field.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onEditField(field)}
+                className="hover:bg-blue-50 hover:text-blue-600"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onDeleteField(field.id)}
+                className="hover:bg-red-50 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </Card>
       ))}

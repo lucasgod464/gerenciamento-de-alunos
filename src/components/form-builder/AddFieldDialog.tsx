@@ -1,14 +1,13 @@
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/types/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -17,83 +16,125 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { X, Plus } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect } from "react";
+import { FormField } from "@/types/form";
 
 interface AddFieldDialogProps {
   open: boolean;
   onClose: () => void;
   onAddField: (field: Omit<FormField, "id" | "order">) => void;
+  editingField?: FormField | null;
 }
 
-export const AddFieldDialog = ({ open, onClose, onAddField }: AddFieldDialogProps) => {
-  const [label, setLabel] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState<"text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple">("text");
-  const [required, setRequired] = useState(false);
-  const [options, setOptions] = useState<string[]>([]);
-  const [newOption, setNewOption] = useState("");
+export const AddFieldDialog = ({
+  open,
+  onClose,
+  onAddField,
+  editingField,
+}: AddFieldDialogProps) => {
+  const [fieldData, setFieldData] = useState({
+    name: "",
+    label: "",
+    description: "",
+    type: "text",
+    required: true,
+    options: [] as string[],
+  });
+  const [optionInput, setOptionInput] = useState("");
+
+  useEffect(() => {
+    if (editingField) {
+      setFieldData({
+        name: editingField.name,
+        label: editingField.label,
+        description: editingField.description || "",
+        type: editingField.type,
+        required: editingField.required,
+        options: editingField.options || [],
+      });
+    } else {
+      setFieldData({
+        name: "",
+        label: "",
+        description: "",
+        type: "text",
+        required: true,
+        options: [],
+      });
+    }
+    setOptionInput("");
+  }, [editingField, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddField({
-      label,
-      description,
-      type,
-      required,
-      name: label.toLowerCase().replace(/\s+/g, "_"),
-      options: (type === "select" || type === "multiple") ? options : undefined,
-    });
-    setLabel("");
-    setDescription("");
-    setType("text");
-    setRequired(false);
-    setOptions([]);
-    setNewOption("");
+    const field = {
+      ...fieldData,
+      name: fieldData.name.toLowerCase().replace(/\s+/g, "_"),
+    };
+    onAddField(field);
   };
 
-  const addOption = () => {
-    if (newOption.trim()) {
-      setOptions([...options, newOption.trim()]);
-      setNewOption("");
+  const handleAddOption = () => {
+    if (optionInput.trim()) {
+      setFieldData(prev => ({
+        ...prev,
+        options: [...(prev.options || []), optionInput.trim()],
+      }));
+      setOptionInput("");
     }
   };
 
-  const removeOption = (indexToRemove: number) => {
-    setOptions(options.filter((_, index) => index !== indexToRemove));
+  const handleRemoveOption = (index: number) => {
+    setFieldData(prev => ({
+      ...prev,
+      options: prev.options?.filter((_, i) => i !== index) || [],
+    }));
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Campo</DialogTitle>
+          <DialogTitle>
+            {editingField ? "Editar Campo" : "Adicionar Novo Campo"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="label">Nome do Campo</Label>
             <Input
               id="label"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
+              value={fieldData.label}
+              onChange={(e) =>
+                setFieldData({ ...fieldData, label: e.target.value })
+              }
+              placeholder="Ex: Telefone"
               required
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="description">Descrição (opcional)</Label>
             <Textarea
               id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Digite uma descrição para este campo..."
-              className="resize-none"
+              value={fieldData.description}
+              onChange={(e) =>
+                setFieldData({ ...fieldData, description: e.target.value })
+              }
+              placeholder="Adicione uma descrição para este campo"
             />
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="type">Tipo do Campo</Label>
-            <Select value={type} onValueChange={(value: any) => setType(value)}>
+            <Select
+              value={fieldData.type}
+              onValueChange={(value) =>
+                setFieldData({ ...fieldData, type: value as FormField["type"] })
+              }
+            >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="text">Texto</SelectItem>
@@ -107,65 +148,51 @@ export const AddFieldDialog = ({ open, onClose, onAddField }: AddFieldDialogProp
             </Select>
           </div>
 
-          {(type === "select" || type === "multiple") && (
+          {(fieldData.type === "select" || fieldData.type === "multiple") && (
             <div className="space-y-2">
-              <Label>Opções da Lista</Label>
+              <Label>Opções</Label>
               <div className="flex gap-2">
                 <Input
-                  value={newOption}
-                  onChange={(e) => setNewOption(e.target.value)}
+                  value={optionInput}
+                  onChange={(e) => setOptionInput(e.target.value)}
                   placeholder="Digite uma opção"
                 />
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={addOption}
-                >
-                  <Plus className="h-4 w-4" />
+                <Button type="button" onClick={handleAddOption}>
+                  Adicionar
                 </Button>
               </div>
-              <div className="space-y-2 mt-2">
-                {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-md">
-                    <span className="flex-1">{option}</span>
+              <div className="space-y-2">
+                {fieldData.options?.map((option, index) => (
+                  <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <span>{option}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => removeOption(index)}
+                      onClick={() => handleRemoveOption(index)}
                     >
-                      <X className="h-4 w-4" />
+                      Remover
                     </Button>
                   </div>
                 ))}
               </div>
-              {options.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Adicione pelo menos uma opção para a lista
-                </p>
-              )}
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="required">Campo Obrigatório</Label>
             <Switch
               id="required"
-              checked={required}
-              onCheckedChange={setRequired}
+              checked={fieldData.required}
+              onCheckedChange={(checked) =>
+                setFieldData({ ...fieldData, required: checked })
+              }
             />
-            <Label htmlFor="required">Campo Obrigatório</Label>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button 
-              type="submit"
-              disabled={(type === "select" || type === "multiple") && options.length === 0}
-            >
-              Adicionar
-            </Button>
-          </div>
+
+          <Button type="submit" className="w-full">
+            {editingField ? "Salvar Alterações" : "Adicionar Campo"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

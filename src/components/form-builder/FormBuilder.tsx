@@ -49,6 +49,7 @@ export const FormBuilder = () => {
 
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
+  const [editingField, setEditingField] = useState<FormField | null>(null);
 
   useEffect(() => {
     const loadFields = () => {
@@ -101,6 +102,39 @@ export const FormBuilder = () => {
     });
   };
 
+  const handleEditField = (field: FormField) => {
+    const defaultFieldIds = defaultFields.map(f => f.id);
+    if (defaultFieldIds.includes(field.id)) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar campos padrão do formulário.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setEditingField(field);
+    setIsAddingField(true);
+  };
+
+  const handleUpdateField = (updatedField: Omit<FormField, "id" | "order">) => {
+    if (!editingField) return;
+
+    const updatedFields = fields.map(field => 
+      field.id === editingField.id 
+        ? { ...updatedField, id: field.id, order: field.order }
+        : field
+    );
+
+    setFields(updatedFields);
+    setEditingField(null);
+    setIsAddingField(false);
+
+    toast({
+      title: "Campo atualizado",
+      description: "O campo foi atualizado com sucesso.",
+    });
+  };
+
   const handleDeleteField = (id: string) => {
     const defaultFieldIds = defaultFields.map(field => field.id);
     if (defaultFieldIds.includes(id)) {
@@ -124,18 +158,29 @@ export const FormBuilder = () => {
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-semibold">Campos do Formulário</h2>
-          <Button onClick={() => setIsAddingField(true)}>
+          <Button onClick={() => {
+            setEditingField(null);
+            setIsAddingField(true);
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             Adicionar Campo
           </Button>
         </div>
-        <FormPreview fields={fields} onDeleteField={handleDeleteField} />
+        <FormPreview 
+          fields={fields} 
+          onDeleteField={handleDeleteField}
+          onEditField={handleEditField}
+        />
       </Card>
 
       <AddFieldDialog
         open={isAddingField}
-        onClose={() => setIsAddingField(false)}
-        onAddField={handleAddField}
+        onClose={() => {
+          setIsAddingField(false);
+          setEditingField(null);
+        }}
+        onAddField={editingField ? handleUpdateField : handleAddField}
+        editingField={editingField}
       />
     </div>
   );
