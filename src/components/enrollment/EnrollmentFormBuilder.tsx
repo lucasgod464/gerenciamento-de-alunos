@@ -33,7 +33,7 @@ export const EnrollmentFormBuilder = () => {
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
           // Garantir que o campo de nome sempre esteja presente
-          if (!parsedFields.some(field => field.id === "default-name")) {
+          if (!parsedFields.some((field: FormField) => field.id === "default-name")) {
             parsedFields.unshift(DEFAULT_NAME_FIELD);
           }
           setFields(parsedFields);
@@ -42,10 +42,8 @@ export const EnrollmentFormBuilder = () => {
           setFields([DEFAULT_NAME_FIELD]);
           localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify([DEFAULT_NAME_FIELD]));
         }
-        console.log("Campos do construtor carregados:", fields);
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
-        // Em caso de erro, garantir que pelo menos o campo de nome esteja presente
         setFields([DEFAULT_NAME_FIELD]);
       }
     };
@@ -53,16 +51,16 @@ export const EnrollmentFormBuilder = () => {
     loadFields();
 
     // Adicionar listener para mudanças no localStorage
-    const handleStorageChange = () => {
-      loadFields();
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === ENROLLMENT_FIELDS_KEY) {
+        loadFields();
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('enrollmentFieldsUpdated', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('enrollmentFieldsUpdated', handleStorageChange);
     };
   }, []);
 
@@ -71,7 +69,6 @@ export const EnrollmentFormBuilder = () => {
     try {
       console.log("Salvando campos no localStorage:", fields);
       localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
-      window.dispatchEvent(new Event('enrollmentFieldsUpdated'));
       console.log("Campos salvos com sucesso");
     } catch (error) {
       console.error("Erro ao salvar campos:", error);
