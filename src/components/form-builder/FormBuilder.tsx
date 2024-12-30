@@ -25,31 +25,27 @@ export const FormBuilder = ({
 
   // Load fields from localStorage on component mount
   useEffect(() => {
-    const loadFields = () => {
+    const savedFields = localStorage.getItem(storageKey);
+    if (savedFields) {
       try {
-        const savedFields = localStorage.getItem(storageKey);
-        if (savedFields) {
-          const parsedFields = JSON.parse(savedFields);
-          // Ensure default fields are always present
-          const mergedFields = defaultFields.concat(
-            parsedFields.filter((field: FormField) => 
-              !defaultFields.some(defaultField => defaultField.id === field.id)
-            )
-          );
-          setFields(mergedFields);
-        } else {
-          // If no saved fields, use defaults
-          setFields(defaultFields);
-          localStorage.setItem(storageKey, JSON.stringify(defaultFields));
-        }
+        const parsedFields = JSON.parse(savedFields);
+        // Ensure default fields are always present
+        const mergedFields = defaultFields.concat(
+          parsedFields.filter((field: FormField) => 
+            !defaultFields.some(defaultField => defaultField.id === field.id)
+          )
+        );
+        setFields(mergedFields);
       } catch (error) {
         console.error("Error loading form fields:", error);
         setFields(defaultFields);
       }
-    };
-
-    loadFields();
-  }, [storageKey, defaultFields]);
+    } else {
+      // If no saved fields, use defaults
+      setFields(defaultFields);
+      localStorage.setItem(storageKey, JSON.stringify(defaultFields));
+    }
+  }, [storageKey, JSON.stringify(defaultFields)]); // Only run when storageKey or defaultFields change
 
   // Save fields to localStorage whenever they change
   useEffect(() => {
@@ -69,8 +65,7 @@ export const FormBuilder = ({
       order: fields.length,
     };
     
-    const updatedFields = [...fields, newField];
-    setFields(updatedFields);
+    setFields(prevFields => [...prevFields, newField]);
     setIsAddingField(false);
     
     toast({
@@ -85,8 +80,7 @@ export const FormBuilder = ({
       return;
     }
     
-    const updatedFields = fields.filter((field) => field.id !== id);
-    setFields(updatedFields);
+    setFields(prevFields => prevFields.filter(field => field.id !== id));
     
     toast({
       title: "Campo removido",
