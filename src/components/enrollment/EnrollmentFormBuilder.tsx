@@ -9,51 +9,64 @@ import { useToast } from "@/hooks/use-toast";
 
 const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 
-const DEFAULT_NAME_FIELD: FormField = {
-  id: "default-name",
-  name: "nome_completo",
-  label: "Nome Completo",
-  type: "text",
-  required: true,
-  order: 0,
-};
+const DEFAULT_FIELDS: FormField[] = [
+  {
+    id: "default-name",
+    name: "nome_completo",
+    label: "Nome Completo",
+    type: "text",
+    required: true,
+    order: 0,
+  },
+  {
+    id: "default-birthdate",
+    name: "data_nascimento",
+    label: "Data de Nascimento",
+    type: "date",
+    required: true,
+    order: 1,
+  }
+];
 
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
-  const [fields, setFields] = useState<FormField[]>([DEFAULT_NAME_FIELD]);
+  const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
 
-  // Carregar campos inicialmente
   useEffect(() => {
     const loadFields = () => {
       try {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Garantir que o campo de nome sempre esteja presente
-          if (!parsedFields.some((field: FormField) => field.id === "default-name")) {
-            parsedFields.unshift(DEFAULT_NAME_FIELD);
+          // Garantir que os campos padrão sempre estejam presentes
+          const defaultFieldIds = DEFAULT_FIELDS.map(field => field.id);
+          const missingDefaultFields = DEFAULT_FIELDS.filter(
+            defaultField => !parsedFields.some((field: FormField) => field.id === defaultField.id)
+          );
+          
+          if (missingDefaultFields.length > 0) {
+            parsedFields.unshift(...missingDefaultFields);
           }
+          
           setFields(parsedFields);
         }
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
-        setFields([DEFAULT_NAME_FIELD]);
+        setFields(DEFAULT_FIELDS);
       }
     };
 
     loadFields();
-  }, []); // Remove o listener de storage que estava causando problemas
+  }, []);
 
-  // Salvar campos quando houver mudanças
   useEffect(() => {
     localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
   }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     if (editingField) {
-      // Atualizar campo existente
       const updatedFields = fields.map((f) =>
         f.id === editingField.id ? { ...field, id: f.id, order: f.order } : f
       );
@@ -64,7 +77,6 @@ export const EnrollmentFormBuilder = () => {
         description: "O campo foi atualizado com sucesso.",
       });
     } else {
-      // Adicionar novo campo
       const newField: FormField = {
         ...field,
         id: Math.random().toString(36).substr(2, 9),
@@ -82,11 +94,11 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
-    // Não permitir a exclusão do campo de nome se for o campo padrão
-    if (id === "default-name") {
+    // Não permitir a exclusão dos campos padrão
+    if (DEFAULT_FIELDS.some(field => field.id === id)) {
       toast({
         title: "Operação não permitida",
-        description: "O campo Nome Completo é obrigatório e não pode ser removido.",
+        description: "Este campo é obrigatório e não pode ser removido.",
         variant: "destructive",
       });
       return;
@@ -102,11 +114,11 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleEditField = (field: FormField) => {
-    // Não permitir a edição do campo de nome se for o campo padrão
-    if (field.id === "default-name") {
+    // Não permitir a edição dos campos padrão
+    if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
       toast({
         title: "Operação não permitida",
-        description: "O campo Nome Completo é obrigatório e não pode ser editado.",
+        description: "Este campo é obrigatório e não pode ser editado.",
         variant: "destructive",
       });
       return;
