@@ -29,7 +29,6 @@ export const EnrollmentFormBuilder = () => {
     const loadFields = () => {
       try {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
-        console.log("Carregando campos do construtor:", savedFields);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
           // Garantir que o campo de nome sempre esteja presente
@@ -37,10 +36,6 @@ export const EnrollmentFormBuilder = () => {
             parsedFields.unshift(DEFAULT_NAME_FIELD);
           }
           setFields(parsedFields);
-        } else {
-          // Se não houver campos salvos, inicializar com o campo de nome
-          setFields([DEFAULT_NAME_FIELD]);
-          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify([DEFAULT_NAME_FIELD]));
         }
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
@@ -49,30 +44,11 @@ export const EnrollmentFormBuilder = () => {
     };
 
     loadFields();
-
-    // Adicionar listener para mudanças no localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === ENROLLMENT_FIELDS_KEY) {
-        loadFields();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
+  }, []); // Remove o listener de storage que estava causando problemas
 
   // Salvar campos quando houver mudanças
   useEffect(() => {
-    try {
-      console.log("Salvando campos no localStorage:", fields);
-      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
-      console.log("Campos salvos com sucesso");
-    } catch (error) {
-      console.error("Erro ao salvar campos:", error);
-    }
+    localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
   }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
