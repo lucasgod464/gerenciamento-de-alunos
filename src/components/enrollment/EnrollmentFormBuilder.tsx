@@ -9,9 +9,18 @@ import { useToast } from "@/hooks/use-toast";
 
 const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 
+const DEFAULT_NAME_FIELD: FormField = {
+  id: "default-name",
+  name: "nome_completo",
+  label: "Nome Completo",
+  type: "text",
+  required: true,
+  order: 0,
+};
+
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
-  const [fields, setFields] = useState<FormField[]>([]);
+  const [fields, setFields] = useState<FormField[]>([DEFAULT_NAME_FIELD]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
 
@@ -23,28 +32,38 @@ export const EnrollmentFormBuilder = () => {
         console.log("Carregando campos do construtor:", savedFields);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
+          // Garantir que o campo de nome sempre esteja presente
+          if (!parsedFields.some(field => field.id === "default-name")) {
+            parsedFields.unshift(DEFAULT_NAME_FIELD);
+          }
           setFields(parsedFields);
         } else {
-          // Adicionar campo de nome obrigatório se não houver campos salvos
-          const defaultNameField: FormField = {
-            id: "default-name",
-            name: "nome_completo",
-            label: "Nome Completo",
-            type: "text",
-            required: true,
-            order: 0,
-          };
-          setFields([defaultNameField]);
-          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify([defaultNameField]));
+          // Se não houver campos salvos, inicializar com o campo de nome
+          setFields([DEFAULT_NAME_FIELD]);
+          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify([DEFAULT_NAME_FIELD]));
         }
         console.log("Campos do construtor carregados:", fields);
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
-        setFields([]);
+        // Em caso de erro, garantir que pelo menos o campo de nome esteja presente
+        setFields([DEFAULT_NAME_FIELD]);
       }
     };
 
     loadFields();
+
+    // Adicionar listener para mudanças no localStorage
+    const handleStorageChange = () => {
+      loadFields();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('enrollmentFieldsUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('enrollmentFieldsUpdated', handleStorageChange);
+    };
   }, []);
 
   // Salvar campos quando houver mudanças
