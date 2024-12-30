@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { X, Plus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AddFieldDialogProps {
   open: boolean;
@@ -28,15 +29,16 @@ interface AddFieldDialogProps {
 
 export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddFieldDialogProps) => {
   const [label, setLabel] = useState(editingField?.label || "");
+  const [description, setDescription] = useState(editingField?.description || "");
   const [type, setType] = useState<FieldType>(editingField?.type || "text");
   const [required, setRequired] = useState(editingField?.required || false);
   const [options, setOptions] = useState<string[]>(editingField?.options || []);
   const [newOption, setNewOption] = useState("");
 
-  // Atualiza os estados quando o campo em edição muda
   useEffect(() => {
     if (editingField) {
       setLabel(editingField.label);
+      setDescription(editingField.description || "");
       setType(editingField.type);
       setRequired(editingField.required);
       setOptions(editingField.options || []);
@@ -47,12 +49,14 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
     e.preventDefault();
     onAddField({
       label,
+      description,
       type,
       required,
       name: label.toLowerCase().replace(/\s+/g, "_"),
       options: type === "select" ? options : undefined,
     });
     setLabel("");
+    setDescription("");
     setType("text");
     setRequired(false);
     setOptions([]);
@@ -84,6 +88,16 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição (opcional)</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Digite uma descrição para este campo..."
+              className="resize-none"
             />
           </div>
           <div className="space-y-2">

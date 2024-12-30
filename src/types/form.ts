@@ -4,6 +4,7 @@ export interface FormField {
   id: string;
   name: string;
   label: string;
+  description?: string;
   type: FieldType;
   required: boolean;
   order: number;
