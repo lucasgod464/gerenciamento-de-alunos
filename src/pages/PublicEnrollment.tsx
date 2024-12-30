@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/types/form";
 import { Student } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
@@ -94,6 +95,17 @@ const PublicEnrollment = () => {
             </SelectContent>
           </Select>
         );
+      case "textarea":
+        return (
+          <Textarea
+            id={field.name}
+            required={field.required}
+            value={formData[field.name] || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            className="w-full bg-white min-h-[100px] resize-y"
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+          />
+        );
       case "date":
         return (
           <Input
@@ -134,6 +146,9 @@ const PublicEnrollment = () => {
                 >
                   {field.label} {field.required && "*"}
                 </label>
+                {field.description && (
+                  <p className="text-sm text-gray-500 mb-2">{field.description}</p>
+                )}
                 {renderField(field)}
               </div>
             ))}
