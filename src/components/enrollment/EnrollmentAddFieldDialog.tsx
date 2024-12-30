@@ -27,7 +27,7 @@ interface AddFieldDialogProps {
 
 export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddFieldDialogProps) => {
   const [label, setLabel] = useState(editingField?.label || "");
-  const [type, setType] = useState<"text" | "email" | "tel" | "textarea">(editingField?.type || "text");
+  const [type, setType] = useState<"text" | "email" | "tel" | "textarea" | "date">(editingField?.type || "text");
   const [required, setRequired] = useState(editingField?.required || false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -70,6 +70,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="tel">Telefone</SelectItem>
                 <SelectItem value="textarea">Área de Texto</SelectItem>
+                <SelectItem value="date">Data</SelectItem>
               </SelectContent>
             </Select>
           </div>
