@@ -15,6 +15,13 @@ interface StudentInfoDialogProps {
 export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) {
   if (!student) return null;
 
+  // Filter out duplicate fields from customFields that are already shown in basic fields
+  const filteredCustomFields = student.customFields ? 
+    Object.entries(student.customFields).filter(([key]) => {
+      const normalizedKey = key.toLowerCase().replace(/_/g, '');
+      return !['nome', 'nomecompleto', 'datanascimento', 'datadenanscimento'].includes(normalizedKey);
+    }) : [];
+
   return (
     <Dialog open={!!student} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
@@ -53,8 +60,8 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
             </div>
           )}
           
-          {/* Campos personalizados */}
-          {student.customFields && Object.entries(student.customFields).map(([key, value]) => (
+          {/* Campos personalizados (excluindo duplicatas) */}
+          {filteredCustomFields.map(([key, value]) => (
             <div key={key} className="flex flex-col space-y-1.5">
               <label className="font-semibold capitalize">
                 {key.replace(/_/g, " ")}
