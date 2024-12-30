@@ -14,7 +14,6 @@ export const EnrollmentFormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
 
-  // Load fields from localStorage on component mount
   useEffect(() => {
     const loadFields = () => {
       try {
@@ -31,7 +30,6 @@ export const EnrollmentFormBuilder = () => {
     loadFields();
   }, []);
 
-  // Save fields to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
