@@ -20,14 +20,14 @@ export const FormBuilder = ({
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   
-  const [fields, setFields] = useState<FormField[]>(defaultFields);
+  const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
 
   // Load fields from localStorage on component mount
   useEffect(() => {
-    const savedFields = localStorage.getItem(storageKey);
-    if (savedFields) {
-      try {
+    try {
+      const savedFields = localStorage.getItem(storageKey);
+      if (savedFields) {
         const parsedFields = JSON.parse(savedFields);
         // Ensure default fields are always present
         const mergedFields = defaultFields.concat(
@@ -36,23 +36,21 @@ export const FormBuilder = ({
           )
         );
         setFields(mergedFields);
-      } catch (error) {
-        console.error("Error loading form fields:", error);
+      } else {
         setFields(defaultFields);
+        localStorage.setItem(storageKey, JSON.stringify(defaultFields));
       }
-    } else {
-      // If no saved fields, use defaults
+    } catch (error) {
+      console.error("Error loading form fields:", error);
       setFields(defaultFields);
-      localStorage.setItem(storageKey, JSON.stringify(defaultFields));
     }
-  }, [storageKey, JSON.stringify(defaultFields)]); // Only run when storageKey or defaultFields change
+  }, [storageKey]); // Remove defaultFields from dependencies to prevent re-renders
 
   // Save fields to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(fields));
-      // Dispatch custom event to notify other components
-      window.dispatchEvent(new Event('formFieldsUpdated'));
+      console.log("Fields saved to localStorage:", fields); // Debug log
     } catch (error) {
       console.error("Error saving form fields:", error);
     }
