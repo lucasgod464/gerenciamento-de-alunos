@@ -65,11 +65,6 @@ export const FormBuilder = () => {
     };
 
     loadFields();
-
-    window.addEventListener("formFieldsUpdated", loadFields);
-    return () => {
-      window.removeEventListener("formFieldsUpdated", loadFields);
-    }
   }, []);
 
   useEffect(() => {
