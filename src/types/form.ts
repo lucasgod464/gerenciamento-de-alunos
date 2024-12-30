@@ -7,5 +7,5 @@ export interface FormField {
   type: FieldType;
   required: boolean;
   order: number;
-  options?: { label: string; value: string }[];
+  options?: string[];
 }
