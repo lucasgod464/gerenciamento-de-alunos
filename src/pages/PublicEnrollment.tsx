@@ -1,90 +1,132 @@
-import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { FormField } from "@/types/form";
-import { Student } from "@/types/student";
-import { useToast } from "@/hooks/use-toast";
-import { v4 as uuidv4 } from 'uuid';
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { FormField } from "@/types/form"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
 
-const PublicEnrollment = () => {
-  const [fields, setFields] = useState<FormField[]>([]);
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const { toast } = useToast();
+export default function PublicEnrollment() {
+  const [fields, setFields] = useState<FormField[]>([])
+  const [formData, setFormData] = useState<Record<string, any>>({})
+  const { toast } = useToast()
 
   useEffect(() => {
     const loadFields = () => {
-      const savedFields = localStorage.getItem("enrollmentFields");
-      if (savedFields) {
-        setFields(JSON.parse(savedFields));
+      try {
+        const savedFields = localStorage.getItem("enrollmentFields")
+        if (savedFields) {
+          const parsedFields = JSON.parse(savedFields)
+          setFields(parsedFields)
+          
+          // Inicializa os campos de múltipla escolha com arrays vazios
+          const initialData: Record<string, any> = {}
+          parsedFields.forEach((field: FormField) => {
+            if (field.type === "multiple") {
+              initialData[field.name] = []
+            }
+          })
+          setFormData(initialData)
+        }
+      } catch (error) {
+        console.error("Erro ao carregar campos do formulário:", error)
       }
-    };
+    }
 
-    loadFields();
-    window.addEventListener("formFieldsUpdated", loadFields);
-    return () => window.removeEventListener("formFieldsUpdated", loadFields);
-  }, []);
+    loadFields()
+
+    window.addEventListener("formFieldsUpdated", loadFields)
+    return () => {
+      window.removeEventListener("formFieldsUpdated", loadFields)
+    }
+  }, [])
+
+  const handleInputChange = (name: string, value: any) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleMultipleChoiceChange = (name: string, option: string, checked: boolean) => {
+    setFormData((prev) => {
+      const currentValues = prev[name] || []
+      if (checked) {
+        return {
+          ...prev,
+          [name]: [...currentValues, option],
+        }
+      } else {
+        return {
+          ...prev,
+          [name]: currentValues.filter((value: string) => value !== option),
+        }
+      }
+    })
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
+    
+    // Validação dos campos obrigatórios
+    const missingFields = fields
+      .filter((field) => field.required)
+      .filter((field) => {
+        if (field.type === "multiple") {
+          return !formData[field.name] || formData[field.name].length === 0
+        }
+        return !formData[field.name]
+      })
+      .map((field) => field.label)
 
-    const newStudent: Student = {
-      id: uuidv4(),
-      name: formData.nome_completo || "",
-      birthDate: formData.data_nascimento || "",
-      room: "",
-      status: "active",
-      createdAt: new Date().toISOString(),
-      companyId: null,
-      customFields: formData
-    };
+    if (missingFields.length > 0) {
+      toast({
+        title: "Campos obrigatórios",
+        description: `Por favor, preencha os seguintes campos: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      })
+      return
+    }
 
-    const existingStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    const updatedStudents = [...existingStudents, newStudent];
-    localStorage.setItem("students", JSON.stringify(updatedStudents));
-
+    console.log("Dados do formulário:", formData)
     toast({
-      title: "Sucesso!",
-      description: "Inscrição realizada com sucesso.",
-    });
+      title: "Formulário enviado",
+      description: "Seus dados foram enviados com sucesso!",
+    })
+  }
 
-    setFormData({});
-    window.dispatchEvent(new Event('studentAdded'));
-  };
-
-  const handleInputChange = (fieldName: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-  };
-
-  const sortedFields = [...fields].sort((a, b) => {
-    if (a.name === "nome_completo") return -1;
-    if (b.name === "nome_completo") return 1;
-    if (a.name === "data_nascimento") return -1;
-    if (b.name === "data_nascimento") return 1;
-    return a.order - b.order;
-  });
+  // Ordena os campos pelo número da ordem
+  const sortedFields = [...fields].sort((a, b) => a.order - b.order)
 
   const renderField = (field: FormField) => {
     switch (field.type) {
+      case "textarea":
+        return (
+          <Textarea
+            id={field.name}
+            name={field.name}
+            value={formData[field.name] || ""}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            required={field.required}
+            className="min-h-[100px] resize-y"
+          />
+        )
       case "select":
         return (
           <Select
             value={formData[field.name] || ""}
             onValueChange={(value) => handleInputChange(field.name, value)}
           >
-            <SelectTrigger className="w-full bg-white">
-              <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma opção" />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (
@@ -94,43 +136,42 @@ const PublicEnrollment = () => {
               ))}
             </SelectContent>
           </Select>
-        );
-      case "textarea":
+        )
+      case "multiple":
         return (
-          <Textarea
-            id={field.name}
-            required={field.required}
-            value={formData[field.name] || ""}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            className="w-full bg-white min-h-[100px] resize-y"
-            placeholder={`Digite ${field.label.toLowerCase()}`}
-          />
-        );
-      case "date":
-        return (
-          <Input
-            id={field.name}
-            type="date"
-            required={field.required}
-            value={formData[field.name] || ""}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            className="w-full bg-white"
-          />
-        );
+          <div className="space-y-2">
+            {field.options?.map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${field.name}-${option}`}
+                  checked={(formData[field.name] || []).includes(option)}
+                  onCheckedChange={(checked) => 
+                    handleMultipleChoiceChange(field.name, option, checked as boolean)
+                  }
+                />
+                <label
+                  htmlFor={`${field.name}-${option}`}
+                  className="text-sm text-gray-700"
+                >
+                  {option}
+                </label>
+              </div>
+            ))}
+          </div>
+        )
       default:
         return (
           <Input
             id={field.name}
+            name={field.name}
             type={field.type}
-            required={field.required}
             value={formData[field.name] || ""}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
-            className="w-full bg-white"
-            placeholder={`Digite ${field.label.toLowerCase()}`}
+            required={field.required}
           />
-        );
+        )
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -144,7 +185,8 @@ const PublicEnrollment = () => {
                   htmlFor={field.name} 
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  {field.label} {field.required && "*"}
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 {field.description && (
                   <p className="text-sm text-gray-500 mb-2">{field.description}</p>
@@ -153,13 +195,11 @@ const PublicEnrollment = () => {
               </div>
             ))}
             <Button type="submit" className="w-full">
-              Enviar Inscrição
+              Enviar
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  );
-};
-
-export default PublicEnrollment;
+  )
+}

@@ -53,7 +53,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
       type,
       required,
       name: label.toLowerCase().replace(/\s+/g, "_"),
-      options: type === "select" ? options : undefined,
+      options: (type === "select" || type === "multiple") ? options : undefined,
     });
     setLabel("");
     setDescription("");
@@ -113,11 +113,12 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
                 <SelectItem value="textarea">Área de Texto</SelectItem>
                 <SelectItem value="date">Data</SelectItem>
                 <SelectItem value="select">Lista de Opções</SelectItem>
+                <SelectItem value="multiple">Múltipla Escolha</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {type === "select" && (
+          {(type === "select" || type === "multiple") && (
             <div className="space-y-2">
               <Label>Opções da Lista</Label>
               <div className="flex gap-2">
@@ -151,7 +152,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
               </div>
               {options.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Adicione pelo menos uma opção para a lista de seleção
+                  Adicione pelo menos uma opção para a lista
                 </p>
               )}
             </div>
@@ -171,7 +172,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
             </Button>
             <Button 
               type="submit"
-              disabled={type === "select" && options.length === 0}
+              disabled={(type === "select" || type === "multiple") && options.length === 0}
             >
               {editingField ? "Salvar" : "Adicionar"}
             </Button>
