@@ -91,27 +91,31 @@ const AdminStudentsTotal = () => {
   };
 
   const handleTransferStudent = (studentId: string, newRoomId: string) => {
+    console.log("Iniciando transferência do aluno:", studentId, "para sala:", newRoomId);
+    
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     
     // Encontrar o aluno (pode estar em uma sala ou na lista de alunos sem sala)
     let studentToTransfer: Student | null = null;
+    let studentFound = false;
     
     // Procurar nas salas primeiro
-    for (const room of allRooms) {
-      if (room.students) {
+    const updatedRooms = allRooms.map((room: any) => {
+      if (room.students && !studentFound) {
         const student = room.students.find((s: Student) => s.id === studentId);
         if (student) {
           studentToTransfer = student;
+          studentFound = true;
           // Remover o aluno da sala atual
           room.students = room.students.filter((s: Student) => s.id !== studentId);
-          break;
         }
       }
-    }
+      return room;
+    });
 
     // Se não encontrou nas salas, procurar na lista de alunos sem sala
-    if (!studentToTransfer) {
+    if (!studentFound) {
       const formStudent = formStudents.find((s: Student) => s.id === studentId);
       if (formStudent) {
         studentToTransfer = formStudent;
@@ -122,25 +126,38 @@ const AdminStudentsTotal = () => {
     }
 
     if (studentToTransfer) {
+      console.log("Aluno encontrado para transferência:", studentToTransfer);
+      
       // Adicionar o aluno à nova sala
-      const targetRoom = allRooms.find((room: any) => room.id === newRoomId);
-      if (targetRoom) {
-        if (!targetRoom.students) targetRoom.students = [];
-        targetRoom.students.push({
+      const targetRoomIndex = updatedRooms.findIndex((room: any) => room.id === newRoomId);
+      if (targetRoomIndex !== -1) {
+        if (!updatedRooms[targetRoomIndex].students) {
+          updatedRooms[targetRoomIndex].students = [];
+        }
+        updatedRooms[targetRoomIndex].students.push({
           ...studentToTransfer,
           room: newRoomId
         });
       }
 
       // Atualizar o localStorage
-      localStorage.setItem("rooms", JSON.stringify(allRooms));
+      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
       
       // Recarregar os dados
       loadStudents();
 
+      console.log("Transferência concluída, atualizando estado...");
+      
       toast({
         title: "Sucesso",
         description: "Aluno transferido com sucesso!",
+      });
+    } else {
+      console.error("Aluno não encontrado para transferência");
+      toast({
+        title: "Erro",
+        description: "Não foi possível encontrar o aluno para transferência",
+        variant: "destructive",
       });
     }
   };
@@ -166,7 +183,6 @@ const AdminStudentsTotal = () => {
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Coluna de Alunos sem Sala */}
           <Card>
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
@@ -185,7 +201,6 @@ const AdminStudentsTotal = () => {
             </CardContent>
           </Card>
 
-          {/* Coluna de Alunos com Sala */}
           <Card>
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
