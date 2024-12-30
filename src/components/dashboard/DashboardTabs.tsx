@@ -8,32 +8,7 @@ const EnrollmentFormBuilder = () => {
   return (
     <FormBuilder 
       storageKey="enrollmentFormFields"
-      defaultFields={[
-        {
-          id: "name",
-          name: "fullName",
-          label: "Nome Completo",
-          type: "text",
-          required: true,
-          order: 0,
-        },
-        {
-          id: "email",
-          name: "email",
-          label: "Email",
-          type: "email",
-          required: true,
-          order: 1,
-        },
-        {
-          id: "phone",
-          name: "phone",
-          label: "Telefone",
-          type: "tel",
-          required: true,
-          order: 2,
-        }
-      ]}
+      defaultFields={[]}
     />
   );
 };
