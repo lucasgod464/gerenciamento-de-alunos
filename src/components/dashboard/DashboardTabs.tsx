@@ -14,7 +14,7 @@ const EnrollmentFormBuilder = () => {
           name: "fullName",
           label: "Nome Completo",
           type: "text",
-          required: false,
+          required: true,
           order: 0,
         },
         {
@@ -22,7 +22,7 @@ const EnrollmentFormBuilder = () => {
           name: "email",
           label: "Email",
           type: "email",
-          required: false,
+          required: true,
           order: 1,
         },
         {
@@ -30,7 +30,7 @@ const EnrollmentFormBuilder = () => {
           name: "phone",
           label: "Telefone",
           type: "tel",
-          required: false,
+          required: true,
           order: 2,
         }
       ]}
