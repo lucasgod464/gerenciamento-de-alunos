@@ -23,6 +23,7 @@ const AdminStudentsTotal = () => {
     const companyRooms = allRooms.filter((room: any) => 
       room.companyId === currentUser.companyId
     );
+    setRooms(companyRooms.map(room => ({ id: room.id, name: room.name })));
 
     // Coletar todos os alunos de todas as salas da empresa
     const roomStudents: Student[] = [];
@@ -46,7 +47,6 @@ const AdminStudentsTotal = () => {
 
     // Combinar todos os alunos
     setStudents([...roomStudents, ...companyFormStudents]);
-    setRooms(companyRooms.map(room => ({ id: room.id, name: room.name })));
   };
 
   useEffect(() => {
@@ -64,8 +64,11 @@ const AdminStudentsTotal = () => {
   }, [currentUser]);
 
   const handleDeleteStudent = (id: string) => {
+    // Remover aluno do localStorage (tanto das salas quanto da lista de alunos sem sala)
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     
+    // Atualizar salas
     const updatedRooms = allRooms.map((room: any) => {
       if (room.companyId === currentUser?.companyId && room.students) {
         room.students = room.students.filter((student: Student) => student.id !== id);
@@ -73,7 +76,12 @@ const AdminStudentsTotal = () => {
       return room;
     });
 
+    // Atualizar lista de alunos sem sala
+    const updatedFormStudents = formStudents.filter((student: Student) => student.id !== id);
+
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    localStorage.setItem("students", JSON.stringify(updatedFormStudents));
+    
     loadStudents();
     
     toast({
@@ -84,47 +92,65 @@ const AdminStudentsTotal = () => {
 
   const handleTransferStudent = (studentId: string, newRoomId: string) => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
+    
+    // Encontrar o aluno (pode estar em uma sala ou na lista de alunos sem sala)
     let studentToTransfer: Student | null = null;
-    let oldRoomId: string | null = null;
-
-    allRooms.forEach((room: any) => {
+    
+    // Procurar nas salas primeiro
+    for (const room of allRooms) {
       if (room.students) {
         const student = room.students.find((s: Student) => s.id === studentId);
         if (student) {
           studentToTransfer = student;
-          oldRoomId = room.id;
+          // Remover o aluno da sala atual
+          room.students = room.students.filter((s: Student) => s.id !== studentId);
+          break;
         }
       }
-    });
+    }
 
-    if (!studentToTransfer || !oldRoomId) return;
-
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.id === oldRoomId) {
-        room.students = room.students.filter((s: Student) => s.id !== studentId);
+    // Se não encontrou nas salas, procurar na lista de alunos sem sala
+    if (!studentToTransfer) {
+      const formStudent = formStudents.find((s: Student) => s.id === studentId);
+      if (formStudent) {
+        studentToTransfer = formStudent;
+        // Remover o aluno da lista de alunos sem sala
+        const updatedFormStudents = formStudents.filter((s: Student) => s.id !== studentId);
+        localStorage.setItem("students", JSON.stringify(updatedFormStudents));
       }
-      if (room.id === newRoomId) {
-        const updatedStudent = { ...studentToTransfer, room: newRoomId };
-        room.students = [...(room.students || []), updatedStudent];
+    }
+
+    if (studentToTransfer) {
+      // Adicionar o aluno à nova sala
+      const targetRoom = allRooms.find((room: any) => room.id === newRoomId);
+      if (targetRoom) {
+        if (!targetRoom.students) targetRoom.students = [];
+        targetRoom.students.push({
+          ...studentToTransfer,
+          room: newRoomId
+        });
       }
-      return room;
-    });
 
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    loadStudents();
+      // Atualizar o localStorage
+      localStorage.setItem("rooms", JSON.stringify(allRooms));
+      
+      // Recarregar os dados
+      loadStudents();
 
-    toast({
-      title: "Sucesso",
-      description: "Aluno transferido com sucesso!",
-    });
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
+    }
   };
 
   const filteredStudents = students.filter((student) => 
     student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const studentsWithRoom = filteredStudents.filter(student => student.room);
   const studentsWithoutRoom = filteredStudents.filter(student => !student.room);
+  const studentsWithRoom = filteredStudents.filter(student => student.room);
 
   return (
     <DashboardLayout role="admin">
@@ -145,13 +171,13 @@ const AdminStudentsTotal = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
               <StudentTable 
-                students={students.filter(s => !s.room)}
+                students={studentsWithoutRoom}
                 rooms={rooms}
                 onDeleteStudent={handleDeleteStudent}
                 onTransferStudent={handleTransferStudent}
                 showTransferOption={true}
               />
-              {students.filter(s => !s.room).length === 0 && (
+              {studentsWithoutRoom.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   Nenhum aluno sem sala encontrado
                 </p>
@@ -164,13 +190,13 @@ const AdminStudentsTotal = () => {
             <CardContent className="pt-6">
               <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
               <StudentTable 
-                students={students.filter(s => s.room)}
+                students={studentsWithRoom}
                 rooms={rooms}
                 onDeleteStudent={handleDeleteStudent}
                 onTransferStudent={handleTransferStudent}
                 showTransferOption={true}
               />
-              {students.filter(s => s.room).length === 0 && (
+              {studentsWithRoom.length === 0 && (
                 <p className="text-center text-muted-foreground py-4">
                   Nenhum aluno com sala encontrado
                 </p>
