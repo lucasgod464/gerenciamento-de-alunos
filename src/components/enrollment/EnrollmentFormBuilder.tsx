@@ -15,15 +15,19 @@ export const EnrollmentFormBuilder = () => {
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
 
+  // Carregar campos inicialmente
   useEffect(() => {
     const loadFields = () => {
       try {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+        console.log("Carregando campos do construtor:", savedFields);
         if (savedFields) {
-          setFields(JSON.parse(savedFields));
+          const parsedFields = JSON.parse(savedFields);
+          setFields(parsedFields);
+          console.log("Campos do construtor carregados:", parsedFields);
         }
       } catch (error) {
-        console.error("Error loading enrollment form fields:", error);
+        console.error("Erro ao carregar campos do construtor:", error);
         setFields([]);
       }
     };
@@ -31,20 +35,21 @@ export const EnrollmentFormBuilder = () => {
     loadFields();
   }, []);
 
+  // Salvar campos quando houver mudanças
   useEffect(() => {
     try {
+      console.log("Salvando campos no localStorage:", fields);
       localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
-      // Disparar um evento customizado para notificar outras partes da aplicação
       window.dispatchEvent(new Event('enrollmentFieldsUpdated'));
-      console.info("Enrollment fields saved to localStorage:", fields);
+      console.log("Campos salvos com sucesso");
     } catch (error) {
-      console.error("Error saving enrollment form fields:", error);
+      console.error("Erro ao salvar campos:", error);
     }
   }, [fields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     if (editingField) {
-      // Update existing field
+      // Atualizar campo existente
       const updatedFields = fields.map((f) =>
         f.id === editingField.id ? { ...field, id: f.id, order: f.order } : f
       );
@@ -55,7 +60,7 @@ export const EnrollmentFormBuilder = () => {
         description: "O campo foi atualizado com sucesso.",
       });
     } else {
-      // Add new field
+      // Adicionar novo campo
       const newField: FormField = {
         ...field,
         id: Math.random().toString(36).substr(2, 9),

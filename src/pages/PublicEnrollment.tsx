@@ -7,24 +7,39 @@ const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 const PublicEnrollment = () => {
   const [fields, setFields] = useState<FormField[]>([]);
 
-  useEffect(() => {
-    const loadFields = () => {
-      try {
-        const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
-        if (savedFields) {
-          setFields(JSON.parse(savedFields));
-        }
-      } catch (error) {
-        console.error("Error loading form fields:", error);
-        setFields([]);
+  // Função para carregar os campos
+  const loadFields = () => {
+    try {
+      const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+      console.log("Carregando campos do formulário:", savedFields);
+      if (savedFields) {
+        const parsedFields = JSON.parse(savedFields);
+        setFields(parsedFields);
+        console.log("Campos carregados com sucesso:", parsedFields);
       }
-    };
+    } catch (error) {
+      console.error("Erro ao carregar campos do formulário:", error);
+      setFields([]);
+    }
+  };
 
+  // Carregar campos inicialmente
+  useEffect(() => {
     loadFields();
+  }, []);
+
+  // Ouvir mudanças nos campos
+  useEffect(() => {
     window.addEventListener('enrollmentFieldsUpdated', loadFields);
+    window.addEventListener('storage', (e) => {
+      if (e.key === ENROLLMENT_FIELDS_KEY) {
+        loadFields();
+      }
+    });
     
     return () => {
       window.removeEventListener('enrollmentFieldsUpdated', loadFields);
+      window.removeEventListener('storage', loadFields);
     };
   }, []);
 
