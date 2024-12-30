@@ -22,19 +22,24 @@ export const FormPreview = ({ fields, onDeleteField }: FormPreviewProps) => {
                   <Badge variant="secondary">Obrigatório</Badge>
                 )}
               </div>
+              {field.description && (
+                <p className="text-sm text-muted-foreground">
+                  {field.description}
+                </p>
+              )}
               <p className="text-sm text-muted-foreground">
                 Tipo: {field.type}
+                {(field.type === "select" || field.type === "multiple") && field.options && (
+                  <span className="ml-2">
+                    (Opções: {field.options.join(", ")})
+                  </span>
+                )}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onDeleteField(field.id)}
-              className={
-                ["name", "birthDate", "status", "room"].includes(field.id)
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }
             >
               <Trash2 className="h-4 w-4" />
             </Button>
