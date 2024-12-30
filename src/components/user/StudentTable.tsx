@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Trash2, ArrowRight, Pencil } from "lucide-react";
+import { Trash2, ArrowRight, Pencil, Info } from "lucide-react";
 import { Student } from "@/types/student";
 import { useState } from "react";
 import { StudentForm } from "./StudentForm";
@@ -41,6 +41,7 @@ export function StudentTable({
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isTransferMode, setIsTransferMode] = useState(false);
+  const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { toast } = useToast();
 
   const getRoomName = (roomId: string) => {
@@ -119,6 +120,15 @@ export function StudentTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
+                  {!student.room && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setShowingInfo(student)}
+                    >
+                      <Info className="h-4 w-4" />
+                    </Button>
+                  )}
                   {showTransferOption && (
                     <Button
                       variant="outline"
@@ -173,6 +183,29 @@ export function StudentTable({
               onTransfer={handleTransfer}
               onSubmit={handleSubmit}
             />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!showingInfo} onOpenChange={() => setShowingInfo(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Informações do Aluno</DialogTitle>
+            <DialogDescription>
+              Dados fornecidos durante a inscrição
+            </DialogDescription>
+          </DialogHeader>
+          {showingInfo && showingInfo.customFields && (
+            <div className="space-y-4">
+              {Object.entries(showingInfo.customFields).map(([key, value]) => (
+                <div key={key} className="flex flex-col space-y-1.5">
+                  <label className="font-semibold capitalize">
+                    {key.replace(/_/g, " ")}
+                  </label>
+                  <p className="text-sm text-muted-foreground">{value}</p>
+                </div>
+              ))}
+            </div>
           )}
         </DialogContent>
       </Dialog>
