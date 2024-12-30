@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlus, Users, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnrollmentFormBuilder } from "../enrollment/EnrollmentFormBuilder";
 
 export function DashboardTabs() {
   return (
@@ -26,9 +27,7 @@ export function DashboardTabs() {
             <CardTitle>Inscrição Online</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">
-              Conteúdo da aba Inscrição Online será implementado aqui.
-            </p>
+            <EnrollmentFormBuilder />
           </CardContent>
         </Card>
       </TabsContent>
