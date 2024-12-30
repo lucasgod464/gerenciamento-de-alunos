@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { RoleGuard } from "./components/auth/RoleGuard";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import PublicEnrollment from "./pages/PublicEnrollment";
 
 // Super Admin
 import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
@@ -39,6 +40,10 @@ export const routes = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/enrollment",
+    element: <PublicEnrollment />,
   },
   // Super Admin Routes
   {
