@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormField } from "@/types/form";
+import { useToast } from "@/hooks/use-toast";
 
 const PublicEnrollment = () => {
   const [fields, setFields] = useState<FormField[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadFields = () => {
@@ -35,17 +37,45 @@ const PublicEnrollment = () => {
       customFields: {},
     };
 
+    // Adicionar campos customizados
+    fields.forEach((field) => {
+      if (!["fullName", "birthDate", "status", "room"].includes(field.name)) {
+        (studentData.customFields as any)[field.name] = formData.get(field.name);
+      }
+    });
+
     // Salvar os dados do aluno
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const firstRoom = allRooms[0];
     if (firstRoom) {
       firstRoom.students = [...(firstRoom.students || []), studentData];
       localStorage.setItem("rooms", JSON.stringify(allRooms));
+      
+      toast({
+        title: "Inscrição realizada",
+        description: "Sua inscrição foi realizada com sucesso!",
+      });
+      
+      (e.target as HTMLFormElement).reset();
     }
-
-    alert("Inscrição realizada com sucesso!");
-    (e.target as HTMLFormElement).reset();
   };
+
+  if (fields.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <CardTitle>Formulário de Inscrição</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center">
+              O formulário de inscrição ainda não foi configurado.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -62,14 +92,14 @@ const PublicEnrollment = () => {
                   className="block text-sm font-medium text-gray-700"
                 >
                   {field.label}
-                  {field.required && <span className="text-red-500">*</span>}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
                 </label>
                 {field.type === "textarea" ? (
                   <textarea
                     id={field.name}
                     name={field.name}
                     required={field.required}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md min-h-[100px]"
                   />
                 ) : field.type === "select" ? (
                   <select
@@ -78,6 +108,7 @@ const PublicEnrollment = () => {
                     required={field.required}
                     className="w-full p-2 border rounded-md"
                   >
+                    <option value="">Selecione uma opção</option>
                     {field.options?.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
