@@ -8,7 +8,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FormField } from "@/types/form";
+import { FormField, FieldType } from "@/types/form";
 import {
   Select,
   SelectContent,
@@ -27,7 +27,7 @@ interface AddFieldDialogProps {
 
 export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddFieldDialogProps) => {
   const [label, setLabel] = useState(editingField?.label || "");
-  const [type, setType] = useState<"text" | "email" | "tel" | "textarea" | "date">(editingField?.type || "text");
+  const [type, setType] = useState<FieldType>(editingField?.type || "text");
   const [required, setRequired] = useState(editingField?.required || false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
           </div>
           <div className="space-y-2">
             <Label htmlFor="type">Tipo do Campo</Label>
-            <Select value={type} onValueChange={(value: any) => setType(value)}>
+            <Select value={type} onValueChange={(value: FieldType) => setType(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -71,6 +71,7 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
                 <SelectItem value="tel">Telefone</SelectItem>
                 <SelectItem value="textarea">Área de Texto</SelectItem>
                 <SelectItem value="date">Data</SelectItem>
+                <SelectItem value="select">Seleção</SelectItem>
               </SelectContent>
             </Select>
           </div>
