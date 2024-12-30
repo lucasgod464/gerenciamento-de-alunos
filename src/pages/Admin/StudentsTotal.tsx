@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
-import { StudentTable } from "@/components/user/StudentTable";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 const AdminStudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -18,14 +17,12 @@ const AdminStudentsTotal = () => {
   const loadStudents = () => {
     if (!currentUser?.companyId) return;
 
-    // Carregar alunos das salas
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const companyRooms = allRooms.filter((room: any) => 
       room.companyId === currentUser.companyId
     );
     setRooms(companyRooms.map(room => ({ id: room.id, name: room.name })));
 
-    // Coletar todos os alunos de todas as salas da empresa
     const roomStudents: Student[] = [];
     companyRooms.forEach((room: any) => {
       if (room.students && Array.isArray(room.students)) {
@@ -39,20 +36,17 @@ const AdminStudentsTotal = () => {
       }
     });
 
-    // Carregar alunos do formulário público (sem sala)
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     const companyFormStudents = formStudents.filter((student: Student) => 
       !student.room && (!student.companyId || student.companyId === currentUser.companyId)
     );
 
-    // Combinar todos os alunos
     setStudents([...roomStudents, ...companyFormStudents]);
   };
 
   useEffect(() => {
     loadStudents();
     
-    // Adicionar listener para mudanças no localStorage
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "students" || e.key === "rooms") {
         loadStudents();
@@ -64,11 +58,9 @@ const AdminStudentsTotal = () => {
   }, [currentUser]);
 
   const handleDeleteStudent = (id: string) => {
-    // Remover aluno do localStorage (tanto das salas quanto da lista de alunos sem sala)
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     
-    // Atualizar salas
     const updatedRooms = allRooms.map((room: any) => {
       if (room.companyId === currentUser?.companyId && room.students) {
         room.students = room.students.filter((student: Student) => student.id !== id);
@@ -76,7 +68,6 @@ const AdminStudentsTotal = () => {
       return room;
     });
 
-    // Atualizar lista de alunos sem sala
     const updatedFormStudents = formStudents.filter((student: Student) => student.id !== id);
 
     localStorage.setItem("rooms", JSON.stringify(updatedRooms));
@@ -96,7 +87,6 @@ const AdminStudentsTotal = () => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
     
-    // Encontrar o aluno (pode estar em uma sala ou na lista de alunos sem sala)
     let studentToTransfer: Student | null = null;
     let studentFound = false;
     
@@ -105,9 +95,8 @@ const AdminStudentsTotal = () => {
       if (room.students && !studentFound) {
         const student = room.students.find((s: Student) => s.id === studentId);
         if (student) {
-          studentToTransfer = student;
+          studentToTransfer = { ...student };
           studentFound = true;
-          // Remover o aluno da sala atual
           room.students = room.students.filter((s: Student) => s.id !== studentId);
         }
       }
@@ -118,17 +107,13 @@ const AdminStudentsTotal = () => {
     if (!studentFound) {
       const formStudent = formStudents.find((s: Student) => s.id === studentId);
       if (formStudent) {
-        studentToTransfer = formStudent;
-        // Remover o aluno da lista de alunos sem sala
+        studentToTransfer = { ...formStudent };
         const updatedFormStudents = formStudents.filter((s: Student) => s.id !== studentId);
         localStorage.setItem("students", JSON.stringify(updatedFormStudents));
       }
     }
 
     if (studentToTransfer) {
-      console.log("Aluno encontrado para transferência:", studentToTransfer);
-      
-      // Adicionar o aluno à nova sala
       const targetRoomIndex = updatedRooms.findIndex((room: any) => room.id === newRoomId);
       if (targetRoomIndex !== -1) {
         if (!updatedRooms[targetRoomIndex].students) {
@@ -138,22 +123,16 @@ const AdminStudentsTotal = () => {
           ...studentToTransfer,
           room: newRoomId
         });
+
+        localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+        loadStudents(); // Recarrega os dados imediatamente após a transferência
+
+        toast({
+          title: "Sucesso",
+          description: "Aluno transferido com sucesso!",
+        });
       }
-
-      // Atualizar o localStorage
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-      
-      // Recarregar os dados
-      loadStudents();
-
-      console.log("Transferência concluída, atualizando estado...");
-      
-      toast({
-        title: "Sucesso",
-        description: "Aluno transferido com sucesso!",
-      });
     } else {
-      console.error("Aluno não encontrado para transferência");
       toast({
         title: "Erro",
         description: "Não foi possível encontrar o aluno para transferência",
@@ -182,43 +161,13 @@ const AdminStudentsTotal = () => {
             className="pl-8"
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
-              <StudentTable 
-                students={studentsWithoutRoom}
-                rooms={rooms}
-                onDeleteStudent={handleDeleteStudent}
-                onTransferStudent={handleTransferStudent}
-                showTransferOption={true}
-              />
-              {studentsWithoutRoom.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum aluno sem sala encontrado
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
-              <StudentTable 
-                students={studentsWithRoom}
-                rooms={rooms}
-                onDeleteStudent={handleDeleteStudent}
-                onTransferStudent={handleTransferStudent}
-                showTransferOption={true}
-              />
-              {studentsWithRoom.length === 0 && (
-                <p className="text-center text-muted-foreground py-4">
-                  Nenhum aluno com sala encontrado
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <StudentColumns
+          studentsWithoutRoom={studentsWithoutRoom}
+          studentsWithRoom={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={handleDeleteStudent}
+          onTransferStudent={handleTransferStudent}
+        />
       </div>
     </DashboardLayout>
   );
