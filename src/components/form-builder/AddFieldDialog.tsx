@@ -18,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { FormField } from "@/types/form";
+import { FieldType } from "@/types/form";
 
 interface AddFieldDialogProps {
   open: boolean;
@@ -36,7 +37,7 @@ export const AddFieldDialog = ({
     name: "",
     label: "",
     description: "",
-    type: "text",
+    type: "text" as FieldType,
     required: true,
     options: [] as string[],
   });
@@ -57,7 +58,7 @@ export const AddFieldDialog = ({
         name: "",
         label: "",
         description: "",
-        type: "text",
+        type: "text" as FieldType,
         required: true,
         options: [],
       });
@@ -70,6 +71,7 @@ export const AddFieldDialog = ({
     const field = {
       ...fieldData,
       name: fieldData.name.toLowerCase().replace(/\s+/g, "_"),
+      type: fieldData.type as FieldType, // Corrigindo o erro de tipo
     };
     onAddField(field);
   };
@@ -130,7 +132,7 @@ export const AddFieldDialog = ({
             <Select
               value={fieldData.type}
               onValueChange={(value) =>
-                setFieldData({ ...fieldData, type: value as FormField["type"] })
+                setFieldData({ ...fieldData, type: value as FieldType })
               }
             >
               <SelectTrigger>

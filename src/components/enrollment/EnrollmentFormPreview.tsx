@@ -1,7 +1,7 @@
 import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Lock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +24,9 @@ export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewP
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
 
+  // Lista de IDs dos campos obrigatórios do sistema
+  const systemRequiredFields = ["nome_completo", "data_nascimento", "sala", "status"];
+
   const handleDeleteClick = (id: string) => {
     setFieldToDelete(id);
     setDeleteDialogOpen(true);
@@ -40,39 +43,48 @@ export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewP
   return (
     <>
       <div className="space-y-4">
-        {fields.map((field) => (
-          <Card key={field.id} className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">{field.label}</h3>
-                  {field.required && (
-                    <span className="text-sm text-red-500">*</span>
-                  )}
+        {fields.map((field) => {
+          const isSystemField = systemRequiredFields.includes(field.id);
+
+          return (
+            <Card key={field.id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-medium">{field.label}</h3>
+                    {field.required && (
+                      <span className="text-sm text-red-500">*</span>
+                    )}
+                    {isSystemField && (
+                      <Lock className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Tipo: {field.type}
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Tipo: {field.type}
-                </p>
+                {!isSystemField && (
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditField(field)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(field.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEditField(field)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteClick(field.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
         {fields.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
             Nenhum campo adicionado. Clique em "Adicionar Campo" para começar.
