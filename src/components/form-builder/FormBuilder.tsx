@@ -5,14 +5,12 @@ import { Plus } from "lucide-react";
 import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
-import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 const FORM_FIELDS_KEY = "formFields";
 
 export const FormBuilder = () => {
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
   const defaultFields: FormField[] = [
     {
       id: "name",
@@ -37,10 +35,7 @@ export const FormBuilder = () => {
       type: "select",
       required: true,
       order: 2,
-      options: [
-        { label: "Ativo", value: "active" },
-        { label: "Inativo", value: "inactive" },
-      ],
+      options: ["Ativo", "Inativo"]
     },
     {
       id: "room",
@@ -49,7 +44,7 @@ export const FormBuilder = () => {
       type: "select",
       required: true,
       order: 3,
-      options: [],
+      options: []
     },
   ];
 
