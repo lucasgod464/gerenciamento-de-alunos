@@ -1,62 +1,16 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserPlus, Users, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EnrollmentFormBuilder } from "../enrollment/EnrollmentFormBuilder";
 
 export function DashboardTabs() {
   return (
-    <Tabs defaultValue="inscricao" className="w-full">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="inscricao" className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          Inscrição Online
-        </TabsTrigger>
-        <TabsTrigger value="alunos" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Alunos Total
-        </TabsTrigger>
-        <TabsTrigger value="avisos" className="flex items-center gap-2">
-          <Bell className="h-4 w-4" />
-          Avisos
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="inscricao">
-        <Card>
-          <CardHeader>
-            <CardTitle>Inscrição Online</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EnrollmentFormBuilder />
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="alunos">
-        <Card>
-          <CardHeader>
-            <CardTitle>Alunos Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Conteúdo da aba Alunos Total será implementado aqui.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-      
-      <TabsContent value="avisos">
-        <Card>
-          <CardHeader>
-            <CardTitle>Avisos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Conteúdo da aba Avisos será implementado aqui.
-            </p>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
+    <Card>
+      <CardHeader>
+        <CardTitle>Bem-vindo ao Dashboard</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-muted-foreground">
+          Use o menu lateral para acessar as funcionalidades do sistema.
+        </p>
+      </CardContent>
+    </Card>
   );
 }
