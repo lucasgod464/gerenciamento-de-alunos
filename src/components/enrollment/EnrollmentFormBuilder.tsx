@@ -24,8 +24,20 @@ export const EnrollmentFormBuilder = () => {
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
           setFields(parsedFields);
-          console.log("Campos do construtor carregados:", parsedFields);
+        } else {
+          // Adicionar campo de nome obrigatório se não houver campos salvos
+          const defaultNameField: FormField = {
+            id: "default-name",
+            name: "nome_completo",
+            label: "Nome Completo",
+            type: "text",
+            required: true,
+            order: 0,
+          };
+          setFields([defaultNameField]);
+          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify([defaultNameField]));
         }
+        console.log("Campos do construtor carregados:", fields);
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
         setFields([]);
@@ -78,6 +90,16 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
+    // Não permitir a exclusão do campo de nome se for o campo padrão
+    if (id === "default-name") {
+      toast({
+        title: "Operação não permitida",
+        description: "O campo Nome Completo é obrigatório e não pode ser removido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updatedFields = fields.filter((field) => field.id !== id);
     setFields(updatedFields);
     
@@ -88,6 +110,16 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleEditField = (field: FormField) => {
+    // Não permitir a edição do campo de nome se for o campo padrão
+    if (field.id === "default-name") {
+      toast({
+        title: "Operação não permitida",
+        description: "O campo Nome Completo é obrigatório e não pode ser editado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setEditingField(field);
     setIsAddingField(true);
   };
