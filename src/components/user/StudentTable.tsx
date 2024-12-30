@@ -120,15 +120,13 @@ export function StudentTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
-                  {!student.room && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowingInfo(student)}
-                    >
-                      <Info className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowingInfo(student)}
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
                   {showTransferOption && (
                     <Button
                       variant="outline"
