@@ -136,10 +136,10 @@ const PublicEnrollment = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardContent className="p-6">
-          <h1 className="text-2xl font-bold text-center mb-6">Formulário de Inscrição</h1>
+          <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
             {sortedFields.map((field) => (
-              <div key={field.id}>
+              <div key={field.id} className="text-left">
                 <label 
                   htmlFor={field.name} 
                   className="block text-sm font-medium text-gray-700 mb-1"
