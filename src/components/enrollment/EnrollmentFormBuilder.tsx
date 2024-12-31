@@ -49,7 +49,7 @@ export const EnrollmentFormBuilder = () => {
 
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Filtrar campos duplicados, campos excluídos e campos ocultos
+          // Filter duplicate fields, deleted fields, and hidden fields
           const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) => {
             const isNotDeleted = !deletedFields.includes(field.id);
             const isNotHidden = !HIDDEN_FIELDS.includes(field.name);
@@ -57,7 +57,7 @@ export const EnrollmentFormBuilder = () => {
             return isNotDeleted && isNotHidden && isFirstOccurrence;
           });
           
-          // Garantir que os campos padrão estejam presentes
+          // Ensure default fields are present
           DEFAULT_FIELDS.forEach(defaultField => {
             const fieldExists = uniqueFields.some(field => field.name === defaultField.name);
             if (!fieldExists) {
@@ -65,12 +65,12 @@ export const EnrollmentFormBuilder = () => {
             }
           });
 
-          // Ordenar campos baseado na propriedade order
+          // Sort fields based on order property
           const sortedFields = uniqueFields.sort((a, b) => a.order - b.order);
           setFields(sortedFields);
         }
       } catch (error) {
-        console.error("Erro ao carregar campos do construtor:", error);
+        console.error("Error loading form builder fields:", error);
         setFields(DEFAULT_FIELDS);
       }
     };
@@ -80,14 +80,11 @@ export const EnrollmentFormBuilder = () => {
 
   useEffect(() => {
     try {
-      // Salvar apenas se os campos forem diferentes dos padrão
-      if (JSON.stringify(fields) !== JSON.stringify(DEFAULT_FIELDS)) {
-        localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
-      }
+      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
       localStorage.setItem('deletedFields', JSON.stringify(deletedFields));
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
-      console.error("Erro ao salvar campos do construtor:", error);
+      console.error("Error saving form builder fields:", error);
     }
   }, [fields, deletedFields]);
 
@@ -99,8 +96,8 @@ export const EnrollmentFormBuilder = () => {
       setFields(updatedFields);
       setEditingField(undefined);
       toast({
-        title: "Campo atualizado",
-        description: "O campo foi atualizado com sucesso.",
+        title: "Field updated",
+        description: "The field was successfully updated.",
       });
     } else {
       const newField: FormField = {
@@ -112,8 +109,8 @@ export const EnrollmentFormBuilder = () => {
       const updatedFields = [...fields, newField];
       setFields(updatedFields);
       toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso.",
+        title: "Field added",
+        description: "The new field was successfully added.",
       });
     }
     setIsAddingField(false);
@@ -122,8 +119,8 @@ export const EnrollmentFormBuilder = () => {
   const handleDeleteField = (id: string) => {
     if (DEFAULT_FIELDS.some(field => field.id === id)) {
       toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser removido.",
+        title: "Operation not allowed",
+        description: "This field is required and cannot be removed.",
         variant: "destructive",
       });
       return;
@@ -134,16 +131,16 @@ export const EnrollmentFormBuilder = () => {
     setDeletedFields(prev => [...prev, id]);
     
     toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
+      title: "Field removed",
+      description: "The field was successfully removed.",
     });
   };
 
   const handleEditField = (field: FormField) => {
     if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
       toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser editado.",
+        title: "Operation not allowed",
+        description: "This field is required and cannot be edited.",
         variant: "destructive",
       });
       return;
@@ -154,10 +151,14 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleReorderFields = (reorderedFields: FormField[]) => {
-    setFields(reorderedFields);
+    const updatedFields = reorderedFields.map((field, index) => ({
+      ...field,
+      order: index,
+    }));
+    setFields(updatedFields);
     toast({
-      title: "Ordem atualizada",
-      description: "A ordem dos campos foi atualizada com sucesso.",
+      title: "Order updated",
+      description: "The field order was successfully updated.",
     });
   };
 
@@ -165,13 +166,13 @@ export const EnrollmentFormBuilder = () => {
     <div className="space-y-6">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Campos do Formulário de Inscrição</h2>
+          <h2 className="text-lg font-semibold">Enrollment Form Fields</h2>
           <Button onClick={() => {
             setEditingField(undefined);
             setIsAddingField(true);
           }}>
             <Plus className="mr-2 h-4 w-4" />
-            Adicionar Campo
+            Add Field
           </Button>
         </div>
         <FormPreview 

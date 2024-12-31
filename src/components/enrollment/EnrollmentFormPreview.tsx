@@ -38,11 +38,12 @@ interface FormPreviewProps {
   onReorderFields: (fields: FormField[]) => void;
 }
 
-const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: { 
+const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField, index }: { 
   field: FormField; 
   onDelete: (id: string) => void; 
   onEdit: (field: FormField) => void;
   isSystemField: boolean;
+  index: number;
 }) => {
   const {
     attributes,
@@ -51,69 +52,75 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: field.id });
+  } = useSortable({ 
+    id: field.id,
+    data: {
+      index: index,
+    }
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || undefined,
-    opacity: isDragging ? 0.8 : undefined,
-  } as const;
+    transition,
+    position: 'relative' as const,
+    zIndex: isDragging ? 50 : 1,
+    opacity: isDragging ? 0.8 : 1,
+    backgroundColor: isDragging ? 'var(--background)' : undefined,
+    boxShadow: isDragging ? 'var(--shadow-lg)' : undefined,
+  };
 
   return (
-    <Card 
-      ref={setNodeRef} 
-      style={style} 
-      className={`p-4 relative ${isDragging ? 'shadow-lg scale-[1.02] bg-accent/5 z-50' : 'z-10'}`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {!isSystemField && (
-            <button
-              className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </button>
-          )}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-medium">{field.label}</h3>
-              {field.required && (
-                <span className="text-sm text-red-500">*</span>
-              )}
+    <div ref={setNodeRef} style={style} className="mb-3">
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {!isSystemField && (
+              <button
+                className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-muted-foreground">#{index + 1}</span>
+                <h3 className="font-medium">{field.label}</h3>
+                {field.required && (
+                  <span className="text-sm text-red-500">*</span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Type: {field.type}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Tipo: {field.type}
-            </p>
+          </div>
+          <div className="flex space-x-2">
+            {isSystemField ? (
+              <Lock className="h-4 w-4 text-gray-400" />
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(field)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(field.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
-        <div className="flex space-x-2">
-          {isSystemField ? (
-            <Lock className="h-4 w-4 text-gray-400" />
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(field)}
-                className="relative z-20"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(field.id)}
-                className="relative z-20"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
@@ -124,7 +131,11 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const systemFields = ["nome_completo", "data_nascimento"];
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -137,11 +148,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       const oldIndex = fields.findIndex((field) => field.id === active.id);
       const newIndex = fields.findIndex((field) => field.id === over.id);
       
-      const newFields = arrayMove(fields, oldIndex, newIndex).map((field, index) => ({
-        ...field,
-        order: index,
-      }));
-      
+      const newFields = arrayMove(fields, oldIndex, newIndex);
       onReorderFields(newFields);
     }
   };
@@ -161,7 +168,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="relative">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -171,13 +178,14 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
             items={fields.map(f => f.id)}
             strategy={verticalListSortingStrategy}
           >
-            {fields.map((field) => (
+            {fields.map((field, index) => (
               <SortableFieldCard
                 key={field.id}
                 field={field}
                 onDelete={handleDeleteClick}
                 onEdit={onEditField}
                 isSystemField={systemFields.includes(field.name)}
+                index={index}
               />
             ))}
           </SortableContext>
@@ -185,7 +193,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
 
         {fields.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
-            Nenhum campo adicionado. Clique em "Adicionar Campo" para começar.
+            No fields added. Click "Add Field" to start.
           </p>
         )}
       </div>
@@ -193,15 +201,15 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir este campo? Esta ação não pode ser desfeita.
+              Are you sure you want to delete this field? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>
-              Confirmar
+              Confirm
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
