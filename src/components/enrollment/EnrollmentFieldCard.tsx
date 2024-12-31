@@ -25,16 +25,12 @@ export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    position: 'relative' as const,
-    zIndex: isDragging ? 2 : 1,
     opacity: isDragging ? 0.5 : 1,
-    backgroundColor: isDragging ? 'var(--background)' : undefined,
-    boxShadow: isDragging ? 'var(--shadow-lg)' : undefined,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="mb-3">
-      <Card className="p-4">
+    <div ref={setNodeRef} style={style}>
+      <Card className="p-4 mb-2 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isSystemField && (
@@ -54,7 +50,7 @@ export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: 
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                Type: {field.type}
+                Tipo: {field.type}
               </p>
             </div>
           </div>

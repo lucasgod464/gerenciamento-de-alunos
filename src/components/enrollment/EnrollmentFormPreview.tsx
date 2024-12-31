@@ -24,6 +24,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
+  arrayMove,
 } from "@dnd-kit/sortable";
 
 interface FormPreviewProps {
@@ -43,8 +44,6 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
-        delay: 100,
-        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -59,10 +58,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       const oldIndex = fields.findIndex((field) => field.id === active.id);
       const newIndex = fields.findIndex((field) => field.id === over.id);
       
-      const newFields = [...fields];
-      const [movedField] = newFields.splice(oldIndex, 1);
-      newFields.splice(newIndex, 0, movedField);
-      
+      const newFields = arrayMove(fields, oldIndex, newIndex);
       onReorderFields(newFields);
     }
   };
@@ -82,7 +78,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
 
   return (
     <>
-      <div className="relative space-y-0">
+      <div className="relative space-y-4">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -106,7 +102,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
 
         {fields.length === 0 && (
           <p className="text-center text-muted-foreground py-8">
-            No fields added. Click "Add Field" to start.
+            Nenhum campo adicionado. Clique em "Adicionar Campo" para começar.
           </p>
         )}
       </div>
@@ -114,15 +110,15 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm deletion</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this field? This action cannot be undone.
+              Tem certeza que deseja excluir este campo? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete}>
-              Confirm
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

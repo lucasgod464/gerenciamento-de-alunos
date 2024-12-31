@@ -32,52 +32,47 @@ const HIDDEN_FIELDS = ["sala", "status"];
 
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
-  const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
+  const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
   const [deletedFields, setDeletedFields] = useState<string[]>([]);
 
+  // Load fields from localStorage on component mount
   useEffect(() => {
-    const loadFields = () => {
-      try {
-        const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
-        const savedDeletedFields = localStorage.getItem('deletedFields');
+    try {
+      const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+      const savedDeletedFields = localStorage.getItem('deletedFields');
+      
+      if (savedDeletedFields) {
+        setDeletedFields(JSON.parse(savedDeletedFields));
+      }
+
+      if (savedFields) {
+        const parsedFields = JSON.parse(savedFields);
+        const uniqueFields = parsedFields.filter((field: FormField) => {
+          return !deletedFields.includes(field.id) && 
+                 !HIDDEN_FIELDS.includes(field.name);
+        });
         
-        if (savedDeletedFields) {
-          setDeletedFields(JSON.parse(savedDeletedFields));
-        }
+        // Ensure default fields are present
+        const fieldsWithDefaults = [...DEFAULT_FIELDS];
+        uniqueFields.forEach(field => {
+          if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
+            fieldsWithDefaults.push(field);
+          }
+        });
 
-        if (savedFields) {
-          const parsedFields = JSON.parse(savedFields);
-          // Filter duplicate fields, deleted fields, and hidden fields
-          const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) => {
-            const isNotDeleted = !deletedFields.includes(field.id);
-            const isNotHidden = !HIDDEN_FIELDS.includes(field.name);
-            const isFirstOccurrence = index === self.findIndex((f) => f.name === field.name);
-            return isNotDeleted && isNotHidden && isFirstOccurrence;
-          });
-          
-          // Ensure default fields are present
-          DEFAULT_FIELDS.forEach(defaultField => {
-            const fieldExists = uniqueFields.some(field => field.name === defaultField.name);
-            if (!fieldExists) {
-              uniqueFields.unshift(defaultField);
-            }
-          });
-
-          // Sort fields based on order property
-          const sortedFields = uniqueFields.sort((a, b) => a.order - b.order);
-          setFields(sortedFields);
-        }
-      } catch (error) {
-        console.error("Error loading form builder fields:", error);
+        setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
+      } else {
         setFields(DEFAULT_FIELDS);
       }
-    };
+    } catch (error) {
+      console.error("Error loading form builder fields:", error);
+      setFields(DEFAULT_FIELDS);
+    }
+  }, []);
 
-    loadFields();
-  }, [deletedFields]);
-
+  // Save fields to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
@@ -96,21 +91,20 @@ export const EnrollmentFormBuilder = () => {
       setFields(updatedFields);
       setEditingField(undefined);
       toast({
-        title: "Field updated",
-        description: "The field was successfully updated.",
+        title: "Campo atualizado",
+        description: "O campo foi atualizado com sucesso.",
       });
     } else {
       const newField: FormField = {
         ...field,
-        id: Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
         order: fields.length,
       };
       
-      const updatedFields = [...fields, newField];
-      setFields(updatedFields);
+      setFields(prev => [...prev, newField]);
       toast({
-        title: "Field added",
-        description: "The new field was successfully added.",
+        title: "Campo adicionado",
+        description: "O novo campo foi adicionado com sucesso.",
       });
     }
     setIsAddingField(false);
@@ -119,28 +113,27 @@ export const EnrollmentFormBuilder = () => {
   const handleDeleteField = (id: string) => {
     if (DEFAULT_FIELDS.some(field => field.id === id)) {
       toast({
-        title: "Operation not allowed",
-        description: "This field is required and cannot be removed.",
+        title: "Operação não permitida",
+        description: "Este campo é obrigatório e não pode ser removido.",
         variant: "destructive",
       });
       return;
     }
 
-    const updatedFields = fields.filter((field) => field.id !== id);
-    setFields(updatedFields);
+    setFields(prev => prev.filter(field => field.id !== id));
     setDeletedFields(prev => [...prev, id]);
     
     toast({
-      title: "Field removed",
-      description: "The field was successfully removed.",
+      title: "Campo removido",
+      description: "O campo foi removido com sucesso.",
     });
   };
 
   const handleEditField = (field: FormField) => {
     if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
       toast({
-        title: "Operation not allowed",
-        description: "This field is required and cannot be edited.",
+        title: "Operação não permitida",
+        description: "Este campo é obrigatório e não pode ser editado.",
         variant: "destructive",
       });
       return;
@@ -156,23 +149,19 @@ export const EnrollmentFormBuilder = () => {
       order: index,
     }));
     setFields(updatedFields);
-    toast({
-      title: "Order updated",
-      description: "The field order was successfully updated.",
-    });
   };
 
   return (
     <div className="space-y-6">
       <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Enrollment Form Fields</h2>
+          <h2 className="text-lg font-semibold">Campos do Formulário de Inscrição</h2>
           <Button onClick={() => {
             setEditingField(undefined);
             setIsAddingField(true);
           }}>
             <Plus className="mr-2 h-4 w-4" />
-            Add Field
+            Adicionar Campo
           </Button>
         </div>
         <FormPreview 
