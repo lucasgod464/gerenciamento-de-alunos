@@ -23,22 +23,24 @@ export const AttendanceCalendar = ({
         <CardTitle>Calendário</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={onSelectDate}
-          className="rounded-md border"
-          modifiers={{
-            attendance: attendanceDays
-          }}
-          modifiersStyles={{
-            attendance: {
-              backgroundColor: "#22c55e",
-              color: "white",
-              borderRadius: "50%"
-            }
-          }}
-        />
+        <div className="flex justify-center">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={onSelectDate}
+            className="rounded-md border"
+            modifiers={{
+              attendance: attendanceDays
+            }}
+            modifiersStyles={{
+              attendance: {
+                backgroundColor: "#22c55e",
+                color: "white",
+                borderRadius: "50%"
+              }
+            }}
+          />
+        </div>
         <Button 
           onClick={onStartAttendance}
           disabled={!selectedDate || isAttendanceDay(selectedDate)}
