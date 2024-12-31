@@ -18,6 +18,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { FormField, FieldType } from "@/types/form";
+import { CustomFieldOptions } from "./CustomFieldOptions";
 
 interface AddFieldDialogProps {
   open: boolean;
@@ -156,34 +157,14 @@ export const AddFieldDialog = ({
           </div>
 
           {(fieldData.type === "select" || fieldData.type === "multiple") && (
-            <div className="space-y-2">
-              <Label>Opções</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={optionInput}
-                  onChange={(e) => setOptionInput(e.target.value)}
-                  placeholder="Digite uma opção"
-                />
-                <Button type="button" onClick={handleAddOption}>
-                  Adicionar
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {fieldData.options?.map((option, index) => (
-                  <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
-                    <span>{option}</span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveOption(index)}
-                    >
-                      Remover
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <CustomFieldOptions
+              type={fieldData.type}
+              options={fieldData.options}
+              optionInput={optionInput}
+              setOptionInput={setOptionInput}
+              onAddOption={handleAddOption}
+              onRemoveOption={handleRemoveOption}
+            />
           )}
 
           <div className="flex items-center justify-between">
