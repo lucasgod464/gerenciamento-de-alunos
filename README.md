@@ -81,6 +81,52 @@ sudo nginx -t
 sudo systemctl restart nginx
 ```
 
+### Configurando um Domínio Personalizado
+
+1. **Compre um domínio**
+   - Escolha um registrador de domínio (GoDaddy, Namecheap, Google Domains, etc.)
+   - Compre seu domínio desejado (exemplo: meusite.com)
+
+2. **Configure os registros DNS**
+   - Acesse o painel de controle do seu registrador de domínio
+   - Adicione um registro A apontando para o IP da sua VPS:
+     ```
+     Tipo: A
+     Nome: @
+     Valor: <IP_DA_SUA_VPS>
+     TTL: 3600
+     ```
+   - Se desejar usar www, adicione outro registro:
+     ```
+     Tipo: CNAME
+     Nome: www
+     Valor: @
+     TTL: 3600
+     ```
+
+3. **Configure SSL/HTTPS (recomendado)**
+   ```bash
+   # Instale o Certbot
+   sudo apt install certbot python3-certbot-nginx
+
+   # Obtenha o certificado SSL
+   sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
+
+   # O Certbot irá modificar automaticamente sua configuração do Nginx
+   # e adicionar as configurações SSL necessárias
+   ```
+
+4. **Verifique a configuração**
+   - Aguarde alguns minutos para as alterações DNS se propagarem
+   - Acesse seu site através do domínio (https://seu-dominio.com)
+   - Verifique se o certificado SSL está funcionando corretamente
+
+5. **Renovação automática do SSL**
+   ```bash
+   # Verifique se a renovação automática está funcionando
+   sudo certbot renew --dry-run
+   ```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
