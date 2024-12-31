@@ -40,17 +40,22 @@ export const EnrollmentFormBuilder = () => {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Garantir que os campos padrão sempre estejam presentes
-          const defaultFieldIds = DEFAULT_FIELDS.map(field => field.id);
-          const missingDefaultFields = DEFAULT_FIELDS.filter(
-            defaultField => !parsedFields.some((field: FormField) => field.id === defaultField.id)
+          // Filtrar campos duplicados mantendo apenas uma instância de cada campo padrão
+          const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) =>
+            index === self.findIndex((f) => f.name === field.name)
           );
           
-          if (missingDefaultFields.length > 0) {
-            parsedFields.unshift(...missingDefaultFields);
-          }
-          
-          setFields(parsedFields);
+          // Garantir que os campos padrão estejam presentes
+          DEFAULT_FIELDS.forEach(defaultField => {
+            const fieldExists = uniqueFields.some(field => field.name === defaultField.name);
+            if (!fieldExists) {
+              uniqueFields.unshift(defaultField);
+            }
+          });
+
+          // Ordenar campos baseado na propriedade order
+          const sortedFields = uniqueFields.sort((a, b) => a.order - b.order);
+          setFields(sortedFields);
         }
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
@@ -59,11 +64,20 @@ export const EnrollmentFormBuilder = () => {
     };
 
     loadFields();
+
+    // Adicionar event listener para atualizar campos quando o storage mudar
+    window.addEventListener('storage', loadFields);
+    return () => {
+      window.removeEventListener('storage', loadFields);
+    };
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      // Salvar apenas se os campos forem diferentes dos padrão
+      if (JSON.stringify(fields) !== JSON.stringify(DEFAULT_FIELDS)) {
+        localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      }
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
       console.error("Erro ao salvar campos do construtor:", error);
