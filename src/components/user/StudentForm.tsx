@@ -7,6 +7,14 @@ import { FormField } from "@/types/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BasicInfoFields } from "./form-sections/BasicInfoFields";
 import { CustomFields } from "./form-sections/CustomFields";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
