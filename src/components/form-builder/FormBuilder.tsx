@@ -7,7 +7,7 @@ import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
 import { useToast } from "@/hooks/use-toast";
 
-const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
+const FORM_FIELDS_KEY = "formFields";
 
 export const FormBuilder = () => {
   const { toast } = useToast();
@@ -54,7 +54,7 @@ export const FormBuilder = () => {
   useEffect(() => {
     const loadFields = () => {
       try {
-        const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+        const savedFields = localStorage.getItem(FORM_FIELDS_KEY);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
           const mergedFields = defaultFields.concat(
@@ -65,7 +65,7 @@ export const FormBuilder = () => {
           setFields(mergedFields);
         } else {
           setFields(defaultFields);
-          localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(defaultFields));
+          localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(defaultFields));
         }
       } catch (error) {
         console.error("Error loading form fields:", error);
@@ -78,7 +78,7 @@ export const FormBuilder = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(fields));
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
       console.error("Error saving form fields:", error);
@@ -88,7 +88,7 @@ export const FormBuilder = () => {
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     const newField: FormField = {
       ...field,
-      id: Math.random().toString(36).substr(2, 9),
+      id: crypto.randomUUID(),
       order: fields.length,
     };
     
@@ -153,6 +153,14 @@ export const FormBuilder = () => {
     });
   };
 
+  const handleReorderFields = (reorderedFields: FormField[]) => {
+    const updatedFields = reorderedFields.map((field, index) => ({
+      ...field,
+      order: index,
+    }));
+    setFields(updatedFields);
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -170,6 +178,7 @@ export const FormBuilder = () => {
           fields={fields} 
           onDeleteField={handleDeleteField}
           onEditField={handleEditField}
+          onReorderFields={handleReorderFields}
         />
       </Card>
 
