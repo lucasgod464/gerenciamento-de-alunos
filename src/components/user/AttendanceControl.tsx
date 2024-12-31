@@ -1,191 +1,139 @@
 import { useState, useEffect } from "react";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AttendanceStats } from "./AttendanceStats";
-import { AttendanceList } from "./AttendanceList";
-import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
-import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { AttendanceCalendar } from "./attendance/AttendanceCalendar";
+import { AttendanceList } from "./AttendanceList";
+import { AttendanceStats } from "./AttendanceStats";
+import { Student } from "@/types/attendance";
+import { useAuth } from "@/hooks/useAuth";
 import { DailyObservations } from "./attendance/DailyObservations";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const AttendanceControl = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
-  const [observation, setObservation] = useState("");
-  const [observations, setObservations] = useState<DailyObservation[]>([]);
-  const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  
-  const getCompanyStudents = () => {
-    if (!currentUser?.companyId) return [];
-    
-    // Carregar todas as salas da empresa
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = allRooms.filter((room: any) => 
-      room.companyId === currentUser.companyId
-    );
-    
-    // Coletar todos os alunos de todas as salas
-    let allStudents: Student[] = [];
-    companyRooms.forEach((room: any) => {
-      if (room.students && Array.isArray(room.students)) {
-        const roomStudents = room.students.map((student: Student) => ({
-          ...student,
-          room: room.id
-        }));
-        allStudents = [...allStudents, ...roomStudents];
-      }
-    });
-    
-    return allStudents;
-  };
+  const [students, setStudents] = useState<Student[]>([]);
+  const [date, setDate] = useState<Date | null>(null);
+  const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
+  const [showAttendanceList, setShowAttendanceList] = useState(false);
 
   useEffect(() => {
-    const savedAttendanceDays = localStorage.getItem(`attendanceDays_${currentUser?.companyId}`);
-    if (savedAttendanceDays) {
-      setAttendanceDays(JSON.parse(savedAttendanceDays).map((date: string) => new Date(date)));
-    }
+    // Load students and attendance days from localStorage
+    const loadStudents = () => {
+      const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
+      const companyStudents = allStudents.filter((student: Student) => student.companyId === currentUser?.companyId);
+      setStudents(companyStudents);
+    };
+
+    const loadAttendanceDays = () => {
+      const allAttendanceDays = JSON.parse(localStorage.getItem("attendanceDays") || "[]");
+      setAttendanceDays(allAttendanceDays);
+    };
+
+    loadStudents();
+    loadAttendanceDays();
   }, [currentUser]);
 
-  useEffect(() => {
-    if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      const existingAttendance = dailyAttendances.find(da => da.date === dateStr);
-      
-      if (!existingAttendance) {
-        const students = getCompanyStudents();
-        console.log('Loaded students:', students); // Debug log
-        
-        setDailyAttendances(prev => [...prev, {
-          date: dateStr,
-          students: students
-        }]);
-      }
-
-      const existingObservation = observations.find(obs => obs.date === dateStr);
-      setObservation(existingObservation?.text || "");
+  const handleStartAttendance = () => {
+    if (date) {
+      setShowAttendanceList(true);
+      toast({
+        title: "Chamada iniciada",
+        description: `Chamada para ${format(date, 'dd/MM/yyyy')} iniciada.`,
+      });
     }
-  }, [selectedDate, currentUser]);
-
-  const getCurrentDayStudents = () => {
-    if (!selectedDate) return [];
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    const attendance = dailyAttendances.find(da => da.date === dateStr);
-    return attendance?.students || [];
   };
 
   const handleStatusChange = (studentId: string, status: Student["status"]) => {
-    if (!selectedDate) return;
-    
-    const dateStr = selectedDate.toISOString().split('T')[0];
-    setDailyAttendances(prevAttendances => {
-      const updatedAttendances = prevAttendances.map(da => {
-        if (da.date === dateStr) {
-          return {
-            ...da,
-            students: da.students.map(student =>
-              student.id === studentId ? { ...student, status } : student
-            )
-          };
-        }
-        return da;
-      });
-
-      if (!prevAttendances.some(da => da.date === dateStr)) {
-        updatedAttendances.push({
-          date: dateStr,
-          students: getCompanyStudents().map(student =>
-            student.id === studentId ? { ...student, status } : student
-          )
-        });
-      }
-
-      return updatedAttendances;
-    });
-  };
-
-  const handleObservationChange = (text: string) => {
-    if (text.length <= 100 && selectedDate) {
-      setObservation(text);
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      
-      setObservations(prev => {
-        const filtered = prev.filter(obs => obs.date !== dateStr);
-        return [...filtered, { date: dateStr, text }];
-      });
-    }
-  };
-
-  const startAttendance = () => {
-    if (!selectedDate || !currentUser?.companyId) return;
-
-    const newAttendanceDays = [...attendanceDays, selectedDate];
-    setAttendanceDays(newAttendanceDays);
-    
-    localStorage.setItem(
-      `attendanceDays_${currentUser.companyId}`, 
-      JSON.stringify(newAttendanceDays.map(date => date.toISOString()))
+    const updatedStudents = students.map(student => 
+      student.id === studentId ? { ...student, status } : student
     );
-
+    setStudents(updatedStudents);
+    localStorage.setItem("students", JSON.stringify(updatedStudents));
     toast({
-      title: "Chamada iniciada",
-      description: "A chamada foi iniciada para o dia selecionado.",
+      title: "Status atualizado",
+      description: "O status de presença foi atualizado com sucesso.",
     });
-  };
-
-  const isAttendanceDay = (date: Date) => {
-    return attendanceDays.some(attendanceDate => 
-      attendanceDate.toISOString().split('T')[0] === date.toISOString().split('T')[0]
-    );
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <AttendanceCalendar
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          attendanceDays={attendanceDays}
-          onStartAttendance={startAttendance}
-          isAttendanceDay={isAttendanceDay}
-        />
-        <AttendanceStats students={getCurrentDayStudents()} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Lista de Presença - {selectedDate?.toLocaleDateString('pt-BR', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </CardTitle>
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold text-gray-800">Calendário</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {isAttendanceDay(selectedDate || new Date()) ? (
-              <>
-                <AttendanceList
-                  students={getCurrentDayStudents()}
-                  onStatusChange={handleStatusChange}
-                  date={selectedDate || new Date()}
-                />
-                <DailyObservations
-                  observation={observation}
-                  onObservationChange={handleObservationChange}
-                />
-              </>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Clique em "Iniciar Chamada" para começar a registrar as presenças deste dia.
-              </p>
+        <CardContent className="pt-0">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="rounded-md border shadow-sm"
+            locale={ptBR}
+            modifiers={{
+              highlighted: attendanceDays
+            }}
+            modifiersStyles={{
+              highlighted: {
+                backgroundColor: '#22c55e',
+                color: 'white',
+                borderRadius: '50%'
+              }
+            }}
+          />
+          <Button 
+            className="w-full mt-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md transition-all duration-200 hover:shadow-lg"
+            onClick={handleStartAttendance}
+            disabled={!date || attendanceDays.some(d => 
+              format(d, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
             )}
-          </div>
+          >
+            Iniciar Chamada
+          </Button>
         </CardContent>
       </Card>
+
+      <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-semibold text-gray-800">
+            Estatísticas de Presença
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <AttendanceStats students={students} />
+        </CardContent>
+      </Card>
+
+      {showAttendanceList && (
+        <div className="md:col-span-2 space-y-6">
+          <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Lista de Presença - {format(date!, 'dd/MM/yyyy')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <AttendanceList
+                students={students}
+                onStatusChange={handleStatusChange}
+                date={date!}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Observações do Dia
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <DailyObservations date={date!} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Student } from "@/types/attendance";
 
 interface AttendanceStatsProps {
@@ -28,31 +28,61 @@ export const AttendanceStats = ({ students }: AttendanceStatsProps) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Estatísticas de Presença</CardTitle>
-      </CardHeader>
-      <CardContent className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={getAttendanceStats()}
-              dataKey="value"
-              nameKey="name"
-              cx="50%"
-              cy="50%"
-              outerRadius={80}
-              label
-            >
-              {getAttendanceStats().map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </CardContent>
-    </Card>
+    <div className="h-[300px] flex items-center justify-center">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={getAttendanceStats()}
+            dataKey="value"
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            label={({
+              cx,
+              cy,
+              midAngle,
+              innerRadius,
+              outerRadius,
+              value,
+              index
+            }) => {
+              const RADIAN = Math.PI / 180;
+              const radius = 25 + innerRadius + (outerRadius - innerRadius);
+              const x = cx + radius * Math.cos(-midAngle * RADIAN);
+              const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+              return (
+                <text
+                  x={x}
+                  y={y}
+                  className="text-sm"
+                  textAnchor={x > cx ? 'start' : 'end'}
+                  dominantBaseline="central"
+                >
+                  {value}
+                </text>
+              );
+            }}
+          >
+            {getAttendanceStats().map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={entry.color}
+                className="hover:opacity-80 transition-opacity duration-200"
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+            formatter={(value, entry, index) => (
+              <span className="text-sm font-medium">{value}</span>
+            )}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
