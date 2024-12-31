@@ -56,15 +56,18 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    position: 'relative',
+    zIndex: isDragging ? 50 : 0,
+    opacity: isDragging ? 0.8 : 1,
   };
 
   return (
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`rounded-lg mb-3 ${isDragging ? 'z-50' : 'z-0'}`}
+      className="mb-3"
     >
-      <Card className="p-4">
+      <Card className={`p-4 ${isDragging ? 'shadow-lg bg-accent/5' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isSystemField && (
@@ -125,7 +128,8 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5,
+        distance: 8, // Increased slightly to prevent accidental drags
+        delay: 100, // Small delay before drag starts
       },
     }),
     useSensor(KeyboardSensor, {
@@ -174,15 +178,17 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
             items={fields.map(f => f.id)}
             strategy={verticalListSortingStrategy}
           >
-            {fields.map((field) => (
-              <SortableFieldCard
-                key={field.id}
-                field={field}
-                onDelete={handleDeleteClick}
-                onEdit={onEditField}
-                isSystemField={systemFields.includes(field.name)}
-              />
-            ))}
+            <div className="relative">
+              {fields.map((field) => (
+                <SortableFieldCard
+                  key={field.id}
+                  field={field}
+                  onDelete={handleDeleteClick}
+                  onEdit={onEditField}
+                  isSystemField={systemFields.includes(field.name)}
+                />
+              ))}
+            </div>
           </SortableContext>
         </DndContext>
 
