@@ -27,7 +27,6 @@ export default function PublicEnrollment() {
           const parsedFields = JSON.parse(savedFields)
           setFields(parsedFields)
           
-          // Inicializa os campos de múltipla escolha com arrays vazios
           const initialData: Record<string, any> = {}
           parsedFields.forEach((field: FormField) => {
             if (field.type === "multiple") {
@@ -76,7 +75,6 @@ export default function PublicEnrollment() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Validação dos campos obrigatórios
     const missingFields = fields
       .filter((field) => field.required)
       .filter((field) => {
@@ -96,7 +94,28 @@ export default function PublicEnrollment() {
       return
     }
 
-    console.log("Dados do formulário:", formData)
+    // Salvar o novo aluno no localStorage
+    const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]")
+    const newStudent = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.nome_completo,
+      birthDate: formData.data_nascimento,
+      status: "active",
+      room: "",
+      createdAt: new Date().toLocaleDateString(),
+      companyId: null,
+      customFields: { ...formData }
+    }
+    
+    enrollments.push(newStudent)
+    localStorage.setItem("enrollments", JSON.stringify(enrollments))
+    
+    // Disparar evento de nova inscrição
+    window.dispatchEvent(new Event("enrollmentAdded"))
+
+    // Limpar formulário
+    setFormData({})
+    
     toast({
       title: "Formulário enviado",
       description: "Seus dados foram enviados com sucesso!",

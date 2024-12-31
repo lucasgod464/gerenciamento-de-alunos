@@ -38,17 +38,12 @@ const AdminStudentsTotal = () => {
       }
     });
 
-    // Carregar alunos sem sala do localStorage (incluindo os do formulário de inscrição)
-    const formStudents = JSON.parse(localStorage.getItem("enrollments") || "[]");
-    const studentsWithoutRoom = formStudents
-      .filter((student: Student) => 
-        !student.room && 
-        (!student.companyId || student.companyId === currentUser.companyId)
-      )
+    // Carregar alunos do formulário de inscrição (sem sala)
+    const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
+    const studentsWithoutRoom = enrollments
+      .filter((student: Student) => !student.room)
       .map((student: Student) => ({
         ...student,
-        status: "active",
-        room: "",
         companyId: currentUser.companyId
       }));
 
@@ -59,7 +54,6 @@ const AdminStudentsTotal = () => {
   useEffect(() => {
     loadStudents();
     
-    // Adicionar listeners para mudanças no localStorage
     const handleStorageChange = () => {
       loadStudents();
     };
@@ -175,8 +169,8 @@ const AdminStudentsTotal = () => {
           />
         </div>
         <StudentColumns
-          studentsWithoutRoom={studentsWithoutRoom}
-          studentsWithRoom={studentsWithRoom}
+          studentsWithoutRoom={students.filter(student => !student.room)}
+          studentsWithRoom={students.filter(student => student.room)}
           rooms={rooms}
           onDeleteStudent={handleDeleteStudent}
           onTransferStudent={handleTransferStudent}
