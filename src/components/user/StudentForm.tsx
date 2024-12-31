@@ -57,13 +57,14 @@ export const StudentForm = ({
     
     setRooms(authorizedRooms);
 
-    // Carregar campos customizados
+    // Carregar campos personalizados do localStorage
     const loadCustomFields = () => {
-      const savedFields = localStorage.getItem("formFields");
+      const savedFields = localStorage.getItem("enrollmentFields");
       if (savedFields) {
         try {
           const parsedFields = JSON.parse(savedFields);
-          const defaultFields = ["name", "birthDate", "status", "room"];
+          // Filtrar campos padrão
+          const defaultFields = ["default-name", "default-birthdate"];
           const customFields = parsedFields.filter(
             (field: FormField) => !defaultFields.includes(field.id)
           );
@@ -177,6 +178,28 @@ export const StudentForm = ({
                   required={field.required}
                   defaultValue={initialData?.customFields?.[field.name]}
                 />
+              ) : field.type === "select" || field.type === "multiple" ? (
+                <Select
+                  value={initialData?.customFields?.[field.name] || ""}
+                  onValueChange={(value) => {
+                    const formElement = e.currentTarget as HTMLFormElement;
+                    const input = formElement.elements.namedItem(field.name) as HTMLInputElement;
+                    if (input) {
+                      input.value = value;
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={`Selecione ${field.label}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options?.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               ) : (
                 <Input
                   id={field.name}
