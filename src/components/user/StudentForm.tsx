@@ -59,16 +59,16 @@ export const StudentForm = ({
     
     setRooms(authorizedRooms);
 
-    // Carregar campos personalizados do localStorage
+    // Carregar campos personalizados do FormBuilder
     const loadCustomFields = () => {
-      const savedFields = localStorage.getItem("enrollmentFields");
+      const savedFields = localStorage.getItem("formFields");
       if (savedFields) {
         try {
           const parsedFields = JSON.parse(savedFields);
-          // Filtrar campos padrão
-          const defaultFields = ["default-name", "default-birthdate"];
+          // Filtrar campos do sistema
+          const systemFields = ["nome_completo", "data_nascimento", "sala", "status"];
           const customFields = parsedFields.filter(
-            (field: FormField) => !defaultFields.includes(field.id)
+            (field: FormField) => !systemFields.includes(field.name)
           );
           setCustomFields(customFields);
         } catch (error) {
