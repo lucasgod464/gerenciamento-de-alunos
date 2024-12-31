@@ -51,7 +51,7 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
     };
   }, [fields, formRef, multipleSelections]);
 
-  // Filtrar campos padrão, exceto nome_completo e data_nascimento
+  // Filtrar campos padrão, exceto sala e status
   const customFields = fields.filter(field => 
     !["sala", "status"].includes(field.name)
   );
