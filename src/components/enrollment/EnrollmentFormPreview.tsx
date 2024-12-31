@@ -55,17 +55,23 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition || 'transform 200ms cubic-bezier(0.2, 0, 0, 1)',
+    opacity: isDragging ? 0.8 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 2 : 1,
   };
 
   return (
-    <Card ref={setNodeRef} style={style} className="p-4">
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className={`p-4 transition-all duration-200 ${isDragging ? 'shadow-lg scale-[1.02] bg-accent/5' : ''}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           {!isSystemField && (
             <button
-              className="cursor-grab touch-none"
+              className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
               {...attributes}
               {...listeners}
             >
