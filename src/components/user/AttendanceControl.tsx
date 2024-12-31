@@ -18,9 +18,9 @@ export const AttendanceControl = () => {
   const [date, setDate] = useState<Date | null>(null);
   const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
   const [showAttendanceList, setShowAttendanceList] = useState(false);
+  const [observation, setObservation] = useState("");
 
   useEffect(() => {
-    // Load students and attendance days from localStorage
     const loadStudents = () => {
       const allStudents = JSON.parse(localStorage.getItem("students") || "[]");
       const companyStudents = allStudents.filter((student: Student) => student.companyId === currentUser?.companyId);
@@ -56,6 +56,10 @@ export const AttendanceControl = () => {
       title: "Status atualizado",
       description: "O status de presença foi atualizado com sucesso.",
     });
+  };
+
+  const handleObservationChange = (text: string) => {
+    setObservation(text);
   };
 
   return (
@@ -105,19 +109,19 @@ export const AttendanceControl = () => {
         </CardContent>
       </Card>
 
-      {showAttendanceList && (
+      {showAttendanceList && date && (
         <div className="md:col-span-2 space-y-6">
           <Card className="bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <CardTitle className="text-lg font-semibold text-gray-800">
-                Lista de Presença - {format(date!, 'dd/MM/yyyy')}
+                Lista de Presença - {format(date, 'dd/MM/yyyy')}
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <AttendanceList
                 students={students}
                 onStatusChange={handleStatusChange}
-                date={date!}
+                date={date}
               />
             </CardContent>
           </Card>
@@ -129,7 +133,11 @@ export const AttendanceControl = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <DailyObservations date={date!} />
+              <DailyObservations 
+                date={date}
+                observation={observation}
+                onObservationChange={handleObservationChange}
+              />
             </CardContent>
           </Card>
         </div>
