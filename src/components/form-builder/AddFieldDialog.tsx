@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
-import { FormField } from "@/types/form";
+import { FormField, FieldType } from "@/types/form";
 
 interface AddFieldDialogProps {
   open: boolean;
@@ -32,13 +32,20 @@ export const AddFieldDialog = ({
   onAddField,
   editingField,
 }: AddFieldDialogProps) => {
-  const [fieldData, setFieldData] = useState({
+  const [fieldData, setFieldData] = useState<{
+    name: string;
+    label: string;
+    description: string;
+    type: FieldType;
+    required: boolean;
+    options: string[];
+  }>({
     name: "",
     label: "",
     description: "",
     type: "text",
     required: true,
-    options: [] as string[],
+    options: [],
   });
   const [optionInput, setOptionInput] = useState("");
 
@@ -129,8 +136,8 @@ export const AddFieldDialog = ({
             <Label htmlFor="type">Tipo do Campo</Label>
             <Select
               value={fieldData.type}
-              onValueChange={(value) =>
-                setFieldData({ ...fieldData, type: value as FormField["type"] })
+              onValueChange={(value: FieldType) =>
+                setFieldData({ ...fieldData, type: value })
               }
             >
               <SelectTrigger>
