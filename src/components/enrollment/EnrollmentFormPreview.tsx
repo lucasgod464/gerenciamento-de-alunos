@@ -55,65 +55,64 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || undefined,
-    opacity: isDragging ? 0.8 : undefined,
-  } as const;
+    transition,
+  };
 
   return (
-    <Card 
+    <div 
       ref={setNodeRef} 
-      style={style} 
-      className={`p-4 relative ${isDragging ? 'shadow-lg scale-[1.02] bg-accent/5 z-50' : 'z-10'}`}
+      style={style}
+      className={`rounded-lg mb-3 ${isDragging ? 'z-50' : 'z-0'}`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {!isSystemField && (
-            <button
-              className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </button>
-          )}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-medium">{field.label}</h3>
-              {field.required && (
-                <span className="text-sm text-red-500">*</span>
-              )}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {!isSystemField && (
+              <button
+                className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <h3 className="font-medium">{field.label}</h3>
+                {field.required && (
+                  <span className="text-sm text-red-500">*</span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Tipo: {field.type}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Tipo: {field.type}
-            </p>
+          </div>
+          <div className="flex space-x-2">
+            {isSystemField ? (
+              <Lock className="h-4 w-4 text-gray-400" />
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(field)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(field.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
-        <div className="flex space-x-2">
-          {isSystemField ? (
-            <Lock className="h-4 w-4 text-gray-400" />
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(field)}
-                className="relative z-20"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onDelete(field.id)}
-                className="relative z-20"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-    </Card>
+      </Card>
+    </div>
   );
 };
 
@@ -124,7 +123,11 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const systemFields = ["nome_completo", "data_nascimento"];
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
