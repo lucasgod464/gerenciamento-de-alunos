@@ -25,7 +25,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewP
   const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
 
   // Lista de campos obrigatórios do sistema
-  const systemFields = ["nome_completo", "data_nascimento", "sala", "status"];
+  const systemFields = ["nome_completo", "data_nascimento"];
 
   const handleDeleteClick = (id: string) => {
     setFieldToDelete(id);
