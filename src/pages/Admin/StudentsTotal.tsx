@@ -38,14 +38,22 @@ const AdminStudentsTotal = () => {
       }
     });
 
-    // Carregar alunos sem sala do localStorage
-    const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
-    const companyFormStudents = formStudents.filter((student: Student) => 
-      !student.room && (!student.companyId || student.companyId === currentUser.companyId)
-    );
+    // Carregar alunos sem sala do localStorage (incluindo os do formulário de inscrição)
+    const formStudents = JSON.parse(localStorage.getItem("enrollments") || "[]");
+    const studentsWithoutRoom = formStudents
+      .filter((student: Student) => 
+        !student.room && 
+        (!student.companyId || student.companyId === currentUser.companyId)
+      )
+      .map((student: Student) => ({
+        ...student,
+        status: "active",
+        room: "",
+        companyId: currentUser.companyId
+      }));
 
     // Combinar todos os alunos
-    setStudents([...roomStudents, ...companyFormStudents]);
+    setStudents([...roomStudents, ...studentsWithoutRoom]);
   };
 
   useEffect(() => {
@@ -58,10 +66,12 @@ const AdminStudentsTotal = () => {
 
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("studentAdded", handleStorageChange);
+    window.addEventListener("enrollmentAdded", handleStorageChange);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("studentAdded", handleStorageChange);
+      window.removeEventListener("enrollmentAdded", handleStorageChange);
     };
   }, [currentUser]);
 
@@ -77,10 +87,10 @@ const AdminStudentsTotal = () => {
       });
       localStorage.setItem("rooms", JSON.stringify(updatedRooms));
 
-      // Remover aluno da lista de alunos sem sala
-      const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
-      const updatedFormStudents = formStudents.filter((student: Student) => student.id !== id);
-      localStorage.setItem("students", JSON.stringify(updatedFormStudents));
+      // Remover aluno da lista de inscrições
+      const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
+      const updatedEnrollments = enrollments.filter((student: Student) => student.id !== id);
+      localStorage.setItem("enrollments", JSON.stringify(updatedEnrollments));
 
       loadStudents();
 
@@ -100,14 +110,14 @@ const AdminStudentsTotal = () => {
 
   const handleTransferStudent = (studentId: string, newRoomId: string) => {
     try {
-      // Buscar o aluno na lista de alunos sem sala
-      const formStudents = JSON.parse(localStorage.getItem("students") || "[]");
-      const studentToTransfer = formStudents.find((s: Student) => s.id === studentId);
+      // Buscar o aluno na lista de inscrições
+      const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
+      const studentToTransfer = enrollments.find((s: Student) => s.id === studentId);
       
       if (studentToTransfer) {
-        // Remover o aluno da lista de alunos sem sala
-        const updatedFormStudents = formStudents.filter((s: Student) => s.id !== studentId);
-        localStorage.setItem("students", JSON.stringify(updatedFormStudents));
+        // Remover o aluno da lista de inscrições
+        const updatedEnrollments = enrollments.filter((s: Student) => s.id !== studentId);
+        localStorage.setItem("enrollments", JSON.stringify(updatedEnrollments));
 
         // Adicionar o aluno à sala selecionada
         const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
@@ -119,7 +129,8 @@ const AdminStudentsTotal = () => {
             room.students.push({
               ...studentToTransfer,
               room: newRoomId,
-              companyId: currentUser?.companyId
+              companyId: currentUser?.companyId,
+              status: "active"
             });
           }
           return room;
