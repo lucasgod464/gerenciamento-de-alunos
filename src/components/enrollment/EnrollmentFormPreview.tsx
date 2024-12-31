@@ -55,17 +55,15 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition: transition || 'transform 200ms cubic-bezier(0.2, 0, 0, 1)',
-    opacity: isDragging ? 0.8 : 1,
-    position: 'relative',
-    zIndex: isDragging ? 2 : 1,
-  };
+    transition: transition || undefined,
+    opacity: isDragging ? 0.8 : undefined,
+  } as const;
 
   return (
     <Card 
       ref={setNodeRef} 
       style={style} 
-      className={`p-4 transition-all duration-200 ${isDragging ? 'shadow-lg scale-[1.02] bg-accent/5' : ''}`}
+      className={`p-4 relative ${isDragging ? 'shadow-lg scale-[1.02] bg-accent/5 z-50' : 'z-10'}`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -99,6 +97,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit(field)}
+                className="relative z-20"
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -106,6 +105,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(field.id)}
+                className="relative z-20"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
