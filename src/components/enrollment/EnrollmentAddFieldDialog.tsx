@@ -17,8 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { X, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddFieldDialogProps {
   open: boolean;
@@ -137,15 +138,20 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
               </div>
               <div className="space-y-2 mt-2">
                 {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-slate-50 p-2 rounded-md">
-                    <span className="flex-1">{option}</span>
+                  <div key={index} className="flex items-center justify-between bg-muted p-2 rounded">
+                    <div className="flex items-center gap-2">
+                      {type === "multiple" ? (
+                        <Checkbox checked disabled />
+                      ) : null}
+                      <span>{option}</span>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeOption(index)}
                     >
-                      <X className="h-4 w-4" />
+                      Remover
                     </Button>
                   </div>
                 ))}
