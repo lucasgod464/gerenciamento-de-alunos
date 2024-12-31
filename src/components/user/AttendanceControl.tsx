@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { AttendanceStats } from "./AttendanceStats";
 import { AttendanceList } from "./AttendanceList";
 import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { AttendanceCalendar } from "./attendance/AttendanceCalendar";
+import { DailyObservations } from "./attendance/DailyObservations";
 
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -18,20 +17,31 @@ export const AttendanceControl = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   
-  // Load students from localStorage filtered by company
   const getCompanyStudents = () => {
     if (!currentUser?.companyId) return [];
-    const savedStudents = localStorage.getItem("students");
-    if (!savedStudents) return [];
     
-    const allStudents = JSON.parse(savedStudents);
-    return allStudents.filter((student: Student) => 
-      student.companyId === currentUser.companyId
+    // Carregar todas as salas da empresa
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter((room: any) => 
+      room.companyId === currentUser.companyId
     );
+    
+    // Coletar todos os alunos de todas as salas
+    let allStudents: Student[] = [];
+    companyRooms.forEach((room: any) => {
+      if (room.students && Array.isArray(room.students)) {
+        const roomStudents = room.students.map((student: Student) => ({
+          ...student,
+          room: room.id
+        }));
+        allStudents = [...allStudents, ...roomStudents];
+      }
+    });
+    
+    return allStudents;
   };
 
   useEffect(() => {
-    // Carregar dias com chamada do localStorage
     const savedAttendanceDays = localStorage.getItem(`attendanceDays_${currentUser?.companyId}`);
     if (savedAttendanceDays) {
       setAttendanceDays(JSON.parse(savedAttendanceDays).map((date: string) => new Date(date)));
@@ -44,9 +54,12 @@ export const AttendanceControl = () => {
       const existingAttendance = dailyAttendances.find(da => da.date === dateStr);
       
       if (!existingAttendance) {
+        const students = getCompanyStudents();
+        console.log('Loaded students:', students); // Debug log
+        
         setDailyAttendances(prev => [...prev, {
           date: dateStr,
-          students: getCompanyStudents()
+          students: students
         }]);
       }
 
@@ -110,7 +123,6 @@ export const AttendanceControl = () => {
     const newAttendanceDays = [...attendanceDays, selectedDate];
     setAttendanceDays(newAttendanceDays);
     
-    // Salvar no localStorage
     localStorage.setItem(
       `attendanceDays_${currentUser.companyId}`, 
       JSON.stringify(newAttendanceDays.map(date => date.toISOString()))
@@ -131,37 +143,13 @@ export const AttendanceControl = () => {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Calendário</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border"
-              modifiers={{
-                attendance: attendanceDays
-              }}
-              modifiersStyles={{
-                attendance: {
-                  backgroundColor: "#22c55e",
-                  color: "white",
-                  borderRadius: "50%"
-                }
-              }}
-            />
-            <Button 
-              onClick={startAttendance}
-              disabled={!selectedDate || isAttendanceDay(selectedDate)}
-              className="w-full"
-            >
-              Iniciar Chamada
-            </Button>
-          </CardContent>
-        </Card>
-
+        <AttendanceCalendar
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          attendanceDays={attendanceDays}
+          onStartAttendance={startAttendance}
+          isAttendanceDay={isAttendanceDay}
+        />
         <AttendanceStats students={getCurrentDayStudents()} />
       </div>
 
@@ -185,20 +173,10 @@ export const AttendanceControl = () => {
                   onStatusChange={handleStatusChange}
                   date={selectedDate || new Date()}
                 />
-
-                <div className="space-y-2">
-                  <CardTitle className="text-lg">Observações do dia</CardTitle>
-                  <Textarea
-                    value={observation}
-                    onChange={(e) => handleObservationChange(e.target.value)}
-                    placeholder="Digite suas observações para este dia (máximo 100 caracteres)"
-                    maxLength={100}
-                    className="min-h-[100px]"
-                  />
-                  <p className="text-sm text-muted-foreground text-right">
-                    {observation.length}/100 caracteres
-                  </p>
-                </div>
+                <DailyObservations
+                  observation={observation}
+                  onObservationChange={handleObservationChange}
+                />
               </>
             ) : (
               <p className="text-center text-muted-foreground py-8">
