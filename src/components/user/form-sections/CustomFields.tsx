@@ -23,7 +23,7 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
     const initial: Record<string, string[]> = {};
     fields.forEach((field) => {
       if (field.type === "multiple") {
-        initial[field.name] = initialData?.customFields?.[field.name] || [];
+        initial[field.name] = initialData?.customFields?.[field.name]?.split(",") || [];
       }
     });
     return initial;
@@ -52,15 +52,20 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
     });
   };
 
+  // Filtrar campos padrão
+  const customFields = fields.filter(field => 
+    !["nome_completo", "data_nascimento", "sala", "status"].includes(field.name)
+  );
+
   return (
     <div className="space-y-4">
-      {fields.map((field) => (
+      {customFields.map((field) => (
         <div key={field.id} className="space-y-2">
-          <Label htmlFor={field.name}>{field.label}</Label>
-          {field.type === "textarea" ? (
-            <Textarea
-              id={field.name}
+          <Label>{field.label}</Label>
+          {field.type === "text" ? (
+            <Input
               name={field.name}
+              type="text"
               required={field.required}
               defaultValue={initialData?.customFields?.[field.name]}
             />
@@ -104,7 +109,7 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder={`Selecione ${field.label}`} />
+                <SelectValue placeholder="Selecione uma opção" />
               </SelectTrigger>
               <SelectContent>
                 {field.options?.map((option) => (
@@ -114,15 +119,13 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
                 ))}
               </SelectContent>
             </Select>
-          ) : (
-            <Input
-              id={field.name}
+          ) : field.type === "textarea" ? (
+            <Textarea
               name={field.name}
-              type={field.type}
               required={field.required}
               defaultValue={initialData?.customFields?.[field.name]}
             />
-          )}
+          ) : null}
         </div>
       ))}
     </div>

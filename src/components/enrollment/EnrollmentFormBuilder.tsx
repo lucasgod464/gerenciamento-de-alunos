@@ -9,28 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 
-const DEFAULT_FIELDS: FormField[] = [
-  {
-    id: "default-name",
-    name: "nome_completo",
-    label: "Nome Completo",
-    type: "text",
-    required: true,
-    order: 0,
-  },
-  {
-    id: "default-birthdate",
-    name: "data_nascimento",
-    label: "Data de Nascimento",
-    type: "date",
-    required: true,
-    order: 1,
-  }
-];
-
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
-  const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
+  const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
 
@@ -40,21 +21,11 @@ export const EnrollmentFormBuilder = () => {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Garantir que os campos padrão sempre estejam presentes
-          const defaultFieldIds = DEFAULT_FIELDS.map(field => field.id);
-          const missingDefaultFields = DEFAULT_FIELDS.filter(
-            defaultField => !parsedFields.some((field: FormField) => field.id === defaultField.id)
-          );
-          
-          if (missingDefaultFields.length > 0) {
-            parsedFields.unshift(...missingDefaultFields);
-          }
-          
           setFields(parsedFields);
         }
       } catch (error) {
         console.error("Erro ao carregar campos do construtor:", error);
-        setFields(DEFAULT_FIELDS);
+        setFields([]);
       }
     };
 
@@ -100,16 +71,6 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
-    // Não permitir a exclusão dos campos padrão
-    if (DEFAULT_FIELDS.some(field => field.id === id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser removido.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const updatedFields = fields.filter((field) => field.id !== id);
     setFields(updatedFields);
     
@@ -120,16 +81,6 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleEditField = (field: FormField) => {
-    // Não permitir a edição dos campos padrão
-    if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser editado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setEditingField(field);
     setIsAddingField(true);
   };
