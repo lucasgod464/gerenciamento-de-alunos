@@ -1,25 +1,25 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { FormField } from "@/types/form"
+import { useEffect, useState } from "react"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { FormField } from "@/types/form";
-import { useState } from "react";
+} from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface CustomFieldsProps {
-  fields: FormField[];
-  initialData?: any;
-  formRef: React.RefObject<HTMLFormElement>;
+  fields: FormField[]
+  initialData?: any
+  formRef: React.RefObject<HTMLFormElement>
 }
 
 export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps) => {
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(() => {
+  const [multipleSelections, setMultipleSelections] = useState<Record<string, string[]>>(() => {
     const initial: Record<string, string[]> = {};
     fields.forEach((field) => {
       if (field.type === "multiple") {
@@ -29,32 +29,31 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
     return initial;
   });
 
-  const handleCheckboxChange = (fieldName: string, option: string, checked: boolean) => {
-    setSelectedOptions((prev) => {
-      const currentValues = prev[fieldName] || [];
-      const newValues = checked
-        ? [...currentValues, option]
-        : currentValues.filter((value) => value !== option);
+  useEffect(() => {
+    if (!formRef.current) return;
 
-      // Update the hidden input value for form submission
-      const formElement = formRef.current;
-      if (formElement) {
-        const input = formElement.elements.namedItem(fieldName) as HTMLInputElement;
-        if (input) {
-          input.value = newValues.join(",");
+    const form = formRef.current;
+    const handleSubmit = () => {
+      fields.forEach((field) => {
+        if (field.type === "multiple") {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = field.name;
+          input.value = multipleSelections[field.name]?.join(",") || "";
+          form.appendChild(input);
         }
-      }
+      });
+    };
 
-      return {
-        ...prev,
-        [fieldName]: newValues,
-      };
-    });
-  };
+    form.addEventListener("submit", handleSubmit);
+    return () => {
+      form.removeEventListener("submit", handleSubmit);
+    };
+  }, [fields, formRef, multipleSelections]);
 
-  // Filtrar campos padrão
+  // Filtrar campos padrão, exceto nome_completo e data_nascimento
   const customFields = fields.filter(field => 
-    !["nome_completo", "data_nascimento", "sala", "status"].includes(field.name)
+    !["sala", "status"].includes(field.name)
   );
 
   return (
@@ -71,24 +70,31 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
             />
           ) : field.type === "multiple" ? (
             <div className="space-y-2">
-              {/* Hidden input to store the selected values */}
-              <input
-                type="hidden"
-                name={field.name}
-                value={selectedOptions[field.name]?.join(",") || ""}
-              />
               {field.options?.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
                   <Checkbox
                     id={`${field.name}-${option}`}
-                    checked={selectedOptions[field.name]?.includes(option)}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange(field.name, option, checked as boolean)
-                    }
+                    checked={multipleSelections[field.name]?.includes(option)}
+                    onCheckedChange={(checked) => {
+                      setMultipleSelections(prev => {
+                        const current = prev[field.name] || [];
+                        if (checked) {
+                          return {
+                            ...prev,
+                            [field.name]: [...current, option]
+                          };
+                        } else {
+                          return {
+                            ...prev,
+                            [field.name]: current.filter(item => item !== option)
+                          };
+                        }
+                      });
+                    }}
                   />
                   <label
                     htmlFor={`${field.name}-${option}`}
-                    className="text-sm text-gray-700"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     {option}
                   </label>
@@ -97,16 +103,9 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
             </div>
           ) : field.type === "select" ? (
             <Select
-              value={initialData?.customFields?.[field.name] || ""}
-              onValueChange={(value) => {
-                const formElement = formRef.current;
-                if (formElement) {
-                  const input = formElement.elements.namedItem(field.name) as HTMLInputElement;
-                  if (input) {
-                    input.value = value;
-                  }
-                }
-              }}
+              name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione uma opção" />
@@ -122,6 +121,13 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
           ) : field.type === "textarea" ? (
             <Textarea
               name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+            />
+          ) : field.type === "date" ? (
+            <Input
+              name={field.name}
+              type="date"
               required={field.required}
               defaultValue={initialData?.customFields?.[field.name]}
             />
