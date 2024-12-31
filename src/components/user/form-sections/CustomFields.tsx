@@ -61,14 +61,23 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
       {customFields.map((field) => (
         <div key={field.id} className="space-y-2">
           <Label>{field.label}</Label>
-          {field.type === "text" ? (
+          {field.type === "text" && (
             <Input
               name={field.name}
               type="text"
               required={field.required}
               defaultValue={initialData?.customFields?.[field.name]}
             />
-          ) : field.type === "multiple" ? (
+          )}
+          {field.type === "textarea" && (
+            <Textarea
+              name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+              className="min-h-[100px] resize-y"
+            />
+          )}
+          {field.type === "multiple" && (
             <div className="space-y-2">
               {field.options?.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
@@ -101,7 +110,8 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
                 </div>
               ))}
             </div>
-          ) : field.type === "select" ? (
+          )}
+          {field.type === "select" && (
             <Select
               name={field.name}
               required={field.required}
@@ -118,20 +128,15 @@ export const CustomFields = ({ fields, initialData, formRef }: CustomFieldsProps
                 ))}
               </SelectContent>
             </Select>
-          ) : field.type === "textarea" ? (
-            <Textarea
-              name={field.name}
-              required={field.required}
-              defaultValue={initialData?.customFields?.[field.name]}
-            />
-          ) : field.type === "date" ? (
+          )}
+          {field.type === "date" && (
             <Input
               name={field.name}
               type="date"
               required={field.required}
               defaultValue={initialData?.customFields?.[field.name]}
             />
-          ) : null}
+          )}
         </div>
       ))}
     </div>
