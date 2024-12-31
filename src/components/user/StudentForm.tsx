@@ -1,19 +1,12 @@
-import { useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Save } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { BasicInfoFields } from "./form-sections/BasicInfoFields";
+import { CustomFields } from "./form-sections/CustomFields";
 
 interface StudentFormProps {
   onSubmit: (student: Student) => void;
@@ -39,6 +32,7 @@ export const StudentForm = ({
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user: currentUser } = useAuth();
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -111,129 +105,52 @@ export const StudentForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {!isTransferMode ? (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Nome Completo</Label>
-            <Input
-              id="fullName"
-              name="fullName"
-              type="text"
-              required
-              defaultValue={initialData?.name}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="birthDate">Data de Nascimento</Label>
-            <Input
-              id="birthDate"
-              name="birthDate"
-              type="date"
-              required
-              defaultValue={initialData?.birthDate}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Sala</Label>
-            <Select value={selectedRoom} onValueChange={setSelectedRoom} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma sala" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select
-              value={status}
-              onValueChange={(value: "active" | "inactive") => setStatus(value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Ativo</SelectItem>
-                <SelectItem value="inactive">Inativo</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {customFields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.name}>{field.label}</Label>
-              {field.type === "textarea" ? (
-                <Textarea
-                  id={field.name}
-                  name={field.name}
-                  required={field.required}
-                  defaultValue={initialData?.customFields?.[field.name]}
-                />
-              ) : field.type === "select" || field.type === "multiple" ? (
-                <Select
-                  value={initialData?.customFields?.[field.name] || ""}
-                  onValueChange={(value) => {
-                    const formElement = e.currentTarget as HTMLFormElement;
-                    const input = formElement.elements.namedItem(field.name) as HTMLInputElement;
-                    if (input) {
-                      input.value = value;
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={`Selecione ${field.label}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {field.options?.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  id={field.name}
-                  name={field.name}
-                  type={field.type}
-                  required={field.required}
-                  defaultValue={initialData?.customFields?.[field.name]}
-                />
-              )}
+    <form onSubmit={handleSubmit} ref={formRef} className="space-y-4">
+      <ScrollArea className="h-[60vh] pr-4">
+        <div className="space-y-6">
+          {!isTransferMode ? (
+            <>
+              <BasicInfoFields
+                initialData={initialData}
+                selectedRoom={selectedRoom}
+                setSelectedRoom={setSelectedRoom}
+                status={status}
+                setStatus={setStatus}
+                rooms={rooms}
+              />
+              
+              <CustomFields
+                fields={customFields}
+                initialData={initialData}
+                formRef={formRef}
+              />
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Label>Transferir para Sala</Label>
+              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a sala para transferência" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableRooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ))}
-        </>
-      ) : (
-        <div className="space-y-2">
-          <Label>Transferir para Sala</Label>
-          <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione a sala para transferência" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableRooms.map((room) => (
-                <SelectItem key={room.id} value={room.id}>
-                  {room.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          )}
         </div>
-      )}
+      </ScrollArea>
 
-      <Button type="submit" className="w-full">
-        <Save className="mr-2 h-4 w-4" />
-        {isTransferMode ? "Transferir Aluno" : initialData ? "Salvar Alterações" : "Adicionar Aluno"}
-      </Button>
+      <div className="pt-4 border-t">
+        <Button type="submit" className="w-full">
+          <Save className="mr-2 h-4 w-4" />
+          {isTransferMode ? "Transferir Aluno" : initialData ? "Salvar Alterações" : "Adicionar Aluno"}
+        </Button>
+      </div>
     </form>
   );
 };
