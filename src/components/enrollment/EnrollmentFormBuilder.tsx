@@ -28,6 +28,9 @@ const DEFAULT_FIELDS: FormField[] = [
   }
 ];
 
+// Lista de campos que devem ser ocultados no formulário de inscrição
+const HIDDEN_FIELDS = ["sala", "status"];
+
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
   const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
@@ -47,11 +50,12 @@ export const EnrollmentFormBuilder = () => {
 
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Filtrar campos duplicados e campos excluídos
+          // Filtrar campos duplicados, campos excluídos e campos ocultos
           const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) => {
             const isNotDeleted = !deletedFields.includes(field.id);
+            const isNotHidden = !HIDDEN_FIELDS.includes(field.name);
             const isFirstOccurrence = index === self.findIndex((f) => f.name === field.name);
-            return isNotDeleted && isFirstOccurrence;
+            return isNotDeleted && isNotHidden && isFirstOccurrence;
           });
           
           // Garantir que os campos padrão estejam presentes
