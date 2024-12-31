@@ -1,7 +1,7 @@
 import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Edit } from "lucide-react";
+import { Trash2, Edit, Lock } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,9 @@ interface FormPreviewProps {
 export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
+
+  // Lista de campos obrigatórios do sistema
+  const systemFields = ["nome_completo", "data_nascimento", "sala", "status"];
 
   const handleDeleteClick = (id: string) => {
     setFieldToDelete(id);
@@ -55,20 +58,26 @@ export const FormPreview = ({ fields, onDeleteField, onEditField }: FormPreviewP
                 </p>
               </div>
               <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEditField(field)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteClick(field.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {systemFields.includes(field.name) ? (
+                  <Lock className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditField(field)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDeleteClick(field.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </Card>
