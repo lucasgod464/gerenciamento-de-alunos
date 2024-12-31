@@ -33,17 +33,26 @@ export const EnrollmentFormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>(DEFAULT_FIELDS);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
+  const [deletedFields, setDeletedFields] = useState<string[]>([]);
 
   useEffect(() => {
     const loadFields = () => {
       try {
         const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+        const savedDeletedFields = localStorage.getItem('deletedFields');
+        
+        if (savedDeletedFields) {
+          setDeletedFields(JSON.parse(savedDeletedFields));
+        }
+
         if (savedFields) {
           const parsedFields = JSON.parse(savedFields);
-          // Filtrar campos duplicados mantendo apenas uma instância de cada campo padrão
-          const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) =>
-            index === self.findIndex((f) => f.name === field.name)
-          );
+          // Filtrar campos duplicados e campos excluídos
+          const uniqueFields = parsedFields.filter((field: FormField, index: number, self: FormField[]) => {
+            const isNotDeleted = !deletedFields.includes(field.id);
+            const isFirstOccurrence = index === self.findIndex((f) => f.name === field.name);
+            return isNotDeleted && isFirstOccurrence;
+          });
           
           // Garantir que os campos padrão estejam presentes
           DEFAULT_FIELDS.forEach(defaultField => {
@@ -64,13 +73,7 @@ export const EnrollmentFormBuilder = () => {
     };
 
     loadFields();
-
-    // Adicionar event listener para atualizar campos quando o storage mudar
-    window.addEventListener('storage', loadFields);
-    return () => {
-      window.removeEventListener('storage', loadFields);
-    };
-  }, []);
+  }, [deletedFields]);
 
   useEffect(() => {
     try {
@@ -78,11 +81,12 @@ export const EnrollmentFormBuilder = () => {
       if (JSON.stringify(fields) !== JSON.stringify(DEFAULT_FIELDS)) {
         localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
       }
+      localStorage.setItem('deletedFields', JSON.stringify(deletedFields));
       window.dispatchEvent(new Event('formFieldsUpdated'));
     } catch (error) {
       console.error("Erro ao salvar campos do construtor:", error);
     }
-  }, [fields]);
+  }, [fields, deletedFields]);
 
   const handleAddField = (field: Omit<FormField, "id" | "order">) => {
     if (editingField) {
@@ -125,6 +129,7 @@ export const EnrollmentFormBuilder = () => {
 
     const updatedFields = fields.filter((field) => field.id !== id);
     setFields(updatedFields);
+    setDeletedFields(prev => [...prev, id]);
     
     toast({
       title: "Campo removido",
