@@ -130,10 +130,9 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
                 />
                 <Button 
                   type="button" 
-                  variant="outline"
                   onClick={addOption}
                 >
-                  <Plus className="h-4 w-4" />
+                  Adicionar
                 </Button>
               </div>
               <div className="space-y-2 mt-2">
