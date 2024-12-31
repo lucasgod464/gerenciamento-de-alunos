@@ -134,6 +134,38 @@ export const AttendanceControl = () => {
     });
   };
 
+  const cancelAttendance = () => {
+    if (!selectedDate || !currentUser?.companyId) return;
+
+    // Remove o dia selecionado da lista de dias com chamada
+    const newAttendanceDays = attendanceDays.filter(date => 
+      date.toISOString().split('T')[0] !== selectedDate.toISOString().split('T')[0]
+    );
+    setAttendanceDays(newAttendanceDays);
+
+    // Remove os dados de presença daquele dia
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    setDailyAttendances(prevAttendances => 
+      prevAttendances.filter(attendance => attendance.date !== dateStr)
+    );
+
+    // Remove as observações daquele dia
+    setObservations(prevObservations => 
+      prevObservations.filter(obs => obs.date !== dateStr)
+    );
+    
+    // Atualiza o localStorage
+    localStorage.setItem(
+      `attendanceDays_${currentUser.companyId}`, 
+      JSON.stringify(newAttendanceDays.map(date => date.toISOString()))
+    );
+
+    toast({
+      title: "Chamada cancelada",
+      description: "A chamada foi cancelada para o dia selecionado.",
+    });
+  };
+
   const isAttendanceDay = (date: Date) => {
     return attendanceDays.some(attendanceDate => 
       attendanceDate.toISOString().split('T')[0] === date.toISOString().split('T')[0]
@@ -149,6 +181,7 @@ export const AttendanceControl = () => {
           attendanceDays={attendanceDays}
           onStartAttendance={startAttendance}
           isAttendanceDay={isAttendanceDay}
+          onCancelAttendance={cancelAttendance}
         />
         <AttendanceStats students={getCurrentDayStudents()} />
       </div>

@@ -8,6 +8,7 @@ interface AttendanceCalendarProps {
   attendanceDays: Date[];
   onStartAttendance: () => void;
   isAttendanceDay: (date: Date) => boolean;
+  onCancelAttendance?: () => void;
 }
 
 export const AttendanceCalendar = ({
@@ -16,6 +17,7 @@ export const AttendanceCalendar = ({
   attendanceDays,
   onStartAttendance,
   isAttendanceDay,
+  onCancelAttendance,
 }: AttendanceCalendarProps) => {
   return (
     <Card>
@@ -41,13 +43,24 @@ export const AttendanceCalendar = ({
             }}
           />
         </div>
-        <Button 
-          onClick={onStartAttendance}
-          disabled={!selectedDate || isAttendanceDay(selectedDate)}
-          className="w-full"
-        >
-          Iniciar Chamada
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={onStartAttendance}
+            disabled={!selectedDate || isAttendanceDay(selectedDate)}
+            className="flex-1"
+          >
+            Iniciar Chamada
+          </Button>
+          {selectedDate && isAttendanceDay(selectedDate) && onCancelAttendance && (
+            <Button 
+              onClick={onCancelAttendance}
+              variant="destructive"
+              className="flex-1"
+            >
+              Cancelar Chamada
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
