@@ -28,7 +28,6 @@ const DEFAULT_FIELDS: FormField[] = [
   }
 ];
 
-// Lista de campos que devem ser ocultados no formulário de inscrição
 const HIDDEN_FIELDS = ["sala", "status"];
 
 export const EnrollmentFormBuilder = () => {
@@ -121,7 +120,6 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleDeleteField = (id: string) => {
-    // Não permitir a exclusão dos campos padrão
     if (DEFAULT_FIELDS.some(field => field.id === id)) {
       toast({
         title: "Operação não permitida",
@@ -142,7 +140,6 @@ export const EnrollmentFormBuilder = () => {
   };
 
   const handleEditField = (field: FormField) => {
-    // Não permitir a edição dos campos padrão
     if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
       toast({
         title: "Operação não permitida",
@@ -154,6 +151,14 @@ export const EnrollmentFormBuilder = () => {
 
     setEditingField(field);
     setIsAddingField(true);
+  };
+
+  const handleReorderFields = (reorderedFields: FormField[]) => {
+    setFields(reorderedFields);
+    toast({
+      title: "Ordem atualizada",
+      description: "A ordem dos campos foi atualizada com sucesso.",
+    });
   };
 
   return (
@@ -173,6 +178,7 @@ export const EnrollmentFormBuilder = () => {
           fields={fields} 
           onDeleteField={handleDeleteField}
           onEditField={handleEditField}
+          onReorderFields={handleReorderFields}
         />
       </Card>
 
