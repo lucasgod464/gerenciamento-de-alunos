@@ -30,6 +30,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import type { CSSProperties } from "react";
 
 interface FormPreviewProps {
   fields: FormField[];
@@ -53,11 +54,11 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
     isDragging,
   } = useSortable({ id: field.id });
 
-  const style = {
+  const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    position: 'relative',
-    zIndex: isDragging ? 50 : 0,
+    position: 'relative' as const,
+    zIndex: isDragging ? 50 : 'auto',
     opacity: isDragging ? 0.8 : 1,
   };
 
@@ -128,8 +129,9 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Increased slightly to prevent accidental drags
-        delay: 100, // Small delay before drag starts
+        distance: 8,
+        tolerance: 5,
+        delay: 100,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -178,7 +180,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
             items={fields.map(f => f.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="relative">
+            <div className="relative space-y-0">
               {fields.map((field) => (
                 <SortableFieldCard
                   key={field.id}
