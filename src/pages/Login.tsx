@@ -42,6 +42,7 @@ const Login = () => {
       
       toast.success("Login realizado com sucesso!");
       
+      // Redirect based on access level from the response
       switch (response.user.role) {
         case "SUPER_ADMIN":
           navigate("/super-admin", { replace: true });
@@ -53,9 +54,12 @@ const Login = () => {
           navigate("/user", { replace: true });
           break;
         default:
-          navigate("/login", { replace: true });
+          console.error("Unknown role:", response.user.role);
+          setError("Erro de configuração de acesso");
+          break;
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {
@@ -84,8 +88,9 @@ const Login = () => {
         )}
 
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
-          <p className="font-semibold">Conta para teste:</p>
+          <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: superadmin@gmail.com</div>
+          <div>Admin: lucas@gmail.com</div>
           <div>Senha: 123456</div>
         </div>
 

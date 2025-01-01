@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AccessLevel, ROLE_PERMISSIONS, RolePermissions } from "@/types/auth";
+import { Navigate } from "react-router-dom";
 
 interface RoleGuardProps {
   children: ReactNode;
@@ -17,22 +18,34 @@ export function RoleGuard({
 }: RoleGuardProps) {
   const { user, can, isCompanyMember } = useAuth();
 
-  if (!user) return null;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   // Check role access
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return null;
+    // Redirect to appropriate dashboard based on user's role
+    switch (user.role) {
+      case "SUPER_ADMIN":
+        return <Navigate to="/super-admin" replace />;
+      case "ADMIN":
+        return <Navigate to="/admin" replace />;
+      case "USER":
+        return <Navigate to="/user" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
   }
 
   // Check company access
   if (companyId && !isCompanyMember(companyId)) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   // Check permissions
   const hasAllPermissions = requiredPermissions.every((permission) => can(permission));
   if (!hasAllPermissions) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
