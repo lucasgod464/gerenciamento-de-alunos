@@ -10,51 +10,28 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { useToast } from "@/components/ui/use-toast"
-
-interface Company {
-  id: string
-  name: string
-  document: string
-  usersLimit: number
-  currentUsers: number
-  roomsLimit: number
-  currentRooms: number
-  status: "Ativa" | "Inativa"
-  createdAt: string
-  publicFolderPath: string
-}
+import { Company } from "./CompanyList"
 
 interface CreateCompanyDialogProps {
-  onCompanyCreated: (company: Company) => void
+  onCompanyCreated: (company: Omit<Company, "id" | "createdAt" | "publicFolderPath" | "currentUsers" | "currentRooms" | "storageUsed">) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
-  const { toast } = useToast()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const newCompany = {
-      id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       document: formData.get("document") as string,
-      usersLimit: Number(formData.get("usersLimit")) || 5, // Default to 5 if not specified
-      currentUsers: 0,
-      roomsLimit: Number(formData.get("roomsLimit")) || 5, // Default to 5 if not specified
-      currentRooms: 0,
+      usersLimit: Number(formData.get("usersLimit")) || 5,
+      roomsLimit: Number(formData.get("roomsLimit")) || 5,
       status: "Ativa" as const,
-      createdAt: new Date().toLocaleDateString(),
-      publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
     }
     
     onCompanyCreated(newCompany)
     setOpen(false)
-    toast({
-      title: "Empresa criada",
-      description: "A empresa foi criada com sucesso.",
-    })
   }
 
   return (
