@@ -18,10 +18,10 @@ import { Company } from "./CompanyList"
 import { useToast } from "@/components/ui/use-toast"
 
 interface CompanyTableRowProps {
-  company: Company
-  onDelete: (id: string) => void
-  onEdit: (company: Company) => void
-  onUpdateStatus: (company: Company) => void
+  company: Company;
+  onDelete: (id: string) => void;
+  onEdit: (company: Company) => void;
+  onUpdateStatus: (company: Company) => void;
 }
 
 export function CompanyTableRow({

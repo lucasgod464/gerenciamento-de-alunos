@@ -28,7 +28,6 @@ export function CompanyList({ companies, onUpdateCompany, onDeleteCompany }: Com
         <TableHeader>
           <TableRow>
             <TableHead>Nome</TableHead>
-            <TableHead>Documento</TableHead>
             <TableHead>Usuários</TableHead>
             <TableHead>Salas</TableHead>
             <TableHead>Status</TableHead>
@@ -41,8 +40,9 @@ export function CompanyList({ companies, onUpdateCompany, onDeleteCompany }: Com
             <CompanyTableRow
               key={company.id}
               company={company}
-              onUpdate={onUpdateCompany}
+              onEdit={onUpdateCompany}
               onDelete={onDeleteCompany}
+              onUpdateStatus={onUpdateCompany}
             />
           ))}
         </TableBody>

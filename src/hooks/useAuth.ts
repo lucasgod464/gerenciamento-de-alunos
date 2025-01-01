@@ -48,11 +48,11 @@ export function useAuth() {
 
       if (error) {
         console.error("Login error:", error);
-        throw new Error("Invalid credentials");
+        throw new Error("Email ou senha inválidos");
       }
 
       if (!data || data.length === 0) {
-        throw new Error("Invalid credentials");
+        throw new Error("Email ou senha inválidos");
       }
 
       const user = data[0];
@@ -60,7 +60,7 @@ export function useAuth() {
       // Validate required fields
       if (!user.id || !user.email || !user.role) {
         console.error("Invalid user data:", user);
-        throw new Error("Invalid user data");
+        throw new Error("Dados do usuário inválidos");
       }
 
       const response: AuthResponse = {
@@ -81,7 +81,10 @@ export function useAuth() {
       return response;
     } catch (error) {
       console.error("Login failed:", error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("Erro ao fazer login");
     }
   };
 
