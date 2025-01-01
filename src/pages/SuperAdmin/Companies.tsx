@@ -6,16 +6,24 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
+import { useAuth } from "@/hooks/useAuth"
 
 const Companies = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   // Buscar empresas
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      console.log('Fetching companies...')
+      console.log('Fetching companies...', 'Current user:', user)
+      
+      if (!user || user.role !== 'SUPER_ADMIN') {
+        console.error('User not authorized')
+        throw new Error('Not authorized')
+      }
+
       const { data, error } = await supabase
         .from('companies')
         .select('*')
@@ -41,7 +49,8 @@ const Companies = () => {
         publicFolderPath: `/storage/${company.id}`,
         storageUsed: company.storage_used || 0
       } as Company))
-    }
+    },
+    enabled: !!user && user.role === 'SUPER_ADMIN'
   })
 
   // Criar empresa
