@@ -1,3 +1,6 @@
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CompanyTableRow } from "./CompanyTableRow";
+
 export interface Company {
   id: string;
   name: string;
@@ -10,4 +13,40 @@ export interface Company {
   createdAt: string;
   publicFolderPath: string;
   storageUsed: number;
+}
+
+interface CompanyListProps {
+  companies: Company[];
+  onUpdateCompany: (company: Company) => void;
+  onDeleteCompany: (id: string) => void;
+}
+
+export function CompanyList({ companies, onUpdateCompany, onDeleteCompany }: CompanyListProps) {
+  return (
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Documento</TableHead>
+            <TableHead>Usuários</TableHead>
+            <TableHead>Salas</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Criado em</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {companies.map((company) => (
+            <CompanyTableRow
+              key={company.id}
+              company={company}
+              onUpdate={onUpdateCompany}
+              onDelete={onDeleteCompany}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }

@@ -1,78 +1,116 @@
-import { DashboardLayout } from "@/components/DashboardLayout"
-import { EmailList } from "@/components/emails/EmailList"
-import { EmailStats } from "@/components/emails/EmailStats"
-import { useToast } from "@/hooks/use-toast"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { EmailList, Email } from "@/components/emails/EmailList";
+import { EmailStats } from "@/components/emails/EmailStats";
+import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog";
+import { useToast } from "@/components/ui/use-toast";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Emails = () => {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
+  const [emails, setEmails] = useState<Email[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Buscar emails criados pelo super admin
-  const { data: emails = [] } = useQuery({
-    queryKey: ["createdEmails"],
-    queryFn: () => {
-      const storedEmails = localStorage.getItem("createdEmails")
-      return storedEmails ? JSON.parse(storedEmails) : []
-    },
-  })
+  const fetchEmails = async () => {
+    try {
+      const { data: emailsData, error } = await supabase
+        .from("emails")
+        .select(`
+          *,
+          companies (
+            name,
+            status
+          )
+        `);
 
-  // Buscar usuários criados pelos administradores
-  const { data: usersFromAdmins = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => {
-      const storedUsers = localStorage.getItem("users")
-      return storedUsers ? JSON.parse(storedUsers) : []
-    },
-  })
+      if (error) throw error;
 
-  // Converter usuários para o formato de email
-  const usersAsEmails = usersFromAdmins.map((user: any) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    password: user.password,
-    accessLevel: "Usuário Comum",
-    company: user.companyId,
-    createdAt: user.createdAt,
-  }))
+      const formattedEmails: Email[] = emailsData.map((email: any) => ({
+        id: email.id,
+        name: email.name,
+        email: email.email,
+        accessLevel: email.access_level,
+        companyId: email.company_id,
+        companyName: email.companies?.name,
+        companyStatus: email.companies?.status,
+        createdAt: email.created_at,
+        updatedAt: email.updated_at
+      }));
 
-  // Combinar todos os emails do sistema
-  const allEmails = [...emails, ...usersAsEmails]
+      setEmails(formattedEmails);
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os emails.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const totalAdmins = allEmails.filter((email: any) => 
-    email.accessLevel === "Admin" || 
-    email.accessLevel === "Administrador"
-  ).length
+  useEffect(() => {
+    fetchEmails();
+  }, []);
 
-  const totalUsers = allEmails.filter((email: any) => 
-    email.accessLevel === "Usuário Comum" || 
-    email.accessLevel === "User"
-  ).length
+  const handleUpdateEmail = async (updatedEmail: Email) => {
+    try {
+      const { error } = await supabase
+        .from("emails")
+        .update({
+          name: updatedEmail.name,
+          email: updatedEmail.email,
+          access_level: updatedEmail.accessLevel,
+          company_id: updatedEmail.companyId,
+        })
+        .eq("id", updatedEmail.id);
 
-  const handleUpdateEmail = (updatedEmail: any) => {
-    const allEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-    const updatedEmails = allEmails.map((email: any) =>
-      email.id === updatedEmail.id ? updatedEmail : email
-    )
-    localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
-    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    toast({
-      title: "Email atualizado",
-      description: "As informações do email foram atualizadas com sucesso.",
-    })
-  }
+      if (error) throw error;
 
-  const handleDeleteEmail = (id: string) => {
-    const allEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-    const updatedEmails = allEmails.filter((email: any) => email.id !== id)
-    localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
-    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    toast({
-      title: "Email excluído",
-      description: "O email foi excluído permanentemente.",
-      variant: "destructive",
-    })
+      toast({
+        title: "Email atualizado",
+        description: "O email foi atualizado com sucesso.",
+      });
+      
+      fetchEmails();
+    } catch (error) {
+      console.error("Error updating email:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o email.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteEmail = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("emails")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Email excluído",
+        description: "O email foi excluído com sucesso.",
+      });
+      
+      fetchEmails();
+    } catch (error) {
+      console.error("Error deleting email:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o email.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return <div>Carregando...</div>;
   }
 
   return (
@@ -85,20 +123,21 @@ const Emails = () => {
           </p>
         </div>
 
-        <EmailStats 
-          totalEmails={allEmails.length} 
-          totalAdmins={totalAdmins}
-          totalUsers={totalUsers}
-        />
+        <EmailStats emails={emails} />
+
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Lista de Emails</h2>
+          <CreateEmailDialog onEmailCreated={fetchEmails} />
+        </div>
 
         <EmailList
-          emails={emails}
+          data={emails}
           onUpdateEmail={handleUpdateEmail}
           onDeleteEmail={handleDeleteEmail}
         />
       </div>
     </DashboardLayout>
-  )
-}
+  );
+};
 
-export default Emails
+export default Emails;
