@@ -37,7 +37,7 @@ export function useAuth() {
 
       console.log("Iniciando processo de login para:", email)
 
-      // Buscar o usuário, usando maybeSingle() para tratar caso de nenhum resultado
+      // Primeiro, vamos verificar se o usuário existe no Supabase
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -56,6 +56,8 @@ export function useAuth() {
         console.error("Usuário não encontrado:", email)
         throw new Error("Email ou senha inválidos")
       }
+
+      console.log("Usuário encontrado:", { role: user.role, id: user.id })
 
       // Verificar senha
       const encodedPassword = btoa(password)

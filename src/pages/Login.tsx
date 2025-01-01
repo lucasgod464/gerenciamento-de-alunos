@@ -39,23 +39,21 @@ const Login = () => {
 
       console.log("Iniciando tentativa de login...");
       const response = await login(email.trim(), password);
-      console.log("Login bem sucedido, redirecionando...");
+      console.log("Login bem sucedido, redirecionando...", response.user.role);
       
       toast.success("Login realizado com sucesso!");
       
-      switch (response.user.role) {
-        case "SUPER_ADMIN":
-          navigate("/super-admin", { replace: true });
-          break;
-        case "ADMIN":
-          navigate("/admin", { replace: true });
-          break;
-        case "USER":
-          navigate("/user", { replace: true });
-          break;
-        default:
-          console.error("Role desconhecida:", response.user.role);
-          navigate("/login", { replace: true });
+      // Garantir que o redirecionamento seja feito corretamente com base na role
+      if (response.user.role === "SUPER_ADMIN") {
+        console.log("Redirecionando para /super-admin");
+        navigate("/super-admin", { replace: true });
+      } else if (response.user.role === "ADMIN") {
+        navigate("/admin", { replace: true });
+      } else if (response.user.role === "USER") {
+        navigate("/user", { replace: true });
+      } else {
+        console.error("Role desconhecida:", response.user.role);
+        throw new Error("Tipo de usuário não reconhecido");
       }
     } catch (error) {
       console.error("Erro no login:", error);
