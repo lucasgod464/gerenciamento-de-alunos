@@ -31,54 +31,67 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      console.log("Tentando login para:", email)
+      if (!email || !password) {
+        throw new Error("Email e senha são obrigatórios")
+      }
 
-      // Primeiro, vamos verificar se o usuário existe
+      console.log("Iniciando processo de login para:", email)
+
+      // Buscar usuário
       const { data: users, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
+        .eq('status', 'active')
 
-      console.log("Resposta do banco:", { users, userError })
+      console.log("Resultado da busca:", { users, userError })
 
       if (userError) {
         console.error("Erro ao buscar usuário:", userError)
-        throw new Error("Erro ao buscar usuário")
+        throw new Error("Erro ao buscar usuário no banco de dados")
       }
 
-      const user = users?.[0]
-      if (!user) {
-        console.error("Usuário não encontrado com email:", email)
+      if (!users || users.length === 0) {
+        console.error("Nenhum usuário encontrado com o email:", email)
         throw new Error("Email ou senha inválidos")
       }
 
-      // Verificar a senha
+      const user = users[0]
+      console.log("Usuário encontrado:", { id: user.id, email: user.email, role: user.role })
+
+      // Verificar senha
       const encodedPassword = btoa(password)
       const storedPassword = user.password.startsWith('b64_') 
-        ? user.password.slice(4) // Remove o prefixo b64_
+        ? user.password.slice(4) 
         : user.password
 
       console.log("Verificando senha:", {
-        encodedPassword,
-        storedPassword,
-        isValid: encodedPassword === storedPassword
+        senhaCorreta: encodedPassword === storedPassword,
+        formatoAntigo: !user.password.startsWith('b64_')
       })
 
       if (encodedPassword !== storedPassword) {
+        console.error("Senha incorreta para o usuário:", email)
         throw new Error("Email ou senha inválidos")
       }
 
-      // Atualizar último acesso
+      // Atualizar último acesso e formato da senha se necessário
+      const updates: any = {
+        last_access: new Date().toISOString(),
+      }
+
+      if (!user.password.startsWith('b64_')) {
+        updates.password = `b64_${storedPassword}`
+      }
+
       const { error: updateError } = await supabase
         .from('users')
-        .update({ 
-          last_access: new Date().toISOString(),
-          password: user.password.startsWith('b64_') ? user.password : `b64_${storedPassword}`
-        })
+        .update(updates)
         .eq('id', user.id)
 
       if (updateError) {
-        console.error("Erro atualizando último acesso:", updateError)
+        console.error("Erro ao atualizar último acesso:", updateError)
+        // Não vamos falhar o login por causa disso
       }
 
       const response: AuthResponse = {
@@ -95,6 +108,7 @@ export function useAuth() {
         token: `${user.role.toLowerCase()}-token`,
       }
 
+      console.log("Login bem sucedido:", { userId: user.id, role: user.role })
       localStorage.setItem("session", JSON.stringify(response))
       return response
     },

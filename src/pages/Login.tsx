@@ -24,21 +24,22 @@ const Login = () => {
     setError("");
     setIsLoading(true);
 
-    if (!validateEmail(email)) {
-      setError("Por favor, insira um email válido");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await login(email, password);
-      console.log("Login successful, redirecting based on role:", response.user.role);
+      if (!email.trim() || !password.trim()) {
+        throw new Error("Por favor, preencha todos os campos");
+      }
+
+      if (!validateEmail(email)) {
+        throw new Error("Por favor, insira um email válido");
+      }
+
+      if (password.length < 6) {
+        throw new Error("A senha deve ter pelo menos 6 caracteres");
+      }
+
+      console.log("Iniciando tentativa de login...");
+      const response = await login(email.trim(), password);
+      console.log("Login bem sucedido, redirecionando...");
       
       toast.success("Login realizado com sucesso!");
       
@@ -53,10 +54,12 @@ const Login = () => {
           navigate("/user", { replace: true });
           break;
         default:
+          console.error("Role desconhecida:", response.user.role);
           navigate("/login", { replace: true });
       }
     } catch (error) {
-      setError("Email ou senha inválidos");
+      console.error("Erro no login:", error);
+      setError(error instanceof Error ? error.message : "Erro ao fazer login");
       toast.error("Falha no login");
     } finally {
       setIsLoading(false);
