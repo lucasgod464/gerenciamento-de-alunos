@@ -3,10 +3,11 @@ import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useCompanies } from "@/hooks/useCompanies"
-import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/components/ui/use-toast"
+import { Company } from "@/components/companies/CompanyList"
 
 const Companies = () => {
-  const { user } = useAuth()
+  const { toast } = useToast()
   const {
     companies,
     isLoading,
@@ -15,15 +16,21 @@ const Companies = () => {
     deleteCompany,
   } = useCompanies()
 
-  console.log("Fetching companies... Current user:", user)
-
-  if (isLoading) {
-    return <div>Carregando...</div>
+  const handleCreateCompany = (newCompany: Company) => {
+    createCompany(newCompany)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
   }
 
   // Calculate statistics
   const activeCompanies = companies.filter(company => company.status === "Ativa").length
   const inactiveCompanies = companies.filter(company => company.status === "Inativa").length
+
+  if (isLoading) {
+    return <div>Carregando...</div>
+  }
 
   return (
     <DashboardLayout role="super-admin">
@@ -43,7 +50,7 @@ const Companies = () => {
 
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Lista de Empresas</h2>
-          <CreateCompanyDialog onCompanyCreated={createCompany} />
+          <CreateCompanyDialog onCompanyCreated={handleCreateCompany} />
         </div>
 
         <CompanyList
