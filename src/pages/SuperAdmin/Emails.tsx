@@ -1,10 +1,11 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { EmailList, Email } from "@/components/emails/EmailList";
+import { EmailList } from "@/components/emails/EmailList";
 import { EmailStats } from "@/components/emails/EmailStats";
 import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email";
 
 const Emails = () => {
   const [emails, setEmails] = useState<Email[]>([]);
@@ -25,17 +26,9 @@ const Emails = () => {
 
       if (error) throw error;
 
-      const formattedEmails: Email[] = emailsData.map((email: any) => ({
-        id: email.id,
-        name: email.name,
-        email: email.email,
-        accessLevel: email.access_level,
-        companyId: email.company_id,
-        companyName: email.companies?.name,
-        companyStatus: email.companies?.status,
-        createdAt: email.created_at,
-        updatedAt: email.updated_at
-      }));
+      const formattedEmails: Email[] = emailsData.map((email: SupabaseEmail) => 
+        mapSupabaseEmailToEmail(email)
+      );
 
       setEmails(formattedEmails);
     } catch (error) {
@@ -123,7 +116,7 @@ const Emails = () => {
           </p>
         </div>
 
-        <EmailStats emails={emails} />
+        <EmailStats data={emails} />
 
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Lista de Emails</h2>

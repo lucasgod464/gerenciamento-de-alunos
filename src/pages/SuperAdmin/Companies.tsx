@@ -31,6 +31,11 @@ const Companies = () => {
     return <div>Carregando...</div>;
   }
 
+  const typedCompanies = companies.map(company => ({
+    ...company,
+    status: company.status as "Ativa" | "Inativa"
+  }));
+
   return (
     <DashboardLayout role="super-admin">
       <div className="space-y-6 p-6">
@@ -53,7 +58,7 @@ const Companies = () => {
         </div>
 
         <CompanyList
-          companies={companies}
+          companies={typedCompanies}
           onUpdateCompany={updateCompany}
           onDeleteCompany={deleteCompany}
         />

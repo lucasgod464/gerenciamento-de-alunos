@@ -1,17 +1,6 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmailTableRow } from "./EmailTableRow";
-
-export interface Email {
-  id: string;
-  name: string;
-  email: string;
-  accessLevel: "Admin" | "Usuário Comum";
-  companyId: string;
-  companyName?: string;
-  companyStatus?: "Ativa" | "Inativa";
-  createdAt: string;
-  updatedAt: string;
-}
+import { Email } from "@/types/email";
 
 interface EmailListProps {
   data: Email[];
