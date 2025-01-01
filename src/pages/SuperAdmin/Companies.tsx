@@ -8,6 +8,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/useAuth"
 
+interface SupabaseCompany {
+  id: string
+  name: string
+  status: string
+  storage_used: number
+  created_at: string
+  updated_at: string
+  document: string | null
+  users_limit: number | null
+  rooms_limit: number | null
+}
+
 const Companies = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
@@ -34,7 +46,7 @@ const Companies = () => {
 
       console.log("Companies fetched:", data)
       
-      return (data || []).map(company => ({
+      return (data as SupabaseCompany[] || []).map(company => ({
         id: company.id,
         name: company.name,
         document: company.document || "",
@@ -77,23 +89,25 @@ const Companies = () => {
         throw error
       }
 
+      const company = data as SupabaseCompany
+      
       toast({
         title: "Empresa criada",
         description: "A empresa foi criada com sucesso.",
       })
 
       return {
-        id: data.id,
-        name: data.name,
-        document: data.document || "",
-        usersLimit: data.users_limit || 10,
+        id: company.id,
+        name: company.name,
+        document: company.document || "",
+        usersLimit: company.users_limit || 10,
         currentUsers: 0,
-        roomsLimit: data.rooms_limit || 10,
+        roomsLimit: company.rooms_limit || 10,
         currentRooms: 0,
-        status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
-        createdAt: new Date(data.created_at).toLocaleDateString(),
-        publicFolderPath: `/companies/${data.id}`,
-        storageUsed: data.storage_used || 0
+        status: company.status === "active" ? "Ativa" as const : "Inativa" as const,
+        createdAt: new Date(company.created_at).toLocaleDateString(),
+        publicFolderPath: `/companies/${company.id}`,
+        storageUsed: company.storage_used || 0
       }
     },
     onSuccess: () => {
@@ -125,23 +139,25 @@ const Companies = () => {
         throw error
       }
 
+      const updatedCompany = data as SupabaseCompany
+
       toast({
         title: "Empresa atualizada",
         description: "A empresa foi atualizada com sucesso.",
       })
       
       return {
-        id: data.id,
-        name: data.name,
+        id: updatedCompany.id,
+        name: updatedCompany.name,
         document: company.document,
-        usersLimit: data.users_limit,
+        usersLimit: updatedCompany.users_limit || 10,
         currentUsers: company.currentUsers,
-        roomsLimit: data.rooms_limit,
+        roomsLimit: updatedCompany.rooms_limit || 10,
         currentRooms: company.currentRooms,
-        status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
-        createdAt: new Date(data.created_at).toLocaleDateString(),
+        status: updatedCompany.status === "active" ? "Ativa" as const : "Inativa" as const,
+        createdAt: new Date(updatedCompany.created_at).toLocaleDateString(),
         publicFolderPath: company.publicFolderPath,
-        storageUsed: data.storage_used || 0
+        storageUsed: updatedCompany.storage_used || 0
       }
     },
     onSuccess: () => {
@@ -149,7 +165,6 @@ const Companies = () => {
     }
   })
 
-  // Delete company mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
