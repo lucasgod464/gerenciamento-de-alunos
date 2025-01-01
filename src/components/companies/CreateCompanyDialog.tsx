@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from "@/hooks/useAuth"
 
 interface Company {
   id: string
@@ -24,58 +23,38 @@ interface Company {
   status: "Ativa" | "Inativa"
   createdAt: string
   publicFolderPath: string
-  storageUsed: number
 }
 
 interface CreateCompanyDialogProps {
-  onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void
+  onCompanyCreated: (company: Company) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  const { user } = useAuth()
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-
-    if (!user) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar autenticado para criar uma empresa.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (user.role !== "SUPER_ADMIN") {
-      toast({
-        title: "Erro",
-        description: "Apenas super administradores podem criar empresas.",
-        variant: "destructive",
-      })
-      return
-    }
-
     const formData = new FormData(event.currentTarget)
     const newCompany = {
+      id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
       document: formData.get("document") as string,
-      usersLimit: Number(formData.get("usersLimit")) || 5,
+      usersLimit: Number(formData.get("usersLimit")) || 5, // Default to 5 if not specified
       currentUsers: 0,
-      roomsLimit: Number(formData.get("roomsLimit")) || 5,
+      roomsLimit: Number(formData.get("roomsLimit")) || 5, // Default to 5 if not specified
       currentRooms: 0,
       status: "Ativa" as const,
+      createdAt: new Date().toLocaleDateString(),
       publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
-      storageUsed: 0,
     }
     
-    try {
-      await onCompanyCreated(newCompany)
-      setOpen(false)
-    } catch (error) {
-      console.error("Error creating company:", error)
-    }
+    onCompanyCreated(newCompany)
+    setOpen(false)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
   }
 
   return (
