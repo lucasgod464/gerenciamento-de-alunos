@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { User, AuthResponse, AccessLevel, RolePermissions, ROLE_PERMISSIONS } from "@/types/auth"
-import { comparePasswords } from "@/utils/passwordUtils"
 import { supabase } from "@/integrations/supabase/client"
 
 export function useAuth() {
@@ -34,58 +33,48 @@ export function useAuth() {
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
       console.log("Tentando login para:", email)
 
-      const { data: user, error } = await supabase
+      // Primeiro, vamos verificar se o usuário existe
+      const { data: users, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
-        .maybeSingle()
 
-      console.log("Resposta do banco:", { user, error })
+      console.log("Resposta do banco:", { users, userError })
 
-      if (error) {
-        console.error("Erro no banco:", error)
+      if (userError) {
+        console.error("Erro ao buscar usuário:", userError)
         throw new Error("Erro ao buscar usuário")
       }
 
+      const user = users?.[0]
       if (!user) {
         console.error("Usuário não encontrado com email:", email)
         throw new Error("Email ou senha inválidos")
       }
 
-      // Primeiro vamos atualizar a senha do usuário para o novo formato se necessário
-      if (!user.password.startsWith('b64_')) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ 
-            password: 'b64_' + btoa(password),
-            last_access: new Date().toISOString() 
-          })
-          .eq('id', user.id)
-
-        if (updateError) {
-          console.error("Erro atualizando senha:", updateError)
-          throw new Error("Erro ao atualizar senha")
-        }
-
-        console.log("Senha atualizada para o novo formato")
-      }
-
-      // Agora vamos verificar a senha
+      // Verificar a senha
+      const encodedPassword = btoa(password)
       const storedPassword = user.password.startsWith('b64_') 
         ? user.password.slice(4) // Remove o prefixo b64_
         : user.password
 
-      const isPasswordValid = btoa(password) === storedPassword
-      console.log("Senha válida:", isPasswordValid)
+      console.log("Verificando senha:", {
+        encodedPassword,
+        storedPassword,
+        isValid: encodedPassword === storedPassword
+      })
 
-      if (!isPasswordValid) {
+      if (encodedPassword !== storedPassword) {
         throw new Error("Email ou senha inválidos")
       }
 
-      // Update last_access
+      // Atualizar último acesso
       const { error: updateError } = await supabase
         .from('users')
-        .update({ last_access: new Date().toISOString() })
+        .update({ 
+          last_access: new Date().toISOString(),
+          password: user.password.startsWith('b64_') ? user.password : `b64_${storedPassword}`
+        })
         .eq('id', user.id)
 
       if (updateError) {
