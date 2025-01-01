@@ -24,6 +24,10 @@ interface EmailTableRowProps {
 export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps) {
   const isCompanyActive = email.companyStatus === "Ativa"
 
+  const handleEdit = () => {
+    onUpdate(email)
+  }
+
   return (
     <TableRow className="hover:bg-gray-50 transition-colors">
       <TableCell>
@@ -74,7 +78,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onUpdate(email)}
+            onClick={handleEdit}
             className="hover:bg-gray-100"
           >
             <Pencil className="w-4 h-4 text-gray-600" />
