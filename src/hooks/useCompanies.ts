@@ -20,8 +20,22 @@ export function useCompanies() {
         throw error;
       }
 
-      console.log("Companies fetched:", data);
-      return data || [];
+      const mappedCompanies: Company[] = data.map(company => ({
+        id: company.id,
+        name: company.name,
+        document: company.id, // Using id as document since it's required by the interface
+        usersLimit: company.users_limit,
+        currentUsers: 0, // This would need to be calculated from profiles table
+        roomsLimit: company.rooms_limit,
+        currentRooms: 0, // This would need to be calculated from rooms table
+        status: company.status,
+        createdAt: new Date(company.created_at).toLocaleDateString('pt-BR'),
+        publicFolderPath: company.public_folder_path || '',
+        storageUsed: 0 // This would need to be calculated from storage usage
+      }));
+
+      console.log("Companies fetched:", mappedCompanies);
+      return mappedCompanies;
     },
   });
 
@@ -30,7 +44,14 @@ export function useCompanies() {
       console.log("Creating company:", newCompany);
       const { data, error } = await supabase
         .from("companies")
-        .insert(newCompany)
+        .insert({
+          id: newCompany.id,
+          name: newCompany.name,
+          status: newCompany.status,
+          users_limit: newCompany.usersLimit,
+          rooms_limit: newCompany.roomsLimit,
+          public_folder_path: newCompany.publicFolderPath,
+        })
         .select()
         .single();
 
@@ -54,7 +75,13 @@ export function useCompanies() {
       console.log("Updating company:", updatedCompany);
       const { data, error } = await supabase
         .from("companies")
-        .update(updatedCompany)
+        .update({
+          name: updatedCompany.name,
+          status: updatedCompany.status,
+          users_limit: updatedCompany.usersLimit,
+          rooms_limit: updatedCompany.roomsLimit,
+          public_folder_path: updatedCompany.publicFolderPath,
+        })
         .eq("id", updatedCompany.id)
         .select()
         .single();
