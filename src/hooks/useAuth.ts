@@ -32,7 +32,7 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      console.log("Attempting login for:", email)
+      console.log("Tentando login para:", email)
 
       const { data: user, error } = await supabase
         .from('users')
@@ -40,21 +40,43 @@ export function useAuth() {
         .eq('email', email.toLowerCase())
         .maybeSingle()
 
-      console.log("Database response:", { user, error })
+      console.log("Resposta do banco:", { user, error })
 
       if (error) {
-        console.error("Database error:", error)
+        console.error("Erro no banco:", error)
         throw new Error("Erro ao buscar usuário")
       }
 
       if (!user) {
-        console.error("No user found with email:", email)
+        console.error("Usuário não encontrado com email:", email)
         throw new Error("Email ou senha inválidos")
       }
 
-      console.log("Comparing passwords...")
-      const isPasswordValid = await comparePasswords(password, user.password)
-      console.log("Password valid:", isPasswordValid)
+      // Primeiro vamos atualizar a senha do usuário para o novo formato se necessário
+      if (!user.password.startsWith('b64_')) {
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({ 
+            password: 'b64_' + btoa(password),
+            last_access: new Date().toISOString() 
+          })
+          .eq('id', user.id)
+
+        if (updateError) {
+          console.error("Erro atualizando senha:", updateError)
+          throw new Error("Erro ao atualizar senha")
+        }
+
+        console.log("Senha atualizada para o novo formato")
+      }
+
+      // Agora vamos verificar a senha
+      const storedPassword = user.password.startsWith('b64_') 
+        ? user.password.slice(4) // Remove o prefixo b64_
+        : user.password
+
+      const isPasswordValid = btoa(password) === storedPassword
+      console.log("Senha válida:", isPasswordValid)
 
       if (!isPasswordValid) {
         throw new Error("Email ou senha inválidos")
@@ -67,7 +89,7 @@ export function useAuth() {
         .eq('id', user.id)
 
       if (updateError) {
-        console.error("Error updating last access:", updateError)
+        console.error("Erro atualizando último acesso:", updateError)
       }
 
       const response: AuthResponse = {
