@@ -3,13 +3,17 @@ export interface User {
   name: string;
   email: string;
   password: string;
-  responsibleCategory: string;
-  location: string;
-  specialization: string;
-  status: "active" | "inactive";
-  createdAt: string;
-  lastAccess: string;
-  companyId: string | null;
+  role: string;
+  company_id: string | null;
+  created_at: string | null;
+  last_access: string | null;
   authorizedRooms: string[];
-  tags: string[]; // Adding tags field
+  tags: string[];
+  responsibleCategory?: string;
+  location?: string;
+  specialization?: string;
+  status?: 'active' | 'inactive';
+  phone?: string;
+  birthDate?: string;
+  address?: string;
 }

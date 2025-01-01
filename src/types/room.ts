@@ -39,14 +39,14 @@ export function mapSupabaseRoomToRoom(supabaseRoom: SupabaseRoom): Room {
     companyId: supabaseRoom.company_id,
     studyRoom: supabaseRoom.study_room || '',
     authorizedUsers: supabaseRoom.room_authorized_users?.map(auth => auth.user_id) || [],
-    students: supabaseRoom.room_students?.map(student => ({ 
+    students: supabaseRoom.room_students?.map(student => ({
       id: student.student_id,
-      name: '', // These fields will be populated when needed
+      name: '',
       birthDate: '',
-      room: '',
+      room: supabaseRoom.id,
       status: 'active',
       createdAt: '',
-      companyId: null
+      companyId: supabaseRoom.company_id
     })) || [],
     created_at: supabaseRoom.created_at
   };

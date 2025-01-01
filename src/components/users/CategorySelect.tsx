@@ -7,13 +7,9 @@ import {
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-
-interface Category {
-  id: string;
-  name: string;
-  status: boolean;
-  companyId: string | null;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { Category } from "@/types/category";
+import { useToast } from "@/hooks/use-toast";
 
 interface CategorySelectProps {
   value: string;
@@ -23,21 +19,53 @@ interface CategorySelectProps {
 export const CategorySelect = ({ value, onChange }: CategorySelectProps) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
 
-    const savedCategories = localStorage.getItem("categories");
-    if (savedCategories) {
-      const allCategories = JSON.parse(savedCategories);
-      const companyCategories = allCategories.filter(
-        (cat: Category) => 
-          cat.companyId === currentUser.companyId && 
-          cat.status === true
-      );
-      setCategories(companyCategories);
-    }
-  }, [currentUser]);
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('company_id', currentUser.companyId)
+          .eq('status', true);
+
+        if (error) throw error;
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        toast({
+          title: "Erro ao carregar categorias",
+          description: "Ocorreu um erro ao carregar as categorias.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchCategories();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('categories-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'categories'
+        },
+        () => {
+          fetchCategories();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser, toast]);
 
   return (
     <Select value={value} onValueChange={onChange} name="responsibleCategory">
