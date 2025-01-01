@@ -4,9 +4,16 @@ import "./App.css"
 import { Toaster } from "@/components/ui/toaster"
 import { routes } from "./routes"
 
-const queryClient = new QueryClient()
-
 function App() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: Infinity,
+        refetchOnWindowFocus: false,
+      },
+    },
+  })
+
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={routes} />
