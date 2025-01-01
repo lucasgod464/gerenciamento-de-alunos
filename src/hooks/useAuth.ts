@@ -10,8 +10,10 @@ export function useAuth() {
       // First check Supabase session
       const { data: { session: supabaseSession } } = await supabase.auth.getSession();
       
-      if (supabaseSession?.user?.id) {
-        console.log("Found Supabase session:", supabaseSession);
+      if (!supabaseSession?.access_token) {
+        console.log("No valid Supabase session found");
+        localStorage.removeItem("session");
+        return null;
       }
       
       // Then check local storage
@@ -20,7 +22,7 @@ export function useAuth() {
       
       try {
         const parsedSession = JSON.parse(storedSession);
-        if (!parsedSession?.user?.id || !parsedSession?.token) {
+        if (!parsedSession?.user?.id) {
           localStorage.removeItem("session");
           return null;
         }
@@ -34,15 +36,6 @@ export function useAuth() {
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
-    initialData: () => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      try {
-        return JSON.parse(storedSession);
-      } catch {
-        return null;
-      }
-    },
   });
 
   const login = async (email: string, password: string) => {
@@ -98,6 +91,7 @@ export function useAuth() {
   const logout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem("session");
+    await refetch();
   };
 
   const isAuthenticated = !!session?.user?.id && !!session?.token;
