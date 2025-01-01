@@ -2,13 +2,14 @@ import { Room } from "@/types/room";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface RoomTableRowProps {
   room: Room;
   onEdit: (room: Room) => void;
   onDelete: (id: string) => void;
   onShowStudents: (room: Room) => void;
-  getAuthorizedUserNames: (room: Room) => string;
+  getAuthorizedUserNames: (room: Room) => Promise<string>;
 }
 
 export const RoomTableRow = ({
@@ -18,13 +19,29 @@ export const RoomTableRow = ({
   onShowStudents,
   getAuthorizedUserNames,
 }: RoomTableRowProps) => {
+  const [authorizedUsers, setAuthorizedUsers] = useState<string>("Carregando...");
+
+  useEffect(() => {
+    const loadAuthorizedUsers = async () => {
+      try {
+        const names = await getAuthorizedUserNames(room);
+        setAuthorizedUsers(names);
+      } catch (error) {
+        console.error("Erro ao carregar usuários autorizados:", error);
+        setAuthorizedUsers("Erro ao carregar usuários");
+      }
+    };
+
+    loadAuthorizedUsers();
+  }, [room, getAuthorizedUserNames]);
+
   return (
     <TableRow key={room.id}>
       <TableCell>{room.name}</TableCell>
       <TableCell>{room.schedule}</TableCell>
       <TableCell>{room.location}</TableCell>
       <TableCell>{room.category}</TableCell>
-      <TableCell>{getAuthorizedUserNames(room)}</TableCell>
+      <TableCell>{authorizedUsers}</TableCell>
       <TableCell>
         <Button
           variant="ghost"
