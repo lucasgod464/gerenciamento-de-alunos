@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen, FileText } from "lucide-react"
+import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
 import { CompanyDataUsage } from "./CompanyDataUsage"
 import {
   AlertDialog,
@@ -62,8 +62,8 @@ export function CompanyTableRow({
               ID: {company.id}
               <br />
               <span className="flex items-center gap-1 text-gray-400">
-                <FileText className="w-4 h-4" />
-                {company.document}
+                <Folder className="w-4 h-4" />
+                {company.publicFolderPath}
               </span>
             </div>
           </div>

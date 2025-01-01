@@ -41,36 +41,27 @@ export type Database = {
       companies: {
         Row: {
           created_at: string | null
-          document: string | null
           id: string
           name: string
-          rooms_limit: number | null
           status: string
           storage_used: number | null
           updated_at: string | null
-          users_limit: number | null
         }
         Insert: {
           created_at?: string | null
-          document?: string | null
           id?: string
           name: string
-          rooms_limit?: number | null
           status?: string
           storage_used?: number | null
           updated_at?: string | null
-          users_limit?: number | null
         }
         Update: {
           created_at?: string | null
-          document?: string | null
           id?: string
           name?: string
-          rooms_limit?: number | null
           status?: string
           storage_used?: number | null
           updated_at?: string | null
-          users_limit?: number | null
         }
         Relationships: []
       }
