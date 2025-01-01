@@ -2,35 +2,115 @@ import { DashboardLayout } from "@/components/DashboardLayout"
 import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
-import { useCompanies } from "@/hooks/useCompanies"
 import { useToast } from "@/components/ui/use-toast"
-import { Company } from "@/components/companies/CompanyList"
+import { supabase } from "@/integrations/supabase/client"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 const Companies = () => {
   const { toast } = useToast()
-  const {
-    companies,
-    isLoading,
-    createCompany,
-    updateCompany,
-    deleteCompany,
-  } = useCompanies()
+  const queryClient = useQueryClient()
 
-  const handleCreateCompany = (newCompany: Company) => {
-    createCompany(newCompany)
-    toast({
-      title: "Empresa criada",
-      description: "A empresa foi criada com sucesso.",
-    })
+  // Fetch companies
+  const { data: companies = [], isLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      return data.map(company => ({
+        id: company.id,
+        name: company.name,
+        document: 'N/A', // Add if needed in the future
+        usersLimit: 10, // Add if needed in the future
+        currentUsers: 0, // We can calculate this later
+        roomsLimit: 10, // Add if needed in the future
+        currentRooms: 0, // We can calculate this later
+        status: company.status === 'active' ? 'Ativa' : 'Inativa',
+        createdAt: new Date(company.created_at).toLocaleDateString(),
+        publicFolderPath: `/storage/${company.id}`,
+        storageUsed: company.storage_used || 0
+      }))
+    }
+  })
+
+  // Create company mutation
+  const createMutation = useMutation({
+    mutationFn: async (newCompany: any) => {
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([{
+          name: newCompany.name,
+          status: 'active'
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast({
+        title: "Empresa criada",
+        description: "A empresa foi criada com sucesso.",
+      })
+    }
+  })
+
+  // Update company mutation
+  const updateMutation = useMutation({
+    mutationFn: async (company: any) => {
+      const { data, error } = await supabase
+        .from('companies')
+        .update({
+          name: company.name,
+          status: company.status === 'Ativa' ? 'active' : 'inactive'
+        })
+        .eq('id', company.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast({
+        title: "Empresa atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      })
+    }
+  })
+
+  // Delete company mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] })
+      toast({
+        title: "Empresa excluída",
+        description: "A empresa foi excluída com sucesso.",
+      })
+    }
+  })
+
+  if (isLoading) {
+    return <div>Carregando...</div>
   }
 
   // Calculate statistics
   const activeCompanies = companies.filter(company => company.status === "Ativa").length
   const inactiveCompanies = companies.filter(company => company.status === "Inativa").length
-
-  if (isLoading) {
-    return <div>Carregando...</div>
-  }
 
   return (
     <DashboardLayout role="super-admin">
@@ -50,13 +130,13 @@ const Companies = () => {
 
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Lista de Empresas</h2>
-          <CreateCompanyDialog onCompanyCreated={handleCreateCompany} />
+          <CreateCompanyDialog onCompanyCreated={createMutation.mutate} />
         </div>
 
         <CompanyList
           companies={companies}
-          onUpdateCompany={updateCompany}
-          onDeleteCompany={deleteCompany}
+          onUpdateCompany={updateMutation.mutate}
+          onDeleteCompany={deleteMutation.mutate}
         />
       </div>
     </DashboardLayout>
