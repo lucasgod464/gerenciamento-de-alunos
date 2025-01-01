@@ -51,6 +51,47 @@ export type Database = {
         }
         Relationships: []
       }
+      emails: {
+        Row: {
+          access_level: Database["public"]["Enums"]["email_access_level"]
+          company_id: string
+          created_at: string
+          email: string
+          id: string
+          name: string
+          password: string
+          updated_at: string
+        }
+        Insert: {
+          access_level?: Database["public"]["Enums"]["email_access_level"]
+          company_id: string
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          password: string
+          updated_at?: string
+        }
+        Update: {
+          access_level?: Database["public"]["Enums"]["email_access_level"]
+          company_id?: string
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          password?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emails_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           company_id: string | null
@@ -106,7 +147,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      email_access_level: "Admin" | "Usuário Comum"
     }
     CompositeTypes: {
       [_ in never]: never

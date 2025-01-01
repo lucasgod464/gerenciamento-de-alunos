@@ -20,11 +20,7 @@ import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { Email } from "@/types/email"
-
-interface Company {
-  id: string
-  name: string
-}
+import { supabase } from "@/integrations/supabase/client"
 
 interface CreateEmailDialogProps {
   onEmailCreated: (email: Email) => void
@@ -35,24 +31,38 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  // Buscar empresas do localStorage
+  // Buscar empresas do Supabase
   const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
-    queryFn: () => {
-      const storedCompanies = localStorage.getItem("companies")
-      return storedCompanies ? JSON.parse(storedCompanies) : []
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name")
+      
+      if (error) throw error
+      return data
     },
   })
 
   // Mutation para criar email
   const createEmailMutation = useMutation({
-    mutationFn: async (newEmail: Email): Promise<Email> => {
-      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-      const updatedEmails = [...currentEmails, newEmail]
-      localStorage.setItem("createdEmails", JSON.stringify(updatedEmails))
-      return newEmail
+    mutationFn: async (newEmail: Omit<Email, "id" | "createdAt">) => {
+      const { data, error } = await supabase
+        .from("emails")
+        .insert([{
+          name: newEmail.name,
+          email: newEmail.email,
+          password: newEmail.password,
+          access_level: newEmail.accessLevel === "Admin" ? "Admin" : "Usuário Comum",
+          company_id: newEmail.company,
+        }])
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
     },
-    onSuccess: (newEmail: Email) => {
+    onSuccess: (newEmail) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] })
       onEmailCreated(newEmail)
       setOpen(false)
@@ -60,6 +70,14 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
         title: "Email criado",
         description: "O email foi criado com sucesso.",
       })
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao criar email",
+        description: "Ocorreu um erro ao criar o email. Tente novamente.",
+        variant: "destructive",
+      })
+      console.error("Erro ao criar email:", error)
     },
   })
 
@@ -76,14 +94,12 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
-    const newEmail: Email = {
-      id: Math.random().toString(36).substr(2, 9),
+    const newEmail = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       password: formData.get("password") as string,
       accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
       company: formData.get("company") as string,
-      createdAt: new Date().toLocaleDateString(),
     }
     
     createEmailMutation.mutate(newEmail)
@@ -163,8 +179,8 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
               </SelectTrigger>
               <SelectContent>
                 {companies.length > 0 ? (
-                  companies.map((company: Company) => (
-                    <SelectItem key={company.id} value={company.name}>
+                  companies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
                       {company.name}
                     </SelectItem>
                   ))

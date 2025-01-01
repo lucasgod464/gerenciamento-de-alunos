@@ -8,18 +8,9 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Email } from "@/types/email"
+import { supabase } from "@/integrations/supabase/client"
 
-interface EmailListProps {
-  emails: Email[]
-  onUpdateEmail: (email: Email) => void
-  onDeleteEmail: (id: string) => void
-}
-
-export function EmailList({
-  emails,
-  onUpdateEmail,
-  onDeleteEmail,
-}: EmailListProps) {
+export function EmailList() {
   const [search, setSearch] = useState("")
   const [accessLevelFilter, setAccessLevelFilter] = useState("")
   const [editingEmail, setEditingEmail] = useState<Email | null>(null)
@@ -28,44 +19,49 @@ export function EmailList({
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // Buscar usuários criados pelos administradores
-  const { data: usersFromAdmins = [] } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => {
-      const storedUsers = localStorage.getItem("users")
-      return storedUsers ? JSON.parse(storedUsers) : []
+  // Buscar emails do Supabase
+  const { data: emails = [], isLoading } = useQuery({
+    queryKey: ["emails"],
+    queryFn: async () => {
+      const query = supabase
+        .from("emails")
+        .select(`
+          id,
+          name,
+          email,
+          access_level,
+          company_id,
+          companies (
+            id,
+            name,
+            status
+          ),
+          created_at
+        `)
+
+      if (user?.role !== "SUPER_ADMIN") {
+        query.eq("company_id", user?.companyId)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+
+      return data.map(email => ({
+        id: email.id,
+        name: email.name,
+        email: email.email,
+        accessLevel: email.access_level,
+        company: email.companies.name,
+        companyId: email.company_id,
+        companyStatus: email.companies.status,
+        createdAt: new Date(email.created_at).toLocaleDateString(),
+      }))
     },
   })
-
-  // Buscar emails criados pelo super admin
-  const { data: createdEmails = [] } = useQuery({
-    queryKey: ["createdEmails"],
-    queryFn: () => {
-      const storedEmails = localStorage.getItem("createdEmails")
-      return storedEmails ? JSON.parse(storedEmails) : []
-    },
-  })
-
-  // Converter usuários para o formato de email
-  const usersAsEmails: Email[] = usersFromAdmins.map((user: any) => ({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    password: user.password || "********",
-    accessLevel: "Usuário Comum" as "Administrador" | "Usuário Comum",
-    company: user.companyId,
-    createdAt: user.createdAt,
-  }))
-
-  // Combinar emails sem duplicação
-  const allEmails = [...usersAsEmails, ...createdEmails]
-  const uniqueEmails = allEmails.filter((email, index, self) =>
-    index === self.findIndex((e) => e.id === email.id)
-  )
 
   const handleEmailCreated = (newEmail: Email) => {
-    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    onUpdateEmail(newEmail)
+    queryClient.invalidateQueries({ queryKey: ["emails"] })
     toast({
       title: "Email criado",
       description: "O email foi criado com sucesso.",
@@ -78,24 +74,45 @@ export function EmailList({
   }
 
   const handleEmailUpdated = (updatedEmail: Email) => {
-    queryClient.invalidateQueries({ queryKey: ["createdEmails"] })
-    onUpdateEmail(updatedEmail)
+    queryClient.invalidateQueries({ queryKey: ["emails"] })
     setEditingEmail(null)
   }
 
-  const filteredEmails = uniqueEmails.filter((email) => {
+  const handleDeleteEmail = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("emails")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
+
+      queryClient.invalidateQueries({ queryKey: ["emails"] })
+      toast({
+        title: "Email excluído",
+        description: "O email foi excluído com sucesso.",
+      })
+    } catch (error) {
+      console.error("Erro ao excluir email:", error)
+      toast({
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao excluir o email.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const filteredEmails = emails.filter((email) => {
     const matchesSearch =
       email.name.toLowerCase().includes(search.toLowerCase()) ||
       email.email.toLowerCase().includes(search.toLowerCase()) ||
       email.company.toLowerCase().includes(search.toLowerCase())
     
-    const matchesAccessLevel = !accessLevelFilter || accessLevelFilter === "all" || email.accessLevel === accessLevelFilter
+    const matchesAccessLevel = !accessLevelFilter || 
+      accessLevelFilter === "all" || 
+      email.accessLevel === accessLevelFilter
 
-    if (user?.role === "SUPER_ADMIN") {
-      return matchesSearch && matchesAccessLevel
-    }
-    
-    return email.company === user?.companyId && matchesSearch && matchesAccessLevel
+    return matchesSearch && matchesAccessLevel
   })
 
   return (
@@ -127,7 +144,7 @@ export function EmailList({
                 key={email.id}
                 email={email}
                 onEdit={handleEditEmail}
-                onDelete={onDeleteEmail}
+                onDelete={handleDeleteEmail}
               />
             ))}
           </TableBody>
