@@ -12,45 +12,47 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { Room } from "@/types/room";
 import { MapPin } from "lucide-react";
-
-interface Category {
-  id: string;
-  name: string;
-  status: boolean;
-  companyId: string | null;
-}
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomFormFieldsProps {
-  room: Partial<Room>;
   onChange: (field: keyof Room, value: any) => void;
 }
 
-export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
+export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!user?.companyId) return;
-    
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const companyCategories = allCategories.filter(
-      (cat: Category) => cat.companyId === user.companyId && cat.status === true
-    );
-    setCategories(companyCategories);
+    fetchCategories();
   }, [user]);
 
-  useEffect(() => {
-    if (room.schedule) {
-      const [start, end] = room.schedule.split(" - ");
-      setStartTime(start);
-      setEndTime(end);
+  const fetchCategories = async () => {
+    if (!user?.companyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('company_id', user.companyId)
+        .eq('status', true);
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: "Erro ao carregar categorias",
+        description: "Não foi possível carregar as categorias.",
+        variant: "destructive",
+      });
     }
-  }, [room.schedule]);
+  };
 
   const handleTimeChange = (type: "start" | "end", value: string) => {
-    // Validação básica do formato da hora
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(value)) return;
 
@@ -73,7 +75,6 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
         <Label htmlFor="name">Nome da Sala</Label>
         <Input
           id="name"
-          value={room.name || ""}
           onChange={(e) => onChange("name", e.target.value)}
           className="transition-all duration-200 hover:border-primary focus:border-primary"
         />
@@ -106,7 +107,6 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="location"
-            value={room.location || ""}
             onChange={(e) => onChange("location", e.target.value)}
             className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
             placeholder="Digite o endereço completo da sala..."
@@ -115,10 +115,7 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
-        <Select
-          value={room.category || ""}
-          onValueChange={(value) => onChange("category", value)}
-        >
+        <Select onValueChange={(value) => onChange("category", value)}>
           <SelectTrigger className="transition-all duration-200 hover:border-primary focus:border-primary">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
@@ -135,11 +132,11 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
         <Label htmlFor="status">Status</Label>
         <Switch
           id="status"
-          checked={room.status}
           onCheckedChange={(checked) => onChange("status", checked)}
+          defaultChecked={true}
         />
         <span className="text-sm text-muted-foreground">
-          {room.status ? "Ativa" : "Inativa"}
+          Ativa
         </span>
       </div>
     </div>
