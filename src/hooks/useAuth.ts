@@ -41,10 +41,13 @@ export function useAuth() {
     console.log("Attempting login for:", email);
 
     try {
+      // Call the verify_login function to check credentials
       const { data, error } = await supabase.rpc('verify_login', {
         p_email: email,
         p_password: password
       });
+
+      console.log("Login response:", { data, error });
 
       if (error) {
         console.error("Login error:", error);
@@ -52,6 +55,7 @@ export function useAuth() {
       }
 
       if (!data || data.length === 0) {
+        console.error("No user data returned");
         throw new Error("Email ou senha inválidos");
       }
 
@@ -66,7 +70,7 @@ export function useAuth() {
       const response: AuthResponse = {
         user: {
           id: user.id,
-          name: user.name,
+          name: user.name || '',
           email: user.email,
           role: user.role as any,
           companyId: user.company_id || null,
@@ -90,6 +94,7 @@ export function useAuth() {
 
   const logout = () => {
     localStorage.removeItem("session");
+    refetch();
   };
 
   const isAuthenticated = !!session?.user?.id && !!session?.token;
