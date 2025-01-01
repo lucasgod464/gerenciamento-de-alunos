@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { User, AuthResponse } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types/permissions";
+import bcrypt from 'bcryptjs';
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -46,12 +47,11 @@ export function useAuth() {
         .from('emails')
         .select('*')
         .eq('email', email)
-        .eq('password', password)
         .single();
 
       console.log("Email login response:", { emailData, emailError });
 
-      if (emailData) {
+      if (emailData && emailData.password === password) {
         // Map access_level to role
         const roleMap: { [key: string]: string } = {
           'Admin': 'ADMIN',
@@ -76,18 +76,24 @@ export function useAuth() {
         return response;
       }
 
-      // If no email user found, try users table
+      // If no email user found or password doesn't match, try users table
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
-        .eq('password', password)
         .single();
 
       console.log("User login response:", { userData, userError });
 
       if (!userData) {
         console.error("No user data returned");
+        throw new Error("Email ou senha inválidos");
+      }
+
+      // Compare the provided password with the hashed password
+      const passwordMatch = await bcrypt.compare(password, userData.password);
+      
+      if (!passwordMatch) {
         throw new Error("Email ou senha inválidos");
       }
 
