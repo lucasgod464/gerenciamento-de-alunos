@@ -78,10 +78,17 @@ export function useAuth() {
     try {
       const { data, error } = await supabase.rpc(
         'verify_user_login',
-        { p_email: email, p_password: password }
+        { 
+          p_email: email, 
+          p_password: password 
+        }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("RPC Error:", error);
+        throw error;
+      }
+
       if (!data || data.length === 0) {
         throw new Error("Invalid credentials");
       }
@@ -94,7 +101,10 @@ export function useAuth() {
         password,
       });
 
-      if (signInError) throw signInError;
+      if (signInError) {
+        console.error("Sign in error:", signInError);
+        throw signInError;
+      }
 
       await refetch();
       return { user, token: "authenticated" };
