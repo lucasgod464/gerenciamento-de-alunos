@@ -34,15 +34,24 @@ interface CreateCompanyDialogProps {
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
-  const { isAuthenticated } = useAuth()
+  const { user } = useAuth()
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!isAuthenticated) {
+    if (!user) {
       toast({
         title: "Erro",
         description: "Você precisa estar autenticado para criar uma empresa.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (user.role !== "SUPER_ADMIN") {
+      toast({
+        title: "Erro",
+        description: "Apenas super administradores podem criar empresas.",
         variant: "destructive",
       })
       return
@@ -62,19 +71,10 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
     }
     
     try {
-      onCompanyCreated(newCompany)
+      await onCompanyCreated(newCompany)
       setOpen(false)
-      toast({
-        title: "Empresa criada",
-        description: "A empresa foi criada com sucesso.",
-      })
     } catch (error) {
       console.error("Error creating company:", error)
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
-        variant: "destructive",
-      })
     }
   }
 

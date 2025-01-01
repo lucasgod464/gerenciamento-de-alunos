@@ -1,13 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
 import { supabase } from "@/integrations/supabase/client"
+import { useAuth } from "@/hooks/useAuth"
+import { useToast } from "@/components/ui/use-toast"
 
 export function useCompanies() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
+  const { toast } = useToast()
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
+      if (!user) {
+        throw new Error("User not authenticated")
+      }
+
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -32,12 +40,19 @@ export function useCompanies() {
         storageUsed: company.storage_used,
       }))
     },
+    enabled: !!user, // Only run query when user is authenticated
   })
 
   const createMutation = useMutation({
     mutationFn: async (newCompany: Omit<Company, "id" | "createdAt">) => {
-      console.log("Creating company with data:", newCompany)
-      
+      if (!user) {
+        throw new Error("User not authenticated")
+      }
+
+      if (user.role !== "SUPER_ADMIN") {
+        throw new Error("Only SUPER_ADMIN can create companies")
+      }
+
       const { data, error } = await supabase
         .from("companies")
         .insert([
@@ -64,11 +79,26 @@ export function useCompanies() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
+      toast({
+        title: "Sucesso",
+        description: "Empresa criada com sucesso!",
+      })
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao criar empresa",
+        variant: "destructive",
+      })
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: async (updatedCompany: Company) => {
+      if (!user) {
+        throw new Error("User not authenticated")
+      }
+
       const { data, error } = await supabase
         .from("companies")
         .update({
@@ -95,6 +125,10 @@ export function useCompanies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      if (!user) {
+        throw new Error("User not authenticated")
+      }
+
       const { error } = await supabase
         .from("companies")
         .delete()
