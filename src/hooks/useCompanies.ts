@@ -13,7 +13,16 @@ export function useCompanies() {
       console.log("Fetching companies...")
       const { data, error } = await supabase
         .from('companies')
-        .select('*')
+        .select(`
+          id,
+          name,
+          document,
+          users_limit,
+          rooms_limit,
+          status,
+          storage_used,
+          created_at
+        `)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -22,7 +31,20 @@ export function useCompanies() {
       }
 
       console.log("Companies fetched:", data)
-      return data || []
+      
+      return data.map(company => ({
+        id: company.id,
+        name: company.name,
+        document: company.document || "",
+        usersLimit: company.users_limit || 5,
+        currentUsers: 0, // We'll implement this count later
+        roomsLimit: company.rooms_limit || 5,
+        currentRooms: 0, // We'll implement this count later
+        status: company.status === "active" ? "Ativa" : "Inativa",
+        createdAt: new Date(company.created_at).toLocaleDateString(),
+        publicFolderPath: `/storage/${company.id}`,
+        storageUsed: company.storage_used || 0,
+      }))
     },
   })
 
@@ -125,19 +147,7 @@ export function useCompanies() {
   })
 
   return {
-    companies: companies.map(company => ({
-      id: company.id,
-      name: company.name,
-      document: company.document || "",
-      usersLimit: company.users_limit || 5,
-      currentUsers: 0, // We'll implement this count later
-      roomsLimit: company.rooms_limit || 5,
-      currentRooms: 0, // We'll implement this count later
-      status: company.status === "active" ? "Ativa" : "Inativa",
-      createdAt: new Date(company.created_at).toLocaleDateString(),
-      publicFolderPath: `/storage/${company.id}`,
-      storageUsed: company.storage_used || 0,
-    })),
+    companies,
     isLoading,
     createCompany: createMutation.mutate,
     updateCompany: updateMutation.mutate,
