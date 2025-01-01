@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
-import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 
 export function useCompanies() {
@@ -9,55 +8,25 @@ export function useCompanies() {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      console.log("Fetching companies from Supabase...")
-      const { data: companies, error } = await supabase
-        .from("companies")
-        .select("*")
-        .order("created_at", { ascending: false })
-
-      if (error) {
-        console.error("Error fetching companies:", error)
-        throw error
-      }
-
-      // Map database fields to Company type
-      return companies.map((company): Company => ({
-        id: company.id,
-        name: company.name,
-        document: company.document || "",
-        usersLimit: company.users_limit || 5,
-        currentUsers: 0, // We'll update this with a count query later
-        roomsLimit: company.rooms_limit || 5,
-        currentRooms: 0, // We'll update this with a count query later
-        status: company.status === "active" ? "Ativa" : "Inativa",
-        createdAt: new Date(company.created_at).toLocaleDateString(),
-        publicFolderPath: `/storage/${company.id}`,
-        storageUsed: company.storage_used || 0,
-      }))
+      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
+      return companies
     },
   })
 
   const createMutation = useMutation({
     mutationFn: async (newCompany: Omit<Company, "id" | "createdAt" | "publicFolderPath" | "currentUsers" | "currentRooms" | "storageUsed">) => {
-      console.log("Creating new company in Supabase:", newCompany)
-      const { data, error } = await supabase
-        .from("companies")
-        .insert({
-          name: newCompany.name,
-          document: newCompany.document,
-          users_limit: newCompany.usersLimit,
-          rooms_limit: newCompany.roomsLimit,
-          status: newCompany.status === "Ativa" ? "active" : "inactive",
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Error creating company:", error)
-        throw error
+      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
+      const company: Company = {
+        id: Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toLocaleDateString(),
+        publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
+        currentUsers: 0,
+        currentRooms: 0,
+        storageUsed: 0,
+        ...newCompany,
       }
-
-      return data
+      localStorage.setItem("companies", JSON.stringify([...companies, company]))
+      return company
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -71,25 +40,12 @@ export function useCompanies() {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedCompany: Company) => {
-      console.log("Updating company in Supabase:", updatedCompany)
-      const { data, error } = await supabase
-        .from("companies")
-        .update({
-          name: updatedCompany.name,
-          users_limit: updatedCompany.usersLimit,
-          rooms_limit: updatedCompany.roomsLimit,
-          status: updatedCompany.status === "Ativa" ? "active" : "inactive",
-        })
-        .eq("id", updatedCompany.id)
-        .select()
-        .single()
-
-      if (error) {
-        console.error("Error updating company:", error)
-        throw error
-      }
-
-      return data
+      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
+      const updatedCompanies = companies.map((company: Company) =>
+        company.id === updatedCompany.id ? updatedCompany : company
+      )
+      localStorage.setItem("companies", JSON.stringify(updatedCompanies))
+      return updatedCompany
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -103,17 +59,9 @@ export function useCompanies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      console.log("Deleting company from Supabase:", id)
-      const { error } = await supabase
-        .from("companies")
-        .delete()
-        .eq("id", id)
-
-      if (error) {
-        console.error("Error deleting company:", error)
-        throw error
-      }
-
+      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
+      const filteredCompanies = companies.filter((company: Company) => company.id !== id)
+      localStorage.setItem("companies", JSON.stringify(filteredCompanies))
       return id
     },
     onSuccess: () => {
