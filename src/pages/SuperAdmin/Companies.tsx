@@ -5,6 +5,7 @@ import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Company } from "@/components/companies/CompanyList"
 
 const Companies = () => {
   const { toast } = useToast()
@@ -23,22 +24,22 @@ const Companies = () => {
       return data.map(company => ({
         id: company.id,
         name: company.name,
-        document: 'N/A', // Add if needed in the future
-        usersLimit: 10, // Add if needed in the future
-        currentUsers: 0, // We can calculate this later
-        roomsLimit: 10, // Add if needed in the future
-        currentRooms: 0, // We can calculate this later
-        status: company.status === 'active' ? 'Ativa' : 'Inativa',
+        document: 'N/A',
+        usersLimit: 10,
+        currentUsers: 0,
+        roomsLimit: 10,
+        currentRooms: 0,
+        status: company.status === 'active' ? "Ativa" : "Inativa",
         createdAt: new Date(company.created_at).toLocaleDateString(),
         publicFolderPath: `/storage/${company.id}`,
         storageUsed: company.storage_used || 0
-      }))
+      } as Company))
     }
   })
 
   // Create company mutation
   const createMutation = useMutation({
-    mutationFn: async (newCompany: any) => {
+    mutationFn: async (newCompany: Company) => {
       const { data, error } = await supabase
         .from('companies')
         .insert([{
@@ -62,7 +63,7 @@ const Companies = () => {
 
   // Update company mutation
   const updateMutation = useMutation({
-    mutationFn: async (company: any) => {
+    mutationFn: async (company: Company) => {
       const { data, error } = await supabase
         .from('companies')
         .update({
