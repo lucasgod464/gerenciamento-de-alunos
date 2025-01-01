@@ -127,6 +127,48 @@ sudo systemctl restart nginx
    sudo certbot renew --dry-run
    ```
 
+### Atualizando o Sistema
+
+Quando houver alterações no código, siga estes passos para atualizar o sistema em produção:
+
+```bash
+# 1. Entre na pasta do projeto
+cd <YOUR_PROJECT_NAME>
+
+# 2. Pare a aplicação no PM2
+pm2 stop seu-app
+
+# 3. Faça pull das alterações do Git
+git pull origin main
+
+# 4. Instale novas dependências (se houver)
+npm install
+
+# 5. Rebuild o projeto
+npm run build
+
+# 6. Reinicie a aplicação
+pm2 restart seu-app
+
+# 7. Verifique o status
+pm2 status
+
+# 8. Verifique os logs por possíveis erros
+pm2 logs seu-app
+```
+
+#### Backup antes de atualizar (recomendado)
+
+Antes de fazer uma atualização, é recomendado fazer backup:
+
+```bash
+# 1. Backup dos arquivos
+cp -r <YOUR_PROJECT_NAME> <YOUR_PROJECT_NAME>_backup_$(date +%Y%m%d)
+
+# 2. Se algo der errado, você pode restaurar:
+cp -r <YOUR_PROJECT_NAME>_backup_[DATA] <YOUR_PROJECT_NAME>
+```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
