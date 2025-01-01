@@ -38,9 +38,13 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
-        .single()
+        .maybeSingle()
 
-      if (error || !user) {
+      if (error) {
+        throw new Error("Error fetching user")
+      }
+
+      if (!user) {
         throw new Error("Invalid credentials")
       }
 
