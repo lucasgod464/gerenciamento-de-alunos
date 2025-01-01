@@ -131,18 +131,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_main_teacher: boolean | null
           room_id: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          is_main_teacher?: boolean | null
           room_id?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          is_main_teacher?: boolean | null
           room_id?: string | null
           user_id?: string | null
         }
@@ -227,6 +230,13 @@ export type Database = {
           study_room?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_rooms_category"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "rooms_company_id_fkey"
             columns: ["company_id"]
