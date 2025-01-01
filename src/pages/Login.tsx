@@ -37,15 +37,16 @@ const Login = () => {
         throw new Error("A senha deve ter pelo menos 6 caracteres");
       }
 
-      console.log("Starting login attempt...");
+      console.log("🚀 Iniciando tentativa de login...");
       const response = await login(email.trim(), password);
-      console.log("Login successful, redirecting...", response.user.role);
+      console.log("✅ Login bem-sucedido, redirecionando...", response.user.role);
       
       toast.success("Login realizado com sucesso!");
       
       // Redirect based on user role
       switch (response.user.role) {
         case "SUPER_ADMIN":
+          console.log("🎯 Redirecionando para /super-admin");
           navigate("/super-admin");
           break;
         case "ADMIN":
@@ -55,11 +56,11 @@ const Login = () => {
           navigate("/user");
           break;
         default:
-          console.error("Unknown role:", response.user.role);
+          console.error("❌ Tipo de usuário desconhecido:", response.user.role);
           throw new Error("Tipo de usuário não reconhecido");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Erro no login:", error);
       setError(error instanceof Error ? error.message : "Erro ao fazer login");
       toast.error("Falha no login");
     } finally {
