@@ -3,7 +3,7 @@ import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useCompanies } from "@/hooks/useCompanies"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 import { Company } from "@/components/companies/CompanyList"
 
 const Companies = () => {
@@ -15,12 +15,9 @@ const Companies = () => {
     deleteCompany,
   } = useCompanies()
 
-  const handleCreateCompany = (newCompany: Company) => {
+  const handleCreateCompany = (newCompany: Omit<Company, "id" | "createdAt" | "publicFolderPath" | "currentUsers" | "currentRooms" | "storageUsed">) => {
     createCompany(newCompany)
-    toast({
-      title: "Empresa criada",
-      description: "A empresa foi criada com sucesso.",
-    })
+    toast.success("Empresa criada com sucesso!")
   }
 
   // Calculate statistics

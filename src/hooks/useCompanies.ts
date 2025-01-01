@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
 import { supabase } from "@/integrations/supabase/client"
-import { toast } from "@/hooks/use-toast"
+import { toast } from "sonner"
 
 export function useCompanies() {
   const queryClient = useQueryClient()
@@ -61,18 +61,11 @@ export function useCompanies() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast({
-        title: "Empresa criada",
-        description: "A empresa foi criada com sucesso.",
-      })
+      toast.success("Empresa criada com sucesso!")
     },
     onError: (error) => {
       console.error("Error in createMutation:", error)
-      toast({
-        title: "Erro ao criar empresa",
-        description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
-        variant: "destructive",
-      })
+      toast.error("Erro ao criar empresa. Tente novamente.")
     },
   })
 
@@ -100,18 +93,11 @@ export function useCompanies() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast({
-        title: "Empresa atualizada",
-        description: "As alterações foram salvas com sucesso.",
-      })
+      toast.success("Empresa atualizada com sucesso!")
     },
     onError: (error) => {
       console.error("Error in updateMutation:", error)
-      toast({
-        title: "Erro ao atualizar empresa",
-        description: "Ocorreu um erro ao salvar as alterações. Tente novamente.",
-        variant: "destructive",
-      })
+      toast.error("Erro ao atualizar empresa. Tente novamente.")
     },
   })
 
@@ -132,18 +118,11 @@ export function useCompanies() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast({
-        title: "Empresa excluída",
-        description: "A empresa foi excluída com sucesso.",
-      })
+      toast.success("Empresa excluída com sucesso!")
     },
     onError: (error) => {
       console.error("Error in deleteMutation:", error)
-      toast({
-        title: "Erro ao excluir empresa",
-        description: "Ocorreu um erro ao excluir a empresa. Tente novamente.",
-        variant: "destructive",
-      })
+      toast.error("Erro ao excluir empresa. Tente novamente.")
     },
   })
 
