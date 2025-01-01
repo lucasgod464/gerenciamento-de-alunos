@@ -19,7 +19,7 @@ import {
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-import { Email } from "@/types/email"
+import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email"
 import { supabase } from "@/integrations/supabase/client"
 
 interface CreateEmailDialogProps {
@@ -31,7 +31,6 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
 
-  // Buscar empresas do Supabase
   const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
@@ -44,23 +43,29 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
     },
   })
 
-  // Mutation para criar email
   const createEmailMutation = useMutation({
-    mutationFn: async (newEmail: Omit<Email, "id" | "createdAt">) => {
+    mutationFn: async (newEmail: Omit<Email, "id" | "createdAt" | "company" | "companyStatus">) => {
       const { data, error } = await supabase
         .from("emails")
         .insert([{
           name: newEmail.name,
           email: newEmail.email,
           password: newEmail.password,
-          access_level: newEmail.accessLevel === "Admin" ? "Admin" : "Usuário Comum",
-          company_id: newEmail.company,
+          access_level: newEmail.accessLevel,
+          company_id: newEmail.companyId,
         }])
-        .select()
+        .select(`
+          *,
+          companies (
+            id,
+            name,
+            status
+          )
+        `)
         .single()
 
       if (error) throw error
-      return data
+      return mapSupabaseEmailToEmail(data as SupabaseEmail)
     },
     onSuccess: (newEmail) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] })
@@ -99,7 +104,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
       email: formData.get("email") as string,
       password: formData.get("password") as string,
       accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
-      company: formData.get("company") as string,
+      companyId: formData.get("company") as string,
     }
     
     createEmailMutation.mutate(newEmail)

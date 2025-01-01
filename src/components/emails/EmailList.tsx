@@ -7,7 +7,7 @@ import { EditEmailDialog } from "./EditEmailDialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/useAuth"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Email } from "@/types/email"
+import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email"
 import { supabase } from "@/integrations/supabase/client"
 
 export function EmailList() {
@@ -19,24 +19,18 @@ export function EmailList() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
-  // Buscar emails do Supabase
   const { data: emails = [], isLoading } = useQuery({
     queryKey: ["emails"],
     queryFn: async () => {
       const query = supabase
         .from("emails")
         .select(`
-          id,
-          name,
-          email,
-          access_level,
-          company_id,
+          *,
           companies (
             id,
             name,
             status
-          ),
-          created_at
+          )
         `)
 
       if (user?.role !== "SUPER_ADMIN") {
@@ -47,16 +41,7 @@ export function EmailList() {
 
       if (error) throw error
 
-      return data.map(email => ({
-        id: email.id,
-        name: email.name,
-        email: email.email,
-        accessLevel: email.access_level,
-        company: email.companies.name,
-        companyId: email.company_id,
-        companyStatus: email.companies.status,
-        createdAt: new Date(email.created_at).toLocaleDateString(),
-      }))
+      return data.map((email: SupabaseEmail) => mapSupabaseEmailToEmail(email))
     },
   })
 
