@@ -41,6 +41,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       if (error) throw error;
 
+      // Update the local state with full student objects
       setSelectedRoomStudents(prev => prev.filter(student => student.id !== studentId));
 
       toast({
