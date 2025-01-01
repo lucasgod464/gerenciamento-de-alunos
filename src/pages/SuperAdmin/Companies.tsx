@@ -6,21 +6,32 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
+import { useAuth } from "@/hooks/useAuth"
 
 const Companies = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
+  const { user } = useAuth()
+
+  console.log("Current user:", user) // Debug log
 
   // Fetch companies
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
+      console.log("Fetching companies...") // Debug log
       const { data, error } = await supabase
         .from('companies')
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error("Error fetching companies:", error) // Debug log
+        throw error
+      }
+      
+      console.log("Companies fetched:", data) // Debug log
+      
       return data.map(company => ({
         id: company.id,
         name: company.name,
