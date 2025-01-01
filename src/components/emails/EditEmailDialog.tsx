@@ -22,6 +22,13 @@ import { Email } from "@/types/email"
 import { Eye, EyeOff } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 
+interface EditEmailDialogProps {
+  email: Email | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onEmailUpdated: (email: Email) => void;
+}
+
 export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: EditEmailDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -89,7 +96,7 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
         accessLevel: data.access_level,
         company: data.companies.name,
         companyId: data.company_id,
-        companyStatus: data.companies.status,
+        companyStatus: data.companies.status as "Ativa" | "Inativa",
         createdAt: new Date(data.created_at).toLocaleDateString(),
       };
       onEmailUpdated(updatedEmail);

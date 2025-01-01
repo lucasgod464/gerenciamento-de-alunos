@@ -1,10 +1,6 @@
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@/components/ui/table";
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
@@ -29,20 +25,45 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const handleShowStudents = (room: Room) => {
-    const studentsList: Student[] = room.students?.map(student => ({
-      id: student.id,
-      name: '',  // These will be populated when needed
-      birthDate: '',
-      room: room.id,
-      status: 'active',
-      createdAt: '',
-      companyId: currentUser?.companyId || null
-    })) || [];
+  const handleShowStudents = async (room: Room) => {
+    try {
+      const { data: roomStudents, error } = await supabase
+        .from('room_students')
+        .select(`
+          student_id,
+          students:student_id (
+            id,
+            name,
+            birthDate:birth_date,
+            status,
+            created_at
+          )
+        `)
+        .eq('room_id', room.id);
+
+      if (error) throw error;
+
+      const studentsList: Student[] = roomStudents.map(rs => ({
+        id: rs.students.id,
+        name: rs.students.name,
+        birthDate: rs.students.birthDate,
+        room: room.id,
+        status: rs.students.status as 'active' | 'inactive',
+        createdAt: new Date(rs.students.created_at).toLocaleDateString(),
+        companyId: currentUser?.companyId || null
+      }));
     
-    setSelectedRoomStudents(studentsList);
-    setSelectedRoomId(room.id);
-    setIsStudentsDialogOpen(true);
+      setSelectedRoomStudents(studentsList);
+      setSelectedRoomId(room.id);
+      setIsStudentsDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar alunos",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDeleteStudent = async (studentId: string) => {
@@ -158,7 +179,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
               onEdit={onEdit}
               onDelete={onDelete}
               onShowStudents={handleShowStudents}
-              getAuthorizedUserNames={getAuthorizedUserNames}
             />
           ))}
         </TableBody>
