@@ -1,6 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
-import { toast } from "sonner"
+
+// Funções auxiliares para localStorage
+const getStoredCompanies = (): Company[] => {
+  const stored = localStorage.getItem("companies")
+  if (!stored) return []
+  
+  const companies = JSON.parse(stored)
+  return companies.map((company: any) => ({
+    ...company,
+    status: company.status === "Ativa" ? "Ativa" : "Inativa",
+    storageUsed: company.storageUsed || 0
+  }))
+}
+
+const setStoredCompanies = (companies: Company[]) => {
+  localStorage.setItem("companies", JSON.stringify(companies))
+}
 
 export function useCompanies() {
   const queryClient = useQueryClient()
@@ -8,69 +24,77 @@ export function useCompanies() {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
-      return companies
+      const companies = getStoredCompanies()
+      
+      // Calculate real-time stats
+      const rooms = JSON.parse(localStorage.getItem("rooms") || "[]")
+      const users = JSON.parse(localStorage.getItem("users") || "[]")
+      
+      return companies.map(company => ({
+        ...company,
+        currentUsers: users.filter((user: any) => user.companyId === company.id).length,
+        currentRooms: rooms.filter((room: any) => room.companyId === company.id).length,
+      }))
     },
+    staleTime: Infinity,
   })
 
   const createMutation = useMutation({
-    mutationFn: async (newCompany: Omit<Company, "id" | "createdAt" | "publicFolderPath" | "currentUsers" | "currentRooms" | "storageUsed">) => {
-      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
-      const company: Company = {
-        id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toLocaleDateString(),
-        publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
-        currentUsers: 0,
-        currentRooms: 0,
-        storageUsed: 0,
-        ...newCompany,
-      }
-      localStorage.setItem("companies", JSON.stringify([...companies, company]))
-      return company
+    mutationFn: async (newCompany: Company) => {
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = [...currentCompanies, newCompany]
+      setStoredCompanies(updatedCompanies)
+      return newCompany
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast.success("Empresa criada com sucesso!")
-    },
-    onError: (error) => {
-      console.error("Error in createMutation:", error)
-      toast.error("Erro ao criar empresa. Tente novamente.")
     },
   })
 
   const updateMutation = useMutation({
     mutationFn: async (updatedCompany: Company) => {
-      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
-      const updatedCompanies = companies.map((company: Company) =>
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.map((company) =>
         company.id === updatedCompany.id ? updatedCompany : company
       )
-      localStorage.setItem("companies", JSON.stringify(updatedCompanies))
+      setStoredCompanies(updatedCompanies)
       return updatedCompany
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast.success("Empresa atualizada com sucesso!")
-    },
-    onError: (error) => {
-      console.error("Error in updateMutation:", error)
-      toast.error("Erro ao atualizar empresa. Tente novamente.")
     },
   })
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const companies = JSON.parse(localStorage.getItem("companies") || "[]")
-      const filteredCompanies = companies.filter((company: Company) => company.id !== id)
-      localStorage.setItem("companies", JSON.stringify(filteredCompanies))
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.filter((company) => company.id !== id)
+      setStoredCompanies(updatedCompanies)
       return id
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast.success("Empresa excluída com sucesso!")
     },
-    onError: (error) => {
-      console.error("Error in deleteMutation:", error)
-      toast.error("Erro ao excluir empresa. Tente novamente.")
+  })
+
+  const resetMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const currentCompanies = getStoredCompanies()
+      const updatedCompanies = currentCompanies.map((company) =>
+        company.id === id
+          ? {
+              ...company,
+              currentUsers: 0,
+              currentRooms: 0,
+              status: "Ativa" as const,
+            }
+          : company
+      )
+      setStoredCompanies(updatedCompanies)
+      return id
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
     },
   })
 
@@ -80,5 +104,6 @@ export function useCompanies() {
     createCompany: createMutation.mutate,
     updateCompany: updateMutation.mutate,
     deleteCompany: deleteMutation.mutate,
+    resetCompany: resetMutation.mutate,
   }
 }

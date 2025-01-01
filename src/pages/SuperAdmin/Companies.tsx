@@ -3,10 +3,11 @@ import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useCompanies } from "@/hooks/useCompanies"
-import { toast } from "sonner"
+import { useToast } from "@/components/ui/use-toast"
 import { Company } from "@/components/companies/CompanyList"
 
 const Companies = () => {
+  const { toast } = useToast()
   const {
     companies,
     isLoading,
@@ -15,14 +16,17 @@ const Companies = () => {
     deleteCompany,
   } = useCompanies()
 
-  const handleCreateCompany = (newCompany: Omit<Company, "id" | "createdAt" | "publicFolderPath" | "currentUsers" | "currentRooms" | "storageUsed">) => {
+  const handleCreateCompany = (newCompany: Company) => {
     createCompany(newCompany)
-    toast.success("Empresa criada com sucesso!")
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
   }
 
   // Calculate statistics
-  const activeCompanies = companies?.filter(company => company.status === "Ativa").length || 0
-  const inactiveCompanies = companies?.filter(company => company.status === "Inativa").length || 0
+  const activeCompanies = companies.filter(company => company.status === "Ativa").length
+  const inactiveCompanies = companies.filter(company => company.status === "Inativa").length
 
   if (isLoading) {
     return <div>Carregando...</div>
@@ -39,7 +43,7 @@ const Companies = () => {
         </div>
 
         <CompanyStats
-          totalCompanies={companies?.length || 0}
+          totalCompanies={companies.length}
           activeCompanies={activeCompanies}
           inactiveCompanies={inactiveCompanies}
         />
@@ -50,7 +54,7 @@ const Companies = () => {
         </div>
 
         <CompanyList
-          companies={companies || []}
+          companies={companies}
           onUpdateCompany={updateCompany}
           onDeleteCompany={deleteCompany}
         />
