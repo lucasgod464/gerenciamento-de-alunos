@@ -20,9 +20,19 @@ export function useCompanies() {
         throw error
       }
 
+      // Map the snake_case response to camelCase Company interface
       return data.map(company => ({
-        ...company,
+        id: company.id,
+        name: company.name,
+        document: company.document,
+        usersLimit: company.users_limit,
+        currentUsers: company.current_users,
+        roomsLimit: company.rooms_limit,
+        currentRooms: company.current_rooms,
+        status: company.status,
         createdAt: new Date(company.created_at).toLocaleDateString(),
+        publicFolderPath: company.public_folder_path,
+        storageUsed: company.storage_used,
       }))
     },
   })
@@ -54,9 +64,19 @@ export function useCompanies() {
         throw error
       }
 
+      // Map the response to match Company interface
       return {
-        ...data,
+        id: data.id,
+        name: data.name,
+        document: data.document,
+        usersLimit: data.users_limit,
+        currentUsers: data.current_users,
+        roomsLimit: data.rooms_limit,
+        currentRooms: data.current_rooms,
+        status: data.status,
         createdAt: new Date(data.created_at).toLocaleDateString(),
+        publicFolderPath: data.public_folder_path,
+        storageUsed: data.storage_used,
       }
     },
     onSuccess: () => {
@@ -93,9 +113,19 @@ export function useCompanies() {
         throw error
       }
 
+      // Map the response to match Company interface
       return {
-        ...data,
+        id: data.id,
+        name: data.name,
+        document: data.document,
+        usersLimit: data.users_limit,
+        currentUsers: data.current_users,
+        roomsLimit: data.rooms_limit,
+        currentRooms: data.current_rooms,
+        status: data.status,
         createdAt: new Date(data.created_at).toLocaleDateString(),
+        publicFolderPath: data.public_folder_path,
+        storageUsed: data.storage_used,
       }
     },
     onSuccess: () => {
@@ -160,9 +190,19 @@ export function useCompanies() {
         throw error
       }
 
+      // Map the response to match Company interface
       return {
-        ...data,
+        id: data.id,
+        name: data.name,
+        document: data.document,
+        usersLimit: data.users_limit,
+        currentUsers: data.current_users,
+        roomsLimit: data.rooms_limit,
+        currentRooms: data.current_rooms,
+        status: data.status,
         createdAt: new Date(data.created_at).toLocaleDateString(),
+        publicFolderPath: data.public_folder_path,
+        storageUsed: data.storage_used,
       }
     },
     onSuccess: () => {
