@@ -28,7 +28,21 @@ const Companies = () => {
       }
 
       console.log("Companies fetched:", data)
-      return data || []
+      
+      // Map database records to Company type
+      return (data || []).map(company => ({
+        id: company.id,
+        name: company.name,
+        document: "", // Default empty string for now
+        usersLimit: 10, // Default value
+        currentUsers: 0, // Default value
+        roomsLimit: 10, // Default value
+        currentRooms: 0, // Default value
+        status: company.status === "active" ? "Ativa" : "Inativa",
+        createdAt: new Date(company.created_at).toLocaleDateString(),
+        publicFolderPath: `/companies/${company.id}`,
+        storageUsed: company.storage_used || 0
+      }))
     },
     enabled: !!user && user.role === "SUPER_ADMIN"
   })
@@ -41,7 +55,7 @@ const Companies = () => {
         .from("companies")
         .insert([{
           name: newCompany.name,
-          status: newCompany.status || "Ativa"
+          status: newCompany.status === "Ativa" ? "active" : "inactive"
         }])
         .select()
         .single()
@@ -51,7 +65,19 @@ const Companies = () => {
         throw error
       }
 
-      return data
+      return {
+        id: data.id,
+        name: data.name,
+        document: "",
+        usersLimit: 10,
+        currentUsers: 0,
+        roomsLimit: 10,
+        currentRooms: 0,
+        status: data.status === "active" ? "Ativa" : "Inativa",
+        createdAt: new Date(data.created_at).toLocaleDateString(),
+        publicFolderPath: `/companies/${data.id}`,
+        storageUsed: data.storage_used || 0
+      }
     },
     onError: (error) => {
       console.error("Error in create mutation:", error)
@@ -77,14 +103,27 @@ const Companies = () => {
         .from("companies")
         .update({
           name: company.name,
-          status: company.status
+          status: company.status === "Ativa" ? "active" : "inactive"
         })
         .eq("id", company.id)
         .select()
         .single()
 
       if (error) throw error
-      return data
+      
+      return {
+        id: data.id,
+        name: data.name,
+        document: company.document,
+        usersLimit: company.usersLimit,
+        currentUsers: company.currentUsers,
+        roomsLimit: company.roomsLimit,
+        currentRooms: company.currentRooms,
+        status: data.status === "active" ? "Ativa" : "Inativa",
+        createdAt: new Date(data.created_at).toLocaleDateString(),
+        publicFolderPath: company.publicFolderPath,
+        storageUsed: data.storage_used || 0
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
