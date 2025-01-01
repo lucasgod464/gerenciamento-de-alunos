@@ -1,8 +1,10 @@
-// Simple hash for development purposes
+import bcrypt from 'bcryptjs';
+
 export const hashPassword = async (password: string): Promise<string> => {
-  return btoa(password); // Using base64 encoding for development
+  const salt = await bcrypt.genSalt(10);
+  return bcrypt.hash(password, salt);
 };
 
 export const comparePasswords = async (password: string, hashedPassword: string): Promise<boolean> => {
-  return btoa(password) === hashedPassword;
+  return bcrypt.compare(password, hashedPassword);
 };

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
@@ -24,44 +24,39 @@ const Login = () => {
     setError("");
     setIsLoading(true);
 
+    if (!validateEmail(email)) {
+      setError("Por favor, insira um email válido");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      if (!email.trim() || !password.trim()) {
-        throw new Error("Por favor, preencha todos os campos");
-      }
-
-      if (!validateEmail(email)) {
-        throw new Error("Por favor, insira um email válido");
-      }
-
-      if (password.length < 6) {
-        throw new Error("A senha deve ter pelo menos 6 caracteres");
-      }
-
-      console.log("🚀 Iniciando tentativa de login...");
-      const response = await login(email.trim(), password);
-      console.log("✅ Login bem-sucedido, redirecionando...", response.user.role);
+      const response = await login(email, password);
+      console.log("Login successful, redirecting based on role:", response.user.role);
       
       toast.success("Login realizado com sucesso!");
       
-      // Redirect based on user role
       switch (response.user.role) {
         case "SUPER_ADMIN":
-          console.log("🎯 Redirecionando para /super-admin");
-          navigate("/super-admin");
+          navigate("/super-admin", { replace: true });
           break;
         case "ADMIN":
-          navigate("/admin");
+          navigate("/admin", { replace: true });
           break;
         case "USER":
-          navigate("/user");
+          navigate("/user", { replace: true });
           break;
         default:
-          console.error("❌ Tipo de usuário desconhecido:", response.user.role);
-          throw new Error("Tipo de usuário não reconhecido");
+          navigate("/login", { replace: true });
       }
     } catch (error) {
-      console.error("❌ Erro no login:", error);
-      setError(error instanceof Error ? error.message : "Erro ao fazer login");
+      setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {
       setIsLoading(false);
@@ -91,6 +86,8 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
+          <div>Admin: admin@teste.com</div>
+          <div>Usuário: usuario@teste.com</div>
           <div>Senha para todas as contas: 123456</div>
         </div>
 
@@ -120,14 +117,7 @@ const Login = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Entrando...
-              </>
-            ) : (
-              "Entrar"
-            )}
+            {isLoading ? "Entrando..." : "Entrar"}
           </Button>
         </form>
       </div>
