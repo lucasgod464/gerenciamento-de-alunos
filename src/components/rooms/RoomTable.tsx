@@ -1,19 +1,16 @@
 import {
   Table,
   TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Users } from "lucide-react";
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Student } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
+import { RoomTableHeader } from "./table/RoomTableHeader";
+import { RoomTableRow } from "./table/RoomTableRow";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RoomTableProps {
   rooms: Room[];
@@ -34,23 +31,16 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
     setIsStudentsDialogOpen(true);
   };
 
-  const handleDeleteStudent = (studentId: string) => {
+  const handleDeleteStudent = async (studentId: string) => {
     try {
-      // Obter todas as salas do localStorage
-      const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-      
-      // Encontrar a sala que contém o aluno
-      const updatedRooms = allRooms.map((room: Room) => {
-        if (room.students) {
-          room.students = room.students.filter((student: Student) => student.id !== studentId);
-        }
-        return room;
-      });
+      const { error } = await supabase
+        .from('room_students')
+        .delete()
+        .eq('room_id', selectedRoomId)
+        .eq('student_id', studentId);
 
-      // Atualizar o localStorage com as salas atualizadas
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      if (error) throw error;
 
-      // Atualizar a lista de alunos selecionados
       setSelectedRoomStudents(prev => prev.filter(student => student.id !== studentId));
 
       toast({
@@ -67,46 +57,39 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
     }
   };
 
-  const handleTransferStudent = (studentId: string, newRoomId: string) => {
+  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-      let studentToTransfer: Student | null = null;
+      // Remove from current room
+      const { error: deleteError } = await supabase
+        .from('room_students')
+        .delete()
+        .eq('room_id', selectedRoomId)
+        .eq('student_id', studentId);
 
-      // Remover o aluno da sala atual
-      const updatedRooms = allRooms.map((room: Room) => {
-        if (room.students) {
-          const student = room.students.find((s: Student) => s.id === studentId);
-          if (student) {
-            studentToTransfer = student;
-            room.students = room.students.filter((s: Student) => s.id !== studentId);
-          }
-        }
-        return room;
-      });
+      if (deleteError) throw deleteError;
 
-      // Adicionar o aluno à nova sala
-      if (studentToTransfer) {
-        const targetRoom = updatedRooms.find((room: Room) => room.id === newRoomId);
-        if (targetRoom) {
-          if (!targetRoom.students) {
-            targetRoom.students = [];
-          }
-          targetRoom.students.push({
-            ...studentToTransfer,
-            room: newRoomId
-          });
-        }
-      }
+      // Add to new room
+      const { error: insertError } = await supabase
+        .from('room_students')
+        .insert({
+          room_id: newRoomId,
+          student_id: studentId
+        });
 
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-      
-      // Atualizar a lista de alunos selecionados
+      if (insertError) throw insertError;
+
       if (selectedRoomId === newRoomId) {
-        const newRoomStudents = updatedRooms
-          .find((room: Room) => room.id === newRoomId)
-          ?.students || [];
-        setSelectedRoomStudents(newRoomStudents);
+        // Refresh students list if transferring within the same room
+        const { data: newRoomStudents, error: fetchError } = await supabase
+          .from('room_students')
+          .select('student_id')
+          .eq('room_id', newRoomId);
+
+        if (fetchError) throw fetchError;
+
+        setSelectedRoomStudents(newRoomStudents.map(s => ({ id: s.student_id })));
       } else {
+        // Remove from current view if transferring to different room
         setSelectedRoomStudents(prev => prev.filter(student => student.id !== studentId));
       }
 
@@ -124,80 +107,45 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
     }
   };
 
-  const getAuthorizedUserNames = (room: Room) => {
+  const getAuthorizedUserNames = async (room: Room) => {
     if (!currentUser?.companyId) return "Nenhum usuário vinculado";
 
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const authorizedUsers = allUsers.filter((user: any) => 
-      user.companyId === currentUser.companyId && 
-      user.authorizedRooms?.includes(room.id)
-    );
+    try {
+      const { data: authorizedUsers, error } = await supabase
+        .from('room_authorized_users')
+        .select('users (name)')
+        .eq('room_id', room.id);
 
-    if (authorizedUsers.length === 0) return "Nenhum usuário vinculado";
-    return authorizedUsers.map(user => user.name).join(", ");
+      if (error) throw error;
+
+      if (!authorizedUsers || authorizedUsers.length === 0) {
+        return "Nenhum usuário vinculado";
+      }
+
+      return authorizedUsers
+        .map(auth => auth.users?.name)
+        .filter(Boolean)
+        .join(", ");
+    } catch (error) {
+      console.error("Erro ao buscar usuários autorizados:", error);
+      return "Erro ao carregar usuários";
+    }
   };
 
   return (
     <>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome da Sala</TableHead>
-            <TableHead>Horário</TableHead>
-            <TableHead>Endereço</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Usuários Vinculados</TableHead>
-            <TableHead>Alunos</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
+        <RoomTableHeader />
         <TableBody>
           {rooms.map((room) => (
-            <TableRow key={room.id}>
-              <TableCell>{room.name}</TableCell>
-              <TableCell>{room.schedule}</TableCell>
-              <TableCell>{room.location}</TableCell>
-              <TableCell>{room.category}</TableCell>
-              <TableCell>{getAuthorizedUserNames(room)}</TableCell>
-              <TableCell>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleShowStudents(room)}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Ver Alunos
-                </Button>
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    room.status
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
-                >
-                  {room.status ? "Ativa" : "Inativa"}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onEdit(room)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onDelete(room.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
+            <RoomTableRow
+              key={room.id}
+              room={room}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onShowStudents={handleShowStudents}
+              getAuthorizedUserNames={getAuthorizedUserNames}
+            />
           ))}
         </TableBody>
       </Table>

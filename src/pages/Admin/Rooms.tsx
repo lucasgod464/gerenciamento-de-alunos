@@ -8,6 +8,7 @@ import { RoomTable } from "@/components/rooms/RoomTable";
 import { RoomActions } from "@/components/rooms/RoomActions";
 import { useToast } from "@/hooks/use-toast";
 import { Room } from "@/types/room";
+import { supabase } from "@/integrations/supabase/client";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -20,15 +21,48 @@ const Rooms = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  useEffect(() => {
+  const fetchRooms = async () => {
     if (!currentUser?.companyId) return;
-    
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = allRooms.filter((room: Room) => room.companyId === currentUser.companyId);
-    setRooms(companyRooms);
+
+    try {
+      const { data: roomsData, error } = await supabase
+        .from('rooms')
+        .select(`
+          *,
+          room_authorized_users (
+            user_id
+          ),
+          room_students (
+            student_id
+          )
+        `)
+        .eq('company_id', currentUser.companyId);
+
+      if (error) throw error;
+
+      // Transform the data to match our Room type
+      const transformedRooms = roomsData.map(room => ({
+        ...room,
+        authorizedUsers: room.room_authorized_users?.map(auth => auth.user_id) || [],
+        students: room.room_students?.map(student => ({ id: student.student_id })) || []
+      }));
+
+      setRooms(transformedRooms);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar as salas",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchRooms();
   }, [currentUser]);
 
-  const handleSave = (newRoom: Partial<Room>) => {
+  const handleSave = async (newRoom: Partial<Room>) => {
     if (!currentUser?.companyId) {
       toast({
         title: "Erro",
@@ -38,48 +72,58 @@ const Rooms = () => {
       return;
     }
 
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const otherRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser.companyId
-    );
+    try {
+      if (editingRoom) {
+        // Update existing room
+        const { error } = await supabase
+          .from('rooms')
+          .update({
+            name: newRoom.name,
+            schedule: newRoom.schedule,
+            location: newRoom.location,
+            category: newRoom.category,
+            status: newRoom.status,
+          })
+          .eq('id', editingRoom.id);
 
-    if (editingRoom) {
-      const updatedRooms = rooms.map(room => 
-        room.id === editingRoom.id 
-          ? { 
-              ...editingRoom, 
-              ...newRoom, 
-              studyRoom: editingRoom.studyRoom,
-              authorizedUsers: editingRoom.authorizedUsers 
-            }
-          : room
-      );
-      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
-      setRooms(updatedRooms);
+        if (error) throw error;
+
+        toast({
+          title: "Sala atualizada",
+          description: "A sala foi atualizada com sucesso.",
+        });
+      } else {
+        // Create new room
+        const { error } = await supabase
+          .from('rooms')
+          .insert({
+            name: newRoom.name,
+            schedule: newRoom.schedule,
+            location: newRoom.location,
+            category: newRoom.category,
+            status: newRoom.status,
+            company_id: currentUser.companyId,
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sala criada",
+          description: "A nova sala foi criada com sucesso.",
+        });
+      }
+
+      fetchRooms();
+      setIsDialogOpen(false);
+      setEditingRoom(null);
+    } catch (error) {
+      console.error('Error saving room:', error);
       toast({
-        title: "Sala atualizada",
-        description: "A sala foi atualizada com sucesso.",
-      });
-    } else {
-      const newRoomWithId = { 
-        id: Math.random().toString(36).substr(2, 9),
-        ...newRoom,
-        companyId: currentUser.companyId,
-        studyRoom: "",
-        authorizedUsers: []
-      } as Room;
-      
-      const updatedRooms = [...rooms, newRoomWithId];
-      localStorage.setItem("rooms", JSON.stringify([...otherRooms, ...updatedRooms]));
-      setRooms(updatedRooms);
-      toast({
-        title: "Sala criada",
-        description: "A nova sala foi criada com sucesso.",
+        title: "Erro",
+        description: "Erro ao salvar a sala",
+        variant: "destructive",
       });
     }
-    
-    setIsDialogOpen(false);
-    setEditingRoom(null);
   };
 
   const handleEdit = (room: Room) => {
@@ -92,35 +136,33 @@ const Rooms = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!roomToDelete || !currentUser?.companyId) return;
 
-    // Get all rooms from localStorage
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
-    // Filter out the room to delete from the current company's rooms
-    const updatedCompanyRooms = rooms.filter(room => room.id !== roomToDelete);
-    
-    // Filter out all rooms from the current company
-    const otherCompaniesRooms = allRooms.filter(
-      (room: Room) => room.companyId !== currentUser.companyId
-    );
-    
-    // Combine other companies' rooms with updated company rooms
-    const finalRooms = [...otherCompaniesRooms, ...updatedCompanyRooms];
-    
-    // Update localStorage and state
-    localStorage.setItem("rooms", JSON.stringify(finalRooms));
-    setRooms(updatedCompanyRooms);
-    
-    toast({
-      title: "Sala excluída",
-      description: "A sala foi excluída com sucesso.",
-      variant: "destructive",
-    });
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .delete()
+        .eq('id', roomToDelete);
 
-    setDeleteDialogOpen(false);
-    setRoomToDelete(null);
+      if (error) throw error;
+
+      toast({
+        title: "Sala excluída",
+        description: "A sala foi excluída com sucesso.",
+      });
+
+      fetchRooms();
+      setDeleteDialogOpen(false);
+      setRoomToDelete(null);
+    } catch (error) {
+      console.error('Error deleting room:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir a sala",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredRooms = rooms.filter(room => {

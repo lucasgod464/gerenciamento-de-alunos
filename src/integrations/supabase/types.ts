@@ -92,6 +92,115 @@ export type Database = {
           },
         ]
       }
+      room_authorized_users: {
+        Row: {
+          created_at: string
+          id: string
+          room_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_authorized_users_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "room_authorized_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      room_students: {
+        Row: {
+          created_at: string
+          id: string
+          room_id: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          room_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_students_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          category: string
+          company_id: string | null
+          created_at: string
+          id: string
+          location: string
+          name: string
+          schedule: string
+          status: boolean
+          study_room: string | null
+        }
+        Insert: {
+          category: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          schedule: string
+          status?: boolean
+          study_room?: string | null
+        }
+        Update: {
+          category?: string
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          schedule?: string
+          status?: boolean
+          study_room?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           company_id: string | null

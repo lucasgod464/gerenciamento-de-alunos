@@ -11,4 +11,5 @@ export interface Room {
   studyRoom: string;
   authorizedUsers: string[];
   students: Student[];
+  created_at?: string;
 }
