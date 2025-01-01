@@ -28,7 +28,7 @@ export function useCompanies() {
         currentUsers: 0, // This would need to be calculated from profiles table
         roomsLimit: company.rooms_limit,
         currentRooms: 0, // This would need to be calculated from rooms table
-        status: company.status,
+        status: company.status === "Ativa" ? "Ativa" : "Inativa", // Ensure correct type
         createdAt: new Date(company.created_at).toLocaleDateString('pt-BR'),
         publicFolderPath: company.public_folder_path || '',
         storageUsed: 0 // This would need to be calculated from storage usage
