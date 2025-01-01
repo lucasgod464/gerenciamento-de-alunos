@@ -31,59 +31,46 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async ({ email, password }: { email: string; password: string }) => {
-      if (!email || !password) {
-        throw new Error("Email e senha são obrigatórios")
-      }
+      console.log("Starting login process for:", email)
 
-      console.log("Iniciando processo de login para:", email)
-
-      // Primeiro, vamos verificar se o usuário existe no Supabase
-      const { data: user, error: userError } = await supabase
+      const { data: user, error } = await supabase
         .from('users')
         .select('*')
-        .eq('email', email.toLowerCase())
+        .eq('email', email)
         .eq('status', 'active')
         .maybeSingle()
 
-      console.log("Resultado da busca do usuário:", { user, userError })
-
-      if (userError) {
-        console.error("Erro ao buscar usuário:", userError)
-        throw new Error("Erro ao buscar usuário")
+      if (error) {
+        console.error("Database error:", error)
+        throw new Error("Error fetching user")
       }
 
       if (!user) {
-        console.error("Usuário não encontrado:", email)
-        throw new Error("Email ou senha inválidos")
+        console.error("User not found:", email)
+        throw new Error("Invalid email or password")
       }
 
-      console.log("Usuário encontrado:", { role: user.role, id: user.id })
+      console.log("User found:", { id: user.id, role: user.role })
 
-      // Verificar senha
+      // Check password (base64 encoded)
       const encodedPassword = btoa(password)
       const storedPassword = user.password.startsWith('b64_') 
         ? user.password.slice(4) 
         : user.password
 
-      console.log("Verificando senha")
-
       if (encodedPassword !== storedPassword) {
-        console.error("Senha incorreta para o usuário:", email)
-        throw new Error("Email ou senha inválidos")
+        console.error("Invalid password for user:", email)
+        throw new Error("Invalid email or password")
       }
 
-      // Atualizar último acesso
+      // Update last access
       const { error: updateError } = await supabase
         .from('users')
-        .update({
-          last_access: new Date().toISOString(),
-          password: user.password.startsWith('b64_') ? user.password : `b64_${storedPassword}`
-        })
+        .update({ last_access: new Date().toISOString() })
         .eq('id', user.id)
 
       if (updateError) {
-        console.error("Erro ao atualizar último acesso:", updateError)
-        // Não vamos falhar o login por causa disso
+        console.warn("Failed to update last access:", updateError)
       }
 
       const response: AuthResponse = {
@@ -100,7 +87,7 @@ export function useAuth() {
         token: `${user.role.toLowerCase()}-token`,
       }
 
-      console.log("Login bem sucedido:", { userId: user.id, role: user.role })
+      console.log("Login successful:", { userId: user.id, role: user.role })
       localStorage.setItem("session", JSON.stringify(response))
       return response
     },
@@ -122,7 +109,6 @@ export function useAuth() {
 
   const can = (permission: string) => {
     if (!user) return false
-    // Implement permission logic here if needed
     return true
   }
 
