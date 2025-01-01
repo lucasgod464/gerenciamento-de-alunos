@@ -40,7 +40,7 @@ export function useCompanies() {
         storageUsed: company.storage_used,
       }))
     },
-    enabled: !!user, // Only run query when user is authenticated
+    enabled: !!user,
   })
 
   const createMutation = useMutation({
@@ -69,13 +69,14 @@ export function useCompanies() {
           },
         ])
         .select()
+        .single()
 
       if (error) {
         console.error("Error creating company:", error)
         throw error
       }
 
-      return data[0]
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -85,6 +86,7 @@ export function useCompanies() {
       })
     },
     onError: (error: Error) => {
+      console.error("Mutation error:", error)
       toast({
         title: "Erro",
         description: error.message || "Erro ao criar empresa",
