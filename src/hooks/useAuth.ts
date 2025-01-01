@@ -41,48 +41,73 @@ export function useAuth() {
     console.log("Attempting login for:", email);
 
     try {
-      // Call the verify_login function to check credentials
-      const { data, error } = await supabase.rpc('verify_login', {
-        p_email: email,
-        p_password: password
-      });
+      // First try to login with emails table
+      const { data: emailData, error: emailError } = await supabase
+        .from('emails')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
 
-      console.log("Login response:", { data, error });
+      console.log("Email login response:", { emailData, emailError });
 
-      if (error) {
-        console.error("Login error:", error);
-        throw new Error("Email ou senha inválidos");
+      if (emailData) {
+        // Map access_level to role
+        const roleMap: { [key: string]: string } = {
+          'Admin': 'ADMIN',
+          'Usuário Comum': 'USER'
+        };
+
+        const response: AuthResponse = {
+          user: {
+            id: emailData.id,
+            name: emailData.name || '',
+            email: emailData.email,
+            role: roleMap[emailData.access_level] as any,
+            companyId: emailData.company_id || null,
+            createdAt: emailData.created_at,
+            lastAccess: new Date().toISOString(),
+          },
+          token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
+        };
+
+        localStorage.setItem("session", JSON.stringify(response));
+        await refetch();
+        return response;
       }
 
-      if (!data || data.length === 0) {
+      // If no email user found, try users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .eq('password', password)
+        .single();
+
+      console.log("User login response:", { userData, userError });
+
+      if (!userData) {
         console.error("No user data returned");
         throw new Error("Email ou senha inválidos");
       }
 
-      const user = data[0];
-      
-      // Validate required fields
-      if (!user.id || !user.email || !user.role) {
-        console.error("Invalid user data:", user);
-        throw new Error("Dados do usuário inválidos");
-      }
-
       const response: AuthResponse = {
         user: {
-          id: user.id,
-          name: user.name || '',
-          email: user.email,
-          role: user.role as any,
-          companyId: user.company_id || null,
-          createdAt: user.created_at,
-          lastAccess: user.last_access,
+          id: userData.id,
+          name: userData.name || '',
+          email: userData.email,
+          role: userData.role as any,
+          companyId: userData.company_id || null,
+          createdAt: userData.created_at,
+          lastAccess: userData.last_access,
         },
-        token: `${user.role.toLowerCase()}-token`,
+        token: `${userData.role.toLowerCase()}-token`,
       };
 
       localStorage.setItem("session", JSON.stringify(response));
       await refetch();
       return response;
+
     } catch (error) {
       console.error("Login failed:", error);
       if (error instanceof Error) {
