@@ -32,6 +32,7 @@ export type Database = {
       }
       users: {
         Row: {
+          auth_id: string | null
           authorized_rooms: string[] | null
           company_id: string | null
           created_at: string
@@ -41,6 +42,7 @@ export type Database = {
           location: string | null
           name: string
           password: string
+          password_hash: string | null
           profile_picture: string | null
           responsible_category: string | null
           role: string
@@ -49,6 +51,7 @@ export type Database = {
           tags: string[] | null
         }
         Insert: {
+          auth_id?: string | null
           authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
@@ -58,14 +61,16 @@ export type Database = {
           location?: string | null
           name: string
           password: string
+          password_hash?: string | null
           profile_picture?: string | null
           responsible_category?: string | null
-          role: string
+          role?: string
           specialization?: string | null
           status?: string | null
           tags?: string[] | null
         }
         Update: {
+          auth_id?: string | null
           authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
@@ -75,6 +80,7 @@ export type Database = {
           location?: string | null
           name?: string
           password?: string
+          password_hash?: string | null
           profile_picture?: string | null
           responsible_category?: string | null
           role?: string
@@ -89,7 +95,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_new_user: {
+        Args: {
+          p_name: string
+          p_email: string
+          p_password: string
+          p_role: string
+          p_company_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

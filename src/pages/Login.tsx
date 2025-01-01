@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -37,12 +36,30 @@ const Login = () => {
     }
 
     try {
-      const response = await login(email, password);
-      console.log("Login successful, redirecting based on role:", response.user.role);
-      
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (signInError) throw signInError;
+
+      if (!user) {
+        throw new Error("Usuário não encontrado");
+      }
+
+      // Buscar dados do usuário incluindo role
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('auth_id', user.id)
+        .single();
+
+      if (userError) throw userError;
+
       toast.success("Login realizado com sucesso!");
       
-      switch (response.user.role) {
+      // Redirecionar baseado no role
+      switch (userData.role) {
         case "SUPER_ADMIN":
           navigate("/super-admin", { replace: true });
           break;
@@ -56,6 +73,7 @@ const Login = () => {
           navigate("/login", { replace: true });
       }
     } catch (error) {
+      console.error("Erro no login:", error);
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {
@@ -86,8 +104,6 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
-          <div>Admin: admin@teste.com</div>
-          <div>Usuário: usuario@teste.com</div>
           <div>Senha para todas as contas: 123456</div>
         </div>
 
