@@ -32,40 +32,55 @@ export type Database = {
       }
       users: {
         Row: {
+          authorized_rooms: string[] | null
           company_id: string | null
           created_at: string
           email: string
           id: string
           last_access: string | null
+          location: string | null
           name: string
           password: string
           profile_picture: string | null
+          responsible_category: string | null
           role: string
+          specialization: string | null
           status: string | null
+          tags: string[] | null
         }
         Insert: {
+          authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
           email: string
           id?: string
           last_access?: string | null
+          location?: string | null
           name: string
           password: string
           profile_picture?: string | null
+          responsible_category?: string | null
           role: string
+          specialization?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Update: {
+          authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
           email?: string
           id?: string
           last_access?: string | null
+          location?: string | null
           name?: string
           password?: string
           profile_picture?: string | null
+          responsible_category?: string | null
           role?: string
+          specialization?: string | null
           status?: string | null
+          tags?: string[] | null
         }
         Relationships: []
       }

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,7 +13,6 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -24,25 +23,49 @@ const Login = () => {
     setError("");
     setIsLoading(true);
 
-    if (!validateEmail(email)) {
-      setError("Por favor, insira um email válido");
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      const response = await login(email, password);
-      console.log("Login successful, redirecting based on role:", response.user.role);
-      
+      if (!validateEmail(email)) {
+        setError("Por favor, insira um email válido");
+        return;
+      }
+
+      if (password.length < 6) {
+        setError("A senha deve ter pelo menos 6 caracteres");
+        return;
+      }
+
+      console.log("Attempting login with:", email);
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.error("Login error:", signInError);
+        throw signInError;
+      }
+
+      if (!user) {
+        throw new Error("No user returned from login");
+      }
+
+      // Fetch user role from users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user role:", userError);
+        throw userError;
+      }
+
+      console.log("User role:", userData.role);
       toast.success("Login realizado com sucesso!");
-      
-      switch (response.user.role) {
+
+      // Redirect based on role
+      switch (userData.role) {
         case "SUPER_ADMIN":
           navigate("/super-admin", { replace: true });
           break;
@@ -53,9 +76,10 @@ const Login = () => {
           navigate("/user", { replace: true });
           break;
         default:
-          navigate("/login", { replace: true });
+          setError("Perfil de usuário inválido");
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {
@@ -86,9 +110,7 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
-          <div>Admin: admin@teste.com</div>
-          <div>Usuário: usuario@teste.com</div>
-          <div>Senha para todas as contas: 123456</div>
+          <div>Senha: 123456</div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
