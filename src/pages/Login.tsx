@@ -84,11 +84,9 @@ const Login = () => {
         )}
 
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
-          <p className="font-semibold">Contas para teste:</p>
-          <div>Super Admin: super@teste.com</div>
-          <div>Admin: admin@teste.com</div>
-          <div>Usuário: usuario@teste.com</div>
-          <div>Senha para todas as contas: 123456</div>
+          <p className="font-semibold">Conta para teste:</p>
+          <div>Super Admin: superadmin@gmail.com</div>
+          <div>Senha: 123456</div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
