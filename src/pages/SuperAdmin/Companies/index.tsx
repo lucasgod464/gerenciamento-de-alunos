@@ -7,9 +7,16 @@ import { useQuery } from "@tanstack/react-query";
 import { Company } from "@/types/company";
 import { useAuth } from "@/hooks/useAuth";
 import { useCompanyMutations } from "./CompanyMutations";
+import { useToast } from "@/components/ui/use-toast";
+
+interface CompanyWithCounts extends Company {
+  current_users: number;
+  current_rooms: number;
+}
 
 const Companies = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { createMutation, updateMutation, deleteMutation } = useCompanyMutations();
 
   const { data: companies = [], isLoading } = useQuery({
@@ -22,50 +29,50 @@ const Companies = () => {
         throw new Error('Not authorized');
       }
 
-      const { data, error } = await supabase
+      // Primeiro, buscar as empresas
+      const { data: companiesData, error: companiesError } = await supabase
         .from('companies')
-        .select(`
-          id,
-          name,
-          document,
-          users_limit,
-          rooms_limit,
-          status,
-          created_at,
-          storage_used,
-          (
-            SELECT count(*) 
-            FROM users 
-            WHERE users.company_id = companies.id
-          ) as current_users,
-          (
-            SELECT count(*) 
-            FROM rooms 
-            WHERE rooms.company_id = companies.id
-          ) as current_rooms
-        `)
-        .order('created_at', { ascending: false });
+        .select('*');
 
-      if (error) {
-        console.error('Error fetching companies:', error);
-        throw error;
+      if (companiesError) {
+        console.error('Error fetching companies:', companiesError);
+        toast({
+          title: "Erro ao carregar empresas",
+          description: "Não foi possível carregar a lista de empresas.",
+          variant: "destructive",
+        });
+        throw companiesError;
       }
 
-      console.log('Companies fetched:', data);
-      
-      return data.map(company => ({
-        id: company.id,
-        name: company.name,
-        document: company.document || 'N/A',
-        usersLimit: company.users_limit || 10,
-        currentUsers: company.current_users || 0,
-        roomsLimit: company.rooms_limit || 10,
-        currentRooms: company.current_rooms || 0,
-        status: company.status === 'active' ? "Ativa" : "Inativa",
-        createdAt: new Date(company.created_at).toLocaleDateString(),
-        publicFolderPath: `/storage/${company.id}`,
-        storageUsed: company.storage_used || 0
-      } as Company));
+      // Para cada empresa, buscar a contagem de usuários e salas
+      const companiesWithCounts = await Promise.all(companiesData.map(async (company) => {
+        const { count: usersCount } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', company.id);
+
+        const { count: roomsCount } = await supabase
+          .from('rooms')
+          .select('*', { count: 'exact', head: true })
+          .eq('company_id', company.id);
+
+        return {
+          id: company.id,
+          name: company.name,
+          document: company.document || 'N/A',
+          usersLimit: company.users_limit || 10,
+          currentUsers: usersCount || 0,
+          roomsLimit: company.rooms_limit || 10,
+          currentRooms: roomsCount || 0,
+          status: company.status === 'active' ? "Ativa" : "Inativa",
+          createdAt: new Date(company.created_at).toLocaleDateString(),
+          publicFolderPath: `/storage/${company.id}`,
+          storageUsed: company.storage_used || 0
+        } as Company;
+      }));
+
+      console.log('Companies fetched:', companiesWithCounts);
+      return companiesWithCounts;
     },
     enabled: !!user && user.role === 'SUPER_ADMIN'
   });
