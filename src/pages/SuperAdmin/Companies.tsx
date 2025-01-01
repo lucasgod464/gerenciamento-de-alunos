@@ -80,6 +80,14 @@ const Companies = () => {
         title: "Empresa criada",
         description: "A empresa foi criada com sucesso.",
       })
+    },
+    onError: (error) => {
+      console.error('Error in create mutation:', error)
+      toast({
+        title: "Erro ao criar empresa",
+        description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
+        variant: "destructive"
+      })
     }
   })
 
