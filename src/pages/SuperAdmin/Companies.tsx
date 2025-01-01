@@ -4,11 +4,9 @@ import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
 import { useToast } from "@/hooks/use-toast"
 import { Company } from "@/components/companies/CompanyList"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/hooks/useAuth"
-
-// Mover a lógica de mutations para um hook separado
 import { useCompanyMutations } from "@/hooks/useCompanyMutations"
 
 const Companies = () => {
@@ -16,12 +14,17 @@ const Companies = () => {
   const { user } = useAuth()
   const { createCompany, updateCompany, deleteCompany } = useCompanyMutations()
 
-  // Fetch companies
+  // Fetch companies with better error handling and logging
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
       console.log("Fetching companies... Current user:", user)
       
+      if (!user) {
+        console.error("No user found")
+        throw new Error("User not authenticated")
+      }
+
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -44,16 +47,16 @@ const Companies = () => {
         name: company.name,
         document: company.document || "",
         usersLimit: company.users_limit || 10,
-        currentUsers: 0, // Será calculado depois
+        currentUsers: 0, // Will be calculated later
         roomsLimit: company.rooms_limit || 10,
-        currentRooms: 0, // Será calculado depois
+        currentRooms: 0, // Will be calculated later
         status: company.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(company.created_at).toLocaleDateString(),
         publicFolderPath: `/companies/${company.id}`,
         storageUsed: company.storage_used || 0
       }))
     },
-    enabled: !!user
+    enabled: !!user // Only run query when user is available
   })
 
   if (isLoading) {
