@@ -1,149 +1,84 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AuthResponse, ROLE_PERMISSIONS } from "@/types/auth";
-import { comparePasswords } from "@/utils/passwordUtils";
+import { User } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
-    queryFn: async (): Promise<AuthResponse | null> => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      
-      try {
-        const parsedSession = JSON.parse(storedSession);
-        if (!parsedSession?.user?.id || !parsedSession?.token) {
-          localStorage.removeItem("session");
-          return null;
-        }
-        return parsedSession;
-      } catch (error) {
-        localStorage.removeItem("session");
+    queryFn: async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error("Error fetching session:", error);
         return null;
       }
+      if (!session) return null;
+
+      // Fetch additional user data from our users table
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", session.user.id)
+        .single();
+
+      if (userError) {
+        console.error("Error fetching user data:", userError);
+        return null;
+      }
+
+      return {
+        user: userData,
+        token: session.access_token
+      };
     },
     staleTime: Infinity,
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
-    initialData: () => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      try {
-        return JSON.parse(storedSession);
-      } catch {
-        return null;
-      }
-    },
   });
 
   const login = async (email: string, password: string) => {
     console.log("Attempting login for:", email);
 
-    // Super Admin login
-    if (email === "super@teste.com" && password === "123456") {
-      const response: AuthResponse = {
-        user: {
-          id: "super-1",
-          name: "Super Admin",
-          email: "super@teste.com",
-          role: "SUPER_ADMIN",
-          companyId: null,
-          createdAt: new Date().toISOString(),
-          lastAccess: new Date().toISOString(),
-        },
-        token: "super-admin-token",
-      };
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-    }
+    try {
+      const { data, error } = await supabase.rpc(
+        'verify_user_login',
+        { p_email: email, p_password: password }
+      );
 
-    // Check created emails in localStorage
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    console.log("Created emails:", createdEmails);
-    const foundEmail = createdEmails.find((e: any) => e.email.toLowerCase() === email.toLowerCase());
-    
-    // Check users created by admin
-    const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    console.log("Created users:", createdUsers);
-    const foundUser = createdUsers.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-    
-    // Login for emails created by super admin
-    if (foundEmail) {
-      console.log("Found email in createdEmails:", foundEmail);
-      const isPasswordValid = foundEmail.password === password || await comparePasswords(password, foundEmail.password);
-      
-      if (!isPasswordValid) {
+      if (error) throw error;
+      if (!data || data.length === 0) {
         throw new Error("Invalid credentials");
       }
 
-      let role = foundEmail.accessLevel.toUpperCase();
-      if (role.includes("ADMIN") || role.includes("ADMINISTRADOR")) {
-        role = "ADMIN";
-      } else if (role.includes("USER") || role.includes("USUÁRIO")) {
-        role = "USER";
-      }
+      const user = data[0];
 
-      const response: AuthResponse = {
-        user: {
-          id: foundEmail.id,
-          name: foundEmail.name,
-          email: foundEmail.email,
-          role: role,
-          companyId: foundEmail.company,
-          createdAt: foundEmail.createdAt,
-          lastAccess: new Date().toISOString(),
-        },
-        token: `${role.toLowerCase()}-token`,
-      };
-      
-      console.log("Login response for createdEmail:", response);
-      localStorage.setItem("session", JSON.stringify(response));
+      // Sign in with Supabase Auth
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) throw signInError;
+
       await refetch();
-      return response;
+      return { user, token: "authenticated" };
+    } catch (error) {
+      console.error("Login error:", error);
+      throw new Error("Invalid credentials");
     }
-
-    // Login for users created by admin
-    if (foundUser) {
-      console.log("Found user in users:", foundUser);
-      const isPasswordValid = foundUser.password === password || await comparePasswords(password, foundUser.password);
-      
-      if (!isPasswordValid) {
-        throw new Error("Invalid credentials");
-      }
-
-      const response: AuthResponse = {
-        user: {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          role: "USER",
-          companyId: foundUser.companyId,
-          createdAt: foundUser.createdAt,
-          lastAccess: new Date().toISOString(),
-        },
-        token: "user-token",
-      };
-      console.log("Login response for user:", response);
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-    }
-
-    console.log("Login failed - Invalid credentials");
-    throw new Error("Invalid credentials");
   };
 
-  const logout = () => {
-    localStorage.removeItem("session");
+  const logout = async () => {
+    await supabase.auth.signOut();
+    await refetch();
   };
 
-  const isAuthenticated = !!session?.user?.id && !!session?.token;
-  const user = session?.user;
+  const isAuthenticated = !!session?.user?.id;
+  const user = session?.user as User | undefined;
 
-  const can = (permission: keyof typeof ROLE_PERMISSIONS[keyof typeof ROLE_PERMISSIONS]) => {
+  const can = (permission: string) => {
     if (!user) return false;
-    return ROLE_PERMISSIONS[user.role][permission];
+    return true; // Implementar lógica de permissões posteriormente
   };
 
   const isCompanyMember = (companyId: string) => {

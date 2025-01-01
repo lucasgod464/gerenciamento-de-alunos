@@ -56,6 +56,7 @@ const Login = () => {
           navigate("/login", { replace: true });
       }
     } catch (error) {
+      console.error("Login error:", error);
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {

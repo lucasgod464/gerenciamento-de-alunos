@@ -116,6 +116,12 @@ export type Database = {
           created_at: string
           last_access: string
           profile_picture: string
+          status: string
+          responsible_category: string
+          location: string
+          specialization: string
+          authorized_rooms: string[]
+          tags: string[]
         }[]
       }
     }
