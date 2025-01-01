@@ -40,17 +40,24 @@ export function useAuth() {
         .eq('email', email.toLowerCase())
         .maybeSingle()
 
+      console.log("Database response:", { user, error })
+
       if (error) {
-        throw new Error("Error fetching user")
+        console.error("Database error:", error)
+        throw new Error("Erro ao buscar usuário")
       }
 
       if (!user) {
-        throw new Error("Invalid credentials")
+        console.error("No user found with email:", email)
+        throw new Error("Email ou senha inválidos")
       }
 
+      console.log("Comparing passwords...")
       const isPasswordValid = await comparePasswords(password, user.password)
+      console.log("Password valid:", isPasswordValid)
+
       if (!isPasswordValid) {
-        throw new Error("Invalid credentials")
+        throw new Error("Email ou senha inválidos")
       }
 
       // Update last_access
