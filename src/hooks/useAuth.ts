@@ -1,8 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { User, AuthResponse, ROLE_PERMISSIONS } from "@/types/auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { User, AuthResponse } from "@/types/auth";
 import { comparePasswords } from "@/utils/passwordUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
+  const queryClient = useQueryClient();
+
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
@@ -25,117 +28,65 @@ export function useAuth() {
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
-    initialData: () => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      try {
-        return JSON.parse(storedSession);
-      } catch {
-        return null;
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async ({ email, password }: { email: string; password: string }) => {
+      console.log("Attempting login for:", email);
+
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email.toLowerCase())
+        .single();
+
+      if (error || !user) {
+        throw new Error("Invalid credentials");
       }
+
+      const isPasswordValid = await comparePasswords(password, user.password);
+      if (!isPasswordValid) {
+        throw new Error("Invalid credentials");
+      }
+
+      // Update last_access
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ last_access: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error("Error updating last access:", updateError);
+      }
+
+      const response: AuthResponse = {
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          companyId: user.company_id,
+          createdAt: user.created_at,
+          lastAccess: user.last_access,
+          profilePicture: user.profile_picture,
+        },
+        token: `${user.role.toLowerCase()}-token`,
+      };
+
+      localStorage.setItem("session", JSON.stringify(response));
+      return response;
     },
   });
 
   const login = async (email: string, password: string) => {
-    console.log("Attempting login for:", email);
-
-    // Super Admin login
-    if (email === "super@teste.com" && password === "123456") {
-      const response: AuthResponse = {
-        user: {
-          id: "super-1",
-          name: "Super Admin",
-          email: "super@teste.com",
-          role: "SUPER_ADMIN",
-          companyId: null,
-          createdAt: new Date().toISOString(),
-          lastAccess: new Date().toISOString(),
-        },
-        token: "super-admin-token",
-      };
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-    }
-
-    // Check created emails in localStorage
-    const createdEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]");
-    console.log("Created emails:", createdEmails);
-    const foundEmail = createdEmails.find((e: any) => e.email.toLowerCase() === email.toLowerCase());
-    
-    // Check users created by admin
-    const createdUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    console.log("Created users:", createdUsers);
-    const foundUser = createdUsers.find((u: any) => u.email.toLowerCase() === email.toLowerCase());
-    
-    // Login for emails created by super admin
-    if (foundEmail) {
-      console.log("Found email in createdEmails:", foundEmail);
-      const isPasswordValid = foundEmail.password === password || await comparePasswords(password, foundEmail.password);
-      
-      if (!isPasswordValid) {
-        throw new Error("Invalid credentials");
-      }
-
-      let role = foundEmail.accessLevel.toUpperCase();
-      if (role.includes("ADMIN") || role.includes("ADMINISTRADOR")) {
-        role = "ADMIN";
-      } else if (role.includes("USER") || role.includes("USUÁRIO")) {
-        role = "USER";
-      }
-
-      const response: AuthResponse = {
-        user: {
-          id: foundEmail.id,
-          name: foundEmail.name,
-          email: foundEmail.email,
-          role: role,
-          companyId: foundEmail.company,
-          createdAt: foundEmail.createdAt,
-          lastAccess: new Date().toISOString(),
-        },
-        token: `${role.toLowerCase()}-token`,
-      };
-      
-      console.log("Login response for createdEmail:", response);
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-    }
-
-    // Login for users created by admin
-    if (foundUser) {
-      console.log("Found user in users:", foundUser);
-      const isPasswordValid = foundUser.password === password || await comparePasswords(password, foundUser.password);
-      
-      if (!isPasswordValid) {
-        throw new Error("Invalid credentials");
-      }
-
-      const response: AuthResponse = {
-        user: {
-          id: foundUser.id,
-          name: foundUser.name,
-          email: foundUser.email,
-          role: "USER",
-          companyId: foundUser.companyId,
-          createdAt: foundUser.createdAt,
-          lastAccess: new Date().toISOString(),
-        },
-        token: "user-token",
-      };
-      console.log("Login response for user:", response);
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-    }
-
-    console.log("Login failed - Invalid credentials");
-    throw new Error("Invalid credentials");
+    const response = await loginMutation.mutateAsync({ email, password });
+    await refetch();
+    return response;
   };
 
   const logout = () => {
     localStorage.removeItem("session");
+    queryClient.clear();
   };
 
   const isAuthenticated = !!session?.user?.id && !!session?.token;

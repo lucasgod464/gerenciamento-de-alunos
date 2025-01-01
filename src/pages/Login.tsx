@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
@@ -86,8 +86,6 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
-          <div>Admin: admin@teste.com</div>
-          <div>Usuário: usuario@teste.com</div>
           <div>Senha para todas as contas: 123456</div>
         </div>
 
@@ -117,7 +115,14 @@ const Login = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Entrando...
+              </>
+            ) : (
+              "Entrar"
+            )}
           </Button>
         </form>
       </div>
