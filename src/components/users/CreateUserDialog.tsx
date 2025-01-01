@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { hashPassword } from "@/utils/passwordUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -30,37 +31,73 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     
-    const id = Math.random().toString(36).substr(2, 9);
-    const password = formData.get("password") as string;
-    const hashedPassword = await hashPassword(password);
+    try {
+      const password = formData.get("password") as string;
+      const hashedPassword = await hashPassword(password);
 
-    const newUser: User = {
-      id,
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      password: hashedPassword,
-      responsibleCategory: formData.get("responsibleCategory") as string,
-      location: formData.get("location") as string,
-      specialization: formData.get("specialization") as string,
-      status: formData.get("status") as "active" | "inactive",
-      createdAt: new Date().toLocaleDateString(),
-      lastAccess: "-",
-      companyId: currentUser?.companyId || null,
-      authorizedRooms: selectedRooms,
-      tags: selectedTags,
-    };
+      // Insert new user
+      const { data: newUser, error: userError } = await supabase
+        .from('users')
+        .insert([{
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          password: hashedPassword,
+          role: 'USER',
+          company_id: currentUser?.companyId,
+        }])
+        .select()
+        .single();
 
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    localStorage.setItem("users", JSON.stringify([...users, newUser]));
+      if (userError) throw userError;
 
-    onUserCreated(newUser);
-    
-    toast({
-      title: "Usuário criado",
-      description: "O usuário foi criado com sucesso.",
-    });
+      // Insert authorized rooms
+      if (selectedRooms.length > 0) {
+        const { error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .insert(
+            selectedRooms.map(roomId => ({
+              user_id: newUser.id,
+              room_id: roomId
+            }))
+          );
 
-    setOpen(false);
+        if (roomsError) throw roomsError;
+      }
+
+      // Insert user tags
+      if (selectedTags.length > 0) {
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(
+            selectedTags.map(tagId => ({
+              user_id: newUser.id,
+              tag_id: tagId
+            }))
+          );
+
+        if (tagsError) throw tagsError;
+      }
+
+      onUserCreated({
+        ...newUser,
+        authorizedRooms: selectedRooms,
+        tags: selectedTags,
+      });
+      
+      toast({
+        title: "Usuário criado",
+        description: "O usuário foi criado com sucesso.",
+      });
+
+      setOpen(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: "Ocorreu um erro ao criar o usuário. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

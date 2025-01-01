@@ -10,6 +10,7 @@ import { UserFormFields } from "./UserFormFields";
 import { useState, useEffect } from "react";
 import { hashPassword } from "@/utils/passwordUtils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -45,26 +46,77 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     const newPassword = formData.get("password") as string;
 
     try {
-      const updatedUser: User = {
-        ...user,
+      // Update user
+      const updateData: any = {
         name: formData.get("name") as string,
         email: formData.get("email") as string,
-        password: newPassword ? await hashPassword(newPassword) : user.password,
-        responsibleCategory: formData.get("responsibleCategory") as string,
-        location: formData.get("location") as string,
-        specialization: formData.get("specialization") as string,
-        status: formData.get("status") as "active" | "inactive",
-        authorizedRooms: selectedRooms,
-        tags: selectedTags,
+        status: formData.get("status") as string,
       };
 
-      onSubmit(updatedUser);
+      if (newPassword) {
+        updateData.password = await hashPassword(newPassword);
+      }
+
+      const { data: updatedUser, error: userError } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (userError) throw userError;
+
+      // Update authorized rooms
+      await supabase
+        .from('user_authorized_rooms')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (selectedRooms.length > 0) {
+        const { error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .insert(
+            selectedRooms.map(roomId => ({
+              user_id: user.id,
+              room_id: roomId
+            }))
+          );
+
+        if (roomsError) throw roomsError;
+      }
+
+      // Update user tags
+      await supabase
+        .from('user_tags')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (selectedTags.length > 0) {
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(
+            selectedTags.map(tagId => ({
+              user_id: user.id,
+              tag_id: tagId
+            }))
+          );
+
+        if (tagsError) throw tagsError;
+      }
+
+      onSubmit({
+        ...updatedUser,
+        authorizedRooms: selectedRooms,
+        tags: selectedTags,
+      });
+
       toast({
         title: "Usuário atualizado",
         description: "As informações do usuário foram atualizadas com sucesso.",
       });
       onClose();
     } catch (error) {
+      console.error('Error updating user:', error);
       toast({
         title: "Erro ao atualizar",
         description: "Ocorreu um erro ao atualizar o usuário.",

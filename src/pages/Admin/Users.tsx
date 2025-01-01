@@ -7,104 +7,98 @@ import { User } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
-  // Buscar usuários criados pelo Super Admin
-  const { data: superAdminCreatedUsers = [] } = useQuery({
-    queryKey: ["createdEmails"],
-    queryFn: () => {
-      const storedEmails = localStorage.getItem("createdEmails") || "[]";
-      const emails = JSON.parse(storedEmails);
-      return emails.filter((email: any) => 
-        email.accessLevel === "Usuário Comum" && 
-        email.company === currentUser?.companyId
-      ).map((email: any) => ({
-        id: email.id,
-        name: email.name,
-        email: email.email,
-        password: email.password,
-        responsibleCategory: "",
-        location: "",
-        specialization: "",
-        status: "active",
-        createdAt: email.createdAt,
-        lastAccess: "-",
-        companyId: email.company,
-        authorizedRooms: []
+  const { data: users = [], refetch } = useQuery({
+    queryKey: ["users", currentUser?.companyId],
+    queryFn: async () => {
+      if (!currentUser?.companyId) return [];
+
+      const { data: usersData, error } = await supabase
+        .from('users')
+        .select(`
+          *,
+          user_authorized_rooms (
+            room_id
+          ),
+          user_tags (
+            tag_id
+          )
+        `)
+        .eq('company_id', currentUser.companyId);
+
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+
+      return usersData.map(user => ({
+        ...user,
+        authorizedRooms: user.user_authorized_rooms?.map(r => r.room_id) || [],
+        tags: user.user_tags?.map(t => t.tag_id) || [],
       }));
-    }
+    },
+    enabled: !!currentUser?.companyId,
   });
 
-  useEffect(() => {
-    if (!currentUser?.companyId) return;
+  const handleUpdateUser = async (updatedUser: User) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          name: updatedUser.name,
+          email: updatedUser.email,
+          status: updatedUser.status,
+        })
+        .eq('id', updatedUser.id);
 
-    const loadUsers = () => {
-      const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-      const adminCreatedUsers = allUsers.filter((user: User) => 
-        user.companyId === currentUser.companyId
-      );
+      if (error) throw error;
+
+      refetch();
       
-      // Combinar usuários criados pelo admin com usuários criados pelo super admin
-      const combinedUsers = [...adminCreatedUsers, ...superAdminCreatedUsers];
-      
-      // Remover duplicatas baseado no email
-      const uniqueUsers = combinedUsers.reduce((acc: User[], current: User) => {
-        const exists = acc.find(user => user.email === current.email);
-        if (!exists) {
-          acc.push(current);
-        }
-        return acc;
-      }, []);
-      
-      setUsers(uniqueUsers);
-    };
-
-    loadUsers();
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "users" || e.key === "createdEmails") {
-        loadUsers();
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [currentUser, superAdminCreatedUsers]);
-
-  const handleUpdateUser = (updatedUser: User) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const otherUsers = allUsers.filter((user: User) => user.id !== updatedUser.id);
-    const updatedUsers = [...otherUsers, updatedUser];
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(prevUsers =>
-      prevUsers.map(user => user.id === updatedUser.id ? updatedUser : user)
-    );
-    
-    toast({
-      title: "Usuário atualizado",
-      description: "As informações do usuário foram atualizadas com sucesso.",
-    });
+      toast({
+        title: "Usuário atualizado",
+        description: "As informações do usuário foram atualizadas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error updating user:', error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Ocorreu um erro ao atualizar o usuário.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteUser = (id: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const updatedUsers = allUsers.filter((user: User) => user.id !== id);
-    
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
-    
-    toast({
-      title: "Usuário excluído",
-      description: "O usuário foi excluído com sucesso.",
-      variant: "destructive",
-    });
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      refetch();
+      
+      toast({
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao excluir o usuário.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredUsers = users.filter((user) => {
@@ -119,7 +113,7 @@ const Users = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <UsersHeader onUserCreated={(user) => setUsers([...users, user])} />
+        <UsersHeader onUserCreated={() => refetch()} />
         
         <UsersFilters
           search={search}
