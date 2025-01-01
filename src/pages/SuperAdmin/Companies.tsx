@@ -17,7 +17,7 @@ const Companies = () => {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      console.log("Fetching companies with user:", user) // Debug log
+      console.log("Fetching companies with user:", user)
       
       const { data, error } = await supabase
         .from('companies')
@@ -25,11 +25,11 @@ const Companies = () => {
         .order('created_at', { ascending: false })
 
       if (error) {
-        console.error("Error fetching companies:", error) // Debug log
+        console.error("Error fetching companies:", error)
         throw error
       }
       
-      console.log("Companies fetched:", data) // Debug log
+      console.log("Companies fetched:", data)
       
       return data.map(company => ({
         id: company.id,
@@ -45,7 +45,7 @@ const Companies = () => {
         storageUsed: company.storage_used || 0
       } as Company))
     },
-    enabled: !!user // Only fetch when user is authenticated
+    enabled: !!user?.id // Only fetch when user is authenticated
   })
 
   // Create company mutation
