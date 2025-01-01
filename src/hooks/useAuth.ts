@@ -56,6 +56,13 @@ export function useAuth() {
       }
 
       const user = data[0];
+      
+      // Validate required fields
+      if (!user.id || !user.email || !user.role) {
+        console.error("Invalid user data:", user);
+        throw new Error("Invalid user data");
+      }
+
       const response: AuthResponse = {
         user: {
           id: user.id,
@@ -74,7 +81,7 @@ export function useAuth() {
       return response;
     } catch (error) {
       console.error("Login failed:", error);
-      throw new Error("Invalid credentials");
+      throw error;
     }
   };
 
