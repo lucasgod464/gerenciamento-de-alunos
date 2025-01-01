@@ -37,18 +37,23 @@ export function useAuth() {
 
       console.log("Iniciando processo de login para:", email)
 
-      // Buscar o usuário diretamente, sem verificação prévia
+      // Buscar o usuário, usando maybeSingle() para tratar caso de nenhum resultado
       const { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
         .eq('status', 'active')
-        .single()
+        .maybeSingle()
 
       console.log("Resultado da busca do usuário:", { user, userError })
 
-      if (userError || !user) {
-        console.error("Usuário não encontrado ou erro:", userError)
+      if (userError) {
+        console.error("Erro ao buscar usuário:", userError)
+        throw new Error("Erro ao buscar usuário")
+      }
+
+      if (!user) {
+        console.error("Usuário não encontrado:", email)
         throw new Error("Email ou senha inválidos")
       }
 
