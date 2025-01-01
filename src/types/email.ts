@@ -6,11 +6,10 @@ export interface Email {
   accessLevel: "Admin" | "Usuário Comum";
   company: string;
   companyId: string;
-  companyStatus?: "Ativa" | "Inativa";
+  companyStatus: "Ativa" | "Inativa";
   createdAt: string;
 }
 
-// Interface para mapear os dados do Supabase
 export interface SupabaseEmail {
   id: string;
   name: string;
@@ -20,14 +19,13 @@ export interface SupabaseEmail {
   company_id: string;
   created_at: string;
   updated_at: string;
-  companies?: {
+  companies: {
     id: string;
     name: string;
     status: string;
   };
 }
 
-// Função auxiliar para converter dados do Supabase para o formato do frontend
 export function mapSupabaseEmailToEmail(supabaseEmail: SupabaseEmail): Email {
   return {
     id: supabaseEmail.id,

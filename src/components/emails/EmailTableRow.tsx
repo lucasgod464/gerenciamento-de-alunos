@@ -17,11 +17,11 @@ import { Email } from "@/types/email"
 
 interface EmailTableRowProps {
   email: Email
-  onEdit: (email: Email) => void
+  onUpdate: (email: Email) => void
   onDelete: (id: string) => void
 }
 
-export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
+export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps) {
   const isCompanyActive = email.companyStatus === "Ativa"
 
   return (
@@ -74,7 +74,7 @@ export function EmailTableRow({ email, onEdit, onDelete }: EmailTableRowProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onEdit(email)}
+            onClick={() => onUpdate(email)}
             className="hover:bg-gray-100"
           >
             <Pencil className="w-4 h-4 text-gray-600" />
