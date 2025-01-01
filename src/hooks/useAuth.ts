@@ -1,44 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { User, AuthResponse, AccessLevel, RolePermissions } from "@/types/auth"
+import { User, AuthResponse, AccessLevel, RolePermissions, ROLE_PERMISSIONS } from "@/types/auth"
 import { comparePasswords } from "@/utils/passwordUtils"
 import { supabase } from "@/integrations/supabase/client"
-
-// Define as permissões de cada role
-const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
-  SUPER_ADMIN: {
-    canCreateCompany: true,
-    canCreateAdmin: true,
-    canCreateUser: true,
-    canViewAllCompanies: true,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  ADMIN: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: true,
-    canViewAllCompanies: false,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  USER: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: false,
-    canViewAllCompanies: false,
-    canManageUsers: false,
-    canManageRooms: false,
-    canManageStudies: false,
-    canManageTags: false,
-    canManageSpecializations: false,
-  },
-}
 
 export function useAuth() {
   const queryClient = useQueryClient()
