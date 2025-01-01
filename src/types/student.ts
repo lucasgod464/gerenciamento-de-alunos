@@ -6,7 +6,7 @@ export interface Student {
   document?: string;
   address?: string;
   room: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
   createdAt: string;
   companyId: string | null;
   customFields?: Record<string, string>;

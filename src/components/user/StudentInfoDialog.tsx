@@ -66,7 +66,7 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
               <label className="font-semibold capitalize">
                 {key.replace(/_/g, " ")}
               </label>
-              <p className="text-sm text-muted-foreground">{String(value)}</p>
+              <p className="text-sm text-muted-foreground">{value}</p>
             </div>
           ))}
         </div>
