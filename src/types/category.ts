@@ -2,6 +2,7 @@ export interface Category {
   id: string;
   name: string;
   status: boolean;
-  companyId: string | null;
+  company_id: string | null;
   color?: string;
+  created_at?: string;
 }

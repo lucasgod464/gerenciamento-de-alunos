@@ -31,7 +31,18 @@ const Categories = () => {
         .eq('company_id', currentUser?.companyId);
 
       if (error) throw error;
-      setCategories(data || []);
+      
+      // Transform the data to match our Category type
+      const transformedData: Category[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        status: item.status,
+        company_id: item.company_id,
+        color: item.color,
+        created_at: item.created_at
+      }));
+      
+      setCategories(transformedData);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast({
@@ -163,7 +174,7 @@ const Categories = () => {
           </div>
 
           <CategoriesKanban 
-            categories={filteredCategories}
+            categories={categories}
             companyId={currentUser?.companyId || null}
             onEditCategory={handleEditCategory}
             onDeleteCategory={handleDeleteCategory}

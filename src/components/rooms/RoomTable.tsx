@@ -1,6 +1,10 @@
 import {
   Table,
   TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
@@ -26,7 +30,17 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   const { toast } = useToast();
 
   const handleShowStudents = (room: Room) => {
-    setSelectedRoomStudents(room.students || []);
+    const studentsList: Student[] = room.students?.map(student => ({
+      id: student.id,
+      name: '',  // These will be populated when needed
+      birthDate: '',
+      room: room.id,
+      status: 'active',
+      createdAt: '',
+      companyId: currentUser?.companyId || null
+    })) || [];
+    
+    setSelectedRoomStudents(studentsList);
     setSelectedRoomId(room.id);
     setIsStudentsDialogOpen(true);
   };

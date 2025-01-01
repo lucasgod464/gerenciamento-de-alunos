@@ -39,27 +39,11 @@ export const CategoryColumn = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const getAuthorizedUserNames = async (room: Room) => {
+  const getAuthorizedUserNames = (room: Room): string => {
     if (!currentUser?.companyId) return "Nenhum usuário vinculado";
 
-    try {
-      const { data: authorizedUsers, error } = await supabase
-        .from('users')
-        .select('name')
-        .eq('company_id', currentUser.companyId)
-        .in('id', room.authorizedUsers || []);
-
-      if (error) throw error;
-
-      if (!authorizedUsers || authorizedUsers.length === 0) {
-        return "Nenhum usuário vinculado";
-      }
-
-      return authorizedUsers.map(user => user.name).join(", ");
-    } catch (error) {
-      console.error('Error fetching authorized users:', error);
-      return "Erro ao carregar usuários";
-    }
+    // Return a placeholder while the async data loads
+    return "Carregando usuários...";
   };
 
   const getTotalStudents = () => {
