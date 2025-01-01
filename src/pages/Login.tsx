@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -36,26 +37,12 @@ const Login = () => {
     }
 
     try {
-      const { data, error } = await supabase.rpc('verify_user_login', {
-        p_email: email,
-        p_password: password
-      });
-
-      if (error) throw error;
+      const response = await login(email, password);
+      console.log("Login successful, redirecting based on role:", response.user.role);
       
-      if (!data || data.length === 0) {
-        throw new Error("Credenciais inválidas");
-      }
-
-      const user = data[0];
-      
-      // Armazenar dados do usuário na sessão
-      sessionStorage.setItem('user', JSON.stringify(user));
-
       toast.success("Login realizado com sucesso!");
       
-      // Redirecionar baseado no role
-      switch (user.role) {
+      switch (response.user.role) {
         case "SUPER_ADMIN":
           navigate("/super-admin", { replace: true });
           break;
@@ -69,7 +56,6 @@ const Login = () => {
           navigate("/login", { replace: true });
       }
     } catch (error) {
-      console.error("Erro no login:", error);
       setError("Email ou senha inválidos");
       toast.error("Falha no login");
     } finally {
@@ -100,6 +86,8 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
+          <div>Admin: admin@teste.com</div>
+          <div>Usuário: usuario@teste.com</div>
           <div>Senha para todas as contas: 123456</div>
         </div>
 
