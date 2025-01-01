@@ -9,13 +9,115 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: boolean | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: boolean | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: boolean | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          authorized_rooms: string[] | null
+          company_id: string | null
+          created_at: string
+          email: string
+          id: string
+          last_access: string | null
+          location: string | null
+          name: string
+          password: string
+          password_hash: string | null
+          profile_picture: string | null
+          responsible_category: string | null
+          role: string
+          specialization: string | null
+          status: string | null
+          tags: string[] | null
+        }
+        Insert: {
+          authorized_rooms?: string[] | null
+          company_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          last_access?: string | null
+          location?: string | null
+          name: string
+          password: string
+          password_hash?: string | null
+          profile_picture?: string | null
+          responsible_category?: string | null
+          role?: string
+          specialization?: string | null
+          status?: string | null
+          tags?: string[] | null
+        }
+        Update: {
+          authorized_rooms?: string[] | null
+          company_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_access?: string | null
+          location?: string | null
+          name?: string
+          password?: string
+          password_hash?: string | null
+          profile_picture?: string | null
+          responsible_category?: string | null
+          role?: string
+          specialization?: string | null
+          status?: string | null
+          tags?: string[] | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_new_user: {
+        Args: {
+          p_name: string
+          p_email: string
+          p_password: string
+          p_role: string
+          p_company_id?: string
+        }
+        Returns: string
+      }
+      verify_user_login: {
+        Args: {
+          p_email: string
+          p_password: string
+        }
+        Returns: {
+          id: string
+          name: string
+          email: string
+          role: string
+          company_id: string
+          created_at: string
+          last_access: string
+          profile_picture: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
