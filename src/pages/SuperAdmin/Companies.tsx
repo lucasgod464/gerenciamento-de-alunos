@@ -13,13 +13,12 @@ const Companies = () => {
   const queryClient = useQueryClient()
   const { user } = useAuth()
 
-  console.log("Current user:", user) // Debug log
-
   // Fetch companies
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      console.log("Fetching companies...") // Debug log
+      console.log("Fetching companies with user:", user) // Debug log
+      
       const { data, error } = await supabase
         .from('companies')
         .select('*')
@@ -45,7 +44,8 @@ const Companies = () => {
         publicFolderPath: `/storage/${company.id}`,
         storageUsed: company.storage_used || 0
       } as Company))
-    }
+    },
+    enabled: !!user // Only fetch when user is authenticated
   })
 
   // Create company mutation
