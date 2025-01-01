@@ -5,7 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: AccessLevel;
-  companyId: string | null; // null for SUPER_ADMIN
+  companyId: string | null;
   createdAt: string;
   lastAccess: string;
   profilePicture?: string;
@@ -16,13 +16,6 @@ export interface AuthResponse {
   token: string;
 }
 
-export interface AccessControl {
-  companyId: string;
-  accessLevel: AccessLevel;
-  permissions: string[];
-}
-
-// Helper type to define what each role can do
 export interface RolePermissions {
   canCreateCompany: boolean;
   canCreateAdmin: boolean;

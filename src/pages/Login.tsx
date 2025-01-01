@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,6 +13,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validateEmail = (email: string) => {
     return email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
@@ -24,63 +25,43 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      if (!email.trim() || !password.trim()) {
+        throw new Error("Por favor, preencha todos os campos");
+      }
+
       if (!validateEmail(email)) {
-        setError("Por favor, insira um email válido");
-        return;
+        throw new Error("Por favor, insira um email válido");
       }
 
       if (password.length < 6) {
-        setError("A senha deve ter pelo menos 6 caracteres");
-        return;
+        throw new Error("A senha deve ter pelo menos 6 caracteres");
       }
 
-      console.log("Attempting login with:", email);
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        console.error("Login error:", signInError);
-        throw signInError;
-      }
-
-      if (!user) {
-        throw new Error("No user returned from login");
-      }
-
-      // Fetch user role from users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (userError) {
-        console.error("Error fetching user role:", userError);
-        throw userError;
-      }
-
-      console.log("User role:", userData.role);
+      console.log("🚀 Iniciando tentativa de login...");
+      const response = await login(email.trim(), password);
+      console.log("✅ Login bem-sucedido, redirecionando...", response.user.role);
+      
       toast.success("Login realizado com sucesso!");
-
-      // Redirect based on role
-      switch (userData.role) {
+      
+      // Redirect based on user role
+      switch (response.user.role) {
         case "SUPER_ADMIN":
-          navigate("/super-admin", { replace: true });
+          console.log("🎯 Redirecionando para /super-admin");
+          navigate("/super-admin");
           break;
         case "ADMIN":
-          navigate("/admin", { replace: true });
+          navigate("/admin");
           break;
         case "USER":
-          navigate("/user", { replace: true });
+          navigate("/user");
           break;
         default:
-          setError("Perfil de usuário inválido");
+          console.error("❌ Tipo de usuário desconhecido:", response.user.role);
+          throw new Error("Tipo de usuário não reconhecido");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      setError("Email ou senha inválidos");
+      console.error("❌ Erro no login:", error);
+      setError(error instanceof Error ? error.message : "Erro ao fazer login");
       toast.error("Falha no login");
     } finally {
       setIsLoading(false);
@@ -110,7 +91,7 @@ const Login = () => {
         <div className="bg-gray-50 p-4 rounded-md space-y-2 text-sm">
           <p className="font-semibold">Contas para teste:</p>
           <div>Super Admin: super@teste.com</div>
-          <div>Senha: 123456</div>
+          <div>Senha para todas as contas: 123456</div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -139,7 +120,14 @@ const Login = () => {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Entrar"}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Entrando...
+              </>
+            ) : (
+              "Entrar"
+            )}
           </Button>
         </form>
       </div>

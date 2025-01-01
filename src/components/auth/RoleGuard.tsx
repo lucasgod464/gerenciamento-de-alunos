@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { AccessLevel, ROLE_PERMISSIONS, RolePermissions } from "@/types/auth";
+import { AccessLevel, RolePermissions } from "@/types/auth";
 
 interface RoleGuardProps {
   children: ReactNode;
