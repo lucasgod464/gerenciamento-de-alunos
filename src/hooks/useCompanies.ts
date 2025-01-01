@@ -1,22 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
-
-// Funções auxiliares para localStorage
-const getStoredCompanies = (): Company[] => {
-  const stored = localStorage.getItem("companies")
-  if (!stored) return []
-  
-  const companies = JSON.parse(stored)
-  return companies.map((company: any) => ({
-    ...company,
-    status: company.status === "Ativa" ? "Ativa" : "Inativa",
-    storageUsed: company.storageUsed || 0
-  }))
-}
-
-const setStoredCompanies = (companies: Company[]) => {
-  localStorage.setItem("companies", JSON.stringify(companies))
-}
+import { supabase } from "@/integrations/supabase/client"
 
 export function useCompanies() {
   const queryClient = useQueryClient()
@@ -24,27 +8,46 @@ export function useCompanies() {
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const companies = getStoredCompanies()
-      
-      // Calculate real-time stats
-      const rooms = JSON.parse(localStorage.getItem("rooms") || "[]")
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      
-      return companies.map(company => ({
+      const { data, error } = await supabase
+        .from("companies")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        console.error("Error fetching companies:", error)
+        throw error
+      }
+
+      return data.map((company: any) => ({
         ...company,
-        currentUsers: users.filter((user: any) => user.companyId === company.id).length,
-        currentRooms: rooms.filter((room: any) => room.companyId === company.id).length,
+        createdAt: new Date(company.created_at).toLocaleDateString(),
+        status: company.status === "Ativa" ? "Ativa" : "Inativa",
       }))
     },
-    staleTime: Infinity,
   })
 
   const createMutation = useMutation({
-    mutationFn: async (newCompany: Company) => {
-      const currentCompanies = getStoredCompanies()
-      const updatedCompanies = [...currentCompanies, newCompany]
-      setStoredCompanies(updatedCompanies)
-      return newCompany
+    mutationFn: async (newCompany: Omit<Company, "id" | "createdAt">) => {
+      const { data, error } = await supabase
+        .from("companies")
+        .insert([
+          {
+            name: newCompany.name,
+            document: newCompany.document,
+            users_limit: newCompany.usersLimit,
+            rooms_limit: newCompany.roomsLimit,
+            public_folder_path: newCompany.publicFolderPath,
+          },
+        ])
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Error creating company:", error)
+        throw error
+      }
+
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -53,12 +56,24 @@ export function useCompanies() {
 
   const updateMutation = useMutation({
     mutationFn: async (updatedCompany: Company) => {
-      const currentCompanies = getStoredCompanies()
-      const updatedCompanies = currentCompanies.map((company) =>
-        company.id === updatedCompany.id ? updatedCompany : company
-      )
-      setStoredCompanies(updatedCompanies)
-      return updatedCompany
+      const { data, error } = await supabase
+        .from("companies")
+        .update({
+          name: updatedCompany.name,
+          users_limit: updatedCompany.usersLimit,
+          rooms_limit: updatedCompany.roomsLimit,
+          status: updatedCompany.status,
+        })
+        .eq("id", updatedCompany.id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error("Error updating company:", error)
+        throw error
+      }
+
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
@@ -67,30 +82,16 @@ export function useCompanies() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const currentCompanies = getStoredCompanies()
-      const updatedCompanies = currentCompanies.filter((company) => company.id !== id)
-      setStoredCompanies(updatedCompanies)
-      return id
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] })
-    },
-  })
+      const { error } = await supabase
+        .from("companies")
+        .delete()
+        .eq("id", id)
 
-  const resetMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const currentCompanies = getStoredCompanies()
-      const updatedCompanies = currentCompanies.map((company) =>
-        company.id === id
-          ? {
-              ...company,
-              currentUsers: 0,
-              currentRooms: 0,
-              status: "Ativa" as const,
-            }
-          : company
-      )
-      setStoredCompanies(updatedCompanies)
+      if (error) {
+        console.error("Error deleting company:", error)
+        throw error
+      }
+
       return id
     },
     onSuccess: () => {
@@ -104,6 +105,5 @@ export function useCompanies() {
     createCompany: createMutation.mutate,
     updateCompany: updateMutation.mutate,
     deleteCompany: deleteMutation.mutate,
-    resetCompany: resetMutation.mutate,
   }
 }
