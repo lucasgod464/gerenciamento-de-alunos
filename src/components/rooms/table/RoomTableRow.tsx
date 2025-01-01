@@ -38,21 +38,23 @@ export const RoomTableRow = ({
           if (categoryData) setCategoryName(categoryData.name);
         }
 
-        // Fetch teacher (first authorized user)
+        // Fetch teacher (authorized user with role = 'TEACHER')
         const { data: authorizedUsers, error: authError } = await supabase
           .from('room_authorized_users')
           .select(`
-            user_id,
             users:user_id (
-              name
+              id,
+              name,
+              role
             )
           `)
-          .eq('room_id', room.id)
-          .limit(1);
+          .eq('room_id', room.id);
 
         if (authError) throw authError;
-        if (authorizedUsers && authorizedUsers.length > 0 && authorizedUsers[0].users) {
-          setTeacherName(authorizedUsers[0].users.name);
+        
+        const teacher = authorizedUsers?.find(user => user.users?.role === 'TEACHER');
+        if (teacher && teacher.users) {
+          setTeacherName(teacher.users.name);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

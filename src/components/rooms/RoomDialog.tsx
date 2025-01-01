@@ -67,7 +67,7 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <RoomFormFields onChange={handleFieldChange} />
+          <RoomFormFields onChange={handleFieldChange} editingRoom={editingRoom} />
           <Button onClick={handleSave} className="w-full">
             Salvar
           </Button>

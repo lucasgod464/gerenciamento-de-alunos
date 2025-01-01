@@ -17,9 +17,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface RoomFormFieldsProps {
   onChange: (field: keyof Room, value: any) => void;
+  editingRoom?: Room | null;
 }
 
-export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
+export function RoomFormFields({ onChange, editingRoom }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -28,7 +29,18 @@ export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
 
   useEffect(() => {
     fetchCategories();
-  }, [user]);
+    if (editingRoom) {
+      const [start, end] = editingRoom.schedule.split(" - ");
+      setStartTime(start);
+      setEndTime(end);
+      
+      // Set other fields
+      onChange("name", editingRoom.name);
+      onChange("location", editingRoom.location);
+      onChange("category", editingRoom.category);
+      onChange("status", editingRoom.status);
+    }
+  }, [editingRoom, user]);
 
   const fetchCategories = async () => {
     if (!user?.companyId) return;
@@ -75,6 +87,7 @@ export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
         <Label htmlFor="name">Nome da Sala</Label>
         <Input
           id="name"
+          defaultValue={editingRoom?.name}
           onChange={(e) => onChange("name", e.target.value)}
           className="transition-all duration-200 hover:border-primary focus:border-primary"
         />
@@ -107,6 +120,7 @@ export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="location"
+            defaultValue={editingRoom?.location}
             onChange={(e) => onChange("location", e.target.value)}
             className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
             placeholder="Digite o endereço completo da sala..."
@@ -115,7 +129,10 @@ export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
-        <Select onValueChange={(value) => onChange("category", value)}>
+        <Select 
+          defaultValue={editingRoom?.category}
+          onValueChange={(value) => onChange("category", value)}
+        >
           <SelectTrigger className="transition-all duration-200 hover:border-primary focus:border-primary">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
@@ -132,8 +149,8 @@ export function RoomFormFields({ onChange }: RoomFormFieldsProps) {
         <Label htmlFor="status">Status</Label>
         <Switch
           id="status"
+          defaultChecked={editingRoom?.status ?? true}
           onCheckedChange={(checked) => onChange("status", checked)}
-          defaultChecked={true}
         />
         <span className="text-sm text-muted-foreground">
           Ativa
