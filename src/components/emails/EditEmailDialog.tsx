@@ -20,6 +20,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { Email } from "@/types/email"
 import { Eye, EyeOff } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
 
 interface EditEmailDialogProps {
   email: Email | null
@@ -44,26 +45,60 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
 
   const { data: companies = [] } = useQuery({
     queryKey: ["companies"],
-    queryFn: () => {
-      const storedCompanies = localStorage.getItem("companies")
-      return storedCompanies ? JSON.parse(storedCompanies) : []
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("companies")
+        .select("id, name")
+      
+      if (error) throw error
+      return data
     },
   })
 
   const updateEmailMutation = useMutation({
     mutationFn: async (updatedEmail: Email) => {
-      const currentEmails = JSON.parse(localStorage.getItem("createdEmails") || "[]")
-      const newEmails = currentEmails.map((e: Email) =>
-        e.id === updatedEmail.id ? {
-          ...updatedEmail,
-          password: newPassword ? newPassword : e.password
-        } : e
-      )
-      localStorage.setItem("createdEmails", JSON.stringify(newEmails))
-      return updatedEmail
+      // Find company ID based on company name
+      const company = companies.find(c => c.name === updatedEmail.company)
+      if (!company) throw new Error("Company not found")
+
+      const updateData = {
+        name: updatedEmail.name,
+        email: updatedEmail.email,
+        access_level: updatedEmail.accessLevel,
+        company_id: company.id,
+      }
+
+      if (newPassword) {
+        updateData.password = newPassword
+      }
+
+      const { data, error } = await supabase
+        .from("emails")
+        .update(updateData)
+        .eq("id", updatedEmail.id)
+        .select(`
+          *,
+          companies (
+            name,
+            status
+          )
+        `)
+        .single()
+
+      if (error) throw error
+      return data
     },
-    onSuccess: (updatedEmail: Email) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] })
+      const updatedEmail = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        accessLevel: data.access_level,
+        company: data.companies.name,
+        companyStatus: data.companies.status,
+        createdAt: new Date(data.created_at).toLocaleDateString(),
+      }
       onEmailUpdated(updatedEmail)
       onOpenChange(false)
       toast({
@@ -71,6 +106,14 @@ export function EditEmailDialog({ email, open, onOpenChange, onEmailUpdated }: E
         description: "As informações do email foram atualizadas com sucesso.",
       })
     },
+    onError: (error) => {
+      console.error("Error updating email:", error)
+      toast({
+        title: "Erro ao atualizar",
+        description: "Ocorreu um erro ao tentar atualizar o email.",
+        variant: "destructive",
+      })
+    }
   })
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
