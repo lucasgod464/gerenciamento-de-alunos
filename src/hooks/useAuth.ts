@@ -2,6 +2,42 @@ import { useQuery } from "@tanstack/react-query";
 import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
+interface DatabaseUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  company_id: string | null;
+  created_at: string;
+  last_access: string;
+  profile_picture?: string;
+  status?: string;
+  responsible_category?: string;
+  location?: string;
+  specialization?: string;
+  authorized_rooms?: string[];
+  tags?: string[];
+}
+
+const convertDatabaseUserToUser = (dbUser: DatabaseUser): User => {
+  return {
+    id: dbUser.id,
+    name: dbUser.name,
+    email: dbUser.email,
+    role: dbUser.role as User['role'],
+    companyId: dbUser.company_id,
+    createdAt: dbUser.created_at,
+    lastAccess: dbUser.last_access,
+    profilePicture: dbUser.profile_picture,
+    status: dbUser.status,
+    responsibleCategory: dbUser.responsible_category,
+    location: dbUser.location,
+    specialization: dbUser.specialization,
+    authorizedRooms: dbUser.authorized_rooms,
+    tags: dbUser.tags,
+  };
+};
+
 export function useAuth() {
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
@@ -50,7 +86,7 @@ export function useAuth() {
         throw new Error("Invalid credentials");
       }
 
-      const user = data[0];
+      const user = convertDatabaseUserToUser(data[0]);
 
       // Sign in with Supabase Auth
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -74,7 +110,7 @@ export function useAuth() {
   };
 
   const isAuthenticated = !!session?.user?.id;
-  const user = session?.user as User | undefined;
+  const user = session?.user ? convertDatabaseUserToUser(session.user as DatabaseUser) : undefined;
 
   const can = (permission: string) => {
     if (!user) return false;

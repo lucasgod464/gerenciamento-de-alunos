@@ -9,6 +9,12 @@ export interface User {
   createdAt: string;
   lastAccess: string;
   profilePicture?: string;
+  status?: string;
+  responsibleCategory?: string;
+  location?: string;
+  specialization?: string;
+  authorizedRooms?: string[];
+  tags?: string[];
 }
 
 export interface AuthResponse {
