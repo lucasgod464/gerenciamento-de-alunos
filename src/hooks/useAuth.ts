@@ -37,35 +37,59 @@ export function useAuth() {
 
       console.log("Iniciando processo de login para:", email)
 
-      // Buscar usuário com email exato e status ativo
-      const { data: users, error: userError } = await supabase
+      // Primeiro, vamos verificar se o usuário existe, independente do status
+      const { data: userCheck, error: checkError } = await supabase
+        .from('users')
+        .select('status')
+        .eq('email', email.toLowerCase())
+        .maybeSingle()
+
+      console.log("Verificação inicial do usuário:", { userCheck, checkError })
+
+      if (checkError) {
+        console.error("Erro ao verificar usuário:", checkError)
+        throw new Error("Erro ao verificar usuário")
+      }
+
+      if (!userCheck) {
+        console.error("Nenhum usuário encontrado com o email:", email)
+        throw new Error("Email ou senha inválidos")
+      }
+
+      if (userCheck.status !== 'active') {
+        console.error("Usuário não está ativo:", email)
+        throw new Error("Usuário inativo")
+      }
+
+      // Agora buscar os dados completos do usuário
+      const { data: user, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
         .eq('status', 'active')
-        .single()
+        .maybeSingle()
 
-      console.log("Resultado da busca:", { users, userError })
+      console.log("Resultado da busca completa:", { user, userError })
 
       if (userError) {
-        console.error("Erro ao buscar usuário:", userError)
-        throw new Error("Email ou senha inválidos")
+        console.error("Erro ao buscar dados do usuário:", userError)
+        throw new Error("Erro ao buscar dados do usuário")
       }
 
-      if (!users) {
-        console.error("Nenhum usuário encontrado com o email:", email)
+      if (!user) {
+        console.error("Dados do usuário não encontrados:", email)
         throw new Error("Email ou senha inválidos")
       }
 
       // Verificar senha
       const encodedPassword = btoa(password)
-      const storedPassword = users.password.startsWith('b64_') 
-        ? users.password.slice(4) 
-        : users.password
+      const storedPassword = user.password.startsWith('b64_') 
+        ? user.password.slice(4) 
+        : user.password
 
       console.log("Verificando senha:", {
         senhaCorreta: encodedPassword === storedPassword,
-        formatoAntigo: !users.password.startsWith('b64_')
+        formatoAntigo: !user.password.startsWith('b64_')
       })
 
       if (encodedPassword !== storedPassword) {
@@ -78,14 +102,14 @@ export function useAuth() {
         last_access: new Date().toISOString(),
       }
 
-      if (!users.password.startsWith('b64_')) {
+      if (!user.password.startsWith('b64_')) {
         updates.password = `b64_${storedPassword}`
       }
 
       const { error: updateError } = await supabase
         .from('users')
         .update(updates)
-        .eq('id', users.id)
+        .eq('id', user.id)
 
       if (updateError) {
         console.error("Erro ao atualizar último acesso:", updateError)
@@ -94,19 +118,19 @@ export function useAuth() {
 
       const response: AuthResponse = {
         user: {
-          id: users.id,
-          name: users.name,
-          email: users.email,
-          role: users.role as AccessLevel,
-          companyId: users.company_id,
-          createdAt: users.created_at,
-          lastAccess: users.last_access,
-          profilePicture: users.profile_picture,
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role as AccessLevel,
+          companyId: user.company_id,
+          createdAt: user.created_at,
+          lastAccess: user.last_access,
+          profilePicture: user.profile_picture,
         },
-        token: `${users.role.toLowerCase()}-token`,
+        token: `${user.role.toLowerCase()}-token`,
       }
 
-      console.log("Login bem sucedido:", { userId: users.id, role: users.role })
+      console.log("Login bem sucedido:", { userId: user.id, role: user.role })
       localStorage.setItem("session", JSON.stringify(response))
       return response
     },
