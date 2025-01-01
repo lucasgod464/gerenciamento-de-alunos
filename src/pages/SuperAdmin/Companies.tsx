@@ -57,11 +57,16 @@ const Companies = () => {
   const createMutation = useMutation({
     mutationFn: async (newCompany: Company) => {
       console.log('Creating company:', newCompany)
+      
+      if (!user || user.role !== 'SUPER_ADMIN') {
+        throw new Error('Not authorized')
+      }
+
       const { data, error } = await supabase
         .from('companies')
         .insert([{
           name: newCompany.name,
-          status: 'active'
+          status: newCompany.status === 'Ativa' ? 'active' : 'inactive'
         }])
         .select()
         .single()
@@ -95,6 +100,11 @@ const Companies = () => {
   const updateMutation = useMutation({
     mutationFn: async (company: Company) => {
       console.log('Updating company:', company)
+      
+      if (!user || user.role !== 'SUPER_ADMIN') {
+        throw new Error('Not authorized')
+      }
+
       const { data, error } = await supabase
         .from('companies')
         .update({
@@ -126,6 +136,11 @@ const Companies = () => {
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       console.log('Deleting company:', id)
+      
+      if (!user || user.role !== 'SUPER_ADMIN') {
+        throw new Error('Not authorized')
+      }
+
       const { error } = await supabase
         .from('companies')
         .delete()
