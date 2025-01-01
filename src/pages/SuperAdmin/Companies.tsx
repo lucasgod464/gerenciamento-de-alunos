@@ -29,7 +29,7 @@ const Companies = () => {
 
       console.log("Companies fetched:", data)
       
-      // Map database records to Company type
+      // Map database records to Company type with explicit status typing
       return (data || []).map(company => ({
         id: company.id,
         name: company.name,
@@ -38,7 +38,7 @@ const Companies = () => {
         currentUsers: 0, // Default value
         roomsLimit: 10, // Default value
         currentRooms: 0, // Default value
-        status: company.status === "active" ? "Ativa" : "Inativa",
+        status: company.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(company.created_at).toLocaleDateString(),
         publicFolderPath: `/companies/${company.id}`,
         storageUsed: company.storage_used || 0
@@ -73,7 +73,7 @@ const Companies = () => {
         currentUsers: 0,
         roomsLimit: 10,
         currentRooms: 0,
-        status: data.status === "active" ? "Ativa" : "Inativa",
+        status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(data.created_at).toLocaleDateString(),
         publicFolderPath: `/companies/${data.id}`,
         storageUsed: data.storage_used || 0
@@ -119,7 +119,7 @@ const Companies = () => {
         currentUsers: company.currentUsers,
         roomsLimit: company.roomsLimit,
         currentRooms: company.currentRooms,
-        status: data.status === "active" ? "Ativa" : "Inativa",
+        status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(data.created_at).toLocaleDateString(),
         publicFolderPath: company.publicFolderPath,
         storageUsed: data.storage_used || 0
