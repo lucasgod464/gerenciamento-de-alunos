@@ -1,11 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
 import { supabase } from "@/integrations/supabase/client"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/hooks/use-toast"
 
 export function useCompanies() {
   const queryClient = useQueryClient()
-  const { toast } = useToast()
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
