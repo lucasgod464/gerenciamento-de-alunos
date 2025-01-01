@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { User, AuthResponse } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ROLE_PERMISSIONS } from "@/types/permissions";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
