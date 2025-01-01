@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -8,64 +9,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
-import { Room } from "@/types/room";
-import { MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+interface RoomFormFieldsProps {
+  defaultValues?: {
+    name?: string;
+    schedule?: string;
+    location?: string;
+    category?: string;
+    studyRoom?: string;
+  };
+  onFieldChange: (field: string, value: string) => void;
+}
 
 interface Category {
   id: string;
   name: string;
-  status: boolean;
-  companyId: string | null;
+  color: string;
 }
 
-interface RoomFormFieldsProps {
-  room: Partial<Room>;
-  onChange: (field: keyof Room, value: any) => void;
-}
-
-export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
+export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!user?.companyId) return;
-    
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const companyCategories = allCategories.filter(
-      (cat: Category) => cat.companyId === user.companyId && cat.status === true
-    );
-    setCategories(companyCategories);
-  }, [user]);
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('id, name, color')
+          .eq('company_id', user?.companyId)
+          .eq('status', true);
 
-  useEffect(() => {
-    if (room.schedule) {
-      const [start, end] = room.schedule.split(" - ");
-      setStartTime(start);
-      setEndTime(end);
-    }
-  }, [room.schedule]);
+        if (error) throw error;
 
-  const handleTimeChange = (type: "start" | "end", value: string) => {
-    // Validação básica do formato da hora
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(value)) return;
-
-    if (type === "start") {
-      setStartTime(value);
-      if (endTime) {
-        onChange("schedule", `${value} - ${endTime}`);
+        setCategories(data || []);
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        toast({
+          title: "Erro ao carregar categorias",
+          description: "Não foi possível carregar as categorias. Tente novamente mais tarde.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    } else {
-      setEndTime(value);
-      if (startTime) {
-        onChange("schedule", `${startTime} - ${value}`);
-      }
+    };
+
+    if (user?.companyId) {
+      fetchCategories();
     }
-  };
+  }, [user?.companyId, toast]);
 
   return (
     <div className="space-y-4">
@@ -73,74 +71,77 @@ export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
         <Label htmlFor="name">Nome da Sala</Label>
         <Input
           id="name"
-          value={room.name || ""}
-          onChange={(e) => onChange("name", e.target.value)}
-          className="transition-all duration-200 hover:border-primary focus:border-primary"
+          placeholder="Digite o nome da sala"
+          value={defaultValues?.name || ""}
+          onChange={(e) => onFieldChange("name", e.target.value)}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startTime">Horário Início</Label>
-          <Input
-            id="startTime"
-            type="time"
-            value={startTime}
-            onChange={(e) => handleTimeChange("start", e.target.value)}
-            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="endTime">Horário Fim</Label>
-          <Input
-            id="endTime"
-            type="time"
-            value={endTime}
-            onChange={(e) => handleTimeChange("end", e.target.value)}
-            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
-          />
-        </div>
-      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="location">Endereço</Label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            id="location"
-            value={room.location || ""}
-            onChange={(e) => onChange("location", e.target.value)}
-            className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
-            placeholder="Digite o endereço completo da sala..."
-          />
-        </div>
+        <Label htmlFor="schedule">Horário</Label>
+        <Input
+          id="schedule"
+          placeholder="Digite o horário"
+          value={defaultValues?.schedule || ""}
+          onChange={(e) => onFieldChange("schedule", e.target.value)}
+        />
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="location">Localização</Label>
+        <Input
+          id="location"
+          placeholder="Digite a localização"
+          value={defaultValues?.location || ""}
+          onChange={(e) => onFieldChange("location", e.target.value)}
+        />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
         <Select
-          value={room.category || ""}
-          onValueChange={(value) => onChange("category", value)}
+          value={defaultValues?.category || ""}
+          onValueChange={(value) => onFieldChange("category", value)}
         >
-          <SelectTrigger className="transition-all duration-200 hover:border-primary focus:border-primary">
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
+            {isLoading ? (
+              <SelectItem value="loading" disabled>
+                Carregando categorias...
               </SelectItem>
-            ))}
+            ) : categories.length > 0 ? (
+              categories.map((category) => (
+                <SelectItem 
+                  key={category.id} 
+                  value={category.id}
+                  className="flex items-center gap-2"
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: category.color || '#e5e7eb' }} 
+                  />
+                  {category.name}
+                </SelectItem>
+              ))
+            ) : (
+              <SelectItem value="empty" disabled>
+                Nenhuma categoria encontrada
+              </SelectItem>
+            )}
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center space-x-2">
-        <Label htmlFor="status">Status</Label>
-        <Switch
-          id="status"
-          checked={room.status}
-          onCheckedChange={(checked) => onChange("status", checked)}
+
+      <div className="space-y-2">
+        <Label htmlFor="studyRoom">Sala de Estudo</Label>
+        <Textarea
+          id="studyRoom"
+          placeholder="Digite informações sobre a sala de estudo"
+          value={defaultValues?.studyRoom || ""}
+          onChange={(e) => onFieldChange("studyRoom", e.target.value)}
         />
-        <span className="text-sm text-muted-foreground">
-          {room.status ? "Ativa" : "Inativa"}
-        </span>
       </div>
     </div>
   );
