@@ -7,7 +7,7 @@ import { RoomFilters } from "@/components/rooms/RoomFilters";
 import { RoomTable } from "@/components/rooms/RoomTable";
 import { RoomActions } from "@/components/rooms/RoomActions";
 import { useToast } from "@/hooks/use-toast";
-import { Room } from "@/types/room";
+import { Room, mapSupabaseRoomToRoom, SupabaseRoom } from "@/types/room";
 import { supabase } from "@/integrations/supabase/client";
 
 const Rooms = () => {
@@ -40,13 +40,7 @@ const Rooms = () => {
 
       if (error) throw error;
 
-      // Transform the data to match our Room type
-      const transformedRooms = roomsData.map(room => ({
-        ...room,
-        authorizedUsers: room.room_authorized_users?.map(auth => auth.user_id) || [],
-        students: room.room_students?.map(student => ({ id: student.student_id })) || []
-      }));
-
+      const transformedRooms = (roomsData as SupabaseRoom[]).map(mapSupabaseRoomToRoom);
       setRooms(transformedRooms);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -210,7 +204,7 @@ const Rooms = () => {
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <RoomTable
-              rooms={filteredRooms}
+              rooms={rooms}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
             />
