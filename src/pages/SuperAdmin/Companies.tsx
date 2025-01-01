@@ -11,13 +11,16 @@ import { useAuth } from "@/hooks/useAuth"
 const Companies = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
   // Fetch companies
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      console.log("Fetching companies with user:", user)
+      console.log("Auth state:", { user, isAuthenticated })
+      
+      const { data: session } = await supabase.auth.getSession()
+      console.log("Current session:", session)
       
       const { data, error } = await supabase
         .from('companies')
@@ -45,7 +48,7 @@ const Companies = () => {
         storageUsed: company.storage_used || 0
       } as Company))
     },
-    enabled: !!user?.id // Only fetch when user is authenticated
+    enabled: isAuthenticated // Only fetch when properly authenticated
   })
 
   // Create company mutation

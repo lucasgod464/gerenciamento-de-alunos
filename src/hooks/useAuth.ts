@@ -7,6 +7,14 @@ export function useAuth() {
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
+      // First check Supabase session
+      const { data: { session: supabaseSession } } = await supabase.auth.getSession();
+      
+      if (supabaseSession?.user?.id) {
+        console.log("Found Supabase session:", supabaseSession);
+      }
+      
+      // Then check local storage
       const storedSession = localStorage.getItem("session");
       if (!storedSession) return null;
       
@@ -41,6 +49,15 @@ export function useAuth() {
     console.log("Attempting login for:", email);
 
     try {
+      // First authenticate with Supabase
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) throw authError;
+
+      // Then verify with our custom function
       const { data, error } = await supabase.rpc('verify_login', {
         p_email: email,
         p_password: password
@@ -66,7 +83,7 @@ export function useAuth() {
           createdAt: user.created_at,
           lastAccess: user.last_access,
         },
-        token: `${user.role.toLowerCase()}-token`,
+        token: authData.session?.access_token || `${user.role.toLowerCase()}-token`,
       };
 
       localStorage.setItem("session", JSON.stringify(response));
@@ -78,7 +95,8 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem("session");
   };
 
