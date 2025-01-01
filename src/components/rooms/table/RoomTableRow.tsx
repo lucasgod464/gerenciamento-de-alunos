@@ -2,6 +2,9 @@ import { Room } from "@/types/room";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomTableRowProps {
   room: Room;
@@ -16,12 +19,61 @@ export const RoomTableRow = ({
   onDelete,
   onShowStudents,
 }: RoomTableRowProps) => {
+  const [categoryName, setCategoryName] = useState("");
+  const [teacherName, setTeacherName] = useState("Não atribuído");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchCategoryAndTeacher = async () => {
+      try {
+        // Fetch category name
+        if (room.category) {
+          const { data: categoryData, error: categoryError } = await supabase
+            .from('categories')
+            .select('name')
+            .eq('id', room.category)
+            .single();
+
+          if (categoryError) throw categoryError;
+          if (categoryData) setCategoryName(categoryData.name);
+        }
+
+        // Fetch teacher (first authorized user)
+        const { data: authorizedUsers, error: authError } = await supabase
+          .from('room_authorized_users')
+          .select(`
+            user_id,
+            users:user_id (
+              name
+            )
+          `)
+          .eq('room_id', room.id)
+          .limit(1);
+
+        if (authError) throw authError;
+        if (authorizedUsers && authorizedUsers.length > 0 && authorizedUsers[0].users) {
+          setTeacherName(authorizedUsers[0].users.name);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar informações da sala",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchCategoryAndTeacher();
+  }, [room, toast]);
+
   return (
     <TableRow key={room.id}>
       <TableCell>{room.name}</TableCell>
       <TableCell>{room.schedule}</TableCell>
       <TableCell>{room.location}</TableCell>
-      <TableCell>{room.category}</TableCell>
+      <TableCell>{categoryName}</TableCell>
+      <TableCell>{teacherName}</TableCell>
       <TableCell>
         <Button
           variant="ghost"

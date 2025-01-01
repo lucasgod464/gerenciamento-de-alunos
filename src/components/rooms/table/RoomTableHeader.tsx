@@ -12,6 +12,7 @@ export const RoomTableHeader = () => {
         <TableHead>Horário</TableHead>
         <TableHead>Endereço</TableHead>
         <TableHead>Categoria</TableHead>
+        <TableHead>Professor</TableHead>
         <TableHead>Alunos</TableHead>
         <TableHead>Status</TableHead>
         <TableHead className="text-right">Ações</TableHead>

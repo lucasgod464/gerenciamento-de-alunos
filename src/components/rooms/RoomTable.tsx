@@ -30,11 +30,10 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       const { data: roomStudents, error } = await supabase
         .from('room_students')
         .select(`
-          student_id,
           students:student_id (
             id,
             name,
-            birthDate:birth_date,
+            birth_date,
             status,
             created_at
           )
@@ -46,9 +45,9 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       const studentsList: Student[] = roomStudents.map(rs => ({
         id: rs.students.id,
         name: rs.students.name,
-        birthDate: rs.students.birthDate,
+        birthDate: rs.students.birth_date,
         room: room.id,
-        status: rs.students.status as 'active' | 'inactive',
+        status: rs.students.status === true ? 'active' : 'inactive',
         createdAt: new Date(rs.students.created_at).toLocaleDateString(),
         companyId: currentUser?.companyId || null
       }));
@@ -94,7 +93,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      // Remove from current room
       const { error: deleteError } = await supabase
         .from('room_students')
         .delete()
@@ -103,7 +101,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       if (deleteError) throw deleteError;
 
-      // Add to new room
       const { error: insertError } = await supabase
         .from('room_students')
         .insert({
