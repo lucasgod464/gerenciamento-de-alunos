@@ -4,6 +4,7 @@ import { CategoryColumn } from "./CategoryColumn";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Category } from "@/types/category";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CategoriesKanbanProps {
   categories: Category[];
@@ -22,36 +23,109 @@ export const CategoriesKanban = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedRooms = localStorage.getItem("rooms");
-    if (storedRooms) {
-      const allRooms = JSON.parse(storedRooms);
-      const companyRooms = allRooms.filter(
-        (room: Room) => room.companyId === companyId
-      );
-      setRooms(companyRooms);
-    }
-  }, [companyId]);
-
-  const handleTransferRooms = (roomIds: string[], targetCategoryId: string) => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const updatedRooms = allRooms.map((room: Room) => {
-      if (roomIds.includes(room.id)) {
-        return { ...room, category: targetCategoryId };
-      }
-      return room;
-    });
-
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+    if (!companyId) return;
     
-    // Atualizar o estado local
-    setRooms(prevRooms => 
-      prevRooms.map(room => {
-        if (roomIds.includes(room.id)) {
-          return { ...room, category: targetCategoryId };
+    const fetchRooms = async () => {
+      try {
+        const { data: roomsData, error } = await supabase
+          .from('rooms')
+          .select(`
+            *,
+            room_students (
+              student_id
+            )
+          `)
+          .eq('company_id', companyId);
+
+        if (error) throw error;
+
+        const transformedRooms = roomsData.map(room => ({
+          id: room.id,
+          name: room.name,
+          schedule: room.schedule,
+          location: room.location,
+          category: room.category,
+          status: room.status,
+          companyId: room.company_id,
+          studyRoom: room.study_room,
+          authorizedUsers: [],
+          students: room.room_students?.map(s => ({
+            id: s.student_id,
+            name: '',
+            birthDate: '',
+            room: room.id,
+            status: 'active',
+            createdAt: '',
+            companyId: null
+          })) || [],
+          created_at: room.created_at
+        }));
+
+        setRooms(transformedRooms);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+        toast({
+          title: "Erro ao carregar salas",
+          description: "Ocorreu um erro ao carregar as salas.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchRooms();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('rooms-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'rooms'
+        },
+        () => {
+          fetchRooms();
         }
-        return room;
-      })
-    );
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, toast]);
+
+  const handleTransferRooms = async (roomIds: string[], targetCategoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({ category: targetCategoryId })
+        .in('id', roomIds);
+
+      if (error) throw error;
+
+      // Update local state
+      setRooms(prevRooms => 
+        prevRooms.map(room => {
+          if (roomIds.includes(room.id)) {
+            return { ...room, category: targetCategoryId };
+          }
+          return room;
+        })
+      );
+
+      toast({
+        title: "Salas transferidas",
+        description: "As salas foram transferidas com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error transferring rooms:', error);
+      toast({
+        title: "Erro ao transferir salas",
+        description: "Ocorreu um erro ao transferir as salas.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
