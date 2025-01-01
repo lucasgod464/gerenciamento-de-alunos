@@ -6,36 +6,21 @@ import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Company } from "@/components/companies/CompanyList"
-import { useAuth } from "@/hooks/useAuth"
 
 const Companies = () => {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-  const { user } = useAuth()
 
   // Fetch companies
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      // Ensure we have a valid session
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        console.error("No valid Supabase session found")
-        throw new Error("Authentication required")
-      }
-
-      console.log("Using session:", session.access_token)
-      
       const { data, error } = await supabase
         .from('companies')
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error("Error fetching companies:", error)
-        throw error
-      }
-      
+      if (error) throw error
       return data.map(company => ({
         id: company.id,
         name: company.name,
@@ -49,9 +34,7 @@ const Companies = () => {
         publicFolderPath: `/storage/${company.id}`,
         storageUsed: company.storage_used || 0
       } as Company))
-    },
-    enabled: !!user?.id,
-    retry: 1
+    }
   })
 
   // Create company mutation
