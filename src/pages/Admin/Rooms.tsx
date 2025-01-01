@@ -204,7 +204,7 @@ const Rooms = () => {
 
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <RoomTable
-              rooms={rooms}
+              rooms={filteredRooms}
               onEdit={handleEdit}
               onDelete={handleDeleteClick}
             />

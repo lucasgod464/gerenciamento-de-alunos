@@ -113,20 +113,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       if (insertError) throw insertError;
 
-      if (selectedRoomId === newRoomId) {
-        // Refresh students list if transferring within the same room
-        const { data: newRoomStudents, error: fetchError } = await supabase
-          .from('room_students')
-          .select('student_id')
-          .eq('room_id', newRoomId);
-
-        if (fetchError) throw fetchError;
-
-        setSelectedRoomStudents(newRoomStudents.map(s => ({ id: s.student_id })));
-      } else {
-        // Remove from current view if transferring to different room
-        setSelectedRoomStudents(prev => prev.filter(student => student.id !== studentId));
-      }
+      setSelectedRoomStudents(prev => prev.filter(student => student.id !== studentId));
 
       toast({
         title: "Sucesso",
@@ -139,31 +126,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
         description: "Erro ao transferir aluno",
         variant: "destructive",
       });
-    }
-  };
-
-  const getAuthorizedUserNames = async (room: Room) => {
-    if (!currentUser?.companyId) return "Nenhum usuário vinculado";
-
-    try {
-      const { data: authorizedUsers, error } = await supabase
-        .from('room_authorized_users')
-        .select('users (name)')
-        .eq('room_id', room.id);
-
-      if (error) throw error;
-
-      if (!authorizedUsers || authorizedUsers.length === 0) {
-        return "Nenhum usuário vinculado";
-      }
-
-      return authorizedUsers
-        .map(auth => auth.users?.name)
-        .filter(Boolean)
-        .join(", ");
-    } catch (error) {
-      console.error("Erro ao buscar usuários autorizados:", error);
-      return "Erro ao carregar usuários";
     }
   };
 
