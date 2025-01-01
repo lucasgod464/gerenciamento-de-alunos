@@ -32,7 +32,6 @@ export type Database = {
       }
       users: {
         Row: {
-          auth_id: string | null
           authorized_rooms: string[] | null
           company_id: string | null
           created_at: string
@@ -51,7 +50,6 @@ export type Database = {
           tags: string[] | null
         }
         Insert: {
-          auth_id?: string | null
           authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
@@ -70,7 +68,6 @@ export type Database = {
           tags?: string[] | null
         }
         Update: {
-          auth_id?: string | null
           authorized_rooms?: string[] | null
           company_id?: string | null
           created_at?: string
@@ -104,6 +101,22 @@ export type Database = {
           p_company_id?: string
         }
         Returns: string
+      }
+      verify_user_login: {
+        Args: {
+          p_email: string
+          p_password: string
+        }
+        Returns: {
+          id: string
+          name: string
+          email: string
+          role: string
+          company_id: string
+          created_at: string
+          last_access: string
+          profile_picture: string
+        }[]
       }
     }
     Enums: {

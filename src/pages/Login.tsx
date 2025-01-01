@@ -36,30 +36,26 @@ const Login = () => {
     }
 
     try {
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      const { data, error } = await supabase.rpc('verify_user_login', {
+        p_email: email,
+        p_password: password
       });
 
-      if (signInError) throw signInError;
-
-      if (!user) {
-        throw new Error("Usuário não encontrado");
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error("Credenciais inválidas");
       }
 
-      // Buscar dados do usuário incluindo role
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (userError) throw userError;
+      const user = data[0];
+      
+      // Armazenar dados do usuário na sessão
+      sessionStorage.setItem('user', JSON.stringify(user));
 
       toast.success("Login realizado com sucesso!");
       
       // Redirecionar baseado no role
-      switch (userData.role) {
+      switch (user.role) {
         case "SUPER_ADMIN":
           navigate("/super-admin", { replace: true });
           break;
