@@ -15,7 +15,14 @@ import { useToast } from "@/components/ui/use-toast"
 interface Company {
   id: string
   name: string
+  document: string
+  usersLimit: number
+  currentUsers: number
+  roomsLimit: number
+  currentRooms: number
   status: "Ativa" | "Inativa"
+  createdAt: string
+  publicFolderPath: string
 }
 
 interface CreateCompanyDialogProps {
@@ -30,13 +37,24 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
     event.preventDefault()
     const formData = new FormData(event.currentTarget)
     const newCompany = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substr(2, 9),
       name: formData.get("name") as string,
+      document: formData.get("document") as string,
+      usersLimit: Number(formData.get("usersLimit")) || 5, // Default to 5 if not specified
+      currentUsers: 0,
+      roomsLimit: Number(formData.get("roomsLimit")) || 5, // Default to 5 if not specified
+      currentRooms: 0,
       status: "Ativa" as const,
+      createdAt: new Date().toLocaleDateString(),
+      publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
     }
     
     onCompanyCreated(newCompany)
     setOpen(false)
+    toast({
+      title: "Empresa criada",
+      description: "A empresa foi criada com sucesso.",
+    })
   }
 
   return (
@@ -58,6 +76,39 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
               id="name"
               name="name"
               placeholder="Digite o nome da empresa"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="document">Documento (CPF/CNPJ)</Label>
+            <Input
+              id="document"
+              name="document"
+              placeholder="Digite o CPF ou CNPJ"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="usersLimit">Limite de Usuários</Label>
+            <Input
+              id="usersLimit"
+              name="usersLimit"
+              type="number"
+              min="1"
+              placeholder="5"
+              defaultValue="5"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="roomsLimit">Limite de Salas</Label>
+            <Input
+              id="roomsLimit"
+              name="roomsLimit"
+              type="number"
+              min="1"
+              placeholder="5"
+              defaultValue="5"
               required
             />
           </div>
