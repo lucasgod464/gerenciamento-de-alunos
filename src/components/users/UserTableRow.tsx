@@ -22,18 +22,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Category } from "@/types/category";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableRowProps {
   user: User;
   onEdit: (user: User) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, checked: boolean) => void;
-}
-
-interface Room {
-  id: string;
-  name: string;
-  status: boolean;
 }
 
 interface Tag {
@@ -50,30 +45,54 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
   const { toast } = useToast();
 
   useEffect(() => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const userRooms = allRooms
-      .filter((room: Room) => user.authorizedRooms?.includes(room.id))
-      .map((room: Room) => room.name);
-    
-    setAuthorizedRoomNames(userRooms);
+    const fetchRoomsAndTags = async () => {
+      try {
+        // Fetch authorized rooms
+        const { data: rooms } = await supabase
+          .from('rooms')
+          .select('name')
+          .in('id', user.authorizedRooms || []);
 
-    // Buscar o nome da categoria
-    const categories: Category[] = JSON.parse(localStorage.getItem("categories") || "[]");
-    const category = categories.find(cat => cat.id === user.responsibleCategory);
-    setCategoryName(category?.name || "Categoria não encontrada");
+        if (rooms) {
+          setAuthorizedRoomNames(rooms.map(room => room.name));
+        }
 
-    if (user.companyId) {
-      const storageKey = `company_${user.companyId}_tags`;
-      const savedTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      const userTagDetails = savedTags
-        .filter((tag: Tag) => user.tags?.includes(tag.id))
-        .map((tag: Tag) => ({
-          id: tag.id,
-          name: tag.name,
-          color: tag.color,
-        }));
-      setUserTags(userTagDetails);
-    }
+        // Fetch category name
+        if (user.responsibleCategory) {
+          const { data: category } = await supabase
+            .from('categories')
+            .select('name')
+            .eq('id', user.responsibleCategory)
+            .single();
+
+          if (category) {
+            setCategoryName(category.name);
+          }
+        }
+
+        // Fetch user tags
+        if (user.company_id && user.tags?.length > 0) {
+          const { data: tags } = await supabase
+            .from('user_tags')
+            .select(`
+              tag:tag_id (
+                id,
+                name,
+                color
+              )
+            `)
+            .eq('user_id', user.id);
+
+          if (tags) {
+            setUserTags(tags.map(t => t.tag));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user details:', error);
+      }
+    };
+
+    fetchRoomsAndTags();
   }, [user]);
 
   const handleDelete = () => {
@@ -143,8 +162,8 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
             onCheckedChange={handleStatusChange}
           />
         </TableCell>
-        <TableCell className="text-sm text-muted-foreground">{user.createdAt}</TableCell>
-        <TableCell className="text-sm text-muted-foreground">{user.lastAccess}</TableCell>
+        <TableCell className="text-sm text-muted-foreground">{user.created_at}</TableCell>
+        <TableCell className="text-sm text-muted-foreground">{user.last_access}</TableCell>
         <TableCell>
           <div className="flex justify-center space-x-2">
             <Button

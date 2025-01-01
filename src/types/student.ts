@@ -6,4 +6,8 @@ export interface Student {
   status: 'active' | 'inactive';
   createdAt: string;
   companyId: string | null;
+  email?: string;
+  document?: string;
+  address?: string;
+  customFields?: Record<string, string>;
 }
