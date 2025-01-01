@@ -12,16 +12,11 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Room } from "@/types/room";
 
 interface RoomFormFieldsProps {
-  defaultValues?: {
-    name?: string;
-    schedule?: string;
-    location?: string;
-    category?: string;
-    studyRoom?: string;
-  };
-  onFieldChange: (field: string, value: string) => void;
+  room: Partial<Room>;
+  onChange: (field: keyof Room, value: any) => void;
 }
 
 interface Category {
@@ -30,7 +25,7 @@ interface Category {
   color: string;
 }
 
-export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsProps) {
+export function RoomFormFields({ room, onChange }: RoomFormFieldsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
@@ -72,8 +67,8 @@ export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsP
         <Input
           id="name"
           placeholder="Digite o nome da sala"
-          value={defaultValues?.name || ""}
-          onChange={(e) => onFieldChange("name", e.target.value)}
+          value={room.name || ""}
+          onChange={(e) => onChange("name", e.target.value)}
         />
       </div>
 
@@ -82,8 +77,8 @@ export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsP
         <Input
           id="schedule"
           placeholder="Digite o horário"
-          value={defaultValues?.schedule || ""}
-          onChange={(e) => onFieldChange("schedule", e.target.value)}
+          value={room.schedule || ""}
+          onChange={(e) => onChange("schedule", e.target.value)}
         />
       </div>
 
@@ -92,16 +87,16 @@ export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsP
         <Input
           id="location"
           placeholder="Digite a localização"
-          value={defaultValues?.location || ""}
-          onChange={(e) => onFieldChange("location", e.target.value)}
+          value={room.location || ""}
+          onChange={(e) => onChange("location", e.target.value)}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="category">Categoria</Label>
         <Select
-          value={defaultValues?.category || ""}
-          onValueChange={(value) => onFieldChange("category", value)}
+          value={room.category || ""}
+          onValueChange={(value) => onChange("category", value)}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecione uma categoria" />
@@ -139,8 +134,8 @@ export function RoomFormFields({ defaultValues, onFieldChange }: RoomFormFieldsP
         <Textarea
           id="studyRoom"
           placeholder="Digite informações sobre a sala de estudo"
-          value={defaultValues?.studyRoom || ""}
-          onChange={(e) => onFieldChange("studyRoom", e.target.value)}
+          value={room.studyRoom || ""}
+          onChange={(e) => onChange("studyRoom", e.target.value)}
         />
       </div>
     </div>
