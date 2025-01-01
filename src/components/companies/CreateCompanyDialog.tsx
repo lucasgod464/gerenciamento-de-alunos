@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/hooks/useAuth"
 
 interface Company {
   id: string
@@ -33,9 +34,20 @@ interface CreateCompanyDialogProps {
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
   const { toast } = useToast()
+  const { isAuthenticated } = useAuth()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (!isAuthenticated) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar autenticado para criar uma empresa.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const formData = new FormData(event.currentTarget)
     const newCompany = {
       name: formData.get("name") as string,
@@ -49,12 +61,21 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
       storageUsed: 0,
     }
     
-    onCompanyCreated(newCompany)
-    setOpen(false)
-    toast({
-      title: "Empresa criada",
-      description: "A empresa foi criada com sucesso.",
-    })
+    try {
+      onCompanyCreated(newCompany)
+      setOpen(false)
+      toast({
+        title: "Empresa criada",
+        description: "A empresa foi criada com sucesso.",
+      })
+    } catch (error) {
+      console.error("Error creating company:", error)
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (

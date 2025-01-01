@@ -19,15 +19,25 @@ export function useCompanies() {
       }
 
       return data.map((company: any) => ({
-        ...company,
+        id: company.id,
+        name: company.name,
+        document: company.document,
+        usersLimit: company.users_limit,
+        currentUsers: company.current_users,
+        roomsLimit: company.rooms_limit,
+        currentRooms: company.current_rooms,
+        status: company.status,
         createdAt: new Date(company.created_at).toLocaleDateString(),
-        status: company.status === "Ativa" ? "Ativa" : "Inativa",
+        publicFolderPath: company.public_folder_path,
+        storageUsed: company.storage_used,
       }))
     },
   })
 
   const createMutation = useMutation({
     mutationFn: async (newCompany: Omit<Company, "id" | "createdAt">) => {
+      console.log("Creating company with data:", newCompany)
+      
       const { data, error } = await supabase
         .from("companies")
         .insert([
@@ -35,19 +45,22 @@ export function useCompanies() {
             name: newCompany.name,
             document: newCompany.document,
             users_limit: newCompany.usersLimit,
+            current_users: 0,
             rooms_limit: newCompany.roomsLimit,
+            current_rooms: 0,
+            status: "Ativa",
             public_folder_path: newCompany.publicFolderPath,
+            storage_used: 0,
           },
         ])
         .select()
-        .single()
 
       if (error) {
         console.error("Error creating company:", error)
         throw error
       }
 
-      return data
+      return data[0]
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
