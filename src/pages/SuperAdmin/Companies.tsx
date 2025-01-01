@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout"
 import { CompanyList } from "@/components/companies/CompanyList"
 import { CompanyStats } from "@/components/companies/CompanyStats"
 import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { Company } from "@/components/companies/CompanyList"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
@@ -24,20 +24,24 @@ const Companies = () => {
       
       if (error) {
         console.error("Error fetching companies:", error)
+        toast({
+          title: "Erro ao carregar empresas",
+          description: "Ocorreu um erro ao carregar a lista de empresas.",
+          variant: "destructive"
+        })
         throw error
       }
 
       console.log("Companies fetched:", data)
       
-      // Map database records to Company type with explicit status typing
       return (data || []).map(company => ({
         id: company.id,
         name: company.name,
-        document: "", // Default empty string for now
-        usersLimit: 10, // Default value
-        currentUsers: 0, // Default value
-        roomsLimit: 10, // Default value
-        currentRooms: 0, // Default value
+        document: company.document || "",
+        usersLimit: company.users_limit || 10,
+        currentUsers: 0,
+        roomsLimit: company.rooms_limit || 10,
+        currentRooms: 0,
         status: company.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(company.created_at).toLocaleDateString(),
         publicFolderPath: `/companies/${company.id}`,
@@ -55,23 +59,36 @@ const Companies = () => {
         .from("companies")
         .insert([{
           name: newCompany.name,
-          status: newCompany.status === "Ativa" ? "active" : "inactive"
+          status: newCompany.status === "Ativa" ? "active" : "inactive",
+          document: newCompany.document,
+          users_limit: newCompany.usersLimit,
+          rooms_limit: newCompany.roomsLimit
         }])
         .select()
         .single()
 
       if (error) {
         console.error("Error creating company:", error)
+        toast({
+          title: "Erro ao criar empresa",
+          description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
+          variant: "destructive"
+        })
         throw error
       }
+
+      toast({
+        title: "Empresa criada",
+        description: "A empresa foi criada com sucesso.",
+      })
 
       return {
         id: data.id,
         name: data.name,
-        document: "",
-        usersLimit: 10,
+        document: data.document || "",
+        usersLimit: data.users_limit || 10,
         currentUsers: 0,
-        roomsLimit: 10,
+        roomsLimit: data.rooms_limit || 10,
         currentRooms: 0,
         status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(data.created_at).toLocaleDateString(),
@@ -79,20 +96,8 @@ const Companies = () => {
         storageUsed: data.storage_used || 0
       }
     },
-    onError: (error) => {
-      console.error("Error in create mutation:", error)
-      toast({
-        title: "Erro ao criar empresa",
-        description: "Ocorreu um erro ao criar a empresa. Tente novamente.",
-        variant: "destructive"
-      })
-    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["companies"] })
-      toast({
-        title: "Empresa criada",
-        description: "A empresa foi criada com sucesso.",
-      })
     }
   })
 
@@ -103,21 +108,35 @@ const Companies = () => {
         .from("companies")
         .update({
           name: company.name,
-          status: company.status === "Ativa" ? "active" : "inactive"
+          status: company.status === "Ativa" ? "active" : "inactive",
+          users_limit: company.usersLimit,
+          rooms_limit: company.roomsLimit
         })
         .eq("id", company.id)
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {
+        toast({
+          title: "Erro ao atualizar empresa",
+          description: "Ocorreu um erro ao atualizar a empresa. Tente novamente.",
+          variant: "destructive"
+        })
+        throw error
+      }
+
+      toast({
+        title: "Empresa atualizada",
+        description: "A empresa foi atualizada com sucesso.",
+      })
       
       return {
         id: data.id,
         name: data.name,
         document: company.document,
-        usersLimit: company.usersLimit,
+        usersLimit: data.users_limit,
         currentUsers: company.currentUsers,
-        roomsLimit: company.roomsLimit,
+        roomsLimit: data.rooms_limit,
         currentRooms: company.currentRooms,
         status: data.status === "active" ? "Ativa" as const : "Inativa" as const,
         createdAt: new Date(data.created_at).toLocaleDateString(),
@@ -138,19 +157,31 @@ const Companies = () => {
         .delete()
         .eq("id", id)
 
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companies"] })
+      if (error) {
+        toast({
+          title: "Erro ao excluir empresa",
+          description: "Ocorreu um erro ao excluir a empresa. Tente novamente.",
+          variant: "destructive"
+        })
+        throw error
+      }
+
       toast({
         title: "Empresa excluída",
         description: "A empresa foi excluída com sucesso.",
       })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companies"] })
     }
   })
 
   if (isLoading) {
-    return <div>Carregando...</div>
+    return (
+      <DashboardLayout role="super-admin">
+        <div className="p-6">Carregando...</div>
+      </DashboardLayout>
+    )
   }
 
   // Calculate statistics
