@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -38,17 +39,27 @@ export const CategoryColumn = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const getAuthorizedUserNames = (room: Room) => {
+  const getAuthorizedUserNames = async (room: Room) => {
     if (!currentUser?.companyId) return "Nenhum usuário vinculado";
 
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const authorizedUsers = allUsers.filter((user: any) => 
-      user.companyId === currentUser.companyId && 
-      user.authorizedRooms?.includes(room.id)
-    );
+    try {
+      const { data: authorizedUsers, error } = await supabase
+        .from('users')
+        .select('name')
+        .eq('company_id', currentUser.companyId)
+        .in('id', room.authorizedUsers || []);
 
-    if (authorizedUsers.length === 0) return "Nenhum usuário vinculado";
-    return authorizedUsers.map(user => user.name).join(", ");
+      if (error) throw error;
+
+      if (!authorizedUsers || authorizedUsers.length === 0) {
+        return "Nenhum usuário vinculado";
+      }
+
+      return authorizedUsers.map(user => user.name).join(", ");
+    } catch (error) {
+      console.error('Error fetching authorized users:', error);
+      return "Erro ao carregar usuários";
+    }
   };
 
   const getTotalStudents = () => {
@@ -78,13 +89,22 @@ export const CategoryColumn = ({
     });
   };
 
-  const handleDeleteConfirm = () => {
-    onDelete();
-    setIsDeleteDialogOpen(false);
-    toast({
-      title: "Categoria excluída",
-      description: "A categoria foi excluída com sucesso.",
-    });
+  const handleDeleteConfirm = async () => {
+    try {
+      await onDelete();
+      setIsDeleteDialogOpen(false);
+      toast({
+        title: "Categoria excluída",
+        description: "A categoria foi excluída com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Erro ao excluir categoria",
+        description: "Ocorreu um erro ao excluir a categoria.",
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleRoomSelection = (roomId: string) => {

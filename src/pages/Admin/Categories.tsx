@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { CategoriesKanban } from "@/components/categories/CategoriesKanban";
 import { CategoryDialog } from "@/components/categories/CategoryDialog";
 import { Category } from "@/types/category";
+import { supabase } from "@/integrations/supabase/client";
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -19,15 +20,29 @@ const Categories = () => {
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
-    
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const companyCategories = allCategories.filter(
-      (cat: Category) => cat.companyId === currentUser.companyId
-    );
-    setCategories(companyCategories);
+    fetchCategories();
   }, [currentUser]);
 
-  const handleCreateOrUpdateCategory = (categoryData: Partial<Category>) => {
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('company_id', currentUser?.companyId);
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast({
+        title: "Erro ao carregar categorias",
+        description: "Ocorreu um erro ao carregar as categorias.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateOrUpdateCategory = async (categoryData: Partial<Category>) => {
     if (!currentUser?.companyId) {
       toast({
         title: "Erro",
@@ -37,44 +52,51 @@ const Categories = () => {
       return;
     }
 
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const otherCategories = allCategories.filter(
-      (cat: Category) => cat.companyId !== currentUser.companyId
-    );
+    try {
+      if (editingCategory) {
+        const { error } = await supabase
+          .from('categories')
+          .update({
+            name: categoryData.name,
+            color: categoryData.color,
+          })
+          .eq('id', editingCategory.id);
 
-    if (editingCategory) {
-      const updatedCategories = categories.map(cat => 
-        cat.id === editingCategory.id 
-          ? { ...cat, ...categoryData }
-          : cat
-      );
-      setCategories(updatedCategories);
-      localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
+        if (error) throw error;
+
+        toast({
+          title: "Categoria atualizada",
+          description: "A categoria foi atualizada com sucesso.",
+        });
+      } else {
+        const { error } = await supabase
+          .from('categories')
+          .insert([{
+            name: categoryData.name,
+            color: categoryData.color,
+            company_id: currentUser.companyId,
+            status: true,
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "Categoria criada",
+          description: "A categoria foi criada com sucesso.",
+        });
+      }
+
+      fetchCategories();
+      setIsDialogOpen(false);
+      setEditingCategory(null);
+    } catch (error) {
+      console.error('Error saving category:', error);
       toast({
-        title: "Categoria atualizada",
-        description: "A categoria foi atualizada com sucesso.",
-      });
-    } else {
-      const newCategory: Category = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: categoryData.name || "",
-        status: true,
-        companyId: currentUser.companyId,
-        color: categoryData.color,
-      };
-      
-      const updatedCategories = [...categories, newCategory];
-      localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
-      setCategories(updatedCategories);
-      
-      toast({
-        title: "Categoria criada",
-        description: "A categoria foi criada com sucesso.",
+        title: "Erro ao salvar categoria",
+        description: "Ocorreu um erro ao salvar a categoria.",
+        variant: "destructive",
       });
     }
-
-    setIsDialogOpen(false);
-    setEditingCategory(null);
   };
 
   const handleEditCategory = (category: Category) => {
@@ -82,20 +104,28 @@ const Categories = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteCategory = (categoryId: string) => {
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const otherCategories = allCategories.filter(
-      (cat: Category) => cat.companyId !== currentUser?.companyId
-    );
-    
-    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
-    localStorage.setItem("categories", JSON.stringify([...otherCategories, ...updatedCategories]));
-    setCategories(updatedCategories);
-    
-    toast({
-      title: "Categoria excluída",
-      description: "A categoria foi excluída com sucesso.",
-    });
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', categoryId);
+
+      if (error) throw error;
+
+      fetchCategories();
+      toast({
+        title: "Categoria excluída",
+        description: "A categoria foi excluída com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Erro ao excluir categoria",
+        description: "Ocorreu um erro ao excluir a categoria.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredCategories = categories.filter(cat =>
