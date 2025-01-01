@@ -2,14 +2,17 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { EmailList } from "@/components/emails/EmailList";
 import { EmailStats } from "@/components/emails/EmailStats";
 import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog";
+import { EditEmailDialog } from "@/components/emails/EditEmailDialog";
 import { useToast } from "@/components/ui/use-toast";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email";
 
 const Emails = () => {
   const [emails, setEmails] = useState<Email[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchEmails = async () => {
@@ -47,7 +50,12 @@ const Emails = () => {
     fetchEmails();
   }, []);
 
-  const handleUpdateEmail = async (updatedEmail: Email) => {
+  const handleUpdateEmail = (email: Email) => {
+    setSelectedEmail(email);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEmailUpdated = async (updatedEmail: Email) => {
     try {
       const { error } = await supabase
         .from("emails")
@@ -127,6 +135,13 @@ const Emails = () => {
           data={emails}
           onUpdateEmail={handleUpdateEmail}
           onDeleteEmail={handleDeleteEmail}
+        />
+
+        <EditEmailDialog
+          email={selectedEmail}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onEmailUpdated={handleEmailUpdated}
         />
       </div>
     </DashboardLayout>

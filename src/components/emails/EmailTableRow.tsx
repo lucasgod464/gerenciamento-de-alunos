@@ -49,6 +49,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           </div>
         </div>
       </TableCell>
+      <TableCell>{email.email}</TableCell>
       <TableCell>
         <span
           className={cn(
@@ -61,6 +62,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           {email.accessLevel}
         </span>
       </TableCell>
+      <TableCell>{email.company}</TableCell>
       <TableCell>
         <span className="inline-flex items-center">
           <span 
@@ -69,7 +71,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
               isCompanyActive ? "bg-green-400" : "bg-[#ea384c]"
             )}
           ></span>
-          {email.company}
+          {isCompanyActive ? "Ativa" : "Inativa"}
         </span>
       </TableCell>
       <TableCell>{email.createdAt}</TableCell>
