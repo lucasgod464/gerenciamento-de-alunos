@@ -37,37 +37,35 @@ export function useAuth() {
 
       console.log("Iniciando processo de login para:", email)
 
-      // Buscar usuário
+      // Buscar usuário com email exato e status ativo
       const { data: users, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email.toLowerCase())
         .eq('status', 'active')
+        .single()
 
       console.log("Resultado da busca:", { users, userError })
 
       if (userError) {
         console.error("Erro ao buscar usuário:", userError)
-        throw new Error("Erro ao buscar usuário no banco de dados")
+        throw new Error("Email ou senha inválidos")
       }
 
-      if (!users || users.length === 0) {
+      if (!users) {
         console.error("Nenhum usuário encontrado com o email:", email)
         throw new Error("Email ou senha inválidos")
       }
 
-      const user = users[0]
-      console.log("Usuário encontrado:", { id: user.id, email: user.email, role: user.role })
-
       // Verificar senha
       const encodedPassword = btoa(password)
-      const storedPassword = user.password.startsWith('b64_') 
-        ? user.password.slice(4) 
-        : user.password
+      const storedPassword = users.password.startsWith('b64_') 
+        ? users.password.slice(4) 
+        : users.password
 
       console.log("Verificando senha:", {
         senhaCorreta: encodedPassword === storedPassword,
-        formatoAntigo: !user.password.startsWith('b64_')
+        formatoAntigo: !users.password.startsWith('b64_')
       })
 
       if (encodedPassword !== storedPassword) {
@@ -80,14 +78,14 @@ export function useAuth() {
         last_access: new Date().toISOString(),
       }
 
-      if (!user.password.startsWith('b64_')) {
+      if (!users.password.startsWith('b64_')) {
         updates.password = `b64_${storedPassword}`
       }
 
       const { error: updateError } = await supabase
         .from('users')
         .update(updates)
-        .eq('id', user.id)
+        .eq('id', users.id)
 
       if (updateError) {
         console.error("Erro ao atualizar último acesso:", updateError)
@@ -96,19 +94,19 @@ export function useAuth() {
 
       const response: AuthResponse = {
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role as AccessLevel,
-          companyId: user.company_id,
-          createdAt: user.created_at,
-          lastAccess: user.last_access,
-          profilePicture: user.profile_picture,
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          role: users.role as AccessLevel,
+          companyId: users.company_id,
+          createdAt: users.created_at,
+          lastAccess: users.last_access,
+          profilePicture: users.profile_picture,
         },
-        token: `${user.role.toLowerCase()}-token`,
+        token: `${users.role.toLowerCase()}-token`,
       }
 
-      console.log("Login bem sucedido:", { userId: user.id, role: user.role })
+      console.log("Login bem sucedido:", { userId: users.id, role: users.role })
       localStorage.setItem("session", JSON.stringify(response))
       return response
     },
