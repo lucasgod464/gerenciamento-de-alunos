@@ -25,37 +25,69 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
 
   useEffect(() => {
     if (user) {
-      setSelectedRooms(user.authorizedRooms || []);
-      setSelectedTags(user.tags || []);
+      const fetchUserDetails = async () => {
+        try {
+          // Fetch authorized rooms
+          const { data: roomData } = await supabase
+            .from('user_authorized_rooms')
+            .select('room_id')
+            .eq('user_id', user.id);
+          
+          if (roomData) {
+            setSelectedRooms(roomData.map(r => r.room_id));
+          }
+
+          // Fetch user tags
+          const { data: tagData } = await supabase
+            .from('user_tags')
+            .select(`
+              tags (
+                id,
+                name,
+                color
+              )
+            `)
+            .eq('user_id', user.id);
+
+          if (tagData) {
+            setSelectedTags(tagData.map(t => t.tags).filter(Boolean));
+          }
+        } catch (error) {
+          console.error('Error fetching user details:', error);
+          toast({
+            title: "Erro ao carregar dados",
+            description: "Não foi possível carregar todos os dados do usuário.",
+            variant: "destructive",
+          });
+        }
+      };
+
+      fetchUserDetails();
     }
-  }, [user]);
-
-  const handleAuthorizedRoomsChange = (roomIds: string[]) => {
-    setSelectedRooms(roomIds);
-  };
-
-  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
-    setSelectedTags(tags);
-  };
+  }, [user, toast]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user) return;
 
     const formData = new FormData(event.currentTarget);
-    const newPassword = formData.get("password") as string;
 
     try {
       const updateData: any = {
-        name: formData.get("name") as string,
-        email: formData.get("email") as string,
+        name: formData.get("name"),
+        email: formData.get("email"),
+        location: formData.get("location"),
+        specialization: formData.get("specialization"),
         status: formData.get("status") === "active",
+        responsible_category: formData.get("responsibleCategory"),
       };
 
+      const newPassword = formData.get("password") as string;
       if (newPassword) {
         updateData.password = await hashPassword(newPassword);
       }
 
+      // Update user basic info
       const { data: updatedUser, error: userError } = await supabase
         .from('users')
         .update(updateData)
@@ -65,13 +97,14 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
 
       if (userError) throw userError;
 
+      // Update authorized rooms
       await supabase
         .from('user_authorized_rooms')
         .delete()
         .eq('user_id', user.id);
 
       if (selectedRooms.length > 0) {
-        const { error: roomsError } = await supabase
+        await supabase
           .from('user_authorized_rooms')
           .insert(
             selectedRooms.map(roomId => ({
@@ -79,17 +112,16 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
               room_id: roomId
             }))
           );
-
-        if (roomsError) throw roomsError;
       }
 
+      // Update user tags
       await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', user.id);
 
       if (selectedTags.length > 0) {
-        const { error: tagsError } = await supabase
+        await supabase
           .from('user_tags')
           .insert(
             selectedTags.map(tag => ({
@@ -97,8 +129,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
               tag_id: tag.id
             }))
           );
-
-        if (tagsError) throw tagsError;
       }
 
       onSubmit({
@@ -140,12 +170,12 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
               location: user.location,
               specialization: user.specialization,
               status: user.status,
-              authorizedRooms: user.authorizedRooms,
-              tags: user.tags,
+              authorizedRooms: selectedRooms,
+              tags: selectedTags,
               responsibleCategory: user.responsibleCategory
             }}
-            onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
-            onTagsChange={handleTagsChange}
+            onAuthorizedRoomsChange={setSelectedRooms}
+            onTagsChange={setSelectedTags}
             isEditing={true}
           />
           <div className="flex justify-end space-x-2">
