@@ -47,7 +47,7 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("User login response:", { userData, userError });
 
@@ -75,7 +75,7 @@ export function useAuth() {
         .from('emails')
         .select('*, companies:company_id(*)')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("Email login response:", { emailData, emailError });
 
