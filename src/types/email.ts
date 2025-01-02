@@ -1,11 +1,9 @@
-export type DatabaseAccessLevel = "Admin" | "Usuário Comum";
-
 export interface Email {
   id: string;
   name: string;
   email: string;
   password?: string;
-  accessLevel: DatabaseAccessLevel;
+  accessLevel: "Admin" | "Usuário Comum" | "Inativo";
   company: string;
   companyId: string;
   companyStatus: "Ativa" | "Inativa";
@@ -17,7 +15,7 @@ export interface SupabaseEmail {
   name: string;
   email: string;
   password: string;
-  access_level: DatabaseAccessLevel;
+  access_level: "Admin" | "Usuário Comum" | "Inativo";
   company_id: string;
   created_at: string;
   updated_at: string;

@@ -9,7 +9,7 @@ export const mapDatabaseAccessLevelToAccessLevel = (dbLevel: DatabaseAccessLevel
     case 'Usuário Comum':
       return 'USER';
     case 'Inativo':
-      return 'USER'; // Inactive users are treated as regular users in the system
+      return 'USER'; // or handle differently if needed
     default:
       return 'USER';
   }
@@ -44,26 +44,3 @@ export interface User {
   tags?: { id: string; name: string; color: string; }[];
   responsibleCategory?: string;
 }
-
-export interface SupabaseUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  company_id: string;
-  created_at: string;
-  last_access: string;
-  status: 'active';
-  access_level: DatabaseAccessLevel;
-  location: string;
-  specialization: string;
-  password: string;
-}
-
-export const mapSupabaseUserToUser = (supabaseUser: SupabaseUser): User => {
-  return {
-    ...supabaseUser,
-    role: mapDatabaseAccessLevelToAccessLevel(supabaseUser.access_level),
-    status: supabaseUser.status,
-  };
-};

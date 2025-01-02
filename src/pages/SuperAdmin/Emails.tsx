@@ -22,7 +22,6 @@ const Emails = () => {
         .select(`
           *,
           companies (
-            id,
             name,
             status
           )
@@ -134,7 +133,7 @@ const Emails = () => {
 
         <EmailList
           data={emails}
-          onUpdateEmail={setSelectedEmail}
+          onUpdateEmail={handleUpdateEmail}
           onDeleteEmail={handleDeleteEmail}
         />
 
