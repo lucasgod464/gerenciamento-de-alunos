@@ -16,15 +16,15 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
 
-  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
-    setSelectedTags(tags);
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +44,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           password: hashedPassword,
           role: 'USER',
           company_id: currentUser?.companyId,
-          status: formData.get("status") === "active"
+          status: true // Default to active
         }])
         .select()
         .single();
@@ -70,9 +70,9 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
-            selectedTags.map(tag => ({
+            selectedTags.map(tagId => ({
               user_id: newUser.id,
-              tag_id: tag.id
+              tag_id: tagId
             }))
           );
 
@@ -83,7 +83,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         ...newUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
-        status: formData.get("status") === "active" ? "active" : "inactive",
+        status: 'active',
       });
       
       toast({

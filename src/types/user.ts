@@ -10,7 +10,7 @@ export interface User {
   created_at: string | null;
   last_access: string | null;
   authorizedRooms: string[];
-  tags: { id: string; name: string; color: string; }[];
+  tags: string[];
   responsibleCategory?: string;
   location?: string;
   specialization?: string;
@@ -18,5 +18,4 @@ export interface User {
   phone?: string;
   birthDate?: string;
   address?: string;
-  user_tags?: any[];
 }

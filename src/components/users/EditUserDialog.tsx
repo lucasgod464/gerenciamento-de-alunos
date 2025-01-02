@@ -20,7 +20,7 @@ interface EditUserDialogProps {
 
 export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,8 +34,8 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     setSelectedRooms(roomIds);
   };
 
-  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
-    setSelectedTags(tags);
+  const handleTagsChange = (tagIds: string[]) => {
+    setSelectedTags(tagIds);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -92,9 +92,9 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
-            selectedTags.map(tag => ({
+            selectedTags.map(tagId => ({
               user_id: user.id,
-              tag_id: tag.id
+              tag_id: tagId
             }))
           );
 
