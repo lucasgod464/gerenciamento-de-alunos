@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AccessLevel } from "@/types/user";
-import { AuthResponse } from "@/types/auth";
+import { User } from "@/types/user";
+import { AuthResponse, AccessLevel } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types/permissions";
+import { mapDatabaseAccessLevelToAccessLevel } from "@/types/user";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -39,8 +40,6 @@ export function useAuth() {
   });
 
   const login = async (email: string, password: string) => {
-    console.log("Attempting login for:", email);
-
     try {
       const { data: userData, error: userError } = await supabase
         .from('users')
@@ -48,20 +47,19 @@ export function useAuth() {
         .eq('email', email)
         .single();
 
-      console.log("User login response:", { userData, userError });
-
       if (userData && userData.password === password) {
+        const mappedRole = mapDatabaseAccessLevelToAccessLevel(userData.access_level);
         const response: AuthResponse = {
           user: {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.access_level,
+            role: mappedRole,
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
           },
-          token: `${userData.access_level.toLowerCase()}-token`,
+          token: `${mappedRole.toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
@@ -75,20 +73,19 @@ export function useAuth() {
         .eq('email', email)
         .single();
 
-      console.log("Email login response:", { emailData, emailError });
-
       if (emailData && emailData.password === password) {
+        const mappedRole = mapDatabaseAccessLevelToAccessLevel(emailData.access_level);
         const response: AuthResponse = {
           user: {
             id: emailData.id,
             name: emailData.name || '',
             email: emailData.email,
-            role: emailData.access_level,
+            role: mappedRole,
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
           },
-          token: `${emailData.access_level.toLowerCase()}-token`,
+          token: `${mappedRole.toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
@@ -121,7 +118,7 @@ export function useAuth() {
 
   const isCompanyMember = (companyId: string) => {
     if (!user) return false;
-    if (user.role === "SUPER_ADMIN") return true;
+    if (user.role === 'SUPER_ADMIN') return true;
     return user.companyId === companyId;
   };
 

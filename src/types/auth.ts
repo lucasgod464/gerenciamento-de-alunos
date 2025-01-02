@@ -1,4 +1,4 @@
-export type AccessLevel = 'Admin' | 'Usuário Comum' | 'Inativo';
+export type AccessLevel = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
 
 export interface User {
   id: string;
@@ -35,7 +35,7 @@ export interface RolePermissions {
 }
 
 export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
-  'Admin': {
+  'SUPER_ADMIN': {
     canCreateCompany: true,
     canCreateAdmin: true,
     canCreateUser: true,
@@ -46,18 +46,18 @@ export const ROLE_PERMISSIONS: Record<AccessLevel, RolePermissions> = {
     canManageTags: true,
     canManageSpecializations: true,
   },
-  'Usuário Comum': {
+  'ADMIN': {
     canCreateCompany: false,
     canCreateAdmin: false,
-    canCreateUser: false,
+    canCreateUser: true,
     canViewAllCompanies: false,
-    canManageUsers: false,
-    canManageRooms: false,
-    canManageStudies: false,
-    canManageTags: false,
-    canManageSpecializations: false,
+    canManageUsers: true,
+    canManageRooms: true,
+    canManageStudies: true,
+    canManageTags: true,
+    canManageSpecializations: true,
   },
-  'Inativo': {
+  'USER': {
     canCreateCompany: false,
     canCreateAdmin: false,
     canCreateUser: false,
