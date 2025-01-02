@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Room {
   id: string;
@@ -12,20 +15,43 @@ interface Room {
 }
 
 interface RoomSelectionFieldsProps {
-  rooms: Room[];
   selectedRooms: string[];
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
   onRoomToggle: (roomId: string) => void;
 }
 
 export function RoomSelectionFields({
-  rooms,
   selectedRooms,
-  searchQuery,
-  onSearchChange,
   onRoomToggle,
 }: RoomSelectionFieldsProps) {
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!currentUser?.companyId) return;
+
+      try {
+        const { data: roomsData, error } = await supabase
+          .from('rooms')
+          .select('id, name, status')
+          .eq('company_id', currentUser.companyId)
+          .eq('status', true);
+
+        if (error) {
+          console.error('Error fetching rooms:', error);
+          return;
+        }
+
+        setRooms(roomsData || []);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      }
+    };
+
+    fetchRooms();
+  }, [currentUser]);
+
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -40,7 +66,7 @@ export function RoomSelectionFields({
             <Input
               placeholder="Buscar salas..."
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-8 bg-background"
             />
           </div>
