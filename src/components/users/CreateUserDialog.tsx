@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { UserFormFields } from "./UserFormFields";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { User } from "@/types/user";
+import { User, AccessLevel } from "@/types/user";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
