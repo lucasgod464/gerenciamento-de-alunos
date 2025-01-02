@@ -26,6 +26,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     if (user) {
       const fetchUserDetails = async () => {
         try {
+          // Fetch authorized rooms
           const { data: roomData } = await supabase
             .from('user_authorized_rooms')
             .select('room_id')
@@ -35,6 +36,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             setSelectedRooms(roomData.map(r => r.room_id));
           }
 
+          // Fetch user tags
           const { data: tagData } = await supabase
             .from('user_tags')
             .select(`
@@ -71,35 +73,75 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     const isActive = formData.get("status") === "active";
 
     try {
-      const updateData = {
-        name: formData.get("name") as string,
-        email: formData.get("email") as string,
-        access_level: isActive ? "Usuário Comum" as const : "Inativo" as const,
-      };
-
-      const { data: updatedUser, error } = await supabase
+      // Update user in emails table
+      const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
-        .update(updateData)
+        .update({
+          name: formData.get("name") as string,
+          email: formData.get("email") as string,
+          location: formData.get("location") as string,
+          specialization: formData.get("specialization") as string,
+          access_level: isActive ? "Usuário Comum" : "Inativo",
+        })
         .eq('id', user.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Update user's authorized rooms
+      if (selectedRooms.length > 0) {
+        // First, remove existing room authorizations
+        await supabase
+          .from('user_authorized_rooms')
+          .delete()
+          .eq('user_id', user.id);
+
+        // Then, add new room authorizations
+        const { error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .insert(
+            selectedRooms.map(roomId => ({
+              user_id: user.id,
+              room_id: roomId
+            }))
+          );
+
+        if (roomsError) throw roomsError;
+      }
+
+      // Update user tags
+      if (selectedTags.length > 0) {
+        // Remove existing tags
+        await supabase
+          .from('user_tags')
+          .delete()
+          .eq('user_id', user.id);
+
+        // Add new tags
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(
+            selectedTags.map(tag => ({
+              user_id: user.id,
+              tag_id: tag.id
+            }))
+          );
+
+        if (tagsError) throw tagsError;
+      }
 
       if (updatedUser) {
         const mappedUser: User = {
-          id: updatedUser.id,
+          ...user,
           name: updatedUser.name,
           email: updatedUser.email,
+          location: updatedUser.location,
+          specialization: updatedUser.specialization,
           role: updatedUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
           status: updatedUser.access_level === 'Inativo' ? 'inactive' : 'active',
           authorizedRooms: selectedRooms,
           tags: selectedTags,
-          company_id: user.company_id,
-          created_at: user.created_at,
-          last_access: user.last_access || null,
-          password: '',
-          access_level: updatedUser.access_level,
         };
 
         onSubmit(mappedUser);
@@ -132,7 +174,8 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             defaultValues={{
               name: user.name,
               email: user.email,
-              password: "",
+              location: user.location,
+              specialization: user.specialization,
               status: user.status,
               authorizedRooms: selectedRooms,
               tags: selectedTags,

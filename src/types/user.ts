@@ -14,4 +14,6 @@ export interface User {
   status: UserStatus;
   access_level?: AccessLevel;
   password: string;
+  location?: string;
+  specialization?: string;
 }
