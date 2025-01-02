@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { User } from "@/types/user";
 import { UserFormFields } from "./UserFormFields";
 import { useState, useEffect } from "react";
-import { hashPassword } from "@/utils/passwordUtils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,7 +26,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     if (user) {
       const fetchUserDetails = async () => {
         try {
-          // Fetch authorized rooms
           const { data: roomData } = await supabase
             .from('user_authorized_rooms')
             .select('room_id')
@@ -37,7 +35,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
             setSelectedRooms(roomData.map(r => r.room_id));
           }
 
-          // Fetch user tags
           const { data: tagData } = await supabase
             .from('user_tags')
             .select(`
@@ -73,76 +70,39 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     const formData = new FormData(event.currentTarget);
 
     try {
-      const updateData: any = {
+      const updateData = {
         name: formData.get("name"),
         email: formData.get("email"),
         location: formData.get("location"),
         specialization: formData.get("specialization"),
-        status: formData.get("status") === "active",
-        responsible_category: formData.get("responsibleCategory"),
+        access_level: formData.get("status") === "active" ? "Usuário Comum" : "Inativo",
       };
 
-      const newPassword = formData.get("password") as string;
-      if (newPassword) {
-        updateData.password = await hashPassword(newPassword);
-      }
-
-      // Update user basic info
-      const { data: updatedUser, error: userError } = await supabase
-        .from('users')
+      const { data: updatedUser, error } = await supabase
+        .from('emails')
         .update(updateData)
         .eq('id', user.id)
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (error) throw error;
 
-      // Update authorized rooms
-      await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('user_id', user.id);
+      if (updatedUser) {
+        onSubmit({
+          ...updatedUser,
+          role: updatedUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
+          status: updatedUser.access_level === 'Inativo' ? 'inactive' : 'active',
+          authorizedRooms: selectedRooms,
+          tags: selectedTags,
+          password: '',
+        });
 
-      if (selectedRooms.length > 0) {
-        await supabase
-          .from('user_authorized_rooms')
-          .insert(
-            selectedRooms.map(roomId => ({
-              user_id: user.id,
-              room_id: roomId
-            }))
-          );
+        toast({
+          title: "Usuário atualizado",
+          description: "As informações do usuário foram atualizadas com sucesso.",
+        });
+        onClose();
       }
-
-      // Update user tags
-      await supabase
-        .from('user_tags')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (selectedTags.length > 0) {
-        await supabase
-          .from('user_tags')
-          .insert(
-            selectedTags.map(tag => ({
-              user_id: user.id,
-              tag_id: tag.id
-            }))
-          );
-      }
-
-      onSubmit({
-        ...updatedUser,
-        authorizedRooms: selectedRooms,
-        tags: selectedTags,
-        status: updatedUser.status ? 'active' : 'inactive',
-      });
-
-      toast({
-        title: "Usuário atualizado",
-        description: "As informações do usuário foram atualizadas com sucesso.",
-      });
-      onClose();
     } catch (error) {
       console.error('Error updating user:', error);
       toast({
