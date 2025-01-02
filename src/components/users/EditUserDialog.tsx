@@ -67,16 +67,10 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
       if (error) throw error;
 
       const updatedUser: User = {
-        id: data.id,
+        ...formData,
         name: data.name,
         email: data.email,
-        role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
-        company_id: data.company_id,
-        created_at: data.created_at,
-        last_access: data.updated_at,
-        status: data.access_level === 'Inativo' ? 'inactive' : 'active',
         access_level: data.access_level,
-        password: data.password,
         location: data.location,
         specialization: data.specialization,
       };

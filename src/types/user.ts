@@ -1,5 +1,5 @@
 export type UserStatus = 'active' | 'inactive';
-export type AccessLevel = 'Usuário Comum' | 'Admin' | 'Inativo';
+export type AccessLevel = 'Admin' | 'Usuário Comum' | 'Inativo';
 
 export interface User {
   id: string;
@@ -12,6 +12,9 @@ export interface User {
   status: UserStatus;
   access_level: AccessLevel;
   password: string;
-  location?: string;
-  specialization?: string;
+  location?: string | null;
+  specialization?: string | null;
+  authorizedRooms?: string[];
+  tags?: { id: string; name: string; color: string; }[];
+  responsibleCategory?: string;
 }

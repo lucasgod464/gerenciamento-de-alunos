@@ -1,27 +1,10 @@
 import { TableCell, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Pencil, Trash2, Tag } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { User } from "@/types/user";
 import { useEffect, useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Category } from "@/types/category";
+import { UserActions } from "./table/UserActions";
+import { UserTags } from "./table/UserTags";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableRowProps {
@@ -31,33 +14,25 @@ interface UserTableRowProps {
   onStatusChange: (id: string, checked: boolean) => void;
 }
 
-interface Tag {
-  id: string;
-  name: string;
-  color: string;
-}
-
 export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTableRowProps) {
   const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
-  const [userTags, setUserTags] = useState<Tag[]>([]);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [categoryName, setCategoryName] = useState<string>("");
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRoomsAndTags = async () => {
+    const fetchRoomsAndCategory = async () => {
       try {
-        // Fetch authorized rooms
-        const { data: rooms } = await supabase
-          .from('rooms')
-          .select('name')
-          .in('id', user.authorizedRooms || []);
+        if (user.authorizedRooms?.length) {
+          const { data: rooms } = await supabase
+            .from('rooms')
+            .select('name')
+            .in('id', user.authorizedRooms);
 
-        if (rooms) {
-          setAuthorizedRoomNames(rooms.map(room => room.name));
+          if (rooms) {
+            setAuthorizedRoomNames(rooms.map(room => room.name));
+          }
         }
 
-        // Fetch category name
         if (user.responsibleCategory) {
           const { data: category } = await supabase
             .from('categories')
@@ -69,40 +44,13 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
             setCategoryName(category.name);
           }
         }
-
-        // Fetch user tags
-        if (user.company_id && user.tags?.length > 0) {
-          const { data: tags } = await supabase
-            .from('user_tags')
-            .select(`
-              tag:tag_id (
-                id,
-                name,
-                color
-              )
-            `)
-            .eq('user_id', user.id);
-
-          if (tags) {
-            setUserTags(tags.map(t => t.tag));
-          }
-        }
       } catch (error) {
         console.error('Error fetching user details:', error);
       }
     };
 
-    fetchRoomsAndTags();
+    fetchRoomsAndCategory();
   }, [user]);
-
-  const handleDelete = () => {
-    onDelete(user.id);
-    setShowDeleteDialog(false);
-    toast({
-      title: "Usuário excluído",
-      description: "O usuário foi excluído com sucesso.",
-    });
-  };
 
   const handleStatusChange = (checked: boolean) => {
     onStatusChange(user.id, checked);
@@ -113,93 +61,40 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
   };
 
   return (
-    <>
-      <TableRow>
-        <TableCell className="font-medium">{user.name}</TableCell>
-        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>{categoryName}</TableCell>
-        <TableCell>{user.specialization}</TableCell>
-        <TableCell>
-          <div className="max-w-[200px] overflow-hidden text-sm">
-            {authorizedRoomNames.length > 0 
-              ? authorizedRoomNames.join(", ")
-              : "Nenhuma sala autorizada"}
-          </div>
-        </TableCell>
-        <TableCell>
-          <div className="flex flex-wrap gap-1 max-w-[150px]">
-            {userTags.map((tag) => (
-              <TooltipProvider key={tag.id}>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <div className="flex items-center">
-                      <Tag 
-                        className="h-4 w-4" 
-                        style={{ 
-                          color: tag.color,
-                          fill: tag.color,
-                          fillOpacity: 0.2,
-                        }} 
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{tag.name}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            ))}
-            {userTags.length === 0 && (
-              <span className="text-muted-foreground text-xs">
-                Sem etiquetas
-              </span>
-            )}
-          </div>
-        </TableCell>
-        <TableCell className="text-center">
-          <Switch
-            checked={user.status === "active"}
-            onCheckedChange={handleStatusChange}
-          />
-        </TableCell>
-        <TableCell className="text-sm text-muted-foreground">{user.created_at}</TableCell>
-        <TableCell className="text-sm text-muted-foreground">{user.last_access}</TableCell>
-        <TableCell>
-          <div className="flex justify-center space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(user)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowDeleteDialog(true)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        </TableCell>
-      </TableRow>
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir o usuário {user.name}? Esta ação não pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <TableRow>
+      <TableCell className="font-medium">{user.name}</TableCell>
+      <TableCell className="text-muted-foreground">{user.email}</TableCell>
+      <TableCell>{categoryName}</TableCell>
+      <TableCell>{user.specialization}</TableCell>
+      <TableCell>
+        <div className="max-w-[200px] overflow-hidden text-sm">
+          {authorizedRoomNames.length > 0 
+            ? authorizedRoomNames.join(", ")
+            : "Nenhuma sala autorizada"}
+        </div>
+      </TableCell>
+      <TableCell>
+        <UserTags tags={user.tags} />
+      </TableCell>
+      <TableCell className="text-center">
+        <Switch
+          checked={user.status === "active"}
+          onCheckedChange={handleStatusChange}
+        />
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {user.created_at}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {user.last_access}
+      </TableCell>
+      <TableCell>
+        <UserActions 
+          user={user}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      </TableCell>
+    </TableRow>
   );
 }
