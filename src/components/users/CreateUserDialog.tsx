@@ -63,13 +63,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       // Criar novo email
       const { data: newEmail, error: emailError } = await supabase
         .from('emails')
-        .insert([{
+        .insert({
           name: name,
           email: email,
           password: password,
           access_level: 'Usuário Comum' as AccessLevel,
           company_id: currentUser.companyId,
-        }])
+        })
         .select()
         .single();
 
