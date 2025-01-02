@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
-import { hashPassword } from "@/utils/passwordUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
@@ -32,32 +31,28 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const formData = new FormData(event.currentTarget);
     
     try {
-      const password = formData.get("password") as string;
-      const hashedPassword = await hashPassword(password);
-
-      // Insert new user without checking authentication
-      const { data: newUser, error: userError } = await supabase
-        .from('users')
+      // Inserir na tabela emails em vez da users
+      const { data: newEmail, error: emailError } = await supabase
+        .from('emails')
         .insert([{
           name: formData.get("name") as string,
           email: formData.get("email") as string,
-          password: hashedPassword,
-          role: 'USER',
+          password: formData.get("password") as string,
+          access_level: 'Usuário Comum',
           company_id: currentUser?.companyId,
-          status: formData.get("status") === "active"
         }])
         .select()
         .single();
 
-      if (userError) throw userError;
+      if (emailError) throw emailError;
 
-      // Insert authorized rooms without checking authentication
+      // Inserir autorizações de salas
       if (selectedRooms.length > 0) {
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
           .insert(
             selectedRooms.map(roomId => ({
-              user_id: newUser.id,
+              user_id: newEmail.id,
               room_id: roomId
             }))
           );
@@ -65,13 +60,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (roomsError) throw roomsError;
       }
 
-      // Insert user tags without checking authentication
+      // Inserir tags do usuário
       if (selectedTags.length > 0) {
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
             selectedTags.map(tag => ({
-              user_id: newUser.id,
+              user_id: newEmail.id,
               tag_id: tag.id
             }))
           );
@@ -79,12 +74,20 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (tagsError) throw tagsError;
       }
 
-      onUserCreated({
-        ...newUser,
+      // Mapear o novo email para o formato User para manter compatibilidade
+      const mappedUser: User = {
+        id: newEmail.id,
+        name: newEmail.name,
+        email: newEmail.email,
+        role: 'USER',
+        companyId: newEmail.company_id,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
-        status: formData.get("status") === "active" ? "active" : "inactive",
-      });
+        status: true,
+        createdAt: newEmail.created_at,
+      };
+
+      onUserCreated(mappedUser);
       
       toast({
         title: "Usuário criado",
