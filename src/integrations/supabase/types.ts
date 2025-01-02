@@ -366,6 +366,7 @@ export type Database = {
           name: string
           password: string
           role: string
+          status: boolean | null
         }
         Insert: {
           company_id?: string | null
@@ -376,6 +377,7 @@ export type Database = {
           name: string
           password: string
           role: string
+          status?: boolean | null
         }
         Update: {
           company_id?: string | null
@@ -386,6 +388,7 @@ export type Database = {
           name?: string
           password?: string
           role?: string
+          status?: boolean | null
         }
         Relationships: []
       }
