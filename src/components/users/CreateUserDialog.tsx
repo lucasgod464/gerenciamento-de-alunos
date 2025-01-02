@@ -35,7 +35,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       const password = formData.get("password") as string;
       const hashedPassword = await hashPassword(password);
 
-      // Insert new user without checking authentication
+      // Insert new user
       const { data: newUser, error: userError } = await supabase
         .from('users')
         .insert([{
@@ -51,7 +51,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       if (userError) throw userError;
 
-      // Insert authorized rooms without checking authentication
+      // Insert authorized rooms
       if (selectedRooms.length > 0) {
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
@@ -65,7 +65,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (roomsError) throw roomsError;
       }
 
-      // Insert user tags without checking authentication
+      // Insert user tags
       if (selectedTags.length > 0) {
         const { error: tagsError } = await supabase
           .from('user_tags')

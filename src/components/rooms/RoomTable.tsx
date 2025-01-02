@@ -40,15 +40,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
         `)
         .eq('room_id', room.id);
 
-      if (error) {
-        console.error('Error fetching students:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar alunos",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       if (!roomStudents) {
         setSelectedRoomStudents([]);
@@ -56,7 +48,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       }
 
       const studentsList: Student[] = roomStudents
-        .filter(rs => rs.student && typeof rs.student === 'object') // Ensure student is a valid object
+        .filter(rs => rs.student) // Filter out null students
         .map(rs => 
           mapSupabaseStudentToStudent(
             rs.student,
