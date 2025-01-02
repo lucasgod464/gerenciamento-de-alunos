@@ -46,11 +46,10 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     const newPassword = formData.get("password") as string;
 
     try {
-      // Update user
       const updateData: any = {
         name: formData.get("name") as string,
         email: formData.get("email") as string,
-        status: formData.get("status") as string,
+        status: formData.get("status") === "active",
       };
 
       if (newPassword) {
@@ -66,7 +65,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
 
       if (userError) throw userError;
 
-      // Update authorized rooms
       await supabase
         .from('user_authorized_rooms')
         .delete()
@@ -85,7 +83,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         if (roomsError) throw roomsError;
       }
 
-      // Update user tags
       await supabase
         .from('user_tags')
         .delete()
@@ -108,6 +105,7 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
         ...updatedUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
+        status: updatedUser.status ? 'active' : 'inactive',
       });
 
       toast({

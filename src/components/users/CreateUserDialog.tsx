@@ -44,6 +44,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           password: hashedPassword,
           role: 'USER',
           company_id: currentUser?.companyId,
+          status: true // Default to active
         }])
         .select()
         .single();
@@ -82,6 +83,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         ...newUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
+        status: 'active',
       });
       
       toast({

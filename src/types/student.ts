@@ -8,6 +8,10 @@ export interface Student {
   status: StudentStatus;
   createdAt: string;
   companyId: string | null;
+  email?: string;
+  document?: string;
+  address?: string;
+  customFields?: Record<string, string>;
 }
 
 export interface SupabaseStudent {
@@ -16,6 +20,10 @@ export interface SupabaseStudent {
   birth_date: string;
   status: boolean;
   created_at: string;
+  email?: string;
+  document?: string;
+  address?: string;
+  custom_fields?: Record<string, string>;
 }
 
 export function mapSupabaseStudentToStudent(supabaseStudent: SupabaseStudent, roomId: string, companyId: string | null): Student {
@@ -26,6 +34,10 @@ export function mapSupabaseStudentToStudent(supabaseStudent: SupabaseStudent, ro
     room: roomId,
     status: supabaseStudent.status ? "active" : "inactive",
     createdAt: new Date(supabaseStudent.created_at).toLocaleDateString(),
-    companyId
+    companyId,
+    email: supabaseStudent.email,
+    document: supabaseStudent.document,
+    address: supabaseStudent.address,
+    customFields: supabaseStudent.custom_fields
   };
 }

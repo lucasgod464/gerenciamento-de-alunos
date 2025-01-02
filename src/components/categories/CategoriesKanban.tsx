@@ -5,6 +5,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Category } from "@/types/category";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Student, StudentStatus } from "@/types/student";
 
 interface CategoriesKanbanProps {
   categories: Category[];
@@ -39,7 +40,7 @@ export const CategoriesKanban = ({
 
         if (error) throw error;
 
-        const transformedRooms = roomsData.map(room => ({
+        const transformedRooms: Room[] = roomsData.map(room => ({
           id: room.id,
           name: room.name,
           schedule: room.schedule,
@@ -47,16 +48,16 @@ export const CategoriesKanban = ({
           category: room.category,
           status: room.status,
           companyId: room.company_id,
-          studyRoom: room.study_room,
+          studyRoom: room.study_room || '',
           authorizedUsers: [],
           students: room.room_students?.map(s => ({
             id: s.student_id,
             name: '',
             birthDate: '',
             room: room.id,
-            status: 'active',
+            status: 'active' as StudentStatus,
             createdAt: '',
-            companyId: null
+            companyId: room.company_id
           })) || [],
           created_at: room.created_at
         }));
@@ -104,7 +105,6 @@ export const CategoriesKanban = ({
 
       if (error) throw error;
 
-      // Update local state
       setRooms(prevRooms => 
         prevRooms.map(room => {
           if (roomIds.includes(room.id)) {
