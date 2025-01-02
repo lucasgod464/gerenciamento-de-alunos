@@ -49,7 +49,7 @@ const Users = () => {
         created_at: email.created_at,
         last_access: email.updated_at,
         status: 'active' as const,
-        access_level: email.access_level,
+        access_level: email.access_level as AccessLevel,
         location: email.location,
         specialization: email.specialization,
         password: '',

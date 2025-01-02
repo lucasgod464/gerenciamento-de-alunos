@@ -3,7 +3,7 @@ export interface Email {
   name: string;
   email: string;
   password?: string;
-  accessLevel: "Admin" | "Usuário Comum" | "Inativo";
+  accessLevel: "Admin" | "Usuário Comum";
   company: string;
   companyId: string;
   companyStatus: "Ativa" | "Inativa";
@@ -15,7 +15,7 @@ export interface SupabaseEmail {
   name: string;
   email: string;
   password: string;
-  access_level: "Admin" | "Usuário Comum" | "Inativo";
+  access_level: "Admin" | "Usuário Comum";
   company_id: string;
   created_at: string;
   updated_at: string;
