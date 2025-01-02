@@ -42,12 +42,40 @@ export function useAuth() {
     console.log("Attempting login for:", email);
 
     try {
-      // First try to login with emails table
-      const { data: emailData, error: emailError } = await supabase
-        .from('emails')
+      // First try to login with users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
         .select('*')
         .eq('email', email)
-        .maybeSingle();
+        .single();
+
+      console.log("User login response:", { userData, userError });
+
+      if (userData && userData.password === password) {
+        const response: AuthResponse = {
+          user: {
+            id: userData.id,
+            name: userData.name || '',
+            email: userData.email,
+            role: userData.role,
+            companyId: userData.company_id || null,
+            createdAt: userData.created_at,
+            lastAccess: new Date().toISOString(),
+          },
+          token: `${userData.role.toLowerCase()}-token`,
+        };
+
+        localStorage.setItem("session", JSON.stringify(response));
+        await refetch();
+        return response;
+      }
+
+      // If no user found or password doesn't match, try emails table
+      const { data: emailData, error: emailError } = await supabase
+        .from('emails')
+        .select('*, companies:company_id(*)')
+        .eq('email', email)
+        .single();
 
       console.log("Email login response:", { emailData, emailError });
 
@@ -76,44 +104,7 @@ export function useAuth() {
         return response;
       }
 
-      // If no email user found or password doesn't match, try users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
-
-      console.log("User login response:", { userData, userError });
-
-      if (!userData) {
-        console.error("No user data returned");
-        throw new Error("Email ou senha inválidos");
-      }
-
-      // Compare the provided password with the hashed password
-      const passwordMatch = await bcrypt.compare(password, userData.password);
-      
-      if (!passwordMatch) {
-        throw new Error("Email ou senha inválidos");
-      }
-
-      const response: AuthResponse = {
-        user: {
-          id: userData.id,
-          name: userData.name || '',
-          email: userData.email,
-          role: userData.role as any,
-          companyId: userData.company_id || null,
-          createdAt: userData.created_at,
-          lastAccess: userData.last_access,
-        },
-        token: `${userData.role.toLowerCase()}-token`,
-      };
-
-      localStorage.setItem("session", JSON.stringify(response));
-      await refetch();
-      return response;
-
+      throw new Error("Email ou senha inválidos");
     } catch (error) {
       console.error("Login failed:", error);
       if (error instanceof Error) {
