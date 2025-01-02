@@ -74,8 +74,6 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
       const updateData = {
         name: formData.get("name") as string,
         email: formData.get("email") as string,
-        location: formData.get("location") as string,
-        specialization: formData.get("specialization") as string,
         access_level: isActive ? "Usuário Comum" as const : "Inativo" as const,
       };
 
@@ -90,7 +88,9 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
 
       if (updatedUser) {
         const mappedUser: User = {
-          ...updatedUser,
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
           role: updatedUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
           status: updatedUser.access_level === 'Inativo' ? 'inactive' : 'active',
           authorizedRooms: selectedRooms,
@@ -98,6 +98,8 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
           company_id: user.company_id,
           created_at: user.created_at,
           last_access: user.last_access || null,
+          password: '',
+          access_level: updatedUser.access_level,
         };
 
         onSubmit(mappedUser);
@@ -131,12 +133,9 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
               name: user.name,
               email: user.email,
               password: "",
-              location: user.location,
-              specialization: user.specialization,
               status: user.status,
               authorizedRooms: selectedRooms,
               tags: selectedTags,
-              responsibleCategory: user.responsibleCategory
             }}
             onAuthorizedRoomsChange={setSelectedRooms}
             onTagsChange={setSelectedTags}

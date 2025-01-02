@@ -11,11 +11,7 @@ export interface User {
   last_access: string | null;
   authorizedRooms: string[];
   tags: { id: string; name: string; color: string; }[];
-  responsibleCategory?: string;
-  location?: string;
-  specialization?: string;
   status: UserStatus;
   access_level?: AccessLevel;
-  password?: string;
-  updated_at?: string;
+  password: string;
 }
