@@ -6,7 +6,7 @@ import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Student } from "@/types/student";
+import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
 import { RoomTableHeader } from "./table/RoomTableHeader";
 import { RoomTableRow } from "./table/RoomTableRow";
@@ -30,7 +30,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       const { data: roomStudents, error } = await supabase
         .from('room_students')
         .select(`
-          students:student_id (
+          student:student_id (
             id,
             name,
             birth_date,
@@ -42,15 +42,13 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       if (error) throw error;
 
-      const studentsList: Student[] = roomStudents.map(rs => ({
-        id: rs.students.id,
-        name: rs.students.name,
-        birthDate: rs.students.birth_date,
-        room: room.id,
-        status: rs.students.status === true ? 'active' : 'inactive',
-        createdAt: new Date(rs.students.created_at).toLocaleDateString(),
-        companyId: currentUser?.companyId || null
-      }));
+      const studentsList: Student[] = roomStudents.map(rs => 
+        mapSupabaseStudentToStudent(
+          rs.student,
+          room.id,
+          currentUser?.companyId || null
+        )
+      );
     
       setSelectedRoomStudents(studentsList);
       setSelectedRoomId(room.id);

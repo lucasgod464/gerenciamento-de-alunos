@@ -1,3 +1,5 @@
+export type UserStatus = 'active' | 'inactive';
+
 export interface User {
   id: string;
   name: string;
@@ -12,7 +14,7 @@ export interface User {
   responsibleCategory?: string;
   location?: string;
   specialization?: string;
-  status?: 'active' | 'inactive';
+  status: UserStatus;
   phone?: string;
   birthDate?: string;
   address?: string;

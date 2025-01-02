@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
@@ -28,7 +28,11 @@ const Users = () => {
             room_id
           ),
           user_tags (
-            tag_id
+            tags:tag_id (
+              id,
+              name,
+              color
+            )
           )
         `)
         .eq('company_id', currentUser.companyId);
@@ -40,8 +44,9 @@ const Users = () => {
 
       return usersData.map(user => ({
         ...user,
+        status: user.status ? 'active' as const : 'inactive' as const,
         authorizedRooms: user.user_authorized_rooms?.map(r => r.room_id) || [],
-        tags: user.user_tags?.map(t => t.tag_id) || [],
+        tags: user.user_tags?.map(t => t.tags) || [],
       }));
     },
     enabled: !!currentUser?.companyId,
