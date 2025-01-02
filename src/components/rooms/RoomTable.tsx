@@ -56,10 +56,10 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       }
 
       const studentsList: Student[] = roomStudents
-        .filter(rs => rs.student && typeof rs.student === 'object')
+        .filter(rs => rs.student && typeof rs.student === 'object') // Ensure student is a valid object
         .map(rs => 
           mapSupabaseStudentToStudent(
-            rs.student as any,
+            rs.student,
             room.id,
             currentUser?.companyId || null
           )

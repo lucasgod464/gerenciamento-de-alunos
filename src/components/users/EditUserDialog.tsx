@@ -66,11 +66,13 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (error) throw error;
 
-      onUserUpdated({
+      const updatedUser: User = {
         ...formData,
         ...data,
         role: mapAccessLevelToDatabaseLevel(formData.role),
-      });
+      };
+
+      onUserUpdated(updatedUser);
       onOpenChange(false);
       toast({
         title: "Usuário atualizado",
