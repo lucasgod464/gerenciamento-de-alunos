@@ -59,7 +59,7 @@ const Users = () => {
         .update({
           name: updatedUser.name,
           email: updatedUser.email,
-          status: updatedUser.status,
+          status: updatedUser.status === 'active',
         })
         .eq('id', updatedUser.id);
 

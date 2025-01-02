@@ -1,9 +1,12 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Room {
   id: string;
@@ -12,21 +15,51 @@ interface Room {
 }
 
 interface RoomSelectionFieldsProps {
-  rooms: Room[];
   selectedRooms: string[];
-  searchQuery: string;
-  onSearchChange: (value: string) => void;
   onRoomToggle: (roomId: string) => void;
+  rooms?: Room[];
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export function RoomSelectionFields({
-  rooms,
   selectedRooms,
-  searchQuery,
-  onSearchChange,
   onRoomToggle,
+  rooms = [],
+  searchQuery = "",
+  onSearchChange = () => {},
 }: RoomSelectionFieldsProps) {
-  const filteredRooms = rooms.filter((room) =>
+  const [localRooms, setLocalRooms] = useState<Room[]>(rooms);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    const fetchRooms = async () => {
+      if (!currentUser?.companyId) return;
+
+      try {
+        const { data: roomsData, error } = await supabase
+          .from('rooms')
+          .select('id, name, status')
+          .eq('company_id', currentUser.companyId)
+          .eq('status', true);
+
+        if (error) {
+          console.error('Error fetching rooms:', error);
+          return;
+        }
+
+        setLocalRooms(roomsData || []);
+      } catch (error) {
+        console.error('Error fetching rooms:', error);
+      }
+    };
+
+    if (rooms.length === 0) {
+      fetchRooms();
+    }
+  }, [currentUser, rooms]);
+
+  const filteredRooms = localRooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

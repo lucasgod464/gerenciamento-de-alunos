@@ -16,15 +16,15 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
 
-  const handleTagsChange = (tagIds: string[]) => {
-    setSelectedTags(tagIds);
+  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
+    setSelectedTags(tags);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -35,7 +35,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       const password = formData.get("password") as string;
       const hashedPassword = await hashPassword(password);
 
-      // Insert new user
+      // Insert new user without checking authentication
       const { data: newUser, error: userError } = await supabase
         .from('users')
         .insert([{
@@ -44,14 +44,14 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           password: hashedPassword,
           role: 'USER',
           company_id: currentUser?.companyId,
-          status: true // Default to active
+          status: formData.get("status") === "active"
         }])
         .select()
         .single();
 
       if (userError) throw userError;
 
-      // Insert authorized rooms
+      // Insert authorized rooms without checking authentication
       if (selectedRooms.length > 0) {
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
@@ -65,14 +65,14 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (roomsError) throw roomsError;
       }
 
-      // Insert user tags
+      // Insert user tags without checking authentication
       if (selectedTags.length > 0) {
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
-            selectedTags.map(tagId => ({
+            selectedTags.map(tag => ({
               user_id: newUser.id,
-              tag_id: tagId
+              tag_id: tag.id
             }))
           );
 
@@ -83,7 +83,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         ...newUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
-        status: 'active',
+        status: formData.get("status") === "active" ? "active" : "inactive",
       });
       
       toast({
