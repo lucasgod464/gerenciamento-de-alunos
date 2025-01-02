@@ -43,7 +43,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
-      // Verificar se o email já existe
       const { data: existingEmails, error: checkError } = await supabase
         .from('emails')
         .select('id')
@@ -60,14 +59,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         return;
       }
 
-      // Criar novo email
       const { data: newEmail, error: emailError } = await supabase
         .from('emails')
         .insert({
-          name: name,
-          email: email,
-          password: password,
-          access_level: 'Usuário Comum' as AccessLevel,
+          name,
+          email,
+          password,
+          access_level: 'Usuário Comum',
           company_id: currentUser.companyId,
         })
         .select()
@@ -82,7 +80,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         throw new Error('No data returned after creating email');
       }
 
-      // Inserir autorizações de salas
       if (selectedRooms.length > 0) {
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
@@ -96,7 +93,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (roomsError) throw roomsError;
       }
 
-      // Inserir tags do usuário
       if (selectedTags.length > 0) {
         const { error: tagsError } = await supabase
           .from('user_tags')
@@ -110,7 +106,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (tagsError) throw tagsError;
       }
 
-      // Mapear para o formato User
       const mappedUser: User = {
         id: newEmail.id,
         name: newEmail.name,

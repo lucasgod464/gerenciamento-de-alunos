@@ -42,7 +42,6 @@ export function useAuth() {
     console.log("Attempting login for:", email);
 
     try {
-      // First try to login with users table
       const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -57,12 +56,12 @@ export function useAuth() {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.role as AccessLevel,
+            role: userData.access_level,
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
           },
-          token: `${userData.role.toLowerCase()}-token`,
+          token: `${userData.access_level.toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
@@ -70,7 +69,6 @@ export function useAuth() {
         return response;
       }
 
-      // If no user found or password doesn't match, try emails table
       const { data: emailData, error: emailError } = await supabase
         .from('emails')
         .select('*, companies:company_id(*)')
@@ -80,23 +78,17 @@ export function useAuth() {
       console.log("Email login response:", { emailData, emailError });
 
       if (emailData && emailData.password === password) {
-        // Map access_level to role
-        const roleMap: { [key: string]: string } = {
-          'Admin': 'ADMIN',
-          'Usuário Comum': 'USER'
-        };
-
         const response: AuthResponse = {
           user: {
             id: emailData.id,
             name: emailData.name || '',
             email: emailData.email,
-            role: roleMap[emailData.access_level] as AccessLevel,
+            role: emailData.access_level,
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
           },
-          token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
+          token: `${emailData.access_level.toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
