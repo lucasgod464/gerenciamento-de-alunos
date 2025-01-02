@@ -17,11 +17,11 @@ interface UserFormFieldsProps {
     specialization?: string;
     status?: string;
     authorizedRooms?: string[];
-    tags?: string[];
+    tags?: { id: string; name: string; color: string; }[];
     responsibleCategory?: string;
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
-  onTagsChange?: (tagIds: string[]) => void;
+  onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
   isEditing?: boolean;
 }
 
@@ -34,7 +34,7 @@ export const UserFormFields = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues?.authorizedRooms || []
   );
-  const [selectedTags, setSelectedTags] = useState<string[]>(
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     defaultValues?.tags || []
   );
   const [searchQuery, setSearchQuery] = useState("");
@@ -75,10 +75,10 @@ export const UserFormFields = ({
     onAuthorizedRoomsChange?.(updatedRooms);
   };
 
-  const handleTagToggle = (tagId: string) => {
-    const updatedTags = selectedTags.includes(tagId)
-      ? selectedTags.filter((id) => id !== tagId)
-      : [...selectedTags, tagId];
+  const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
+    const updatedTags = selectedTags.some(t => t.id === tag.id)
+      ? selectedTags.filter((t) => t.id !== tag.id)
+      : [...selectedTags, tag];
 
     setSelectedTags(updatedTags);
     onTagsChange?.(updatedTags);
@@ -105,8 +105,6 @@ export const UserFormFields = ({
         />
         <StatusField defaultValue={defaultValues?.status} />
       </div>
-      <input type="hidden" name="authorizedRooms" value={JSON.stringify(selectedRooms)} />
-      <input type="hidden" name="tags" value={JSON.stringify(selectedTags)} />
     </ScrollArea>
   );
 };

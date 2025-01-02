@@ -13,8 +13,8 @@ interface Tag {
 }
 
 interface TagSelectionFieldsProps {
-  selectedTags: string[]
-  onTagToggle: (tagId: string) => void
+  selectedTags: { id: string; name: string; color: string; }[]
+  onTagToggle: (tag: { id: string; name: string; color: string; }) => void
 }
 
 export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFieldsProps) {
@@ -42,8 +42,8 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
             <div key={tag.id} className="flex items-center space-x-2">
               <Checkbox
                 id={`tag-${tag.id}`}
-                checked={selectedTags.includes(tag.id)}
-                onCheckedChange={() => onTagToggle(tag.id)}
+                checked={selectedTags.some(t => t.id === tag.id)}
+                onCheckedChange={() => onTagToggle(tag)}
               />
               <div
                 className="w-4 h-4 rounded-full"
