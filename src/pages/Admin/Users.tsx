@@ -29,11 +29,7 @@ const Users = () => {
           access_level,
           company_id,
           created_at,
-          updated_at,
-          companies (
-            id,
-            name
-          )
+          updated_at
         `)
         .eq('company_id', currentUser.companyId);
 
@@ -50,9 +46,10 @@ const Users = () => {
         company_id: email.company_id,
         created_at: email.created_at,
         last_access: email.updated_at,
-        status: 'active' as const,
+        status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
         authorizedRooms: [],
         tags: [],
+        password: '',
       }));
     },
     enabled: !!currentUser?.companyId,

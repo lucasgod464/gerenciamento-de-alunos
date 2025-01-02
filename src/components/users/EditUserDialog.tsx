@@ -68,14 +68,15 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     if (!user) return;
 
     const formData = new FormData(event.currentTarget);
+    const isActive = formData.get("status") === "active";
 
     try {
       const updateData = {
-        name: formData.get("name"),
-        email: formData.get("email"),
-        location: formData.get("location"),
-        specialization: formData.get("specialization"),
-        access_level: formData.get("status") === "active" ? "Usuário Comum" : "Inativo",
+        name: formData.get("name") as string,
+        email: formData.get("email") as string,
+        location: formData.get("location") as string,
+        specialization: formData.get("specialization") as string,
+        access_level: isActive ? "Usuário Comum" as const : "Inativo" as const,
       };
 
       const { data: updatedUser, error } = await supabase
@@ -88,15 +89,18 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
       if (error) throw error;
 
       if (updatedUser) {
-        onSubmit({
+        const mappedUser: User = {
           ...updatedUser,
           role: updatedUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
           status: updatedUser.access_level === 'Inativo' ? 'inactive' : 'active',
           authorizedRooms: selectedRooms,
           tags: selectedTags,
-          password: '',
-        });
+          company_id: user.company_id,
+          created_at: user.created_at,
+          last_access: user.last_access || null,
+        };
 
+        onSubmit(mappedUser);
         toast({
           title: "Usuário atualizado",
           description: "As informações do usuário foram atualizadas com sucesso.",
