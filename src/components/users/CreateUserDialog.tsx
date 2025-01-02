@@ -16,15 +16,15 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
     setSelectedRooms(roomIds);
   };
 
-  const handleTagsChange = (tagIds: string[]) => {
-    setSelectedTags(tagIds);
+  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
+    setSelectedTags(tags);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -70,9 +70,9 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
-            selectedTags.map(tagId => ({
+            selectedTags.map(tag => ({
               user_id: newUser.id,
-              tag_id: tagId
+              tag_id: tag.id
             }))
           );
 
