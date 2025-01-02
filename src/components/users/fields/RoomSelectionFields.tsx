@@ -17,14 +17,19 @@ interface Room {
 interface RoomSelectionFieldsProps {
   selectedRooms: string[];
   onRoomToggle: (roomId: string) => void;
+  rooms?: Room[];
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export function RoomSelectionFields({
   selectedRooms,
   onRoomToggle,
+  rooms = [],
+  searchQuery = "",
+  onSearchChange = () => {},
 }: RoomSelectionFieldsProps) {
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [localRooms, setLocalRooms] = useState<Room[]>(rooms);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -43,16 +48,18 @@ export function RoomSelectionFields({
           return;
         }
 
-        setRooms(roomsData || []);
+        setLocalRooms(roomsData || []);
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
     };
 
-    fetchRooms();
-  }, [currentUser]);
+    if (rooms.length === 0) {
+      fetchRooms();
+    }
+  }, [currentUser, rooms]);
 
-  const filteredRooms = rooms.filter((room) =>
+  const filteredRooms = localRooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -66,7 +73,7 @@ export function RoomSelectionFields({
             <Input
               placeholder="Buscar salas..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => onSearchChange(e.target.value)}
               className="pl-8 bg-background"
             />
           </div>
