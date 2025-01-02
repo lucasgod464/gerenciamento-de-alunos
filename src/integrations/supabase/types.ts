@@ -246,6 +246,44 @@ export type Database = {
           },
         ]
       }
+      tags: {
+        Row: {
+          color: string
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: boolean | null
+        }
+        Insert: {
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: boolean | null
+        }
+        Update: {
+          color?: string
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_authorized_rooms: {
         Row: {
           created_at: string
@@ -286,22 +324,29 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          tag_id: string
+          tag_id: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
-          tag_id: string
+          tag_id?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
-          tag_id?: string
+          tag_id?: string | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_tags_user_id_fkey"
             columns: ["user_id"]

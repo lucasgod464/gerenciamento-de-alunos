@@ -5,48 +5,69 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UserWithTagsProps {
   userName: string;
   companyId: string;
 }
 
+interface TagType {
+  id: string;
+  name: string;
+  color: string;
+}
+
 export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
-  const getUserTags = (userName: string) => {
-    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
-    const allTags = JSON.parse(localStorage.getItem(`company_${companyId}_tags`) || "[]");
-    
-    // Busca case insensitive do usuário
-    const user = allUsers.find((u: any) => 
-      u.name.toLowerCase() === userName.toLowerCase() && 
-      u.companyId === companyId
-    );
+  const [userTags, setUserTags] = useState<TagType[]>([]);
 
-    console.log(`Buscando usuário: ${userName}`);
-    console.log(`CompanyId: ${companyId}`);
-    console.log(`Usuário encontrado:`, user);
-    
-    if (!user?.tags?.length) {
-      console.log(`Nenhuma tag encontrada para ${userName}`);
-      return [];
+  useEffect(() => {
+    const fetchUserTags = async () => {
+      try {
+        // Primeiro, buscar o usuário pelo nome
+        const { data: users, error: userError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('name', userName)
+          .eq('company_id', companyId);
+
+        if (userError) throw userError;
+        if (!users || users.length === 0) return;
+
+        const userId = users[0].id;
+
+        // Depois, buscar as tags do usuário
+        const { data: tags, error: tagsError } = await supabase
+          .from('user_tags')
+          .select(`
+            tag:tag_id (
+              id,
+              name,
+              color
+            )
+          `)
+          .eq('user_id', userId);
+
+        if (tagsError) throw tagsError;
+        
+        setUserTags(tags?.map(t => t.tag) || []);
+      } catch (error) {
+        console.error('Erro ao buscar tags do usuário:', error);
+      }
+    };
+
+    if (userName && companyId) {
+      fetchUserTags();
     }
-
-    const userTags = user.tags
-      .map((tagId: string) => allTags.find((tag: any) => tag.id === tagId))
-      .filter(Boolean);
-
-    console.log(`Tags encontradas para ${userName}:`, userTags);
-    return userTags;
-  };
-
-  const userTags = getUserTags(userName);
+  }, [userName, companyId]);
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm">{userName}</span>
       {userTags.length > 0 && (
         <div className="flex gap-1">
-          {userTags.map((tag: any) => (
+          {userTags.map((tag) => (
             <TooltipProvider key={tag.id}>
               <Tooltip>
                 <TooltipTrigger asChild>

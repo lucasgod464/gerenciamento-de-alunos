@@ -4,14 +4,15 @@ import { TagForm } from "@/components/tags/TagForm";
 import { TagList } from "@/components/tags/TagList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TagType {
-  id: string; // Changed to string for better uniqueness
+  id: string;
   name: string;
   description: string;
   color: string;
   status: boolean;
-  companyId: string;
+  company_id: string;
 }
 
 const Tags = () => {
@@ -22,104 +23,117 @@ const Tags = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Helper function to get company-specific storage key
-  const getCompanyStorageKey = (companyId: string) => `company_${companyId}_tags`;
+  // Carregar tags do Supabase
+  const fetchTags = async () => {
+    if (!user?.companyId) return;
 
-  // Load tags from company-specific storage
-  useEffect(() => {
-    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+    try {
+      let query = supabase
+        .from('tags')
+        .select('*');
 
-    if (user.role === "SUPER_ADMIN") {
-      // Super admin sees all tags from all companies
-      const allTags: TagType[] = [];
-      const companies = JSON.parse(localStorage.getItem("companies") || "[]");
-      
-      companies.forEach((company: { id: string }) => {
-        const companyTags = JSON.parse(
-          localStorage.getItem(getCompanyStorageKey(company.id)) || "[]"
-        );
-        allTags.push(...companyTags);
+      if (user.role !== 'SUPER_ADMIN') {
+        query = query.eq('company_id', user.companyId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setTags(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar tags:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar as tags.",
+        variant: "destructive",
       });
-      
-      setTags(allTags);
-    } else {
-      // Regular admin sees only their company's tags
-      const companyTags = JSON.parse(
-        localStorage.getItem(getCompanyStorageKey(user.companyId)) || "[]"
-      );
-      setTags(companyTags);
     }
+  };
+
+  useEffect(() => {
+    fetchTags();
   }, [user]);
 
-  const handleSubmit = (tagData: Omit<TagType, "id" | "companyId">) => {
-    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+  const handleSubmit = async (tagData: Omit<TagType, "id" | "company_id">) => {
+    if (!user?.companyId) return;
 
-    const companyId = user.companyId;
-    const storageKey = getCompanyStorageKey(companyId);
-    const companyTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    try {
+      if (editingTag) {
+        // Atualizar tag existente
+        const { error } = await supabase
+          .from('tags')
+          .update({
+            name: tagData.name,
+            description: tagData.description,
+            color: tagData.color,
+            status: tagData.status,
+          })
+          .eq('id', editingTag.id);
 
-    const newTag: TagType = {
-      id: editingTag?.id || `tag_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      ...tagData,
-      companyId,
-    };
+        if (error) throw error;
 
-    let updatedCompanyTags: TagType[];
+        setEditingTag(null);
+        toast({
+          title: "Sucesso",
+          description: "Tag atualizada com sucesso!",
+        });
+      } else {
+        // Criar nova tag
+        const { error } = await supabase
+          .from('tags')
+          .insert([{
+            ...tagData,
+            company_id: user.companyId,
+          }]);
 
-    if (editingTag) {
-      // Update existing tag
-      updatedCompanyTags = companyTags.map((tag: TagType) =>
-        tag.id === editingTag.id ? newTag : tag
-      );
+        if (error) throw error;
 
-      setTags(prev => prev.map(tag => 
-        tag.id === editingTag.id ? newTag : tag
-      ));
+        toast({
+          title: "Sucesso",
+          description: "Tag criada com sucesso!",
+        });
+      }
 
-      setEditingTag(null);
+      // Recarregar tags
+      fetchTags();
+    } catch (error) {
+      console.error('Erro ao salvar tag:', error);
       toast({
-        title: "Etiqueta atualizada",
-        description: "A etiqueta foi atualizada com sucesso!",
-      });
-    } else {
-      // Create new tag
-      updatedCompanyTags = [...companyTags, newTag];
-      
-      setTags(prev => [...prev, newTag]);
-      
-      toast({
-        title: "Etiqueta criada",
-        description: "A nova etiqueta foi criada com sucesso!",
+        title: "Erro",
+        description: "Não foi possível salvar a tag.",
+        variant: "destructive",
       });
     }
-
-    // Save tags to company-specific storage
-    localStorage.setItem(storageKey, JSON.stringify(updatedCompanyTags));
   };
 
   const handleEdit = (tag: TagType) => {
     setEditingTag(tag);
   };
 
-  const handleDelete = (id: string) => {
-    if (!user?.companyId && user?.role !== "SUPER_ADMIN") return;
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('tags')
+        .delete()
+        .eq('id', id);
 
-    const storageKey = getCompanyStorageKey(user.companyId);
-    const companyTags = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    
-    // Remove the specific tag
-    const updatedCompanyTags = companyTags.filter((tag: TagType) => tag.id !== id);
-    
-    // Update company-specific storage
-    localStorage.setItem(storageKey, JSON.stringify(updatedCompanyTags));
-    
-    // Update local state
-    setTags(prev => prev.filter(tag => tag.id !== id));
-    
-    toast({
-      title: "Etiqueta excluída",
-      description: "A etiqueta foi excluída com sucesso!",
-    });
+      if (error) throw error;
+
+      // Recarregar tags
+      fetchTags();
+      
+      toast({
+        title: "Sucesso",
+        description: "Tag excluída com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir tag:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a tag.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredTags = tags.filter((tag) => {
