@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AccessLevel } from "@/types/user";
-import { AuthResponse } from "@/types/auth";
+import { User, AuthResponse } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types/permissions";
+import bcrypt from 'bcryptjs';
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -57,7 +57,7 @@ export function useAuth() {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.role as AccessLevel,
+            role: userData.role,
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
@@ -80,17 +80,23 @@ export function useAuth() {
       console.log("Email login response:", { emailData, emailError });
 
       if (emailData && emailData.password === password) {
+        // Map access_level to role
+        const roleMap: { [key: string]: string } = {
+          'Admin': 'ADMIN',
+          'Usuário Comum': 'USER'
+        };
+
         const response: AuthResponse = {
           user: {
             id: emailData.id,
             name: emailData.name || '',
             email: emailData.email,
-            role: emailData.access_level as AccessLevel,
+            role: roleMap[emailData.access_level] as any,
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
           },
-          token: `${emailData.access_level.toLowerCase()}-token`,
+          token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));

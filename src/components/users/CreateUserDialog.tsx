@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { UserFormFields } from "./UserFormFields";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { User, AccessLevel } from "@/types/user";
+import { User } from "@/types/user";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -63,13 +63,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       // Criar novo email
       const { data: newEmail, error: emailError } = await supabase
         .from('emails')
-        .insert({
+        .insert([{
           name: name,
           email: email,
           password: password,
           access_level: 'Usuário Comum' as AccessLevel,
           company_id: currentUser.companyId,
-        })
+        }])
         .select()
         .single();
 
