@@ -16,37 +16,43 @@ const Users = () => {
   const { user: currentUser } = useAuth();
 
   const { data: users = [], refetch } = useQuery({
-    queryKey: ["users", currentUser?.companyId],
+    queryKey: ["company-emails", currentUser?.companyId],
     queryFn: async () => {
       if (!currentUser?.companyId) return [];
 
-      const { data: usersData, error } = await supabase
-        .from('users')
+      const { data: emailsData, error } = await supabase
+        .from('emails')
         .select(`
-          *,
-          user_authorized_rooms (
-            room_id
-          ),
-          user_tags (
-            tags:tag_id (
-              id,
-              name,
-              color
-            )
+          id,
+          name,
+          email,
+          access_level,
+          company_id,
+          created_at,
+          updated_at,
+          companies (
+            id,
+            name
           )
         `)
         .eq('company_id', currentUser.companyId);
 
       if (error) {
-        console.error('Error fetching users:', error);
+        console.error('Error fetching emails:', error);
         throw error;
       }
 
-      return usersData.map(user => ({
-        ...user,
-        status: user.status ? 'active' as const : 'inactive' as const,
-        authorizedRooms: user.user_authorized_rooms?.map(r => r.room_id) || [],
-        tags: user.user_tags?.map(t => t.tags) || [],
+      return emailsData.map(email => ({
+        id: email.id,
+        name: email.name,
+        email: email.email,
+        role: email.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        company_id: email.company_id,
+        created_at: email.created_at,
+        last_access: email.updated_at,
+        status: 'active' as const,
+        authorizedRooms: [],
+        tags: [],
       }));
     },
     enabled: !!currentUser?.companyId,
@@ -55,11 +61,11 @@ const Users = () => {
   const handleUpdateUser = async (updatedUser: User) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('emails')
         .update({
           name: updatedUser.name,
           email: updatedUser.email,
-          status: updatedUser.status === 'active',
+          access_level: updatedUser.role === 'ADMIN' ? 'Admin' : 'Usuário Comum',
         })
         .eq('id', updatedUser.id);
 
@@ -84,7 +90,7 @@ const Users = () => {
   const handleDeleteUser = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('emails')
         .delete()
         .eq('id', id);
 
