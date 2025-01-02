@@ -29,14 +29,31 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const email = formData.get("email") as string;
     
     try {
-      // Inserir na tabela emails em vez da users
+      // Primeiro, verificar se o email já existe
+      const { data: existingEmail } = await supabase
+        .from('emails')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (existingEmail) {
+        toast({
+          title: "Erro ao criar usuário",
+          description: "Este email já está cadastrado no sistema.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Se o email não existe, prosseguir com a inserção
       const { data: newEmail, error: emailError } = await supabase
         .from('emails')
         .insert([{
           name: formData.get("name") as string,
-          email: formData.get("email") as string,
+          email: email,
           password: formData.get("password") as string,
           access_level: 'Usuário Comum',
           company_id: currentUser?.companyId,
@@ -44,7 +61,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         .select()
         .single();
 
-      if (emailError) throw emailError;
+      if (emailError) {
+        console.error('Error creating email:', emailError);
+        throw emailError;
+      }
 
       // Inserir autorizações de salas
       if (selectedRooms.length > 0) {
@@ -83,7 +103,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         companyId: newEmail.company_id,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
-        status: true,
+        status: 'active',
         createdAt: newEmail.created_at,
       };
 
