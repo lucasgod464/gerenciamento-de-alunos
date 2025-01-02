@@ -29,7 +29,9 @@ const Users = () => {
           access_level,
           company_id,
           created_at,
-          updated_at
+          updated_at,
+          location,
+          specialization
         `)
         .eq('company_id', currentUser.companyId);
 
@@ -47,8 +49,9 @@ const Users = () => {
         created_at: email.created_at,
         last_access: email.updated_at,
         status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
-        authorizedRooms: [],
-        tags: [],
+        access_level: email.access_level,
+        location: email.location,
+        specialization: email.specialization,
         password: '',
       }));
     },
@@ -62,7 +65,9 @@ const Users = () => {
         .update({
           name: updatedUser.name,
           email: updatedUser.email,
-          access_level: updatedUser.role === 'ADMIN' ? 'Admin' : 'Usuário Comum',
+          access_level: updatedUser.access_level,
+          location: updatedUser.location,
+          specialization: updatedUser.specialization,
         })
         .eq('id', updatedUser.id);
 
@@ -113,7 +118,10 @@ const Users = () => {
     const matchesSearch =
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    const matchesStatus = 
+      statusFilter === "all" || 
+      (statusFilter === "active" && user.access_level !== "Inativo") ||
+      (statusFilter === "inactive" && user.access_level === "Inativo");
 
     return matchesSearch && matchesStatus;
   });

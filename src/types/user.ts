@@ -9,10 +9,8 @@ export interface User {
   company_id: string | null;
   created_at: string | null;
   last_access: string | null;
-  authorizedRooms: string[];
-  tags: { id: string; name: string; color: string; }[];
   status: UserStatus;
-  access_level?: AccessLevel;
+  access_level: AccessLevel;
   password: string;
   location?: string;
   specialization?: string;

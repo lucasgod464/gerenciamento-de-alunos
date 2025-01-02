@@ -5,130 +5,90 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types/user";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@/types/user";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserFormFields } from "./dialog/UserFormFields";
-import { RoomSelection } from "./dialog/RoomSelection";
-import { Room } from "@/types/room";
-import { useAuth } from "@/hooks/useAuth";
 
 interface EditUserDialogProps {
   user: User | null;
-  onClose: () => void;
-  onSubmit: (updatedUser: User) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUserUpdated: (user: User) => void;
 }
 
-export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps) {
-  const [editedUser, setEditedUser] = useState<User | null>(null);
-  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [availableRooms, setAvailableRooms] = useState<Room[]>([]);
+export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: EditUserDialogProps) {
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
+  const [formData, setFormData] = useState<User | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     if (user) {
-      setEditedUser(user);
-      fetchUserRooms();
-      fetchAvailableRooms();
+      setFormData(user);
+      setNewPassword("");
     }
   }, [user]);
 
-  const fetchUserRooms = async () => {
-    if (!user) return;
-    
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!formData) return;
+
     try {
-      const { data: roomData } = await supabase
-        .from('user_authorized_rooms')
-        .select('room_id')
-        .eq('user_id', user.id);
-      
-      if (roomData) {
-        setSelectedRooms(roomData.map(r => r.room_id));
+      const updateData: any = {
+        name: formData.name,
+        email: formData.email,
+        access_level: formData.access_level,
+        location: formData.location || null,
+        specialization: formData.specialization || null,
+      };
+
+      if (newPassword) {
+        updateData.password = newPassword;
       }
-    } catch (error) {
-      console.error('Error fetching user rooms:', error);
-    }
-  };
 
-  const fetchAvailableRooms = async () => {
-    if (!currentUser?.companyId) return;
-
-    try {
-      const { data: rooms } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true);
-
-      if (rooms) {
-        setAvailableRooms(rooms);
-      }
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-    }
-  };
-
-  const handleFieldChange = (field: string, value: string) => {
-    if (!editedUser) return;
-    setEditedUser({ ...editedUser, [field]: value });
-  };
-
-  const handleRoomToggle = (roomId: string) => {
-    setSelectedRooms(prev => 
-      prev.includes(roomId)
-        ? prev.filter(id => id !== roomId)
-        : [...prev, roomId]
-    );
-  };
-
-  const handleSubmit = async () => {
-    if (!editedUser) return;
-
-    try {
-      // Update user in emails table
-      const { error: updateError } = await supabase
+      const { data, error } = await supabase
         .from('emails')
-        .update({
-          name: editedUser.name,
-          email: editedUser.email,
-          location: editedUser.location,
-          access_level: editedUser.status === 'active' ? 'Usuário Comum' : 'Inativo',
-        })
-        .eq('id', editedUser.id);
+        .update(updateData)
+        .eq('id', formData.id)
+        .select()
+        .single();
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
-      // Update user's authorized rooms
-      // First, remove existing room authorizations
-      await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('user_id', editedUser.id);
+      const updatedUser: User = {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        company_id: data.company_id,
+        created_at: data.created_at,
+        last_access: data.updated_at,
+        status: data.access_level === 'Inativo' ? 'inactive' : 'active',
+        access_level: data.access_level,
+        password: data.password,
+        location: data.location,
+        specialization: data.specialization,
+      };
 
-      // Then, add new room authorizations
-      if (selectedRooms.length > 0) {
-        const { error: roomsError } = await supabase
-          .from('user_authorized_rooms')
-          .insert(
-            selectedRooms.map(roomId => ({
-              user_id: editedUser.id,
-              room_id: roomId
-            }))
-          );
-
-        if (roomsError) throw roomsError;
-      }
-
-      onSubmit(editedUser);
+      onUserUpdated(updatedUser);
+      onOpenChange(false);
       toast({
         title: "Usuário atualizado",
         description: "As informações do usuário foram atualizadas com sucesso.",
       });
-      onClose();
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error("Error updating user:", error);
       toast({
         title: "Erro ao atualizar",
         description: "Ocorreu um erro ao atualizar o usuário.",
@@ -137,35 +97,97 @@ export function EditUserDialog({ user, onClose, onSubmit }: EditUserDialogProps)
     }
   };
 
-  if (!editedUser) return null;
+  if (!formData) return null;
 
   return (
-    <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <UserFormFields 
-            user={editedUser}
-            onChange={handleFieldChange}
-          />
-          <RoomSelection
-            rooms={availableRooms}
-            selectedRooms={selectedRooms}
-            onRoomToggle={handleRoomToggle}
-          />
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={handleSubmit}>Salvar</Button>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Nome Completo</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
           </div>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="location">Local</Label>
+            <Input
+              id="location"
+              value={formData.location || ''}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="specialization">Especialização</Label>
+            <Input
+              id="specialization"
+              value={formData.specialization || ''}
+              onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Nova Senha (opcional)</Label>
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha se desejar alterá-la"
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <Eye className="h-4 w-4 text-gray-500" />
+                )}
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="access_level">Nível de Acesso</Label>
+            <Select
+              value={formData.access_level}
+              onValueChange={(value: 'Admin' | 'Usuário Comum' | 'Inativo') => 
+                setFormData({ ...formData, access_level: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Admin">Administrador</SelectItem>
+                <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
+                <SelectItem value="Inativo">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="submit" className="w-full">
+            Salvar Alterações
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );
