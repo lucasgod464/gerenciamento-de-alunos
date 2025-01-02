@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { User, SupabaseUser, mapSupabaseUserToUser } from "@/types/user";
+import { User, mapDatabaseAccessLevelToAccessLevel } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { useQuery } from "@tanstack/react-query";
