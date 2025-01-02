@@ -30,16 +30,28 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
+    const name = formData.get("name") as string;
+    const password = formData.get("password") as string;
     
+    if (!email || !name || !password || !currentUser?.companyId) {
+      toast({
+        title: "Erro ao criar usuário",
+        description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      // Primeiro, verificar se o email já existe
-      const { data: existingEmail } = await supabase
+      // Verificar se o email já existe
+      const { data: existingEmails, error: checkError } = await supabase
         .from('emails')
         .select('id')
-        .eq('email', email)
-        .single();
+        .eq('email', email);
 
-      if (existingEmail) {
+      if (checkError) throw checkError;
+
+      if (existingEmails && existingEmails.length > 0) {
         toast({
           title: "Erro ao criar usuário",
           description: "Este email já está cadastrado no sistema.",
@@ -48,15 +60,15 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         return;
       }
 
-      // Se o email não existe, prosseguir com a inserção
+      // Criar novo email
       const { data: newEmail, error: emailError } = await supabase
         .from('emails')
         .insert([{
-          name: formData.get("name") as string,
+          name: name,
           email: email,
-          password: formData.get("password") as string,
+          password: password,
           access_level: 'Usuário Comum',
-          company_id: currentUser?.companyId,
+          company_id: currentUser.companyId,
         }])
         .select()
         .single();
@@ -64,6 +76,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       if (emailError) {
         console.error('Error creating email:', emailError);
         throw emailError;
+      }
+
+      if (!newEmail) {
+        throw new Error('No data returned after creating email');
       }
 
       // Inserir autorizações de salas
@@ -94,17 +110,19 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (tagsError) throw tagsError;
       }
 
-      // Mapear o novo email para o formato User para manter compatibilidade
+      // Mapear para o formato User
       const mappedUser: User = {
         id: newEmail.id,
         name: newEmail.name,
         email: newEmail.email,
+        password: newEmail.password,
         role: 'USER',
-        companyId: newEmail.company_id,
+        company_id: newEmail.company_id,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
         status: 'active',
-        createdAt: newEmail.created_at,
+        created_at: newEmail.created_at,
+        last_access: null,
       };
 
       onUserCreated(mappedUser);
