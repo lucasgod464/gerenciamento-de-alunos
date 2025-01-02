@@ -18,6 +18,7 @@ interface UserListProps {
 
 export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   const handleStatusChange = (id: string, checked: boolean) => {
     const user = users.find((u) => u.id === id)
@@ -29,9 +30,9 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     }
   }
 
-  const handleEditSubmit = (updatedUser: User) => {
-    onUpdateUser(updatedUser)
-    setEditingUser(null)
+  const handleEditClick = (user: User) => {
+    setEditingUser(user)
+    setIsEditDialogOpen(true)
   }
 
   return (
@@ -56,7 +57,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
             <UserTableRow
               key={user.id}
               user={user}
-              onEdit={setEditingUser}
+              onEdit={() => handleEditClick(user)}
               onDelete={onDeleteUser}
               onStatusChange={handleStatusChange}
             />
@@ -66,8 +67,9 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
 
       <EditUserDialog
         user={editingUser}
-        onClose={() => setEditingUser(null)}
-        onSubmit={handleEditSubmit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onUserUpdated={onUpdateUser}
       />
     </>
   )

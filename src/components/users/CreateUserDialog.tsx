@@ -67,7 +67,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           name: name,
           email: email,
           password: password,
-          access_level: 'Usuário Comum',
+          access_level: 'Usuário Comum' as AccessLevel,
           company_id: currentUser.companyId,
         }])
         .select()
@@ -121,6 +121,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         authorizedRooms: selectedRooms,
         tags: selectedTags,
         status: 'active',
+        access_level: newEmail.access_level,
         created_at: newEmail.created_at,
         last_access: null,
       };

@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { User } from "@/types/user";
+import { User, AccessLevel } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { useQuery } from "@tanstack/react-query";
@@ -49,7 +49,7 @@ const Users = () => {
         created_at: email.created_at,
         last_access: email.updated_at,
         status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
-        access_level: email.access_level,
+        access_level: email.access_level as AccessLevel,
         location: email.location,
         specialization: email.specialization,
         password: '',
@@ -91,6 +91,15 @@ const Users = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
+      // First, delete related records in user_authorized_rooms
+      const { error: authRoomsError } = await supabase
+        .from('user_authorized_rooms')
+        .delete()
+        .eq('user_id', id);
+
+      if (authRoomsError) throw authRoomsError;
+
+      // Then delete the user
       const { error } = await supabase
         .from('emails')
         .delete()

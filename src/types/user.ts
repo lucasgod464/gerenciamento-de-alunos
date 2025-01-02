@@ -5,13 +5,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password: string;
   role: string;
   company_id: string | null;
   created_at: string | null;
   last_access: string | null;
   status: UserStatus;
   access_level: AccessLevel;
-  password: string;
   location?: string | null;
   specialization?: string | null;
   authorizedRooms?: string[];

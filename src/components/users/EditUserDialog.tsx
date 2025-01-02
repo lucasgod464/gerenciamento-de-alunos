@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@/types/user";
+import { User, AccessLevel } from "@/types/user";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -68,11 +68,8 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       const updatedUser: User = {
         ...formData,
-        name: data.name,
-        email: data.email,
-        access_level: data.access_level,
-        location: data.location,
-        specialization: data.specialization,
+        ...data,
+        role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
       };
 
       onUserUpdated(updatedUser);
@@ -165,7 +162,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
             <Label htmlFor="access_level">Nível de Acesso</Label>
             <Select
               value={formData.access_level}
-              onValueChange={(value: 'Admin' | 'Usuário Comum' | 'Inativo') => 
+              onValueChange={(value: AccessLevel) => 
                 setFormData({ ...formData, access_level: value })}
             >
               <SelectTrigger>
