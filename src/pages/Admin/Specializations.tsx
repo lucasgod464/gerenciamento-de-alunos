@@ -6,12 +6,14 @@ import { SpecializationDialog } from "@/components/specializations/Specializatio
 import { DeleteConfirmDialog } from "@/components/specializations/DeleteConfirmDialog";
 import { SpecializationList } from "@/components/specializations/SpecializationList";
 import { SpecializationHeader } from "@/components/specializations/SpecializationHeader";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Specialization {
   id: string;
   name: string;
   status: boolean;
-  companyId: string | null;
+  company_id: string;
+  created_at: string;
 }
 
 const Specializations = () => {
@@ -25,18 +27,33 @@ const Specializations = () => {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
-  useEffect(() => {
+  const fetchSpecializations = async () => {
     if (!currentUser?.companyId) return;
-    
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const companySpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId === currentUser.companyId
-    );
-    setSpecializations(companySpecializations);
+
+    try {
+      const { data, error } = await supabase
+        .from('specializations')
+        .select('*')
+        .eq('company_id', currentUser.companyId);
+
+      if (error) throw error;
+      setSpecializations(data || []);
+    } catch (error) {
+      console.error('Error fetching specializations:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar especializações",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchSpecializations();
   }, [currentUser]);
 
-  const handleCreateSpecialization = (name: string) => {
-    if (!name.trim()) {
+  const handleCreateSpecialization = async (name: string) => {
+    if (!name.trim() || !currentUser?.companyId) {
       toast({
         title: "Erro",
         description: "O nome da especialização é obrigatório.",
@@ -45,92 +62,113 @@ const Specializations = () => {
       return;
     }
 
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const otherSpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId !== currentUser?.companyId
-    );
+    try {
+      const { error } = await supabase
+        .from('specializations')
+        .insert([{
+          name: name.trim(),
+          status: true,
+          company_id: currentUser.companyId
+        }]);
 
-    const newSpecialization: Specialization = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: name,
-      status: true,
-      companyId: currentUser?.companyId
-    };
-    
-    const updatedSpecializations = [...specializations, newSpecialization];
-    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
-    setSpecializations(updatedSpecializations);
-    
-    toast({
-      title: "Especialização criada",
-      description: "A especialização foi criada com sucesso.",
-    });
+      if (error) throw error;
 
-    setIsDialogOpen(false);
+      fetchSpecializations();
+      toast({
+        title: "Especialização criada",
+        description: "A especialização foi criada com sucesso.",
+      });
+
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating specialization:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar especialização",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEditSpecialization = (name: string) => {
+  const handleEditSpecialization = async (name: string) => {
+    if (!selectedSpecialization || !name.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('specializations')
+        .update({ name: name.trim() })
+        .eq('id', selectedSpecialization.id);
+
+      if (error) throw error;
+
+      fetchSpecializations();
+      toast({
+        title: "Especialização atualizada",
+        description: "A especialização foi atualizada com sucesso.",
+      });
+
+      setIsEditDialogOpen(false);
+      setSelectedSpecialization(null);
+    } catch (error) {
+      console.error('Error updating specialization:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar especialização",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteSpecialization = async () => {
     if (!selectedSpecialization) return;
 
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const otherSpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== selectedSpecialization.id
-    );
+    try {
+      const { error } = await supabase
+        .from('specializations')
+        .delete()
+        .eq('id', selectedSpecialization.id);
 
-    const updatedSpecialization = {
-      ...selectedSpecialization,
-      name
-    };
+      if (error) throw error;
 
-    const updatedSpecializations = specializations.map(spec =>
-      spec.id === selectedSpecialization.id ? updatedSpecialization : spec
-    );
+      fetchSpecializations();
+      toast({
+        title: "Especialização excluída",
+        description: "A especialização foi excluída com sucesso.",
+      });
 
-    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
-    setSpecializations(updatedSpecializations);
-
-    toast({
-      title: "Especialização atualizada",
-      description: "A especialização foi atualizada com sucesso.",
-    });
-
-    setIsEditDialogOpen(false);
-    setSelectedSpecialization(null);
+      setIsDeleteDialogOpen(false);
+      setSelectedSpecialization(null);
+    } catch (error) {
+      console.error('Error deleting specialization:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir especialização",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteSpecialization = () => {
-    if (!selectedSpecialization) return;
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const specialization = specializations.find(spec => spec.id === id);
+      if (!specialization) return;
 
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const otherSpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== selectedSpecialization.id
-    );
-    
-    const updatedSpecializations = specializations.filter(spec => spec.id !== selectedSpecialization.id);
-    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
-    setSpecializations(updatedSpecializations);
-    
-    toast({
-      title: "Especialização excluída",
-      description: "A especialização foi excluída com sucesso.",
-    });
+      const { error } = await supabase
+        .from('specializations')
+        .update({ status: !specialization.status })
+        .eq('id', id);
 
-    setIsDeleteDialogOpen(false);
-    setSelectedSpecialization(null);
-  };
+      if (error) throw error;
 
-  const handleToggleStatus = (id: string) => {
-    const allSpecializations = JSON.parse(localStorage.getItem("specializations") || "[]");
-    const otherSpecializations = allSpecializations.filter(
-      (spec: Specialization) => spec.companyId !== currentUser?.companyId || spec.id !== id
-    );
-    
-    const updatedSpecializations = specializations.map(spec =>
-      spec.id === id ? { ...spec, status: !spec.status } : spec
-    );
-    
-    localStorage.setItem("specializations", JSON.stringify([...otherSpecializations, ...updatedSpecializations]));
-    setSpecializations(updatedSpecializations);
+      fetchSpecializations();
+    } catch (error) {
+      console.error('Error toggling specialization status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao alterar status da especialização",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredSpecializations = specializations.filter(spec => {
