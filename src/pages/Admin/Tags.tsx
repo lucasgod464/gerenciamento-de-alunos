@@ -17,12 +17,14 @@ export interface TagType {
   company_id: string;
 }
 
+// Componente principal de Tags
 const Tags = () => {
   const [tags, setTags] = useState<TagType[]>([]);
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -30,9 +32,13 @@ const Tags = () => {
     if (!user?.companyId) return;
 
     try {
+      setIsLoading(true);
+      console.log('Buscando tags para a empresa:', user.companyId);
+      
       let query = supabase
         .from('tags')
-        .select('*');
+        .select('*')
+        .order('name');
 
       if (user.role !== 'SUPER_ADMIN') {
         query = query.eq('company_id', user.companyId);
@@ -40,7 +46,12 @@ const Tags = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao carregar tags:', error);
+        throw error;
+      }
+
+      console.log('Tags carregadas:', data);
       setTags(data || []);
     } catch (error) {
       console.error('Erro ao carregar tags:', error);
@@ -49,6 +60,8 @@ const Tags = () => {
         description: "Não foi possível carregar as tags.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,7 +74,6 @@ const Tags = () => {
 
     try {
       if (editingTag) {
-        // Atualizar tag existente
         const { error } = await supabase
           .from('tags')
           .update({
@@ -80,7 +92,6 @@ const Tags = () => {
           description: "Tag atualizada com sucesso!",
         });
       } else {
-        // Criar nova tag
         const { error } = await supabase
           .from('tags')
           .insert([{
@@ -96,7 +107,7 @@ const Tags = () => {
         });
       }
 
-      // Recarregar tags
+      setDialogOpen(false);
       fetchTags();
     } catch (error) {
       console.error('Erro ao salvar tag:', error);
@@ -113,11 +124,6 @@ const Tags = () => {
     setDialogOpen(true);
   };
 
-  const handleOpenDialog = () => {
-    setEditingTag(null);
-    setDialogOpen(true);
-  };
-
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -127,7 +133,6 @@ const Tags = () => {
 
       if (error) throw error;
 
-      // Recarregar tags
       fetchTags();
       
       toast({
@@ -166,7 +171,10 @@ const Tags = () => {
               Gerencie as etiquetas do sistema
             </p>
           </div>
-          <Button onClick={handleOpenDialog}>
+          <Button onClick={() => {
+            setEditingTag(null);
+            setDialogOpen(true);
+          }}>
             <Plus className="mr-2 h-4 w-4" />
             Criar Etiqueta
           </Button>
@@ -183,7 +191,9 @@ const Tags = () => {
         />
 
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">Gerenciar Etiquetas</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {isLoading ? "Carregando etiquetas..." : "Gerenciar Etiquetas"}
+          </h2>
           <TagList
             tags={filteredTags}
             onEdit={handleEdit}
