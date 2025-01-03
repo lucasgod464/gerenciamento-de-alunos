@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { User, AuthResponse } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ROLE_PERMISSIONS } from "@/types/permissions";
-import bcrypt from 'bcryptjs';
+import { AccessLevel } from "@/types/auth";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -57,7 +57,7 @@ export function useAuth() {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.role,
+            role: userData.role as AccessLevel,
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),

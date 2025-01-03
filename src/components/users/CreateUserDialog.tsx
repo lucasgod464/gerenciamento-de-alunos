@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AccessLevel } from "@/types/auth";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;

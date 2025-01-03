@@ -5,25 +5,34 @@ import { Study } from "@/types/study";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const Studies = () => {
   const [editingStudy, setEditingStudy] = useState<Study | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   const { data: studies = [], refetch } = useQuery({
-    queryKey: ["studies", currentUser?.companyId],
+    queryKey: ["studies", user?.companyId],
     queryFn: async () => {
-      if (!currentUser?.companyId) return [];
+      if (!user?.companyId) return [];
 
       const { data, error } = await supabase
         .from('studies')
         .select('*')
-        .eq('company_id', currentUser.companyId);
+        .eq('company_id', user.companyId);
 
       if (error) throw error;
-      return data;
+
+      return data.map(study => ({
+        id: study.id,
+        name: study.name,
+        status: study.status,
+        startDate: study.start_date,
+        endDate: study.end_date
+      })) as Study[];
     },
-    enabled: !!currentUser?.companyId,
+    enabled: !!user?.companyId,
   });
 
   const handleEdit = async (id: string) => {
@@ -36,7 +45,13 @@ const Studies = () => {
 
       if (error) throw error;
 
-      setEditingStudy(data);
+      setEditingStudy({
+        id: data.id,
+        name: data.name,
+        status: data.status,
+        startDate: data.start_date,
+        endDate: data.end_date
+      });
       setIsEditDialogOpen(true);
     } catch (error) {
       console.error('Error fetching study:', error);

@@ -12,32 +12,24 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
-
-interface Course {
-  id: number;
-  name: string;
-  status: "active" | "inactive";
-}
+import type { Course } from "@/types/course";
 
 const Courses = () => {
   const [newCourseName, setNewCourseName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [courses, setCourses] = useState<Course[]>([
-    { id: 1, name: "Curso de React", status: "active" },
-    { id: 2, name: "Treinamento TypeScript", status: "inactive" },
-  ]);
-  const { user: currentUser } = useAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const { user } = useAuth();
 
   const fetchCourses = async () => {
-    if (!currentUser?.companyId) return;
+    if (!user?.companyId) return;
 
     try {
       const { data, error } = await supabase
         .from('courses')
         .select('*')
-        .eq('company_id', currentUser.companyId);
+        .eq('company_id', user.companyId);
 
       if (error) throw error;
       setCourses(data || []);
@@ -52,15 +44,15 @@ const Courses = () => {
   };
 
   const handleCreateCourse = async () => {
-    if (!newCourseName.trim() || !currentUser?.companyId) return;
+    if (!newCourseName.trim() || !user?.companyId) return;
     
     try {
       const { error } = await supabase
         .from('courses')
         .insert([{
           name: newCourseName.trim(),
-          status: 'active',
-          company_id: currentUser.companyId
+          status: true,
+          company_id: user.companyId
         }]);
 
       if (error) throw error;
@@ -163,12 +155,12 @@ const Courses = () => {
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded-full text-xs ${
-                        course.status === "active"
+                        course.status
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {course.status === "active" ? "Ativo" : "Inativo"}
+                      {course.status ? "Ativo" : "Inativo"}
                     </span>
                   </TableCell>
                   <TableCell>

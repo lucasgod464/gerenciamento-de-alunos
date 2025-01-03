@@ -1,53 +1,48 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useAuth } from "@/hooks/useAuth";
-import { Student } from "@/types/student";
-import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { StudentColumns } from "@/components/admin/students/StudentColumns";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/components/ui/use-toast";
+import type { Student, SupabaseStudent, mapSupabaseStudentToStudent } from "@/types/student";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Pencil, Trash2 } from "lucide-react";
 
-const AdminStudentsTotal = () => {
+const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const { user: currentUser } = useAuth();
-  const { toast } = useToast();
+  const [newStudentName, setNewStudentName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const { user } = useAuth();
 
   const fetchStudents = async () => {
-    if (!currentUser?.companyId) return;
+    if (!user?.companyId) return;
 
     try {
-      // Buscar alunos
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data, error } = await supabase
         .from('students')
-        .select(`
-          *,
-          rooms (
-            id,
-            name
-          )
-        `)
-        .eq('company_id', currentUser.companyId);
+        .select('*')
+        .eq('company_id', user.companyId);
 
-      if (studentsError) throw studentsError;
+      if (error) throw error;
 
-      // Buscar salas
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', currentUser.companyId);
-
-      if (roomsError) throw roomsError;
-
-      setRooms(roomsData || []);
-      setStudents(studentsData || []);
+      const mappedStudents = data.map((student: SupabaseStudent) => 
+        mapSupabaseStudentToStudent(student, '', user.companyId || '')
+      );
+      
+      setStudents(mappedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
       toast({
         title: "Erro",
-        description: "Erro ao carregar alunos",
+        description: "Não foi possível carregar os alunos.",
         variant: "destructive",
       });
     }
@@ -55,21 +50,39 @@ const AdminStudentsTotal = () => {
 
   useEffect(() => {
     fetchStudents();
-    
-    const handleStorageChange = () => {
-      fetchStudents();
-    };
+  }, [user]);
 
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("studentAdded", handleStorageChange);
-    window.addEventListener("enrollmentAdded", handleStorageChange);
+  const handleCreateStudent = async () => {
+    if (!newStudentName.trim() || !user?.companyId) return;
     
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("studentAdded", handleStorageChange);
-      window.removeEventListener("enrollmentAdded", handleStorageChange);
-    };
-  }, [currentUser]);
+    try {
+      const { error } = await supabase
+        .from('students')
+        .insert([{
+          name: newStudentName.trim(),
+          status: true,
+          company_id: user.companyId,
+          birth_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        }]);
+
+      if (error) throw error;
+      
+      fetchStudents();
+      setNewStudentName("");
+      toast({
+        title: "Aluno criado",
+        description: "O aluno foi criado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error creating student:', error);
+      toast({
+        title: "Erro ao criar aluno",
+        description: "Ocorreu um erro ao criar o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleDeleteStudent = async (id: string) => {
     try {
@@ -82,73 +95,112 @@ const AdminStudentsTotal = () => {
 
       fetchStudents();
       toast({
-        title: "Sucesso",
-        description: "Aluno excluído com sucesso!",
+        title: "Aluno excluído",
+        description: "O aluno foi excluído com sucesso.",
       });
     } catch (error) {
       console.error('Error deleting student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao excluir aluno",
+        title: "Erro ao excluir aluno",
+        description: "Ocorreu um erro ao excluir o aluno.",
         variant: "destructive",
       });
     }
   };
 
-  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
-    try {
-      const { error } = await supabase
-        .from('students')
-        .update({ room_id: newRoomId })
-        .eq('id', studentId);
-
-      if (error) throw error;
-
-      fetchStudents();
-      toast({
-        title: "Sucesso",
-        description: "Aluno transferido com sucesso!",
-      });
-    } catch (error) {
-      console.error('Error transferring student:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao transferir aluno",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredStudents = students.filter((student) => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const studentsWithoutRoom = filteredStudents.filter(student => !student.room);
-  const studentsWithRoom = filteredStudents.filter(student => student.room);
 
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Alunos Total</h1>
-        <div className="relative max-w-md mb-6">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar alunos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Alunos</h1>
+          <p className="text-muted-foreground">
+            Gerencie os alunos do sistema
+          </p>
         </div>
-        <StudentColumns
-          studentsWithoutRoom={students.filter(student => !student.room)}
-          studentsWithRoom={students.filter(student => student.room)}
-          rooms={rooms}
-          onDeleteStudent={handleDeleteStudent}
-          onTransferStudent={handleTransferStudent}
-        />
+
+        <div className="p-4 bg-white rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Criar Novo Aluno</h2>
+          <div className="flex gap-4">
+            <Input
+              placeholder="Nome do aluno"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+              className="max-w-md"
+            />
+            <Button onClick={handleCreateStudent}>Salvar</Button>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-lg shadow">
+          <h2 className="text-lg font-semibold mb-4">Gerenciar Alunos</h2>
+          
+          <div className="mb-4">
+            <Input
+              placeholder="Buscar por nome..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="max-w-md"
+            />
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Data de Nascimento</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-[100px]">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredStudents.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell>{student.name}</TableCell>
+                  <TableCell>{new Date(student.birthDate).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        student.status === "active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {student.status === "active" ? "Ativo" : "Inativo"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteStudent(student.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredStudents.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                    Nenhum aluno encontrado
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </DashboardLayout>
   );
 };
 
-export default AdminStudentsTotal;
+export default StudentsTotal;
