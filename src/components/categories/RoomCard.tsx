@@ -21,7 +21,6 @@ interface AuthorizedUser {
   name: string;
   email: string;
   is_main_teacher?: boolean;
-  tags?: { id: string; name: string; color: string; }[];
 }
 
 export const RoomCard = ({
@@ -36,13 +35,12 @@ export const RoomCard = ({
 
   const fetchAuthorizedUsers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: authorizedData, error: authorizedError } = await supabase
         .from('room_authorized_users')
         .select(`
-          id,
           user_id,
           is_main_teacher,
-          user:users (
+          users (
             id,
             name,
             email
@@ -50,13 +48,13 @@ export const RoomCard = ({
         `)
         .eq('room_id', room.id);
 
-      if (error) throw error;
+      if (authorizedError) throw authorizedError;
 
-      if (data) {
-        const users = data.map(item => ({
-          id: item.user.id,
-          name: item.user.name,
-          email: item.user.email,
+      if (authorizedData) {
+        const users = authorizedData.map(item => ({
+          id: item.users.id,
+          name: item.users.name,
+          email: item.users.email,
           is_main_teacher: item.is_main_teacher
         }));
         setAuthorizedUsers(users);
@@ -85,7 +83,6 @@ export const RoomCard = ({
         description: "O usuário foi desvinculado da sala com sucesso.",
       });
 
-      // Refresh the list
       fetchAuthorizedUsers();
     } catch (error) {
       console.error('Error removing authorization:', error);
