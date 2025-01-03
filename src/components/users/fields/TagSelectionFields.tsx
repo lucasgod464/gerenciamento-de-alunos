@@ -4,7 +4,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/hooks/useAuth"
 import { Tag as TagIcon } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
 
 interface Tag {
   id: string
@@ -23,26 +22,16 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
   const { user: currentUser } = useAuth()
 
   useEffect(() => {
-    const fetchTags = async () => {
-      if (!currentUser?.companyId) return;
+    if (!currentUser?.companyId) return
 
-      const { data: tagsData, error } = await supabase
-        .from('tags')
-        .select('*')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true)
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching tags:', error);
-        return;
-      }
-
-      setTags(tagsData);
-    };
-
-    fetchTags();
-  }, [currentUser?.companyId])
+    const storageKey = `company_${currentUser.companyId}_tags`
+    const savedTags = localStorage.getItem(storageKey)
+    if (savedTags) {
+      const parsedTags = JSON.parse(savedTags)
+      const activeTags = parsedTags.filter((tag: Tag) => tag.status)
+      setTags(activeTags)
+    }
+  }, [currentUser])
 
   return (
     <div className="space-y-2">

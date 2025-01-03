@@ -20,7 +20,6 @@ interface CategoryFieldsProps {
 export function CategoryFields({ defaultValues, specializations }: CategoryFieldsProps) {
   const [availableSpecializations, setAvailableSpecializations] = useState<Array<{ id: string; name: string }>>([]);
   const { user: currentUser } = useAuth();
-  const [selectedSpecialization, setSelectedSpecialization] = useState(defaultValues?.specialization || "");
 
   useEffect(() => {
     const fetchSpecializations = async () => {
@@ -47,15 +46,9 @@ export function CategoryFields({ defaultValues, specializations }: CategoryField
   return (
     <div className="space-y-2">
       <Label htmlFor="specialization">Especialização</Label>
-      <Select 
-        name="specialization" 
-        value={selectedSpecialization}
-        onValueChange={setSelectedSpecialization}
-      >
+      <Select name="specialization" defaultValue={defaultValues?.specialization}>
         <SelectTrigger>
-          <SelectValue placeholder="Selecione a especialização">
-            {selectedSpecialization ? availableSpecializations.find(s => s.id === selectedSpecialization)?.name : "Selecione a especialização"}
-          </SelectValue>
+          <SelectValue placeholder="Selecione a especialização" />
         </SelectTrigger>
         <SelectContent>
           {availableSpecializations.map((spec) => (
