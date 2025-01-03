@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminStudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -14,48 +15,49 @@ const AdminStudentsTotal = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const loadStudents = () => {
+  const fetchStudents = async () => {
     if (!currentUser?.companyId) return;
 
-    // Carregar todas as salas da empresa
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const companyRooms = allRooms.filter((room: any) => 
-      room.companyId === currentUser.companyId
-    );
-    setRooms(companyRooms.map((room: any) => ({ id: room.id, name: room.name })));
+    try {
+      // Buscar alunos
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select(`
+          *,
+          rooms (
+            id,
+            name
+          )
+        `)
+        .eq('company_id', currentUser.companyId);
 
-    // Carregar alunos das salas
-    let roomStudents: Student[] = [];
-    companyRooms.forEach((room: any) => {
-      if (room.students && Array.isArray(room.students)) {
-        const students = room.students
-          .filter((student: any) => student.companyId === currentUser.companyId)
-          .map((student: Student) => ({
-            ...student,
-            room: room.id
-          }));
-        roomStudents = [...roomStudents, ...students];
-      }
-    });
+      if (studentsError) throw studentsError;
 
-    // Carregar alunos do formulário de inscrição (sem sala)
-    const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
-    const studentsWithoutRoom = enrollments
-      .filter((student: Student) => !student.room)
-      .map((student: Student) => ({
-        ...student,
-        companyId: currentUser.companyId
-      }));
+      // Buscar salas
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .eq('company_id', currentUser.companyId);
 
-    // Combinar todos os alunos
-    setStudents([...roomStudents, ...studentsWithoutRoom]);
+      if (roomsError) throw roomsError;
+
+      setRooms(roomsData || []);
+      setStudents(studentsData || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar alunos",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
-    loadStudents();
+    fetchStudents();
     
     const handleStorageChange = () => {
-      loadStudents();
+      fetchStudents();
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -69,31 +71,22 @@ const AdminStudentsTotal = () => {
     };
   }, [currentUser]);
 
-  const handleDeleteStudent = (id: string) => {
+  const handleDeleteStudent = async (id: string) => {
     try {
-      // Remover aluno das salas
-      const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-      const updatedRooms = allRooms.map((room: any) => {
-        if (room.students) {
-          room.students = room.students.filter((student: Student) => student.id !== id);
-        }
-        return room;
-      });
-      localStorage.setItem("rooms", JSON.stringify(updatedRooms));
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', id);
 
-      // Remover aluno da lista de inscrições
-      const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
-      const updatedEnrollments = enrollments.filter((student: Student) => student.id !== id);
-      localStorage.setItem("enrollments", JSON.stringify(updatedEnrollments));
+      if (error) throw error;
 
-      loadStudents();
-
+      fetchStudents();
       toast({
         title: "Sucesso",
         description: "Aluno excluído com sucesso!",
       });
     } catch (error) {
-      console.error("Erro ao excluir aluno:", error);
+      console.error('Error deleting student:', error);
       toast({
         title: "Erro",
         description: "Erro ao excluir aluno",
@@ -102,44 +95,22 @@ const AdminStudentsTotal = () => {
     }
   };
 
-  const handleTransferStudent = (studentId: string, newRoomId: string) => {
+  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      // Buscar o aluno na lista de inscrições
-      const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]");
-      const studentToTransfer = enrollments.find((s: Student) => s.id === studentId);
-      
-      if (studentToTransfer) {
-        // Remover o aluno da lista de inscrições
-        const updatedEnrollments = enrollments.filter((s: Student) => s.id !== studentId);
-        localStorage.setItem("enrollments", JSON.stringify(updatedEnrollments));
+      const { error } = await supabase
+        .from('students')
+        .update({ room_id: newRoomId })
+        .eq('id', studentId);
 
-        // Adicionar o aluno à sala selecionada
-        const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-        const updatedRooms = allRooms.map((room: any) => {
-          if (room.id === newRoomId) {
-            if (!room.students) {
-              room.students = [];
-            }
-            room.students.push({
-              ...studentToTransfer,
-              room: newRoomId,
-              companyId: currentUser?.companyId,
-              status: "active"
-            });
-          }
-          return room;
-        });
+      if (error) throw error;
 
-        localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-        loadStudents();
-
-        toast({
-          title: "Sucesso",
-          description: "Aluno transferido com sucesso!",
-        });
-      }
+      fetchStudents();
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
     } catch (error) {
-      console.error("Erro ao transferir aluno:", error);
+      console.error('Error transferring student:', error);
       toast({
         title: "Erro",
         description: "Erro ao transferir aluno",

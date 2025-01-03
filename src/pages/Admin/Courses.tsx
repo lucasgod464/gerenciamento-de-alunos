@@ -11,6 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pencil, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/components/ui/use-toast";
 
 interface Course {
   id: number;
@@ -25,22 +28,81 @@ const Courses = () => {
     { id: 1, name: "Curso de React", status: "active" },
     { id: 2, name: "Treinamento TypeScript", status: "inactive" },
   ]);
+  const { user: currentUser } = useAuth();
 
-  const handleCreateCourse = () => {
-    if (!newCourseName.trim()) return;
-    
-    const newCourse: Course = {
-      id: courses.length + 1,
-      name: newCourseName.trim(),
-      status: "active",
-    };
-    
-    setCourses([...courses, newCourse]);
-    setNewCourseName("");
+  const fetchCourses = async () => {
+    if (!currentUser?.companyId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('company_id', currentUser.companyId);
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      toast({
+        title: "Erro ao carregar cursos",
+        description: "Ocorreu um erro ao carregar os cursos.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteCourse = (id: number) => {
-    setCourses(courses.filter(course => course.id !== id));
+  const handleCreateCourse = async () => {
+    if (!newCourseName.trim() || !currentUser?.companyId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .insert([{
+          name: newCourseName.trim(),
+          status: 'active',
+          company_id: currentUser.companyId
+        }]);
+
+      if (error) throw error;
+      
+      fetchCourses();
+      setNewCourseName("");
+      toast({
+        title: "Curso criado",
+        description: "O curso foi criado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error creating course:', error);
+      toast({
+        title: "Erro ao criar curso",
+        description: "Ocorreu um erro ao criar o curso.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCourse = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      fetchCourses();
+      toast({
+        title: "Curso excluído",
+        description: "O curso foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      toast({
+        title: "Erro ao excluir curso",
+        description: "Ocorreu um erro ao excluir o curso.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredCourses = courses.filter(course =>
@@ -117,7 +179,7 @@ const Courses = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteCourse(course.id)}
+                        onClick={() => handleDeleteCourse(course.id.toString())}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
