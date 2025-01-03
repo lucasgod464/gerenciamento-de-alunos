@@ -12,6 +12,8 @@ export function useRooms() {
 
   const fetchRooms = async () => {
     try {
+      console.log("Fetching rooms for company:", user?.companyId);
+      
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
