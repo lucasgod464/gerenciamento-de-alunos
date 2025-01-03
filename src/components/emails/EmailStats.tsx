@@ -9,7 +9,10 @@ interface EmailStatsProps {
 export function EmailStats({ data }: EmailStatsProps) {
   const totalEmails = data.length;
   const adminEmails = data.filter(email => email.accessLevel === "Admin").length;
-  const activeCompanies = new Set(data.filter(email => email.companyStatus === "Ativa").map(email => email.companyId)).size;
+  const activeCompanies = new Set(
+    data.filter(email => email.company?.status === "Ativa")
+    .map(email => email.companyId)
+  ).size;
 
   return (
     <div className="grid gap-4 md:grid-cols-3">

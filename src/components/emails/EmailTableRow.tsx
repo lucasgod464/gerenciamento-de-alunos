@@ -22,7 +22,7 @@ interface EmailTableRowProps {
 }
 
 export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps) {
-  const isCompanyActive = email.companyStatus === "Ativa"
+  const isCompanyActive = email.company?.status === "Ativa"
 
   const handleEdit = () => {
     onUpdate(email)
@@ -62,7 +62,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           {email.accessLevel}
         </span>
       </TableCell>
-      <TableCell>{email.company}</TableCell>
+      <TableCell>{email.company?.name}</TableCell>
       <TableCell>
         <span className="inline-flex items-center">
           <span 

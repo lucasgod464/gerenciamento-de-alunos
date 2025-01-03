@@ -22,6 +22,7 @@ const Emails = () => {
         .select(`
           *,
           companies (
+            id,
             name,
             status
           )
@@ -29,7 +30,7 @@ const Emails = () => {
 
       if (error) throw error;
 
-      const formattedEmails: Email[] = emailsData.map((email: SupabaseEmail) => 
+      const formattedEmails: Email[] = (emailsData as SupabaseEmail[]).map(email => 
         mapSupabaseEmailToEmail(email)
       );
 
@@ -64,6 +65,8 @@ const Emails = () => {
           email: updatedEmail.email,
           access_level: updatedEmail.accessLevel,
           company_id: updatedEmail.companyId,
+          location: updatedEmail.location,
+          specialization: updatedEmail.specialization,
         })
         .eq("id", updatedEmail.id);
 
