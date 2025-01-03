@@ -11,15 +11,7 @@ export function useRooms() {
   const { user } = useAuth();
 
   const fetchRooms = async () => {
-    if (!user?.companyId) {
-      console.log("No company ID found for user");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log("Fetching rooms for company:", user.companyId);
-      
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
@@ -35,20 +27,16 @@ export function useRooms() {
             )
           )
         `)
-        .eq('company_id', user.companyId);
+        .eq('company_id', user?.companyId);
 
-      if (error) {
-        console.error("Error fetching rooms:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Rooms data:", roomsData);
       const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
-      console.log("Transformed rooms:", formattedRooms);
 
       setRooms(formattedRooms);
+      console.log("Salas carregadas:", formattedRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       toast({
@@ -68,21 +56,10 @@ export function useRooms() {
   }, [user?.companyId]);
 
   const handleSave = async (room: Partial<Room>) => {
-    if (!user?.companyId) {
-      toast({
-        title: "Erro ao salvar sala",
-        description: "Usuário não está associado a uma empresa",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      let result;
-      
       if (room.id) {
         // Update existing room
-        result = await supabase
+        const { error: updateError } = await supabase
           .from('rooms')
           .update({
             name: room.name,
@@ -91,14 +68,18 @@ export function useRooms() {
             category: room.category,
             status: room.status,
             study_room: room.studyRoom || '',
-            company_id: user.companyId,
           })
-          .eq('id', room.id)
-          .select()
-          .single();
+          .eq('id', room.id);
+
+        if (updateError) throw updateError;
+
+        toast({
+          title: "Sala atualizada",
+          description: "A sala foi atualizada com sucesso!",
+        });
       } else {
         // Create new room
-        result = await supabase
+        const { error: createError } = await supabase
           .from('rooms')
           .insert({
             name: room.name,
@@ -107,21 +88,19 @@ export function useRooms() {
             category: room.category,
             status: room.status,
             study_room: room.studyRoom || '',
-            company_id: user.companyId,
-          })
-          .select()
-          .single();
+            company_id: user?.companyId,
+          });
+
+        if (createError) throw createError;
+
+        toast({
+          title: "Sala criada",
+          description: "A sala foi criada com sucesso!",
+        });
       }
 
-      if (result.error) throw result.error;
-
-      toast({
-        title: room.id ? "Sala atualizada" : "Sala criada",
-        description: room.id ? "A sala foi atualizada com sucesso!" : "A sala foi criada com sucesso!",
-      });
-
       fetchRooms();
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving room:", error);
       toast({
         title: "Erro ao salvar sala",
@@ -132,7 +111,7 @@ export function useRooms() {
   };
 
   const handleDeleteConfirm = async (roomId: string) => {
-    if (!roomId || !user?.companyId) return;
+    if (!roomId) return;
 
     try {
       const { error: deleteError } = await supabase
