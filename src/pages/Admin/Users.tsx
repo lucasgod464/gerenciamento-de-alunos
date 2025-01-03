@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { User, AccessLevel } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
@@ -14,14 +14,16 @@ const Users = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
 
-  const { data: users = [], refetch } = useQuery({
-    queryKey: ["company-emails", currentUser?.companyId],
+  // Usar useQuery para gerenciamento de cache e revalidação automática
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ["users", currentUser?.companyId],
     queryFn: async () => {
       if (!currentUser?.companyId) return [];
 
-      const { data: emailsData, error } = await supabase
-        .from('emails')
+      const { data: usersData, error } = await supabase
+        .from('users')
         .select(`
           id,
           name,
@@ -31,27 +33,28 @@ const Users = () => {
           created_at,
           updated_at,
           location,
-          specialization
+          specialization,
+          status
         `)
         .eq('company_id', currentUser.companyId);
 
       if (error) {
-        console.error('Error fetching emails:', error);
+        console.error('Error fetching users:', error);
         throw error;
       }
 
-      return emailsData.map(email => ({
-        id: email.id,
-        name: email.name,
-        email: email.email,
-        role: email.access_level === 'Admin' ? 'ADMIN' : 'USER',
-        company_id: email.company_id,
-        created_at: email.created_at,
-        last_access: email.updated_at,
-        status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
-        access_level: email.access_level as AccessLevel,
-        location: email.location,
-        specialization: email.specialization,
+      return usersData.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        company_id: user.company_id,
+        created_at: user.created_at,
+        last_access: user.updated_at,
+        status: user.status === 'inactive' ? 'inactive' as const : 'active' as const,
+        access_level: user.access_level as AccessLevel,
+        location: user.location,
+        specialization: user.specialization,
         password: '',
       }));
     },
@@ -61,19 +64,22 @@ const Users = () => {
   const handleUpdateUser = async (updatedUser: User) => {
     try {
       const { error } = await supabase
-        .from('emails')
+        .from('users')
         .update({
           name: updatedUser.name,
           email: updatedUser.email,
           access_level: updatedUser.access_level,
           location: updatedUser.location,
           specialization: updatedUser.specialization,
+          status: updatedUser.status,
+          updated_at: new Date().toISOString()
         })
         .eq('id', updatedUser.id);
 
       if (error) throw error;
 
-      refetch();
+      // Invalidar o cache para forçar uma nova busca
+      await queryClient.invalidateQueries(["users", currentUser?.companyId]);
       
       toast({
         title: "Usuário atualizado",
@@ -91,23 +97,28 @@ const Users = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
-      // First, delete related records in user_authorized_rooms
-      const { error: authRoomsError } = await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('user_id', id);
+      // Primeiro, deletar registros relacionados
+      await Promise.all([
+        supabase
+          .from('user_authorized_rooms')
+          .delete()
+          .eq('user_id', id),
+        supabase
+          .from('user_specializations')
+          .delete()
+          .eq('user_id', id)
+      ]);
 
-      if (authRoomsError) throw authRoomsError;
-
-      // Then delete the user
+      // Então deletar o usuário
       const { error } = await supabase
-        .from('emails')
+        .from('users')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
 
-      refetch();
+      // Invalidar o cache para forçar uma nova busca
+      await queryClient.invalidateQueries(["users", currentUser?.companyId]);
       
       toast({
         title: "Usuário excluído",
@@ -129,8 +140,8 @@ const Users = () => {
       user.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = 
       statusFilter === "all" || 
-      (statusFilter === "active" && user.access_level !== "Inativo") ||
-      (statusFilter === "inactive" && user.access_level === "Inativo");
+      (statusFilter === "active" && user.status === "active") ||
+      (statusFilter === "inactive" && user.status === "inactive");
 
     return matchesSearch && matchesStatus;
   });
@@ -138,7 +149,7 @@ const Users = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <UsersHeader onUserCreated={() => refetch()} />
+        <UsersHeader onUserCreated={() => queryClient.invalidateQueries(["users", currentUser?.companyId])} />
         
         <UsersFilters
           search={search}
@@ -151,6 +162,7 @@ const Users = () => {
           users={filteredUsers}
           onUpdateUser={handleUpdateUser}
           onDeleteUser={handleDeleteUser}
+          isLoading={isLoading}
         />
       </div>
     </DashboardLayout>
