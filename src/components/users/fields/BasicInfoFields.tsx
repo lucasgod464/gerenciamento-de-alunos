@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AccessLevel } from "@/types/user";
 
@@ -11,13 +11,14 @@ interface BasicInfoFieldsProps {
     name?: string;
     email?: string;
     password?: string;
-    location?: string;
+    address?: string;
     access_level?: AccessLevel;
   };
   isEditing?: boolean;
+  generateStrongPassword?: () => void;
 }
 
-export function BasicInfoFields({ defaultValues, isEditing }: BasicInfoFieldsProps) {
+export function BasicInfoFields({ defaultValues, isEditing, generateStrongPassword }: BasicInfoFieldsProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -51,38 +52,49 @@ export function BasicInfoFields({ defaultValues, isEditing }: BasicInfoFieldsPro
         <Label htmlFor="password">
           {isEditing ? "Nova Senha (opcional)" : "Senha"}
         </Label>
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            placeholder={isEditing ? "Digite a nova senha se desejar alterá-la" : "Digite a senha"}
-            defaultValue=""
-            className="pr-10"
-            required={!isEditing}
-          />
+        <div className="relative flex gap-2">
+          <div className="relative flex-1">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder={isEditing ? "Digite a nova senha se desejar alterá-la" : "Digite a senha"}
+              defaultValue=""
+              className="pr-10"
+              required={!isEditing}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={togglePasswordVisibility}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4 text-gray-500" />
+              ) : (
+                <Eye className="h-4 w-4 text-gray-500" />
+              )}
+            </Button>
+          </div>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             size="icon"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={togglePasswordVisibility}
+            onClick={generateStrongPassword}
+            title="Gerar senha forte"
           >
-            {showPassword ? (
-              <EyeOff className="h-4 w-4 text-gray-500" />
-            ) : (
-              <Eye className="h-4 w-4 text-gray-500" />
-            )}
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="location">Local</Label>
+        <Label htmlFor="address">Endereço</Label>
         <Input
-          id="location"
-          name="location"
-          placeholder="Digite o local"
-          defaultValue={defaultValues?.location}
+          id="address"
+          name="address"
+          placeholder="Digite o endereço"
+          defaultValue={defaultValues?.address}
           required
         />
       </div>

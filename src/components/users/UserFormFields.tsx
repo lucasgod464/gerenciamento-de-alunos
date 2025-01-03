@@ -13,12 +13,11 @@ interface UserFormFieldsProps {
     name?: string;
     email?: string;
     password?: string;
-    location?: string;
+    address?: string;
     specialization?: string;
     status?: string;
     authorizedRooms?: string[];
     tags?: { id: string; name: string; color: string; }[];
-    responsibleCategory?: string;
   };
   onAuthorizedRoomsChange?: (roomIds: string[]) => void;
   onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
@@ -29,6 +28,7 @@ export const UserFormFields = ({
   defaultValues,
   onAuthorizedRoomsChange,
   onTagsChange,
+  generateStrongPassword,
   isEditing,
 }: UserFormFieldsProps) => {
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
@@ -87,7 +87,11 @@ export const UserFormFields = ({
   return (
     <ScrollArea className="h-[60vh] pr-4">
       <div className="space-y-4">
-        <BasicInfoFields defaultValues={defaultValues} isEditing={isEditing} />
+        <BasicInfoFields 
+          defaultValues={defaultValues} 
+          isEditing={isEditing}
+          generateStrongPassword={generateStrongPassword}
+        />
         <CategoryFields 
           defaultValues={defaultValues} 
           specializations={specializations}

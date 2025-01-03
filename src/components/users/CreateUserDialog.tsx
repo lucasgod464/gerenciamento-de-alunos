@@ -26,13 +26,29 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     setSelectedTags(tags);
   };
 
+  const generateStrongPassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * charset.length);
+      password += charset[randomIndex];
+    }
+    
+    const passwordInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+    if (passwordInput) {
+      passwordInput.value = password;
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
     const password = formData.get("password") as string;
-    const access_level = formData.get("access_level") as string || "Usuário Comum";
+    const access_level = formData.get("access_level") as "Admin" | "Usuário Comum" || "Usuário Comum";
+    const address = formData.get("address") as string;
     
     if (!email || !name || !password || !currentUser?.companyId) {
       toast({
@@ -70,6 +86,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           password,
           access_level,
           company_id: currentUser.companyId,
+          location: address,
         })
         .select()
         .single();
@@ -158,6 +175,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           <UserFormFields 
             onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
             onTagsChange={handleTagsChange}
+            generateStrongPassword={generateStrongPassword}
           />
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="submit">Criar</Button>
