@@ -33,15 +33,22 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
     const loadUserData = async () => {
       if (user?.id) {
         try {
+          console.log('Loading user data for ID:', user.id);
+          
           // Load authorized rooms
           const { data: roomData, error: roomError } = await supabase
             .from('user_authorized_rooms')
             .select('room_id')
             .eq('user_id', user.id);
 
-          if (roomError) throw roomError;
+          if (roomError) {
+            console.error('Error loading authorized rooms:', roomError);
+            throw roomError;
+          }
 
+          console.log('Loaded room data:', roomData);
           const authorizedRooms = roomData?.map(r => r.room_id) || [];
+          console.log('Authorized rooms:', authorizedRooms);
           
           setFormData(user);
           setNewPassword("");
@@ -58,10 +65,10 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
       }
     };
 
-    if (user) {
+    if (user && open) {
       loadUserData();
     }
-  }, [user, toast]);
+  }, [user, open, toast]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -69,6 +76,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
     try {
       setIsSubmitting(true);
+      console.log('Submitting form with selected rooms:', selectedRooms);
 
       const updateData: any = {
         name: formData.name,
@@ -83,6 +91,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         updateData.password = newPassword;
       }
 
+      // Update user data
       const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
         .update(updateData)
@@ -98,10 +107,14 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         .delete()
         .eq('user_id', formData.id);
 
-      if (deleteRoomError) throw deleteRoomError;
+      if (deleteRoomError) {
+        console.error('Error deleting room authorizations:', deleteRoomError);
+        throw deleteRoomError;
+      }
 
       // Insert new room authorizations
       if (selectedRooms.length > 0) {
+        console.log('Inserting new room authorizations:', selectedRooms);
         const roomsData = selectedRooms.map(roomId => ({
           user_id: formData.id,
           room_id: roomId,
@@ -111,7 +124,10 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           .from('user_authorized_rooms')
           .insert(roomsData);
 
-        if (roomError) throw roomError;
+        if (roomError) {
+          console.error('Error inserting room authorizations:', roomError);
+          throw roomError;
+        }
       }
 
       // Update tags
