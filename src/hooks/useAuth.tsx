@@ -46,7 +46,7 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("User login response:", { userData, userError });
 
@@ -75,7 +75,7 @@ export function useAuth() {
         .from('emails')
         .select('*, companies:company_id(*)')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("Email login response:", { emailData, emailError });
 
@@ -95,7 +95,7 @@ export function useAuth() {
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
-            status: emailData.access_level === 'Inativo' ? 'inactive' : 'active',
+            status: emailData.status === 'active' ? 'active' : 'inactive',
           },
           token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
         };

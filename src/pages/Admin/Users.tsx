@@ -45,7 +45,7 @@ const Users = () => {
         company_id: email.company_id,
         created_at: email.created_at,
         last_access: email.updated_at,
-        status: email.status || 'active',
+        status: email.status === 'active' ? 'active' as const : 'inactive' as const,
         access_level: email.access_level,
         location: email.location,
         specialization: email.specialization,
