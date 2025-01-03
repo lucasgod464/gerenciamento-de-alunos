@@ -3,7 +3,7 @@ import { EmailList } from "@/components/emails/EmailList";
 import { EmailStats } from "@/components/emails/EmailStats";
 import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog";
 import { EditEmailDialog } from "@/components/emails/EditEmailDialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email";

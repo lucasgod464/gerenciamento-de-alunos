@@ -1,4 +1,4 @@
-export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
+export type AccessLevel = "Admin" | "Usuário Comum";
 
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 
@@ -10,6 +10,8 @@ export type Permission =
   | "manage:rooms"
   | "view:reports";
 
+export type UserStatus = "active" | "inactive";
+
 export interface AuthUser {
   id: string;
   email: string;
@@ -18,6 +20,7 @@ export interface AuthUser {
   companyId: string | null;
   createdAt: string;
   lastAccess: string;
+  status: UserStatus;
 }
 
 export interface AuthResponse {
