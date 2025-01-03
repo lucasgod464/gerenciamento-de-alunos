@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,84 +8,9 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-interface EnrollmentForm {
-  id: string;
-  form_data: any;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-}
-
 const AdminEnrollment = () => {
-  const [formData, setFormData] = useState<any>(null);
   const { user: currentUser } = useAuth();
   const enrollmentUrl = `${window.location.origin}/enrollment`;
-
-  useEffect(() => {
-    if (currentUser?.companyId) {
-      fetchFormData();
-    }
-  }, [currentUser]);
-
-  const fetchFormData = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('enrollment_forms')
-        .select('*')
-        .eq('company_id', currentUser?.companyId)
-        .single();
-
-      if (error) throw error;
-      
-      if (data) {
-        setFormData(data.form_data);
-      }
-    } catch (error) {
-      console.error('Error fetching form data:', error);
-      toast.error("Erro ao carregar configurações do formulário");
-    }
-  };
-
-  const saveFormData = async (newFormData: any) => {
-    if (!currentUser?.companyId) return;
-
-    try {
-      const { data: existingForm } = await supabase
-        .from('enrollment_forms')
-        .select('id')
-        .eq('company_id', currentUser.companyId)
-        .single();
-
-      if (existingForm) {
-        // Atualizar formulário existente
-        const { error } = await supabase
-          .from('enrollment_forms')
-          .update({
-            form_data: newFormData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingForm.id);
-
-        if (error) throw error;
-      } else {
-        // Criar novo formulário
-        const { error } = await supabase
-          .from('enrollment_forms')
-          .insert({
-            form_data: newFormData,
-            company_id: currentUser.companyId
-          });
-
-        if (error) throw error;
-      }
-
-      setFormData(newFormData);
-      toast.success("Formulário salvo com sucesso!");
-    } catch (error) {
-      console.error('Error saving form data:', error);
-      toast.error("Erro ao salvar formulário");
-    }
-  };
 
   const copyLink = () => {
     navigator.clipboard.writeText(enrollmentUrl);
@@ -140,10 +64,7 @@ const AdminEnrollment = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EnrollmentFormBuilder 
-                initialData={formData}
-                onSave={saveFormData}
-              />
+              <EnrollmentFormBuilder />
             </CardContent>
           </Card>
         </div>
