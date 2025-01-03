@@ -25,6 +25,7 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     try {
       console.log('Fetching authorized users for room:', roomId);
       
+      // Busca os usuários autorizados com join na tabela users
       const { data: authorizedData, error: authorizedError } = await supabase
         .from('room_authorized_users')
         .select(`
@@ -39,22 +40,23 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
         .eq('room_id', roomId);
 
       if (authorizedError) {
-        console.error('Error details:', authorizedError);
+        console.error('Error fetching authorized users:', authorizedError);
         throw authorizedError;
       }
 
-      console.log('Authorized users data:', authorizedData);
+      console.log('Raw authorized users data:', authorizedData);
 
       if (authorizedData) {
         const users = authorizedData
-          .filter(item => item.users) // Filter out any null users
+          .filter(item => item.users) // Remove any null users
           .map(item => ({
             id: item.users.id,
             name: item.users.name,
             email: item.users.email,
             is_main_teacher: item.is_main_teacher
           }));
-        console.log('Processed users:', users);
+        
+        console.log('Processed authorized users:', users);
         setAuthorizedUsers(users);
       }
     } catch (error) {
@@ -68,7 +70,9 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
   };
 
   useEffect(() => {
-    fetchAuthorizedUsers();
+    if (roomId) {
+      fetchAuthorizedUsers();
+    }
   }, [roomId]);
 
   const handleRemoveAuthorization = async (userId: string) => {
@@ -127,7 +131,7 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
           </div>
         ))
       ) : (
-        <p className="text-sm">Nenhum usuário vinculado</p>
+        <p className="text-sm text-muted-foreground">Nenhum usuário vinculado</p>
       )}
     </div>
   );
