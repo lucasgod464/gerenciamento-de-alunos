@@ -28,6 +28,8 @@ export const CategoriesKanban = ({
     
     const fetchRooms = async () => {
       try {
+        console.log('Fetching rooms for company:', companyId);
+        
         const { data: roomsData, error } = await supabase
           .from('rooms')
           .select(`
@@ -50,6 +52,8 @@ export const CategoriesKanban = ({
           return;
         }
 
+        console.log('Rooms data:', roomsData);
+
         const transformedRooms: Room[] = roomsData.map(room => ({
           id: room.id,
           name: room.name,
@@ -65,6 +69,7 @@ export const CategoriesKanban = ({
           ) || []
         }));
 
+        console.log('Transformed rooms:', transformedRooms);
         setRooms(transformedRooms);
       } catch (error) {
         console.error('Error fetching rooms:', error);
