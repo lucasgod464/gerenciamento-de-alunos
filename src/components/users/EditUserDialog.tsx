@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { User, AccessLevel } from "@/types/user";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { RoomSelectionFields } from "./fields/RoomSelectionFields";
+import { TagSelectionFields } from "./fields/TagSelectionFields";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -32,11 +34,15 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   const [formData, setFormData] = useState<User | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [newPassword, setNewPassword] = useState("");
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
 
   useEffect(() => {
     if (user) {
       setFormData(user);
       setNewPassword("");
+      setSelectedRooms(user.authorizedRooms || []);
+      setSelectedTags(user.tags || []);
     }
   }, [user]);
 
@@ -57,6 +63,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         updateData.password = newPassword;
       }
 
+      // Update user data
       const { data, error } = await supabase
         .from('emails')
         .update(updateData)
@@ -66,9 +73,49 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (error) throw error;
 
+      // Update authorized rooms
+      await supabase
+        .from('user_authorized_rooms')
+        .delete()
+        .eq('user_id', formData.id);
+
+      if (selectedRooms.length > 0) {
+        const roomsData = selectedRooms.map(roomId => ({
+          user_id: formData.id,
+          room_id: roomId,
+        }));
+
+        const { error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .insert(roomsData);
+
+        if (roomsError) throw roomsError;
+      }
+
+      // Update user tags
+      await supabase
+        .from('user_tags')
+        .delete()
+        .eq('user_id', formData.id);
+
+      if (selectedTags.length > 0) {
+        const tagsData = selectedTags.map(tag => ({
+          user_id: formData.id,
+          tag_id: tag.id,
+        }));
+
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(tagsData);
+
+        if (tagsError) throw tagsError;
+      }
+
       const updatedUser: User = {
         ...formData,
         ...data,
+        authorizedRooms: selectedRooms,
+        tags: selectedTags,
         role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
       };
 
@@ -175,6 +222,29 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
               </SelectContent>
             </Select>
           </div>
+
+          <RoomSelectionFields
+            selectedRooms={selectedRooms}
+            onRoomToggle={(roomId) => {
+              setSelectedRooms(prev => 
+                prev.includes(roomId) 
+                  ? prev.filter(id => id !== roomId)
+                  : [...prev, roomId]
+              );
+            }}
+          />
+
+          <TagSelectionFields
+            selectedTags={selectedTags}
+            onTagToggle={(tag) => {
+              setSelectedTags(prev => 
+                prev.some(t => t.id === tag.id)
+                  ? prev.filter(t => t.id !== tag.id)
+                  : [...prev, tag]
+              );
+            }}
+          />
+
           <Button type="submit" className="w-full">
             Salvar Alterações
           </Button>
