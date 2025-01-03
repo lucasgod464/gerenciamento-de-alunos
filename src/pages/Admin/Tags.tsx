@@ -170,11 +170,6 @@ const Tags = () => {
             <Plus className="mr-2 h-4 w-4" />
             Criar Etiqueta
           </Button>
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as etiquetas do sistema
-          </p>
         </div>
 
         <TagDialog

@@ -25,11 +25,9 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
   useEffect(() => {
     const fetchUserTags = async () => {
       try {
-        console.log('Fetching tags for user:', userName);
-        
         // Primeiro, buscar o usuário pelo nome
         const { data: users, error: userError } = await supabase
-          .from('emails')
+          .from('users')
           .select('id')
           .eq('name', userName)
           .eq('company_id', companyId);
@@ -38,13 +36,12 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
         if (!users || users.length === 0) return;
 
         const userId = users[0].id;
-        console.log('Found user ID:', userId);
 
         // Depois, buscar as tags do usuário
         const { data: tags, error: tagsError } = await supabase
           .from('user_tags')
           .select(`
-            tags (
+            tag:tag_id (
               id,
               name,
               color
@@ -54,14 +51,7 @@ export const UserWithTags = ({ userName, companyId }: UserWithTagsProps) => {
 
         if (tagsError) throw tagsError;
         
-        console.log('Raw tags data:', tags);
-        
-        const processedTags = tags
-          ?.filter(t => t.tags) // Remove any null tags
-          .map(t => t.tags) || [];
-          
-        console.log('Processed tags:', processedTags);
-        setUserTags(processedTags);
+        setUserTags(tags?.map(t => t.tag) || []);
       } catch (error) {
         console.error('Erro ao buscar tags do usuário:', error);
       }

@@ -16,12 +16,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/components/ui/use-toast";
 import type { Course } from "@/types/course";
 
-interface Course {
-  id: number;
-  name: string;
-  status: "active" | "inactive";
-}
-
 const Courses = () => {
   const [newCourseName, setNewCourseName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,26 +71,30 @@ const Courses = () => {
         variant: "destructive",
       });
     }
-  const [courses, setCourses] = useState<Course[]>([
-    { id: 1, name: "Curso de React", status: "active" },
-    { id: 2, name: "Treinamento TypeScript", status: "inactive" },
-  ]);
-
-  const handleCreateCourse = () => {
-    if (!newCourseName.trim()) return;
-    
-    const newCourse: Course = {
-      id: courses.length + 1,
-      name: newCourseName.trim(),
-      status: "active",
-    };
-    
-    setCourses([...courses, newCourse]);
-    setNewCourseName("");
   };
 
-  const handleDeleteCourse = (id: number) => {
-    setCourses(courses.filter(course => course.id !== id));
+  const handleDeleteCourse = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('courses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      fetchCourses();
+      toast({
+        title: "Curso excluído",
+        description: "O curso foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      toast({
+        title: "Erro ao excluir curso",
+        description: "Ocorreu um erro ao excluir o curso.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredCourses = courses.filter(course =>
@@ -173,7 +171,7 @@ const Courses = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDeleteCourse(course.id)}
+                        onClick={() => handleDeleteCourse(course.id.toString())}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
