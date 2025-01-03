@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
-import { createUser } from "@/services/userService";
+import { userService } from "@/services/userService";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
@@ -49,7 +49,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
     const password = formData.get("password") as string;
-    const access_level = formData.get("access_level") as "Admin" | "Usuário Comum" || "Usuário Comum";
+    const accessLevel = formData.get("access_level") as "Admin" | "Usuário Comum" || "Usuário Comum";
     const location = formData.get("address") as string;
     const specialization = formData.get("specialization") as string;
     
@@ -64,14 +64,16 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
     try {
       // Create the user first
-      const user = await createUser({
+      const user = await userService.createUser({
         email,
         name,
         password,
-        access_level,
-        company_id: currentUser.companyId,
+        accessLevel,
+        companyId: currentUser.companyId,
         location,
         specialization,
+        status: 'active',
+        role: 'USER',
         selectedRooms,
         selectedTags
       });

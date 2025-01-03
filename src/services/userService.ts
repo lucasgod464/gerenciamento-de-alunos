@@ -1,11 +1,21 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { User, mapDatabaseUser } from "@/types/user";
 
-interface CreateUserData extends Omit<User, 'id' | 'createdAt' | 'updatedAt'> {
+interface CreateUserData {
+  email: string;
+  name: string;
   password: string;
+  accessLevel: "Admin" | "Usuário Comum";
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status: string;
+  role: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
 }
 
-export const createUser = async (userData: CreateUserData) => {
+const createUser = async (userData: CreateUserData) => {
   try {
     const { data, error } = await supabase
       .from('emails')
@@ -26,7 +36,7 @@ export const createUser = async (userData: CreateUserData) => {
 
     if (error) throw error;
     
-    return data;
+    return mapDatabaseUser(data);
   } catch (error) {
     console.error('Error creating user:', error);
     throw error;
