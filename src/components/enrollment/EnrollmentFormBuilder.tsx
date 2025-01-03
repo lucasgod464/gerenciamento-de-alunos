@@ -30,7 +30,17 @@ const DEFAULT_FIELDS: FormField[] = [
 
 const HIDDEN_FIELDS = ["sala", "status"];
 
-export const EnrollmentFormBuilder = () => {
+interface EnrollmentFormBuilderProps {
+  onSave: (formFields: any) => Promise<void>;
+  loadConfig: () => Promise<any>;
+  isLoading: boolean;
+}
+
+export const EnrollmentFormBuilder: React.FC<EnrollmentFormBuilderProps> = ({
+  onSave,
+  loadConfig,
+  isLoading
+}) => {
   const { toast } = useToast();
   const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
