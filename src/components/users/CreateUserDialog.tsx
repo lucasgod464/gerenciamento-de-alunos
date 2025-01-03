@@ -61,13 +61,26 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
-      // Verificar se o email já existe
+      console.log('Creating new user with data:', {
+        email,
+        name,
+        password,
+        access_level,
+        company_id: currentUser.companyId,
+        location,
+        specialization
+      });
+
+      // Check if email already exists
       const { data: existingEmails, error: checkError } = await supabase
         .from('emails')
         .select('id')
         .eq('email', email);
 
-      if (checkError) throw checkError;
+      if (checkError) {
+        console.error('Error checking existing email:', checkError);
+        throw checkError;
+      }
 
       if (existingEmails && existingEmails.length > 0) {
         toast({
@@ -103,8 +116,11 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         throw new Error('No data returned after creating user');
       }
 
+      console.log('User created successfully:', newUser);
+
       // Insert room authorizations
       if (selectedRooms.length > 0) {
+        console.log('Creating room authorizations:', selectedRooms);
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
           .insert(
@@ -122,6 +138,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       // Insert user tags
       if (selectedTags.length > 0) {
+        console.log('Creating user tags:', selectedTags);
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
@@ -163,7 +180,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       setOpen(false);
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error in handleSubmit:', error);
       toast({
         title: "Erro ao criar usuário",
         description: "Ocorreu um erro ao criar o usuário. Por favor, tente novamente.",
