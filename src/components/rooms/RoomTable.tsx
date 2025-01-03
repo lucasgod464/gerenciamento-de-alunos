@@ -60,9 +60,15 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
         return;
       }
 
-      const studentsList = roomStudents
+      const studentsList: Student[] = roomStudents
         .filter(rs => rs.student && typeof rs.student === 'object')
-        .map(rs => mapSupabaseStudentToStudent(rs.student));
+        .map(rs => 
+          mapSupabaseStudentToStudent(
+            rs.student,
+            room.id,
+            currentUser?.companyId || null
+          )
+        );
     
       setSelectedRoomStudents(studentsList);
       setSelectedRoomId(room.id);

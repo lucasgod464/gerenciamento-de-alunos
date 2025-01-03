@@ -29,14 +29,6 @@ const Rooms = () => {
     setDeleteDialogOpen(true);
   };
 
-  const onDeleteConfirm = () => {
-    if (roomToDelete) {
-      handleDeleteConfirm(roomToDelete);
-      setRoomToDelete(null);
-      setDeleteDialogOpen(false);
-    }
-  };
-
   if (isLoading) {
     return (
       <DashboardLayout role="admin">
@@ -82,7 +74,7 @@ const Rooms = () => {
           deleteDialogOpen={deleteDialogOpen}
           setDeleteDialogOpen={setDeleteDialogOpen}
           onSave={handleSave}
-          onDeleteConfirm={onDeleteConfirm}
+          onDeleteConfirm={handleDeleteConfirm}
         />
       </div>
     </DashboardLayout>
