@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AccessLevel } from "@/types/user";
 
 interface BasicInfoFieldsProps {
   defaultValues?: {
@@ -10,6 +12,7 @@ interface BasicInfoFieldsProps {
     email?: string;
     password?: string;
     location?: string;
+    access_level?: AccessLevel;
   };
   isEditing?: boolean;
 }
@@ -82,6 +85,18 @@ export function BasicInfoFields({ defaultValues, isEditing }: BasicInfoFieldsPro
           defaultValue={defaultValues?.location}
           required
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="access_level">Nível de Acesso</Label>
+        <Select name="access_level" defaultValue={defaultValues?.access_level || "Usuário Comum"}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o nível de acesso" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Admin">Admin</SelectItem>
+            <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </>
   );

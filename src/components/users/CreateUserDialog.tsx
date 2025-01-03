@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { AccessLevel } from "@/types/auth";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -33,6 +32,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const email = formData.get("email") as string;
     const name = formData.get("name") as string;
     const password = formData.get("password") as string;
+    const access_level = formData.get("access_level") as string || "Usuário Comum";
     
     if (!email || !name || !password || !currentUser?.companyId) {
       toast({
@@ -68,7 +68,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           name,
           email,
           password,
-          access_level: 'Usuário Comum',
+          access_level,
           company_id: currentUser.companyId,
         })
         .select()
