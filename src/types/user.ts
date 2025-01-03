@@ -1,20 +1,22 @@
+export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
 export type UserStatus = 'active' | 'inactive';
-export type AccessLevel = 'Admin' | 'Usuário Comum' | 'Inativo';
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
-  role: string;
-  company_id: string | null;
-  created_at: string | null;
-  last_access: string | null;
-  status: UserStatus;
-  access_level: AccessLevel;
+  accessLevel: "Admin" | "Usuário Comum";
+  companyId: string;
   location?: string | null;
   specialization?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  status: UserStatus;
   authorizedRooms?: string[];
   tags?: { id: string; name: string; color: string; }[];
-  responsibleCategory?: string;
+  company?: {
+    id: string;
+    name: string;
+    status: string;
+  };
 }

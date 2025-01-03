@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { User } from "@/types/user";
+import { User, UserStatus } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
@@ -45,14 +45,13 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
     try {
       setIsSubmitting(true);
 
-      // Update user basic info
       const updateData: any = {
         name: formData.name,
         email: formData.email,
-        access_level: formData.access_level,
+        access_level: formData.accessLevel,
         location: formData.location || null,
         specialization: formData.specialization || null,
-        status: formData.status,
+        status: formData.status as UserStatus,
       };
 
       if (newPassword) {
@@ -68,13 +67,11 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (updateError) throw updateError;
 
-      // Delete existing room authorizations
       await supabase
         .from('user_authorized_rooms')
         .delete()
         .eq('user_id', formData.id);
 
-      // Insert new room authorizations
       if (selectedRooms.length > 0) {
         const roomsData = selectedRooms.map(roomId => ({
           user_id: formData.id,
@@ -86,13 +83,11 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           .insert(roomsData);
       }
 
-      // Delete existing tags
       await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', formData.id);
 
-      // Insert new tags
       if (selectedTags.length > 0) {
         const tagsData = selectedTags.map(tag => ({
           user_id: formData.id,
@@ -109,6 +104,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         ...updatedUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
+        status: formData.status as UserStatus,
       };
 
       onUserUpdated(finalUser);
@@ -146,8 +142,8 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           />
           
           <UserAccessLevel
-            accessLevel={formData.access_level}
-            onAccessLevelChange={(value) => setFormData({ ...formData, access_level: value })}
+            accessLevel={formData.accessLevel}
+            onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
           />
 
           <RoomSelectionFields

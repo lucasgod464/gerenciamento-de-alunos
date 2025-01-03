@@ -1,4 +1,4 @@
-export type StudyStatus = "active" | "inactive" | "completed";
+export type StudyStatus = 'active' | 'inactive' | 'completed';
 
 export interface Study {
   id: string;
