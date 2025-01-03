@@ -1,186 +1,368 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { FormField } from "@/types/form";
-import { AddFieldDialog } from "./EnrollmentAddFieldDialog";
-import { FormPreview } from "./EnrollmentFormPreview";
-import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
+import { Plus, Trash2, GripVertical, Save } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
+interface FormField {
+  id: string;
+  type: string;
+  label: string;
+  required: boolean;
+  options?: string[];
+}
 
-const DEFAULT_FIELDS: FormField[] = [
-  {
-    id: "default-name",
-    name: "nome_completo",
-    label: "Nome Completo",
-    type: "text",
-    required: true,
-    order: 0,
-  },
-  {
-    id: "default-birthdate",
-    name: "data_nascimento",
-    label: "Data de Nascimento",
-    type: "date",
-    required: true,
-    order: 1,
-  }
-];
+interface FormSection {
+  id: string;
+  title: string;
+  fields: FormField[];
+}
 
-const HIDDEN_FIELDS = ["sala", "status"];
+interface EnrollmentFormBuilderProps {
+  initialData?: {
+    sections: FormSection[];
+  };
+  onSave?: (formData: { sections: FormSection[] }) => void;
+}
 
-export const EnrollmentFormBuilder = () => {
-  const { toast } = useToast();
-  const [fields, setFields] = useState<FormField[]>([]);
-  const [isAddingField, setIsAddingField] = useState(false);
-  const [editingField, setEditingField] = useState<FormField | undefined>();
-  const [deletedFields, setDeletedFields] = useState<string[]>([]);
+export const EnrollmentFormBuilder = ({ initialData, onSave }: EnrollmentFormBuilderProps) => {
+  const [sections, setSections] = useState<FormSection[]>(initialData?.sections || []);
 
-  // Load fields from localStorage on component mount
   useEffect(() => {
-    try {
-      const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
-      const savedDeletedFields = localStorage.getItem('deletedFields');
-      
-      if (savedDeletedFields) {
-        setDeletedFields(JSON.parse(savedDeletedFields));
-      }
-
-      if (savedFields) {
-        const parsedFields = JSON.parse(savedFields);
-        const uniqueFields = parsedFields.filter((field: FormField) => {
-          return !deletedFields.includes(field.id) && 
-                 !HIDDEN_FIELDS.includes(field.name);
-        });
-        
-        // Ensure default fields are present
-        const fieldsWithDefaults = [...DEFAULT_FIELDS];
-        uniqueFields.forEach(field => {
-          if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
-            fieldsWithDefaults.push(field);
-          }
-        });
-
-        setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
-      } else {
-        setFields(DEFAULT_FIELDS);
-      }
-    } catch (error) {
-      console.error("Error loading form builder fields:", error);
-      setFields(DEFAULT_FIELDS);
+    if (initialData?.sections) {
+      setSections(initialData.sections);
     }
-  }, []);
+  }, [initialData]);
 
-  // Save fields to localStorage whenever they change
-  useEffect(() => {
-    try {
-      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
-      localStorage.setItem('deletedFields', JSON.stringify(deletedFields));
-      window.dispatchEvent(new Event('formFieldsUpdated'));
-    } catch (error) {
-      console.error("Error saving form builder fields:", error);
-    }
-  }, [fields, deletedFields]);
-
-  const handleAddField = (field: Omit<FormField, "id" | "order">) => {
-    if (editingField) {
-      const updatedFields = fields.map((f) =>
-        f.id === editingField.id ? { ...f, ...field } : f
-      );
-      setFields(updatedFields);
-      setEditingField(undefined);
-      toast({
-        title: "Campo atualizado",
-        description: "O campo foi atualizado com sucesso.",
-      });
-    } else {
-      const newField: FormField = {
-        ...field,
+  const addSection = () => {
+    setSections([
+      ...sections,
+      {
         id: crypto.randomUUID(),
-        order: fields.length,
-      };
-      
-      setFields(prev => [...prev, newField]);
-      toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso.",
-      });
-    }
-    setIsAddingField(false);
+        title: "Nova Seção",
+        fields: [],
+      },
+    ]);
   };
 
-  const handleDeleteField = (id: string) => {
-    if (DEFAULT_FIELDS.some(field => field.id === id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser removido.",
-        variant: "destructive",
-      });
+  const removeSection = (sectionId: string) => {
+    setSections(sections.filter((section) => section.id !== sectionId));
+  };
+
+  const updateSectionTitle = (sectionId: string, title: string) => {
+    setSections(
+      sections.map((section) =>
+        section.id === sectionId ? { ...section, title } : section
+      )
+    );
+  };
+
+  const addField = (sectionId: string) => {
+    setSections(
+      sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              fields: [
+                ...section.fields,
+                {
+                  id: crypto.randomUUID(),
+                  type: "text",
+                  label: "Novo Campo",
+                  required: false,
+                },
+              ],
+            }
+          : section
+      )
+    );
+  };
+
+  const removeField = (sectionId: string, fieldId: string) => {
+    setSections(
+      sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              fields: section.fields.filter((field) => field.id !== fieldId),
+            }
+          : section
+      )
+    );
+  };
+
+  const updateField = (
+    sectionId: string,
+    fieldId: string,
+    updates: Partial<FormField>
+  ) => {
+    setSections(
+      sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              fields: section.fields.map((field) =>
+                field.id === fieldId ? { ...field, ...updates } : field
+              ),
+            }
+          : section
+      )
+    );
+  };
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) return;
+
+    const { source, destination, type } = result;
+
+    if (type === "section") {
+      const newSections = Array.from(sections);
+      const [removed] = newSections.splice(source.index, 1);
+      newSections.splice(destination.index, 0, removed);
+      setSections(newSections);
       return;
     }
 
-    setFields(prev => prev.filter(field => field.id !== id));
-    setDeletedFields(prev => [...prev, id]);
-    
-    toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
-    });
-  };
+    const sourceSection = sections.find(
+      (section) => section.id === source.droppableId
+    );
+    const destSection = sections.find(
+      (section) => section.id === destination.droppableId
+    );
 
-  const handleEditField = (field: FormField) => {
-    if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser editado.",
-        variant: "destructive",
-      });
-      return;
+    if (!sourceSection || !destSection) return;
+
+    if (source.droppableId === destination.droppableId) {
+      const newFields = Array.from(sourceSection.fields);
+      const [removed] = newFields.splice(source.index, 1);
+      newFields.splice(destination.index, 0, removed);
+
+      setSections(
+        sections.map((section) =>
+          section.id === source.droppableId
+            ? { ...section, fields: newFields }
+            : section
+        )
+      );
+    } else {
+      const sourceFields = Array.from(sourceSection.fields);
+      const destFields = Array.from(destSection.fields);
+      const [removed] = sourceFields.splice(source.index, 1);
+      destFields.splice(destination.index, 0, removed);
+
+      setSections(
+        sections.map((section) => {
+          if (section.id === source.droppableId) {
+            return { ...section, fields: sourceFields };
+          }
+          if (section.id === destination.droppableId) {
+            return { ...section, fields: destFields };
+          }
+          return section;
+        })
+      );
     }
-
-    setEditingField(field);
-    setIsAddingField(true);
   };
 
-  const handleReorderFields = (reorderedFields: FormField[]) => {
-    const updatedFields = reorderedFields.map((field, index) => ({
-      ...field,
-      order: index,
-    }));
-    setFields(updatedFields);
+  const handleSave = () => {
+    if (onSave) {
+      onSave({ sections });
+    }
   };
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Campos do Formulário de Inscrição</h2>
-          <Button onClick={() => {
-            setEditingField(undefined);
-            setIsAddingField(true);
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Campo
-          </Button>
-        </div>
-        <FormPreview 
-          fields={fields} 
-          onDeleteField={handleDeleteField}
-          onEditField={handleEditField}
-          onReorderFields={handleReorderFields}
-        />
-      </Card>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="sections" type="section">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef}>
+              {sections.map((section, index) => (
+                <Draggable
+                  key={section.id}
+                  draggableId={section.id}
+                  index={index}
+                >
+                  {(provided) => (
+                    <Card
+                      className="p-4 mb-4"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                    >
+                      <div className="flex items-center gap-2 mb-4">
+                        <div
+                          {...provided.dragHandleProps}
+                          className="cursor-grab"
+                        >
+                          <GripVertical className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <Input
+                          value={section.title}
+                          onChange={(e) =>
+                            updateSectionTitle(section.id, e.target.value)
+                          }
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeSection(section.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
 
-      <AddFieldDialog
-        open={isAddingField}
-        onClose={() => {
-          setIsAddingField(false);
-          setEditingField(undefined);
-        }}
-        onAddField={handleAddField}
-        editingField={editingField}
-      />
+                      <Droppable droppableId={section.id} type="field">
+                        {(provided) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="space-y-4"
+                          >
+                            {section.fields.map((field, fieldIndex) => (
+                              <Draggable
+                                key={field.id}
+                                draggableId={field.id}
+                                index={fieldIndex}
+                              >
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className="flex items-start gap-4 p-4 bg-muted rounded-lg"
+                                  >
+                                    <GripVertical className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
+                                    <div className="flex-1 space-y-4">
+                                      <div className="grid gap-2">
+                                        <Label>Rótulo do Campo</Label>
+                                        <Input
+                                          value={field.label}
+                                          onChange={(e) =>
+                                            updateField(section.id, field.id, {
+                                              label: e.target.value,
+                                            })
+                                          }
+                                        />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label>Tipo do Campo</Label>
+                                        <Select
+                                          value={field.type}
+                                          onValueChange={(value) =>
+                                            updateField(section.id, field.id, {
+                                              type: value,
+                                            })
+                                          }
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            <SelectItem value="text">
+                                              Texto
+                                            </SelectItem>
+                                            <SelectItem value="email">
+                                              Email
+                                            </SelectItem>
+                                            <SelectItem value="tel">
+                                              Telefone
+                                            </SelectItem>
+                                            <SelectItem value="number">
+                                              Número
+                                            </SelectItem>
+                                            <SelectItem value="date">
+                                              Data
+                                            </SelectItem>
+                                            <SelectItem value="select">
+                                              Seleção
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      {field.type === "select" && (
+                                        <div className="grid gap-2">
+                                          <Label>
+                                            Opções (uma por linha)
+                                          </Label>
+                                          <textarea
+                                            className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            value={field.options?.join("\n") || ""}
+                                            onChange={(e) =>
+                                              updateField(section.id, field.id, {
+                                                options: e.target.value
+                                                  .split("\n")
+                                                  .filter(Boolean),
+                                              })
+                                            }
+                                          />
+                                        </div>
+                                      )}
+                                      <div className="flex items-center space-x-2">
+                                        <Switch
+                                          checked={field.required}
+                                          onCheckedChange={(checked) =>
+                                            updateField(section.id, field.id, {
+                                              required: checked,
+                                            })
+                                          }
+                                          id={`required-${field.id}`}
+                                        />
+                                        <Label htmlFor={`required-${field.id}`}>
+                                          Campo Obrigatório
+                                        </Label>
+                                      </div>
+                                    </div>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        removeField(section.id, field.id)
+                                      }
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => addField(section.id)}
+                        className="mt-4"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Adicionar Campo
+                      </Button>
+                    </Card>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+
+      <div className="flex justify-between">
+        <Button onClick={addSection}>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Seção
+        </Button>
+        <Button onClick={handleSave} className="bg-primary text-primary-foreground">
+          <Save className="h-4 w-4 mr-2" />
+          Salvar Formulário
+        </Button>
+      </div>
     </div>
   );
 };
