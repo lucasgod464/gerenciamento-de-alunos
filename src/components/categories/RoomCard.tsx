@@ -20,6 +20,7 @@ interface AuthorizedUser {
   id: string;
   name: string;
   email: string;
+  is_main_teacher?: boolean;
   tags?: { id: string; name: string; color: string; }[];
 }
 
@@ -39,6 +40,8 @@ export const RoomCard = ({
         .from('room_authorized_users')
         .select(`
           id,
+          user_id,
+          is_main_teacher,
           user:users (
             id,
             name,
@@ -53,7 +56,8 @@ export const RoomCard = ({
         const users = data.map(item => ({
           id: item.user.id,
           name: item.user.name,
-          email: item.user.email
+          email: item.user.email,
+          is_main_teacher: item.is_main_teacher
         }));
         setAuthorizedUsers(users);
       }
@@ -116,10 +120,17 @@ export const RoomCard = ({
             {authorizedUsers.length > 0 ? (
               authorizedUsers.map((user) => (
                 <div key={user.id} className="flex items-center justify-between group">
-                  <UserWithTags 
-                    userName={user.name} 
-                    companyId={companyId} 
-                  />
+                  <div className="flex items-center gap-2">
+                    <UserWithTags 
+                      userName={user.name} 
+                      companyId={companyId} 
+                    />
+                    {user.is_main_teacher && (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                        Professor Responsável
+                      </span>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
