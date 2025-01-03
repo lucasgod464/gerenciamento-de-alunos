@@ -1,131 +1,88 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { useState, useEffect } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { supabase } from "@/integrations/supabase/client"
-
-const DEFAULT_FIELDS: FormField[] = [
-  {
-    id: "default-name",
-    name: "nome_completo",
-    label: "Nome Completo",
-    type: "text",
-    required: true,
-    order: 0,
-  },
-  {
-    id: "default-birthdate",
-    name: "data_nascimento",
-    label: "Data de Nascimento",
-    type: "date",
-    required: true,
-    order: 1,
-  }
-];
+} from "@/components/ui/select";
 
 export default function PublicEnrollment() {
-  const [fields, setFields] = useState<FormField[]>([])
-  const [formData, setFormData] = useState<Record<string, any>>({})
-  const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
+  const { toast } = useToast();
+  const [fields, setFields] = useState<FormField[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
-    const loadFormFields = async () => {
-      try {
-        const { data: formFields, error } = await supabase
-          .from('enrollment_form_fields')
-          .select('*')
-          .order('order', { ascending: true });
+    loadFields();
+  }, []);
 
-        if (error) throw error;
-
-        const validatedFields = (formFields || [])
-          .map((field: SupabaseFormField) => mapSupabaseFormField(field));
-
-        const fieldsWithDefaults = [...DEFAULT_FIELDS];
-        validatedFields.forEach(field => {
-          if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
-            fieldsWithDefaults.push(field);
-          }
-        });
-
-        setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
-        
-        const initialData: Record<string, any> = {}
-        fieldsWithDefaults.forEach((field: FormField) => {
-          if (field.type === "multiple") {
-            initialData[field.name] = []
-          }
-        })
-        setFormData(initialData)
-      } catch (error) {
-        console.error('Error loading form fields:', error)
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar campos do formulário",
-          variant: "destructive",
-        })
-      }
-    }
-
-    loadFormFields()
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
+  const loadFields = async () => {
     try {
-      const { data: studentData, error: studentError } = await supabase
+      const { data: formFields, error } = await supabase
+        .from('enrollment_form_fields')
+        .select('*')
+        .order('order');
+
+      if (error) throw error;
+
+      const validatedFields = (formFields || [])
+        .map((field: SupabaseFormField) => mapSupabaseFormField(field));
+
+      setFields(validatedFields);
+    } catch (error) {
+      console.error("Error loading form fields:", error);
+      toast({
+        title: "Erro ao carregar formulário",
+        description: "Não foi possível carregar os campos do formulário.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onSubmit = async (data: any) => {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase
         .from('students')
         .insert({
-          name: formData.nome_completo,
-          birth_date: formData.data_nascimento,
-          status: true,
-          custom_fields: formData
-        })
-        .select()
-        .single();
+          name: data.nome_completo,
+          birth_date: data.data_nascimento,
+          custom_fields: data
+        });
 
-      if (studentError) throw studentError;
+      if (error) throw error;
 
       toast({
-        title: "Sucesso",
-        description: "Inscrição realizada com sucesso!",
+        title: "Inscrição realizada",
+        description: "Sua inscrição foi enviada com sucesso!",
       });
 
-      setFormData({});
-      const form = e.target as HTMLFormElement;
-      form.reset();
+      // Reset form
+      Object.keys(data).forEach(key => {
+        setValue(key, '');
+      });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting enrollment:", error);
       toast({
-        title: "Erro",
-        description: "Erro ao enviar formulário",
+        title: "Erro ao enviar inscrição",
+        description: "Não foi possível enviar sua inscrição. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
-  }
-
-  const handleInputChange = (name: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
+  };
 
   const renderField = (field: FormField) => {
     switch (field.type) {
@@ -133,94 +90,54 @@ export default function PublicEnrollment() {
       case "email":
       case "tel":
         return (
-          <div key={field.id}>
-            <label className="block text-sm font-medium mb-1">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <Input
-              type={field.type}
-              name={field.name}
-              required={field.required}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-            />
-          </div>
-        );
-      case "date":
-        return (
-          <div key={field.id}>
-            <label className="block text-sm font-medium mb-1">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <Input
-              type="date"
-              name={field.name}
-              required={field.required}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-            />
-          </div>
+          <Input
+            {...register(field.name, { required: field.required })}
+            type={field.type}
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+          />
         );
       case "textarea":
         return (
-          <div key={field.id}>
-            <label className="block text-sm font-medium mb-1">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <Textarea
-              name={field.name}
-              required={field.required}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-            />
-          </div>
+          <Textarea
+            {...register(field.name, { required: field.required })}
+            placeholder={`Digite ${field.label.toLowerCase()}`}
+          />
+        );
+      case "date":
+        return (
+          <Input
+            {...register(field.name, { required: field.required })}
+            type="date"
+          />
         );
       case "select":
         return (
-          <div key={field.id}>
-            <label className="block text-sm font-medium mb-1">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <Select
-              name={field.name}
-              required={field.required}
-              onValueChange={(value) => handleInputChange(field.name, value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma opção" />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options?.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            onValueChange={(value) => setValue(field.name, value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option, index) => (
+                <SelectItem key={index} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         );
       case "multiple":
         return (
-          <div key={field.id} className="space-y-2">
-            <label className="block text-sm font-medium">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            {field.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
+          <div className="space-y-2">
+            {field.options?.map((option, index) => (
+              <div key={index} className="flex items-center space-x-2">
                 <Checkbox
-                  id={`${field.name}-${option}`}
-                  checked={formData[field.name]?.includes(option)}
-                  onCheckedChange={(checked) => {
-                    const currentValues = formData[field.name] || [];
-                    const newValues = checked
-                      ? [...currentValues, option]
-                      : currentValues.filter((value: string) => value !== option);
-                    handleInputChange(field.name, newValues);
-                  }}
+                  id={`${field.name}-${index}`}
+                  {...register(field.name)}
+                  value={option}
                 />
-                <label htmlFor={`${field.name}-${option}`}>{option}</label>
+                <Label htmlFor={`${field.name}-${index}`}>{option}</Label>
               </div>
             ))}
           </div>
@@ -231,17 +148,38 @@ export default function PublicEnrollment() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl">
-        <CardContent className="pt-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {fields.map((field) => renderField(field))}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Enviando..." : "Enviar"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Formulário de Inscrição</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {fields.map((field) => (
+                <div key={field.id} className="space-y-2">
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </Label>
+                  {field.description && (
+                    <p className="text-sm text-muted-foreground">{field.description}</p>
+                  )}
+                  {renderField(field)}
+                  {errors[field.name] && (
+                    <p className="text-sm text-red-500">
+                      Este campo é obrigatório
+                    </p>
+                  )}
+                </div>
+              ))}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Enviando..." : "Enviar Inscrição"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
