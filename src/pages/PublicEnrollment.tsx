@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FormField, FieldType } from "@/types/form"
+import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -20,7 +20,7 @@ const DEFAULT_FIELDS: FormField[] = [
     id: "default-name",
     name: "nome_completo",
     label: "Nome Completo",
-    type: "text" as FieldType,
+    type: "text",
     required: true,
     order: 0,
   },
@@ -28,7 +28,7 @@ const DEFAULT_FIELDS: FormField[] = [
     id: "default-birthdate",
     name: "data_nascimento",
     label: "Data de Nascimento",
-    type: "date" as FieldType,
+    type: "date",
     required: true,
     order: 1,
   }
@@ -50,15 +50,11 @@ export default function PublicEnrollment() {
 
         if (error) throw error;
 
-        // Validar e converter os tipos dos campos
-        const validatedFields = (formFields || []).map(field => ({
-          ...field,
-          type: field.type as FieldType,
-          options: Array.isArray(field.options) ? field.options : [],
-          required: Boolean(field.required)
-        }));
+        // Convert and validate fields from Supabase
+        const validatedFields = (formFields || [])
+          .map((field: SupabaseFormField) => mapSupabaseFormField(field));
 
-        // Garantir que os campos padrão estejam sempre presentes
+        // Ensure default fields are always present
         const fieldsWithDefaults = [...DEFAULT_FIELDS];
         validatedFields.forEach(field => {
           if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {

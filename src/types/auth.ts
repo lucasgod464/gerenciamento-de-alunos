@@ -1,56 +1,25 @@
-export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
-
-export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
-
-export type UserStatus = "active" | "inactive";
+export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
+export type UserStatus = 'active' | 'inactive';
 
 export interface AuthUser {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: UserRole;
-  companyId: string | null;
+  companyId: string;
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
 }
 
-export interface AuthResponse {
-  user: AuthUser;
-  token: string;
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
-export type Permission = 
-  | "create:user"
-  | "edit:user"
-  | "delete:user"
-  | "view:users"
-  | "manage:rooms"
-  | "view:reports";
-
-export const ROLE_PERMISSIONS: Record<UserRole, Record<Permission, boolean>> = {
-  SUPER_ADMIN: {
-    "create:user": true,
-    "edit:user": true,
-    "delete:user": true,
-    "view:users": true,
-    "manage:rooms": true,
-    "view:reports": true,
-  },
-  ADMIN: {
-    "create:user": true,
-    "edit:user": true,
-    "delete:user": false,
-    "view:users": true,
-    "manage:rooms": true,
-    "view:reports": true,
-  },
-  USER: {
-    "create:user": false,
-    "edit:user": false,
-    "delete:user": false,
-    "view:users": false,
-    "manage:rooms": false,
-    "view:reports": true,
-  },
-};
+export interface AuthContextType {
+  user: AuthUser | null;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  logout: () => Promise<void>;
+  isLoading: boolean;
+}
