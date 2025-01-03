@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { TagForm } from "@/components/tags/TagForm";
+import { TagDialog } from "@/components/tags/TagDialog";
 import { TagList } from "@/components/tags/TagList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
-interface TagType {
+export interface TagType {
   id: string;
   name: string;
   description: string;
@@ -20,10 +22,10 @@ const Tags = () => {
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Carregar tags do Supabase
   const fetchTags = async () => {
     if (!user?.companyId) return;
 
@@ -108,6 +110,12 @@ const Tags = () => {
 
   const handleEdit = (tag: TagType) => {
     setEditingTag(tag);
+    setDialogOpen(true);
+  };
+
+  const handleOpenDialog = () => {
+    setEditingTag(null);
+    setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -151,23 +159,28 @@ const Tags = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as etiquetas do sistema
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
+            <p className="text-muted-foreground">
+              Gerencie as etiquetas do sistema
+            </p>
+          </div>
+          <Button onClick={handleOpenDialog}>
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Etiqueta
+          </Button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingTag ? "Editar Etiqueta" : "Criar Etiqueta"}
-          </h2>
-          <TagForm
-            editingTag={editingTag}
-            onSubmit={handleSubmit}
-            onCancel={() => setEditingTag(null)}
-          />
-        </div>
+        <TagDialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setEditingTag(null);
+          }}
+          editingTag={editingTag}
+          onSubmit={handleSubmit}
+        />
 
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-lg font-semibold mb-4">Gerenciar Etiquetas</h2>
