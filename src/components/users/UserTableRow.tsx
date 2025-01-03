@@ -17,12 +17,11 @@ interface UserTableRowProps {
 
 export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTableRowProps) {
   const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
-  const [categoryName, setCategoryName] = useState<string>("");
   const [showingInfo, setShowingInfo] = useState<User | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRoomsAndCategory = async () => {
+    const fetchRooms = async () => {
       try {
         if (user.authorizedRooms?.length) {
           const { data: rooms } = await supabase
@@ -34,24 +33,12 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
             setAuthorizedRoomNames(rooms.map(room => room.name));
           }
         }
-
-        if (user.responsibleCategory) {
-          const { data: category } = await supabase
-            .from('categories')
-            .select('name')
-            .eq('id', user.responsibleCategory)
-            .single();
-
-          if (category) {
-            setCategoryName(category.name);
-          }
-        }
       } catch (error) {
-        console.error('Error fetching user details:', error);
+        console.error('Error fetching rooms:', error);
       }
     };
 
-    fetchRoomsAndCategory();
+    fetchRooms();
   }, [user]);
 
   const handleStatusChange = (checked: boolean) => {
@@ -67,7 +54,6 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       <TableRow>
         <TableCell className="font-medium">{user.name}</TableCell>
         <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>{categoryName}</TableCell>
         <TableCell>{user.specialization}</TableCell>
         <TableCell>
           <div className="max-w-[200px] overflow-hidden text-sm">

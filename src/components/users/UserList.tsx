@@ -42,7 +42,6 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
           <TableRow>
             <TableHead className="w-[200px]">Nome Completo</TableHead>
             <TableHead className="w-[200px]">Email</TableHead>
-            <TableHead className="w-[150px]">Categoria</TableHead>
             <TableHead className="w-[150px]">Especialização</TableHead>
             <TableHead className="w-[200px]">Salas Autorizadas</TableHead>
             <TableHead className="w-[150px]">Etiquetas</TableHead>
