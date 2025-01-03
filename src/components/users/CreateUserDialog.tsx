@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { createUser } from "@/services/userService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -19,6 +20,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
 
   const handleAuthorizedRoomsChange = (roomIds: string[]) => {
+    console.log('Selected rooms:', roomIds);
     setSelectedRooms(roomIds);
   };
 
@@ -61,6 +63,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
+      // Create the user first
       const user = await createUser({
         email,
         name,
@@ -72,6 +75,24 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         selectedRooms,
         selectedTags
       });
+
+      // Save authorized rooms
+      if (selectedRooms.length > 0) {
+        console.log('Saving authorized rooms:', selectedRooms);
+        const { error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .insert(
+            selectedRooms.map(roomId => ({
+              user_id: user.id,
+              room_id: roomId
+            }))
+          );
+
+        if (roomsError) {
+          console.error('Error saving authorized rooms:', roomsError);
+          throw roomsError;
+        }
+      }
 
       onUserCreated(user);
       
