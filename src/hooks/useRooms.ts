@@ -11,7 +11,15 @@ export function useRooms() {
   const { user } = useAuth();
 
   const fetchRooms = async () => {
+    if (!user?.companyId) {
+      console.log("No company ID found for user");
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      console.log("Fetching rooms for company:", user.companyId);
+      
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
@@ -27,16 +35,20 @@ export function useRooms() {
             )
           )
         `)
-        .eq('company_id', user?.companyId);
+        .eq('company_id', user.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching rooms:", error);
+        throw error;
+      }
 
+      console.log("Rooms data:", roomsData);
       const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
+      console.log("Transformed rooms:", formattedRooms);
 
       setRooms(formattedRooms);
-      console.log("Salas carregadas:", formattedRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       toast({
@@ -56,6 +68,15 @@ export function useRooms() {
   }, [user?.companyId]);
 
   const handleSave = async (room: Partial<Room>) => {
+    if (!user?.companyId) {
+      toast({
+        title: "Erro ao salvar sala",
+        description: "Usuário não está associado a uma empresa",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       if (room.id) {
         // Update existing room
@@ -69,7 +90,8 @@ export function useRooms() {
             status: room.status,
             study_room: room.studyRoom || '',
           })
-          .eq('id', room.id);
+          .eq('id', room.id)
+          .eq('company_id', user.companyId);
 
         if (updateError) throw updateError;
 
@@ -88,7 +110,7 @@ export function useRooms() {
             category: room.category,
             status: room.status,
             study_room: room.studyRoom || '',
-            company_id: user?.companyId,
+            company_id: user.companyId,
           });
 
         if (createError) throw createError;
@@ -111,13 +133,14 @@ export function useRooms() {
   };
 
   const handleDeleteConfirm = async (roomId: string) => {
-    if (!roomId) return;
+    if (!roomId || !user?.companyId) return;
 
     try {
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId);
+        .eq('id', roomId)
+        .eq('company_id', user.companyId);
 
       if (deleteError) throw deleteError;
 
