@@ -11,7 +11,7 @@ export interface Email {
   specialization?: string | null;
   createdAt: string;
   updatedAt: string;
-  company?: {
+  company: {
     id: string;
     name: string;
     status: string;
