@@ -46,7 +46,7 @@ const Categories = () => {
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast({
-        title: "Erro ao carregar categorias",
+        title: "Erro ao carregar categorias7",
         description: "Ocorreu um erro ao carregar as categorias.",
         variant: "destructive",
       });
