@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,13 +27,23 @@ export const SpecializationDialog = ({
 }: SpecializationDialogProps) => {
   const [name, setName] = useState(initialName);
 
+  // Adicionar useEffect para atualizar o nome quando initialName mudar
+  useEffect(() => {
+    setName(initialName);
+  }, [initialName]);
+
   const handleSave = () => {
     onSave(name);
     setName("");
   };
 
+  const handleClose = () => {
+    setName("");
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -52,7 +62,7 @@ export const SpecializationDialog = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancelar
           </Button>
           <Button onClick={handleSave}>
