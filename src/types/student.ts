@@ -1,12 +1,12 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type StudentStatus = "active" | "inactive";
+export type StudentStatus = boolean;
 
 export interface Student {
   id: string;
   name: string;
   birthDate: string | null;
-  status: boolean;
+  status: StudentStatus;
   email: string | null;
   document: string | null;
   address: string | null;

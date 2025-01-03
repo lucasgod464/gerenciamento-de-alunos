@@ -100,16 +100,16 @@ export function StudentTable({
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birthDate}</TableCell>
-              <TableCell>{getRoomName(student.room)}</TableCell>
+              <TableCell>{getRoomName(student.room || '')}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
-                    student.status === "active"
+                    student.status
                       ? "bg-green-100 text-green-800"
                       : "bg-red-100 text-red-800"
                   }`}
                 >
-                  {student.status === "active" ? "Ativo" : "Inativo"}
+                  {student.status ? "Ativo" : "Inativo"}
                 </span>
               </TableCell>
               <TableCell className="text-right">

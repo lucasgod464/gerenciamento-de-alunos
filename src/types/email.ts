@@ -1,4 +1,4 @@
-export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
+export type AccessLevel = "Admin" | "Usuário Comum";
 
 export interface Email {
   id: string;
