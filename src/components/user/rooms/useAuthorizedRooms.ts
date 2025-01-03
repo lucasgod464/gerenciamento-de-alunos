@@ -9,6 +9,34 @@ interface Category {
   name: string;
 }
 
+interface RoomStudent {
+  student: {
+    id: string;
+    name: string;
+    birth_date: string;
+    status: boolean;
+    email: string | null;
+    document: string | null;
+    address: string | null;
+    custom_fields: Record<string, any> | null;
+    company_id: string | null;
+    created_at: string;
+  };
+}
+
+interface SupabaseRoom {
+  id: string;
+  name: string;
+  schedule: string;
+  location: string;
+  category: string;
+  status: boolean;
+  company_id: string | null;
+  study_room: string;
+  created_at: string;
+  room_students?: RoomStudent[];
+}
+
 export function useAuthorizedRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -52,8 +80,7 @@ export function useAuthorizedRooms() {
             *,
             room_students (
               student:student_id (
-                id,
-                name
+                *
               )
             )
           `)
@@ -71,18 +98,29 @@ export function useAuthorizedRooms() {
         if (categoriesError) throw categoriesError;
 
         // Transform rooms data
-        const transformedRooms = roomsData?.map(room => ({
+        const transformedRooms: Room[] = (roomsData as SupabaseRoom[] || []).map(room => ({
           id: room.id,
           name: room.name,
           schedule: room.schedule,
           location: room.location,
           category: room.category,
           status: room.status,
-          companyId: room.company_id,
+          companyId: room.company_id || null,
           studyRoom: room.study_room,
           createdAt: room.created_at,
-          students: room.room_students?.map(rs => rs.student) || []
-        })) || [];
+          students: room.room_students?.map(rs => ({
+            id: rs.student.id,
+            name: rs.student.name,
+            birthDate: rs.student.birth_date,
+            status: rs.student.status,
+            email: rs.student.email,
+            document: rs.student.document,
+            address: rs.student.address,
+            customFields: rs.student.custom_fields || {},
+            companyId: rs.student.company_id,
+            createdAt: rs.student.created_at
+          })) || []
+        }));
 
         console.log("Transformed rooms:", transformedRooms);
         setRooms(transformedRooms);
