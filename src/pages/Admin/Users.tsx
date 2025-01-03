@@ -18,8 +18,6 @@ const Users = () => {
   const { data: users = [], refetch } = useQuery({
     queryKey: ["company-emails", currentUser?.companyId],
     queryFn: async () => {
-      if (!currentUser?.companyId) return [];
-
       const { data: emailsData, error } = await supabase
         .from('emails')
         .select(`
@@ -42,8 +40,7 @@ const Users = () => {
               color
             )
           )
-        `)
-        .eq('company_id', currentUser.companyId);
+        `);
 
       if (error) {
         console.error('Error fetching emails:', error);
@@ -67,7 +64,6 @@ const Users = () => {
         tags: email.user_tags?.map(ut => ut.tags) || [],
       }));
     },
-    enabled: !!currentUser?.companyId,
   });
 
   const handleUpdateUser = async (updatedUser: User) => {

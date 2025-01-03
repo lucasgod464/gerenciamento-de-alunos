@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { User, AccessLevel } from "@/types/user";
+import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
@@ -68,42 +68,40 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (updateError) throw updateError;
 
-      // Update authorized rooms
+      // Delete existing room authorizations
       await supabase
         .from('user_authorized_rooms')
         .delete()
         .eq('user_id', formData.id);
 
+      // Insert new room authorizations
       if (selectedRooms.length > 0) {
         const roomsData = selectedRooms.map(roomId => ({
           user_id: formData.id,
           room_id: roomId,
         }));
 
-        const { error: roomsError } = await supabase
+        await supabase
           .from('user_authorized_rooms')
           .insert(roomsData);
-
-        if (roomsError) throw roomsError;
       }
 
-      // Update user tags
+      // Delete existing tags
       await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', formData.id);
 
+      // Insert new tags
       if (selectedTags.length > 0) {
         const tagsData = selectedTags.map(tag => ({
           user_id: formData.id,
           tag_id: tag.id,
         }));
 
-        const { error: tagsError } = await supabase
+        await supabase
           .from('user_tags')
           .insert(tagsData);
-
-        if (tagsError) throw tagsError;
       }
 
       const finalUser: User = {
