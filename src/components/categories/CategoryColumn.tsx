@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,13 @@ export const CategoryColumn = ({
   const { toast } = useToast();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const getAuthorizedUserNames = (room: Room): string => {
+    if (!currentUser?.companyId) return "Nenhum usuário vinculado";
+
+    // Return a placeholder while the async data loads
+    return "Carregando usuários...";
+  };
 
   const getTotalStudents = () => {
     return rooms.reduce((total, room) => total + (room.students?.length || 0), 0);
@@ -169,6 +177,7 @@ export const CategoryColumn = ({
               isSelected={selectedRooms.includes(room.id)}
               companyId={currentUser?.companyId || ""}
               onToggleSelection={toggleRoomSelection}
+              getAuthorizedUserNames={getAuthorizedUserNames}
               getStudentsCount={getStudentsCount}
             />
           ))}

@@ -3,20 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, Users, Clock, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { UserWithTags } from "./UserWithTags";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface RoomCardProps {
   room: Room;
   isSelected: boolean;
   companyId: string;
   onToggleSelection: (roomId: string) => void;
+  getAuthorizedUserNames: (room: Room) => string;
   getStudentsCount: (room: Room) => number;
-}
-
-interface MainTeacher {
-  id: string;
-  name: string;
 }
 
 export const RoomCard = ({
@@ -24,37 +18,11 @@ export const RoomCard = ({
   isSelected,
   companyId,
   onToggleSelection,
+  getAuthorizedUserNames,
   getStudentsCount,
 }: RoomCardProps) => {
-  const [mainTeacher, setMainTeacher] = useState<MainTeacher | null>(null);
-
-  useEffect(() => {
-    const fetchMainTeacher = async () => {
-      try {
-        const { data: teacherData, error } = await supabase
-          .from('room_authorized_users')
-          .select(`
-            user:user_id (
-              id,
-              name
-            )
-          `)
-          .eq('room_id', room.id)
-          .eq('is_main_teacher', true)
-          .single();
-
-        if (error) throw error;
-        
-        if (teacherData?.user) {
-          setMainTeacher(teacherData.user as MainTeacher);
-        }
-      } catch (error) {
-        console.error('Error fetching main teacher:', error);
-      }
-    };
-
-    fetchMainTeacher();
-  }, [room.id]);
+  const authorizedUsers = getAuthorizedUserNames(room).split(", ");
+  const hasUsers = authorizedUsers[0] !== "Nenhum usuário vinculado";
 
   return (
     <Card 
@@ -73,16 +41,19 @@ export const RoomCard = ({
         <div>
           <div className="flex items-center gap-2 text-sm mb-1">
             <Users className="h-4 w-4" />
-            <span className="font-medium text-xs text-foreground/70">Professor Responsável</span>
+            <span className="font-medium text-xs text-foreground/70">Usuários Vinculados</span>
           </div>
           <div className="pl-6 space-y-1">
-            {mainTeacher ? (
-              <UserWithTags 
-                userName={mainTeacher.name} 
-                companyId={companyId} 
-              />
+            {hasUsers ? (
+              authorizedUsers.map((userName, index) => (
+                <UserWithTags 
+                  key={index} 
+                  userName={userName} 
+                  companyId={companyId} 
+                />
+              ))
             ) : (
-              <p className="text-sm">Nenhum professor responsável</p>
+              <p className="text-sm">Nenhum usuário vinculado</p>
             )}
           </div>
         </div>
