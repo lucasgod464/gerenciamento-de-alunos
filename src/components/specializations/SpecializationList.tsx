@@ -10,13 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Edit2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-interface Specialization {
-  id: string;
-  name: string;
-  status: boolean;
-  companyId: string | null;
-}
+import { Specialization } from "@/types/specialization";
 
 interface SpecializationListProps {
   specializations: Specialization[];
