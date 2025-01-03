@@ -48,7 +48,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     const name = formData.get("name") as string;
     const password = formData.get("password") as string;
     const access_level = formData.get("access_level") as "Admin" | "Usuário Comum" || "Usuário Comum";
-    const address = formData.get("address") as string;
+    const location = formData.get("address") as string;
+    const specialization = formData.get("specialization") as string;
     
     if (!email || !name || !password || !currentUser?.companyId) {
       toast({
@@ -60,25 +61,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
-      // Verificar se o email já existe
-      const { data: existingEmails, error: checkError } = await supabase
-        .from('emails')
-        .select('id')
-        .eq('email', email);
-
-      if (checkError) throw checkError;
-
-      if (existingEmails && existingEmails.length > 0) {
-        toast({
-          title: "Erro ao criar usuário",
-          description: "Este email já está cadastrado no sistema.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Criar novo email
-      const { data: newEmail, error: emailError } = await supabase
+      // Create new user in emails table
+      const { data: newUser, error: createError } = await supabase
         .from('emails')
         .insert({
           name,
@@ -86,27 +70,22 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
           password,
           access_level,
           company_id: currentUser.companyId,
-          location: address,
+          location,
+          specialization,
+          status: 'active'
         })
         .select()
         .single();
 
-      if (emailError) {
-        console.error('Error creating email:', emailError);
-        throw emailError;
-      }
+      if (createError) throw createError;
 
-      if (!newEmail) {
-        throw new Error('No data returned after creating email');
-      }
-
-      // Inserir autorizações de salas
+      // Insert room authorizations
       if (selectedRooms.length > 0) {
         const { error: roomsError } = await supabase
           .from('user_authorized_rooms')
           .insert(
             selectedRooms.map(roomId => ({
-              user_id: newEmail.id,
+              user_id: newUser.id,
               room_id: roomId
             }))
           );
@@ -114,13 +93,13 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (roomsError) throw roomsError;
       }
 
-      // Inserir tags do usuário
+      // Insert user tags
       if (selectedTags.length > 0) {
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
             selectedTags.map(tag => ({
-              user_id: newEmail.id,
+              user_id: newUser.id,
               tag_id: tag.id
             }))
           );
@@ -128,23 +107,24 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (tagsError) throw tagsError;
       }
 
-      // Mapear para o formato User
-      const mappedUser: User = {
-        id: newEmail.id,
-        name: newEmail.name,
-        email: newEmail.email,
-        password: newEmail.password,
-        role: 'USER',
-        company_id: newEmail.company_id,
-        authorizedRooms: selectedRooms,
-        tags: selectedTags,
-        status: 'active',
-        access_level: newEmail.access_level,
-        created_at: newEmail.created_at,
+      const createdUser: User = {
+        id: newUser.id,
+        name: newUser.name,
+        email: newUser.email,
+        password: newUser.password,
+        role: newUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        company_id: newUser.company_id,
+        created_at: newUser.created_at,
         last_access: null,
+        status: 'active',
+        access_level: newUser.access_level,
+        location: newUser.location || null,
+        specialization: newUser.specialization || null,
+        authorizedRooms: selectedRooms,
+        tags: selectedTags
       };
 
-      onUserCreated(mappedUser);
+      onUserCreated(createdUser);
       
       toast({
         title: "Usuário criado",
