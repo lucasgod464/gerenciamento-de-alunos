@@ -25,7 +25,7 @@ const AdminEnrollment = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EnrollmentFormBuilder showHeader={false} />
+              <EnrollmentFormBuilder />
             </CardContent>
           </Card>
         </div>
