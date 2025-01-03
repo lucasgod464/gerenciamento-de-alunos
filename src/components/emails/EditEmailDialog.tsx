@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { Email } from "@/types/email";
 import { supabase } from "@/integrations/supabase/client";
 import { EmailFormFields } from "./form/EmailFormFields";
@@ -49,6 +49,10 @@ export function EditEmailDialog({
 
   const updateEmailMutation = useMutation({
     mutationFn: async (updatedEmail: Partial<Email>) => {
+      if (!email?.id) {
+        throw new Error("Email ID is required for update");
+      }
+
       const updateData: any = {
         name: updatedEmail.name,
         email: updatedEmail.email,
@@ -64,7 +68,7 @@ export function EditEmailDialog({
       const { data, error } = await supabase
         .from("emails")
         .update(updateData)
-        .eq("id", email?.id)
+        .eq("id", email.id)
         .select(`
           *,
           companies (
@@ -73,9 +77,17 @@ export function EditEmailDialog({
             status
           )
         `)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+
+      if (!data) {
+        throw new Error("No data returned from update");
+      }
+
       return data;
     },
     onSuccess: (data) => {
@@ -109,6 +121,16 @@ export function EditEmailDialog({
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    if (!email?.id) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "ID do email não encontrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateEmailMutation.mutate({
       name,
       email: emailAddress,
