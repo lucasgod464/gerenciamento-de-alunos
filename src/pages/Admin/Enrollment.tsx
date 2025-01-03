@@ -5,54 +5,41 @@ import { ExternalLink, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminEnrollment = () => {
+  const [formConfig, setFormConfig] = useState(null);
+  const { user: currentUser } = useAuth();
+
+  // Carregar configuração do formulário
+  useEffect(() => {
+    const loadFormConfig = async () => {
+      if (!currentUser?.companyId) return;
+      
+      const { data, error } = await supabase
+        .from('enrollment_forms')
+        .select('*')
+        .eq('company_id', currentUser.companyId)
+        .single();
+
+      if (error) {
+        toast.error("Erro ao carregar configurações do formulário");
+        return;
+      }
+
+      setFormConfig(data);
+    };
+
+    loadFormConfig();
+  }, [currentUser]);
+
   const enrollmentUrl = `${window.location.origin}/enrollment`;
-  const [isLoading, setIsLoading] = useState(false);
 
   const copyLink = () => {
     navigator.clipboard.writeText(enrollmentUrl);
     toast.success("Link copiado para a área de transferência!");
-  };
-
-  const saveFormConfig = async (formFields: any) => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase
-        .from('enrollment_form_config')
-        .upsert({ 
-          fields: formFields,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-      toast.success("Configuração salva com sucesso!");
-    } catch (error) {
-      toast.error("Erro ao salvar a configuração");
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadFormConfig = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('enrollment_form_config')
-        .select('*')
-        .single();
-
-      if (error) throw error;
-      return data?.fields;
-    } catch (error) {
-      console.error(error);
-      toast.error("Erro ao carregar a configuração");
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -102,11 +89,7 @@ const AdminEnrollment = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <EnrollmentFormBuilder 
-                onSave={saveFormConfig}
-                loadConfig={loadFormConfig}
-                isLoading={isLoading}
-              />
+              <EnrollmentFormBuilder />
             </CardContent>
           </Card>
         </div>
