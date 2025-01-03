@@ -25,7 +25,7 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     try {
       console.log('Fetching authorized users for room:', roomId);
       
-      // Busca os usuários autorizados com join na tabela users
+      // Busca os usuários autorizados com join na tabela users e user_authorized_rooms
       const { data: authorizedData, error: authorizedError } = await supabase
         .from('room_authorized_users')
         .select(`
@@ -44,6 +44,7 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
         throw authorizedError;
       }
 
+      // Adiciona logs para debug
       console.log('Raw authorized users data:', authorizedData);
 
       if (authorizedData) {
