@@ -9,6 +9,7 @@ export interface Email {
   specialization?: string | null;
   createdAt: string;
   updatedAt: string;
+  status: string;
   company?: {
     id: string;
     name: string;
@@ -27,6 +28,7 @@ export interface SupabaseEmail {
   specialization: string | null;
   created_at: string;
   updated_at: string;
+  status: string;
   companies?: {
     id: string;
     name: string;
@@ -46,6 +48,7 @@ export function mapSupabaseEmailToEmail(email: SupabaseEmail): Email {
     specialization: email.specialization,
     createdAt: email.created_at,
     updatedAt: email.updated_at,
+    status: email.status,
     company: email.companies ? {
       id: email.companies.id,
       name: email.companies.name,

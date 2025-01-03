@@ -16,20 +16,12 @@ const Users = () => {
   const { user: currentUser } = useAuth();
 
   const { data: users = [], refetch } = useQuery({
-    queryKey: ["company-emails", currentUser?.companyId],
+    queryKey: ["company-emails"],
     queryFn: async () => {
       const { data: emailsData, error } = await supabase
         .from('emails')
         .select(`
-          id,
-          name,
-          email,
-          access_level,
-          company_id,
-          created_at,
-          updated_at,
-          location,
-          specialization,
+          *,
           user_authorized_rooms (
             room_id
           ),
@@ -55,7 +47,7 @@ const Users = () => {
         company_id: email.company_id,
         created_at: email.created_at,
         last_access: email.updated_at,
-        status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
+        status: email.status || 'active',
         access_level: email.access_level,
         location: email.location,
         specialization: email.specialization,

@@ -31,6 +31,7 @@ export function EditEmailDialog({
   const [password, setPassword] = useState("");
   const [accessLevel, setAccessLevel] = useState<"Admin" | "Usuário Comum">("Usuário Comum");
   const [companyId, setCompanyId] = useState("");
+  const [status, setStatus] = useState<string>("active");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -42,6 +43,7 @@ export function EditEmailDialog({
       setPassword("");
       setAccessLevel(email.accessLevel);
       setCompanyId(email.companyId);
+      setStatus(email.status || "active");
     }
   }, [email]);
 
@@ -52,6 +54,7 @@ export function EditEmailDialog({
         email: updatedEmail.email,
         access_level: updatedEmail.accessLevel,
         company_id: updatedEmail.companyId,
+        status: updatedEmail.status || 'active'
       };
 
       if (password) {
@@ -101,6 +104,7 @@ export function EditEmailDialog({
     setPassword("");
     setAccessLevel("Usuário Comum");
     setCompanyId("");
+    setStatus("active");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -111,6 +115,7 @@ export function EditEmailDialog({
       password,
       accessLevel,
       companyId,
+      status,
     });
   };
 

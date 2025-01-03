@@ -40,6 +40,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
           password: newEmail.password,
           access_level: newEmail.accessLevel,
           company_id: newEmail.companyId,
+          status: 'active'
         }])
         .select(`
           *,
@@ -52,7 +53,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
         .single();
 
       if (error) throw error;
-      return data;
+      return mapSupabaseEmailToEmail(data);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] });
