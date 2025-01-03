@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { School, Users, Clock, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { UserWithTags } from "./UserWithTags";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface RoomCardProps {
   room: Room;
@@ -15,10 +13,6 @@ interface RoomCardProps {
   getStudentsCount: (room: Room) => number;
 }
 
-interface MainTeacher {
-  name: string;
-}
-
 export const RoomCard = ({
   room,
   isSelected,
@@ -27,39 +21,8 @@ export const RoomCard = ({
   getAuthorizedUserNames,
   getStudentsCount,
 }: RoomCardProps) => {
-  const [mainTeacher, setMainTeacher] = useState<MainTeacher | null>(null);
   const authorizedUsers = getAuthorizedUserNames(room).split(", ");
   const hasUsers = authorizedUsers[0] !== "Nenhum usuário vinculado";
-
-  useEffect(() => {
-    const fetchMainTeacher = async () => {
-      try {
-        const { data: teacherData, error } = await supabase
-          .from('room_authorized_users')
-          .select(`
-            user:user_id (
-              name
-            )
-          `)
-          .eq('room_id', room.id)
-          .eq('is_main_teacher', true)
-          .single();
-
-        if (error) {
-          console.error('Erro ao buscar professor:', error);
-          return;
-        }
-
-        if (teacherData?.user) {
-          setMainTeacher(teacherData.user as MainTeacher);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar professor:', error);
-      }
-    };
-
-    fetchMainTeacher();
-  }, [room.id]);
 
   return (
     <Card 
@@ -75,23 +38,6 @@ export const RoomCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-4">
-        <div>
-          <div className="flex items-center gap-2 text-sm mb-1">
-            <Users className="h-4 w-4" />
-            <span className="font-medium text-xs text-foreground/70">Professor Principal</span>
-          </div>
-          <div className="pl-6 space-y-1">
-            {mainTeacher ? (
-              <UserWithTags 
-                userName={mainTeacher.name} 
-                companyId={companyId} 
-              />
-            ) : (
-              <p className="text-sm">Nenhum professor principal vinculado</p>
-            )}
-          </div>
-        </div>
-
         <div>
           <div className="flex items-center gap-2 text-sm mb-1">
             <Users className="h-4 w-4" />
