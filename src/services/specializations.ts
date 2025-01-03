@@ -1,13 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-
-export interface Specialization {
-  id: string;
-  name: string;
-  status: boolean;
-  company_id: string | null;
-  description: string | null;
-  created_at: string;
-}
+import type { Specialization } from "@/types/specialization";
 
 export const specializationService = {
   async getSpecializations() {
@@ -17,7 +9,7 @@ export const specializationService = {
       .order('name');
     
     if (error) throw error;
-    return data;
+    return data as Specialization[];
   },
 
   async createSpecialization(name: string, companyId: string) {
@@ -34,7 +26,7 @@ export const specializationService = {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Specialization;
   },
 
   async updateSpecialization(id: string, name: string) {
@@ -46,7 +38,7 @@ export const specializationService = {
       .single();
     
     if (error) throw error;
-    return data;
+    return data as Specialization;
   },
 
   async deleteSpecialization(id: string) {
@@ -67,3 +59,5 @@ export const specializationService = {
     if (error) throw error;
   }
 };
+
+export type { Specialization };

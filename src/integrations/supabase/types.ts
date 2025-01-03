@@ -86,6 +86,38 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: string
+          name: string
+          status: boolean | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          status?: boolean | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          status?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           access_level: Database["public"]["Enums"]["email_access_level"]
@@ -280,6 +312,91 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "specializations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          company_id: string | null
+          created_at: string
+          custom_fields: Json | null
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          status: boolean | null
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          company_id?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          status?: boolean | null
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          company_id?: string | null
+          created_at?: string
+          custom_fields?: Json | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          status?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      studies: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          status: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          status?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "studies_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
