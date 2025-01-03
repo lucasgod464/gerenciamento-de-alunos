@@ -2,14 +2,6 @@ export type AccessLevel = "Admin" | "Usuário Comum";
 
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 
-export type Permission = 
-  | "create:user"
-  | "edit:user"
-  | "delete:user"
-  | "view:users"
-  | "manage:rooms"
-  | "view:reports";
-
 export type UserStatus = "active" | "inactive";
 
 export interface AuthUser {
@@ -27,6 +19,14 @@ export interface AuthResponse {
   user: AuthUser;
   token: string;
 }
+
+export type Permission = 
+  | "create:user"
+  | "edit:user"
+  | "delete:user"
+  | "view:users"
+  | "manage:rooms"
+  | "view:reports";
 
 export const ROLE_PERMISSIONS: Record<UserRole, Record<Permission, boolean>> = {
   SUPER_ADMIN: {

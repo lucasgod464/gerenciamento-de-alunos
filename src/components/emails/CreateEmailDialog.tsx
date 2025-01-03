@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -5,46 +6,32 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { useState } from "react"
-import { useToast } from "@/components/ui/use-toast"
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
-import { Email, mapSupabaseEmailToEmail, SupabaseEmail } from "@/types/email"
-import { supabase } from "@/integrations/supabase/client"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Email } from "@/types/email";
+import { supabase } from "@/integrations/supabase/client";
+import { EmailFormFields } from "./form/EmailFormFields";
+import { CompanySelect } from "./form/CompanySelect";
 
 interface CreateEmailDialogProps {
-  onEmailCreated: (email: Email) => void
+  onEmailCreated: (email: Email) => void;
 }
 
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
-  const [open, setOpen] = useState(false)
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-
-  const { data: companies = [] } = useQuery({
-    queryKey: ["companies"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("companies")
-        .select("id, name")
-      
-      if (error) throw error
-      return data
-    },
-  })
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [accessLevel, setAccessLevel] = useState<"Admin" | "Usuário Comum">("Usuário Comum");
+  const [companyId, setCompanyId] = useState("");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const createEmailMutation = useMutation({
-    mutationFn: async (newEmail: Omit<Email, "id" | "createdAt" | "company" | "companyStatus">) => {
+    mutationFn: async (newEmail: Omit<Email, "id" | "createdAt" | "updatedAt" | "company">) => {
       const { data, error } = await supabase
         .from("emails")
         .insert([{
@@ -62,53 +49,59 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
             status
           )
         `)
-        .single()
+        .single();
 
-      if (error) throw error
-      return mapSupabaseEmailToEmail(data as SupabaseEmail)
+      if (error) throw error;
+      return data;
     },
-    onSuccess: (newEmail) => {
-      queryClient.invalidateQueries({ queryKey: ["emails"] })
-      onEmailCreated(newEmail)
-      setOpen(false)
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["emails"] });
+      onEmailCreated(data as Email);
+      setOpen(false);
       toast({
         title: "Email criado",
         description: "O email foi criado com sucesso.",
-      })
+      });
+      resetForm();
     },
     onError: (error) => {
       toast({
         title: "Erro ao criar email",
         description: "Ocorreu um erro ao criar o email. Tente novamente.",
         variant: "destructive",
-      })
-      console.error("Erro ao criar email:", error)
+      });
+      console.error("Erro ao criar email:", error);
     },
-  })
+  });
 
   const generateStrongPassword = () => {
-    const length = 12
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-    let password = ""
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
     for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length))
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
     }
-    return password
-  }
+    setPassword(password);
+  };
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setAccessLevel("Usuário Comum");
+    setCompanyId("");
+  };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const formData = new FormData(event.currentTarget)
-    const newEmail = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      accessLevel: formData.get("accessLevel") as "Admin" | "Usuário Comum",
-      companyId: formData.get("company") as string,
-    }
-    
-    createEmailMutation.mutate(newEmail)
-  }
+    event.preventDefault();
+    createEmailMutation.mutate({
+      name,
+      email,
+      password,
+      accessLevel,
+      companyId,
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -123,85 +116,27 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input
-              id="name"
-              name="name"
-              placeholder="Digite o nome completo"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="Digite o email"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <div className="flex gap-2">
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Digite a senha"
-                required
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={(e) => {
-                  const input = document.getElementById("password") as HTMLInputElement
-                  input.value = generateStrongPassword()
-                }}
-              >
-                Gerar
-              </Button>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="accessLevel">Nível de Acesso</Label>
-            <Select name="accessLevel" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o nível de acesso" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Admin">Administrador</SelectItem>
-                <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="company">Empresa</Label>
-            <Select name="company" required>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.length > 0 ? (
-                  companies.map((company) => (
-                    <SelectItem key={company.id} value={company.id}>
-                      {company.name}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-companies" disabled>
-                    Nenhuma empresa cadastrada
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          <EmailFormFields
+            name={name}
+            email={email}
+            password={password}
+            accessLevel={accessLevel}
+            onNameChange={setName}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onAccessLevelChange={setAccessLevel}
+            onGeneratePassword={generateStrongPassword}
+            showPasswordGenerator={true}
+          />
+          <CompanySelect
+            value={companyId}
+            onChange={setCompanyId}
+          />
           <Button type="submit" className="w-full">
             Criar Email
           </Button>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
