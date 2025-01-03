@@ -2,24 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Room {
-  id: string;
-  name: string;
-  schedule: string;
-  location: string;
-  category: string;
-  status: boolean;
-  companyId: string | null;
-  studyRoom: string;
-  createdAt: string;
-  room_students?: Array<{
-    student: {
-      id: string;
-      name: string;
-    };
-  }>;
-}
+import { Room } from "@/types/room";
 
 interface Category {
   id: string;
@@ -42,48 +25,58 @@ export function useAuthorizedRooms() {
       }
 
       try {
-        const [roomsResponse, categoriesResponse] = await Promise.all([
-          supabase
-            .from('user_authorized_rooms')
-            .select(`
-              room:room_id (
-                id,
-                name,
-                schedule,
-                location,
-                category,
-                status,
-                company_id,
-                study_room,
-                created_at,
-                room_students (
-                  student:student_id (
-                    id,
-                    name
-                  )
+        // Fetch authorized rooms
+        const { data: authorizedRoomsData, error: authorizedRoomsError } = await supabase
+          .from('user_authorized_rooms')
+          .select(`
+            room:room_id (
+              id,
+              name,
+              schedule,
+              location,
+              category,
+              status,
+              company_id,
+              study_room,
+              created_at,
+              room_students (
+                student:student_id (
+                  id,
+                  name
                 )
               )
-            `)
-            .eq('user_id', user.id),
-          
-          supabase
-            .from('categories')
-            .select('id, name')
-            .eq('company_id', user.companyId)
-        ]);
+            )
+          `)
+          .eq('user_id', user.id);
 
-        if (roomsResponse.error) throw roomsResponse.error;
-        if (categoriesResponse.error) throw categoriesResponse.error;
+        if (authorizedRoomsError) throw authorizedRoomsError;
 
-        const transformedRooms = roomsResponse.data
+        // Fetch categories
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('company_id', user.companyId);
+
+        if (categoriesError) throw categoriesError;
+
+        // Transform rooms data
+        const transformedRooms = authorizedRoomsData
           ?.filter(ar => ar.room && ar.room.status)
           .map(ar => ({
-            ...ar.room,
-            room_students: ar.room.room_students || []
+            id: ar.room.id,
+            name: ar.room.name,
+            schedule: ar.room.schedule,
+            location: ar.room.location,
+            category: ar.room.category,
+            status: ar.room.status,
+            companyId: ar.room.company_id,
+            studyRoom: ar.room.study_room,
+            createdAt: ar.room.created_at,
+            students: ar.room.room_students?.map(rs => rs.student) || []
           })) || [];
 
         setRooms(transformedRooms);
-        setCategories(categoriesResponse.data || []);
+        setCategories(categoriesData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -105,7 +98,7 @@ export function useAuthorizedRooms() {
   };
 
   const getStudentCount = (room: Room) => {
-    return room.room_students?.filter(student => typeof student === 'object').length || 0;
+    return room.students?.length || 0;
   };
 
   return {
