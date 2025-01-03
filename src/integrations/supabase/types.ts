@@ -252,6 +252,41 @@ export type Database = {
           },
         ]
       }
+      specializations: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: boolean | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: boolean | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "specializations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tags: {
         Row: {
           color: string
@@ -325,6 +360,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_specializations: {
+        Row: {
+          created_at: string
+          id: string
+          specialization_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          specialization_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          specialization_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       user_tags: {
         Row: {
