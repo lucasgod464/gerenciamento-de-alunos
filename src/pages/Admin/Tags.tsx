@@ -152,9 +152,9 @@ const Tags = () => {
     <DashboardLayout role="admin">
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Etiquetas/h1>
+          <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
           <p className="text-muted-foreground">
-            Gerencie2 as etiquetas do sistema
+            Gerencie as etiquetas do sistema
           </p>
         </div>
 
