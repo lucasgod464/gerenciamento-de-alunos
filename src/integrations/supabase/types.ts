@@ -129,6 +129,7 @@ export type Database = {
           name: string
           password: string
           specialization: string | null
+          status: string
           updated_at: string
         }
         Insert: {
@@ -141,6 +142,7 @@ export type Database = {
           name: string
           password: string
           specialization?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -153,6 +155,7 @@ export type Database = {
           name?: string
           password?: string
           specialization?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: [

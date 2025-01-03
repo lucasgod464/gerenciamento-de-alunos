@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
@@ -13,7 +12,6 @@ const Users = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
 
   const { data: users = [], refetch } = useQuery({
     queryKey: ["company-emails"],
@@ -78,6 +76,11 @@ const Users = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
+      // First delete related records
+      await supabase.from('user_authorized_rooms').delete().eq('user_id', id);
+      await supabase.from('user_tags').delete().eq('user_id', id);
+      
+      // Then delete the user
       const { error } = await supabase
         .from('emails')
         .delete()
