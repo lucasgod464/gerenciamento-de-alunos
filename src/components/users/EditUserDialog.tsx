@@ -27,6 +27,7 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   const [newPassword, setNewPassword] = useState("");
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -42,26 +43,30 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
     if (!formData) return;
 
     try {
+      setIsSubmitting(true);
+
+      // Update user basic info
       const updateData: any = {
         name: formData.name,
         email: formData.email,
         access_level: formData.access_level,
         location: formData.location || null,
         specialization: formData.specialization || null,
+        status: formData.status,
       };
 
       if (newPassword) {
         updateData.password = newPassword;
       }
 
-      const { data, error } = await supabase
+      const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
         .update(updateData)
         .eq('id', formData.id)
-        .select()
+        .select('*')
         .single();
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       // Update authorized rooms
       await supabase
@@ -101,15 +106,14 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         if (tagsError) throw tagsError;
       }
 
-      const updatedUser: User = {
+      const finalUser: User = {
         ...formData,
-        ...data,
+        ...updatedUser,
         authorizedRooms: selectedRooms,
         tags: selectedTags,
-        role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
       };
 
-      onUserUpdated(updatedUser);
+      onUserUpdated(finalUser);
       onOpenChange(false);
       toast({
         title: "Usuário atualizado",
@@ -122,6 +126,8 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         description: "Ocorreu um erro ao atualizar o usuário.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -169,8 +175,12 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           />
 
           <div className="sticky bottom-0 bg-white pt-4 pb-2">
-            <Button type="submit" className="w-full">
-              Salvar Alterações
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </form>

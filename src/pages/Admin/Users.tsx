@@ -31,7 +31,17 @@ const Users = () => {
           created_at,
           updated_at,
           location,
-          specialization
+          specialization,
+          user_authorized_rooms (
+            room_id
+          ),
+          user_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          )
         `)
         .eq('company_id', currentUser.companyId);
 
@@ -53,6 +63,8 @@ const Users = () => {
         location: email.location,
         specialization: email.specialization,
         password: '',
+        authorizedRooms: email.user_authorized_rooms?.map(r => r.room_id) || [],
+        tags: email.user_tags?.map(ut => ut.tags) || [],
       }));
     },
     enabled: !!currentUser?.companyId,
@@ -60,20 +72,7 @@ const Users = () => {
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
-      const { error } = await supabase
-        .from('emails')
-        .update({
-          name: updatedUser.name,
-          email: updatedUser.email,
-          access_level: updatedUser.access_level,
-          location: updatedUser.location,
-          specialization: updatedUser.specialization,
-        })
-        .eq('id', updatedUser.id);
-
-      if (error) throw error;
-
-      refetch();
+      await refetch();
       
       toast({
         title: "Usuário atualizado",
@@ -91,13 +90,6 @@ const Users = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
-      const { error: authRoomsError } = await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('user_id', id);
-
-      if (authRoomsError) throw authRoomsError;
-
       const { error } = await supabase
         .from('emails')
         .delete()
@@ -105,7 +97,7 @@ const Users = () => {
 
       if (error) throw error;
 
-      refetch();
+      await refetch();
       
       toast({
         title: "Usuário excluído",
