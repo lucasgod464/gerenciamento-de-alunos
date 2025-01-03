@@ -55,9 +55,9 @@ export function useAuthorizedRooms() {
       try {
         console.log("Fetching rooms for user:", user.id);
         
-        // Primeiro, vamos verificar diretamente na tabela user_authorized_rooms
+        // Buscar salas autorizadas através da tabela room_authorized_users
         const { data: authorizedRooms, error: authError } = await supabase
-          .from('user_authorized_rooms')
+          .from('room_authorized_users')
           .select('room_id')
           .eq('user_id', user.id);
 
@@ -78,7 +78,7 @@ export function useAuthorizedRooms() {
         const roomIds = authorizedRooms.map(ar => ar.room_id);
         console.log("Found authorized room IDs:", roomIds);
 
-        // Então buscamos os detalhes das salas
+        // Buscar detalhes das salas
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
