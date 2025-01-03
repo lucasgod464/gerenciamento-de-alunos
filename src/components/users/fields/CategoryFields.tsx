@@ -17,9 +17,10 @@ interface CategoryFieldsProps {
   specializations: Array<{ id: string; name: string }>;
 }
 
-export function CategoryFields({ defaultValues, specializations }: CategoryFieldsProps) {
+export function CategoryFields({ defaultValues }: CategoryFieldsProps) {
   const [availableSpecializations, setAvailableSpecializations] = useState<Array<{ id: string; name: string }>>([]);
   const { user: currentUser } = useAuth();
+  const [selectedSpecialization, setSelectedSpecialization] = useState(defaultValues?.specialization || "");
 
   useEffect(() => {
     const fetchSpecializations = async () => {
@@ -46,7 +47,11 @@ export function CategoryFields({ defaultValues, specializations }: CategoryField
   return (
     <div className="space-y-2">
       <Label htmlFor="specialization">Especialização</Label>
-      <Select name="specialization" defaultValue={defaultValues?.specialization}>
+      <Select 
+        name="specialization" 
+        value={selectedSpecialization}
+        onValueChange={setSelectedSpecialization}
+      >
         <SelectTrigger>
           <SelectValue placeholder="Selecione a especialização" />
         </SelectTrigger>
