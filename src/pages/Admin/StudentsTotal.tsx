@@ -4,11 +4,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export function StudentsTotal() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchStudents = async () => {
     try {
@@ -27,7 +30,7 @@ export function StudentsTotal() {
         email: student.email,
         document: student.document,
         address: student.address,
-        customFields: student.custom_fields,
+        customFields: student.custom_fields as Record<string, string> | null,
         companyId: student.company_id,
         createdAt: student.created_at,
       }));
@@ -40,6 +43,8 @@ export function StudentsTotal() {
         description: "Ocorreu um erro ao carregar a lista de alunos.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,19 +55,44 @@ export function StudentsTotal() {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">Total de Alunos</h1>
-          <p className="text-muted-foreground">
-            Gerencie os alunos do sistema
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Total de Alunos</h1>
+            <p className="text-muted-foreground">
+              Gerencie os alunos do sistema
+            </p>
+          </div>
         </div>
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {students.map(student => (
-            <div key={student.id} className="p-4 border-b">
-              <h2 className="text-lg font-semibold">{student.name}</h2>
-              <p>Status: {student.status ? "Ativo" : "Inativo"}</p>
-            </div>
-          ))}
+
+        <div className="bg-white rounded-lg shadow">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Data de Nascimento</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Documento</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {students.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell>{student.name}</TableCell>
+                  <TableCell>
+                    {student.birthDate ? new Date(student.birthDate).toLocaleDateString('pt-BR') : '-'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={student.status ? "success" : "destructive"}>
+                      {student.status ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{student.email || '-'}</TableCell>
+                  <TableCell>{student.document || '-'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
     </DashboardLayout>
