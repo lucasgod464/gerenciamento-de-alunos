@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { FormField } from "@/types/form";
+import { FormField, FieldType } from "@/types/form";
 import { AddFieldDialog } from "./EnrollmentAddFieldDialog";
 import { FormPreview } from "./EnrollmentFormPreview";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +13,7 @@ const DEFAULT_FIELDS: FormField[] = [
     id: "default-name",
     name: "nome_completo",
     label: "Nome Completo",
-    type: "text",
+    type: "text" as FieldType,
     required: true,
     order: 0,
   },
@@ -21,7 +21,7 @@ const DEFAULT_FIELDS: FormField[] = [
     id: "default-birthdate",
     name: "data_nascimento",
     label: "Data de Nascimento",
-    type: "date",
+    type: "date" as FieldType,
     required: true,
     order: 1,
   }
@@ -36,7 +36,6 @@ export const EnrollmentFormBuilder = () => {
   const [editingField, setEditingField] = useState<FormField | undefined>();
   const [deletedFields, setDeletedFields] = useState<string[]>([]);
 
-  // Load fields from Supabase on component mount
   useEffect(() => {
     loadFields();
   }, []);
@@ -50,7 +49,12 @@ export const EnrollmentFormBuilder = () => {
 
       if (error) throw error;
 
-      const uniqueFields = formFields.filter((field) => {
+      const validatedFields = formFields.map(field => ({
+        ...field,
+        type: field.type as FieldType
+      }));
+
+      const uniqueFields = validatedFields.filter((field) => {
         return !deletedFields.includes(field.id) && 
                !HIDDEN_FIELDS.includes(field.name);
       });

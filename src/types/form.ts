@@ -9,4 +9,6 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
+  company_id?: string;
+  created_at?: string;
 }

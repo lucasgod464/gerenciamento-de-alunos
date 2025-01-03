@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
 export default function PublicEnrollment() {
@@ -33,10 +33,16 @@ export default function PublicEnrollment() {
 
       if (error) throw error;
 
-      setFields(formFields);
+      // Validar e converter os tipos dos campos
+      const validatedFields: FormField[] = formFields.map(field => ({
+        ...field,
+        type: field.type as FieldType,
+      }));
+
+      setFields(validatedFields);
       
       const initialData: Record<string, any> = {}
-      formFields.forEach((field: FormField) => {
+      validatedFields.forEach((field: FormField) => {
         if (field.type === "multiple") {
           initialData[field.name] = []
         }
@@ -110,7 +116,6 @@ export default function PublicEnrollment() {
 
       if (error) throw error;
 
-      // Limpar formulário
       setFormData({})
       
       toast({
