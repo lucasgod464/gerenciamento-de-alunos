@@ -4,18 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function PublicEnrollment() {
   const { toast } = useToast();
@@ -37,7 +28,8 @@ export default function PublicEnrollment() {
       if (error) throw error;
 
       const validatedFields = (formFields || [])
-        .map((field: SupabaseFormField) => mapSupabaseFormField(field));
+        .map((field: SupabaseFormField) => mapSupabaseFormField(field))
+        .filter(field => field.name !== 'nome_completo' && field.name !== 'data_nascimento'); // Remove default fields if they exist
 
       setFields(validatedFields);
     } catch (error) {
@@ -53,11 +45,17 @@ export default function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      // Validate required fields
+      if (!data.nome_completo || !data.data_nascimento) {
+        throw new Error("Nome completo e data de nascimento são obrigatórios");
+      }
+
       const { error } = await supabase
         .from('students')
         .insert({
           name: data.nome_completo,
           birth_date: data.data_nascimento,
+          status: true,
           custom_fields: data
         });
 
@@ -76,74 +74,11 @@ export default function PublicEnrollment() {
       console.error("Error submitting enrollment:", error);
       toast({
         title: "Erro ao enviar inscrição",
-        description: "Não foi possível enviar sua inscrição. Por favor, tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível enviar sua inscrição. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const renderField = (field: FormField) => {
-    switch (field.type) {
-      case "text":
-      case "email":
-      case "tel":
-        return (
-          <Input
-            {...register(field.name, { required: field.required })}
-            type={field.type}
-            placeholder={`Digite ${field.label.toLowerCase()}`}
-          />
-        );
-      case "textarea":
-        return (
-          <Textarea
-            {...register(field.name, { required: field.required })}
-            placeholder={`Digite ${field.label.toLowerCase()}`}
-          />
-        );
-      case "date":
-        return (
-          <Input
-            {...register(field.name, { required: field.required })}
-            type="date"
-          />
-        );
-      case "select":
-        return (
-          <Select
-            onValueChange={(value) => setValue(field.name, value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option, index) => (
-                <SelectItem key={index} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-      case "multiple":
-        return (
-          <div className="space-y-2">
-            {field.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${field.name}-${index}`}
-                  {...register(field.name)}
-                  value={option}
-                />
-                <Label htmlFor={`${field.name}-${index}`}>{option}</Label>
-              </div>
-            ))}
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
@@ -156,6 +91,41 @@ export default function PublicEnrollment() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Required fields always present */}
+              <div className="space-y-2">
+                <Label htmlFor="nome_completo">
+                  Nome Completo <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="nome_completo"
+                  {...register("nome_completo", { required: true })}
+                  className={errors.nome_completo ? "border-red-500" : ""}
+                />
+                {errors.nome_completo && (
+                  <p className="text-sm text-red-500">
+                    Nome completo é obrigatório
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="data_nascimento">
+                  Data de Nascimento <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="data_nascimento"
+                  type="date"
+                  {...register("data_nascimento", { required: true })}
+                  className={errors.data_nascimento ? "border-red-500" : ""}
+                />
+                {errors.data_nascimento && (
+                  <p className="text-sm text-red-500">
+                    Data de nascimento é obrigatória
+                  </p>
+                )}
+              </div>
+
+              {/* Dynamic custom fields */}
               {fields.map((field) => (
                 <div key={field.id} className="space-y-2">
                   <Label>
@@ -165,7 +135,10 @@ export default function PublicEnrollment() {
                   {field.description && (
                     <p className="text-sm text-muted-foreground">{field.description}</p>
                   )}
-                  {renderField(field)}
+                  <Input
+                    {...register(field.name, { required: field.required })}
+                    type={field.type === "date" ? "date" : "text"}
+                  />
                   {errors[field.name] && (
                     <p className="text-sm text-red-500">
                       Este campo é obrigatório
