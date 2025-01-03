@@ -46,8 +46,8 @@ export function useAuthorizedRooms() {
 
   useEffect(() => {
     const fetchRoomsAndCategories = async () => {
-      if (!user?.id || !user?.companyId) {
-        console.log("No user ID or companyId found");
+      if (!user?.id) {
+        console.log("No user ID found");
         setIsLoading(false);
         return;
       }
@@ -55,13 +55,18 @@ export function useAuthorizedRooms() {
       try {
         console.log("Fetching rooms for user:", user.id);
         
-        // First fetch the authorized room IDs for the user
+        // Primeiro, vamos verificar diretamente na tabela user_authorized_rooms
         const { data: authorizedRooms, error: authError } = await supabase
           .from('user_authorized_rooms')
           .select('room_id')
           .eq('user_id', user.id);
 
-        if (authError) throw authError;
+        console.log("Authorized rooms response:", { authorizedRooms, authError });
+
+        if (authError) {
+          console.error("Error fetching authorized rooms:", authError);
+          throw authError;
+        }
 
         if (!authorizedRooms?.length) {
           console.log("No authorized rooms found");
@@ -73,7 +78,7 @@ export function useAuthorizedRooms() {
         const roomIds = authorizedRooms.map(ar => ar.room_id);
         console.log("Found authorized room IDs:", roomIds);
 
-        // Then fetch the full room details
+        // Então buscamos os detalhes das salas
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
@@ -87,17 +92,27 @@ export function useAuthorizedRooms() {
           .in('id', roomIds)
           .eq('status', true);
 
-        if (roomsError) throw roomsError;
+        console.log("Rooms data response:", { roomsData, roomsError });
 
-        // Fetch categories
+        if (roomsError) {
+          console.error("Error fetching rooms data:", roomsError);
+          throw roomsError;
+        }
+
+        // Buscar categorias
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('categories')
           .select('id, name')
           .eq('company_id', user.companyId);
 
-        if (categoriesError) throw categoriesError;
+        console.log("Categories response:", { categoriesData, categoriesError });
 
-        // Transform rooms data
+        if (categoriesError) {
+          console.error("Error fetching categories:", categoriesError);
+          throw categoriesError;
+        }
+
+        // Transformar os dados das salas
         const transformedRooms: Room[] = (roomsData as SupabaseRoom[] || []).map(room => ({
           id: room.id,
           name: room.name,
@@ -122,7 +137,7 @@ export function useAuthorizedRooms() {
           })) || []
         }));
 
-        console.log("Transformed rooms:", transformedRooms);
+        console.log("Final transformed rooms:", transformedRooms);
         setRooms(transformedRooms);
         setCategories(categoriesData || []);
       } catch (error) {
