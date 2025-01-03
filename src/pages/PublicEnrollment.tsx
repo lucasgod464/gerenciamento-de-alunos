@@ -29,7 +29,7 @@ export default function PublicEnrollment() {
 
       const validatedFields = (formFields || [])
         .map((field: SupabaseFormField) => mapSupabaseFormField(field))
-        .filter(field => field.name !== 'nome_completo' && field.name !== 'data_nascimento'); // Remove default fields if they exist
+        .filter(field => field.name !== 'nome_completo' && field.name !== 'data_nascimento');
 
       setFields(validatedFields);
     } catch (error) {
@@ -50,16 +50,20 @@ export default function PublicEnrollment() {
         throw new Error("Nome completo e data de nascimento são obrigatórios");
       }
 
-      const { error } = await supabase
+      // Create the student
+      const { data: newStudent, error: studentError } = await supabase
         .from('students')
         .insert({
           name: data.nome_completo,
           birth_date: data.data_nascimento,
           status: true,
-          custom_fields: data
-        });
+          custom_fields: data,
+          company_id: null // This will be assigned when an admin processes the enrollment
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (studentError) throw studentError;
 
       toast({
         title: "Inscrição realizada",
@@ -91,7 +95,6 @@ export default function PublicEnrollment() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Required fields always present */}
               <div className="space-y-2">
                 <Label htmlFor="nome_completo">
                   Nome Completo <span className="text-red-500">*</span>
@@ -125,7 +128,6 @@ export default function PublicEnrollment() {
                 )}
               </div>
 
-              {/* Dynamic custom fields */}
               {fields.map((field) => (
                 <div key={field.id} className="space-y-2">
                   <Label>
