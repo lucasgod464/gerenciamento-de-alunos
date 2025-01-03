@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
-import { CategorySelect } from "../CategorySelect";
 import {
   Select,
   SelectContent,
@@ -14,7 +13,6 @@ import { useAuth } from "@/hooks/useAuth";
 interface CategoryFieldsProps {
   defaultValues?: {
     specialization?: string;
-    responsibleCategory?: string;
   };
   specializations: Array<{ id: string; name: string }>;
 }
@@ -46,29 +44,20 @@ export function CategoryFields({ defaultValues, specializations }: CategoryField
   }, [currentUser?.companyId]);
 
   return (
-    <>
-      <div className="space-y-2">
-        <Label htmlFor="responsibleCategory">Categoria Responsável</Label>
-        <CategorySelect 
-          value={defaultValues?.responsibleCategory || ""} 
-          onChange={() => {}}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="specialization">Especialização</Label>
-        <Select name="specialization" defaultValue={defaultValues?.specialization}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione a especialização" />
-          </SelectTrigger>
-          <SelectContent>
-            {availableSpecializations.map((spec) => (
-              <SelectItem key={spec.id} value={spec.id}>
-                {spec.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </>
+    <div className="space-y-2">
+      <Label htmlFor="specialization">Especialização</Label>
+      <Select name="specialization" defaultValue={defaultValues?.specialization}>
+        <SelectTrigger>
+          <SelectValue placeholder="Selecione a especialização" />
+        </SelectTrigger>
+        <SelectContent>
+          {availableSpecializations.map((spec) => (
+            <SelectItem key={spec.id} value={spec.id}>
+              {spec.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
