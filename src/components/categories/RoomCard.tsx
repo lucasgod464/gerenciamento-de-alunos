@@ -1,12 +1,7 @@
 import { Room } from "@/types/room";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Users, Clock, MapPin, X } from "lucide-react";
+import { School, Users, Clock, MapPin } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { UserWithTags } from "./UserWithTags";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
 import { AuthorizedUsersList } from "./AuthorizedUsersList";
 
 interface RoomCardProps {
@@ -24,8 +19,6 @@ export const RoomCard = ({
   onToggleSelection,
   getStudentsCount,
 }: RoomCardProps) => {
-  const { toast } = useToast();
-
   return (
     <Card 
       className={`bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors cursor-pointer ${
