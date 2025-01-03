@@ -25,13 +25,12 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     try {
       console.log('Fetching authorized users for room:', roomId);
       
-      // Busca os usuários autorizados com join na tabela users e user_authorized_rooms
+      // Busca os usuários autorizados com join na tabela users
       const { data: authorizedData, error: authorizedError } = await supabase
-        .from('room_authorized_users')
+        .from('user_authorized_rooms')
         .select(`
           user_id,
-          is_main_teacher,
-          users (
+          emails!inner (
             id,
             name,
             email
@@ -49,12 +48,12 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
 
       if (authorizedData) {
         const users = authorizedData
-          .filter(item => item.users) // Remove any null users
+          .filter(item => item.emails) // Remove any null users
           .map(item => ({
-            id: item.users.id,
-            name: item.users.name,
-            email: item.users.email,
-            is_main_teacher: item.is_main_teacher
+            id: item.emails.id,
+            name: item.emails.name,
+            email: item.emails.email,
+            is_main_teacher: false // Por enquanto, deixamos como false
           }));
         
         console.log('Processed authorized users:', users);
@@ -79,7 +78,7 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
   const handleRemoveAuthorization = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('room_authorized_users')
+        .from('user_authorized_rooms')
         .delete()
         .eq('room_id', roomId)
         .eq('user_id', userId);
