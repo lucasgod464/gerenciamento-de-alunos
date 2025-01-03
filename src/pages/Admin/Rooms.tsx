@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
+// Componente principal
 const Rooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,6 +24,7 @@ const Rooms = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Função para buscar salas
   const fetchRooms = async () => {
     try {
       const { data: roomsData, error } = await supabase
@@ -54,6 +56,7 @@ const Rooms = () => {
       );
 
       setRooms(formattedRooms);
+      console.log("Salas carregadas:", formattedRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       toast({
@@ -80,10 +83,11 @@ const Rooms = () => {
     setDeleteDialogOpen(true);
   };
 
+  // Função para salvar sala e usuários autorizados
   const handleSave = async (room: Partial<Room>) => {
     try {
       if (editingRoom) {
-        // Update existing room
+        // Atualizar sala existente
         const { error: updateError } = await supabase
           .from('rooms')
           .update({
@@ -98,9 +102,11 @@ const Rooms = () => {
 
         if (updateError) throw updateError;
 
-        // Update authorized users
-        if (room.authorizedUsers?.length > 0) {
-          // First, delete existing authorizations
+        // Atualizar usuários autorizados
+        if (room.authorizedUsers) {
+          console.log("Atualizando usuários autorizados:", room.authorizedUsers);
+          
+          // Primeiro, excluir autorizações existentes
           const { error: deleteAuthError } = await supabase
             .from('room_authorized_users')
             .delete()
@@ -108,18 +114,20 @@ const Rooms = () => {
 
           if (deleteAuthError) throw deleteAuthError;
 
-          // Then, insert new authorizations
-          const { error: insertAuthError } = await supabase
-            .from('room_authorized_users')
-            .insert(
-              room.authorizedUsers.map(userId => ({
-                room_id: editingRoom.id,
-                user_id: userId,
-                is_main_teacher: false
-              }))
-            );
+          // Inserir novas autorizações
+          if (room.authorizedUsers.length > 0) {
+            const { error: insertAuthError } = await supabase
+              .from('room_authorized_users')
+              .insert(
+                room.authorizedUsers.map(userId => ({
+                  room_id: editingRoom.id,
+                  user_id: userId,
+                  is_main_teacher: false
+                }))
+              );
 
-          if (insertAuthError) throw insertAuthError;
+            if (insertAuthError) throw insertAuthError;
+          }
         }
 
         toast({
@@ -127,7 +135,7 @@ const Rooms = () => {
           description: "A sala foi atualizada com sucesso!",
         });
       } else {
-        // Create new room
+        // Criar nova sala
         const { data: newRoom, error: createError } = await supabase
           .from('rooms')
           .insert({
@@ -144,8 +152,10 @@ const Rooms = () => {
 
         if (createError) throw createError;
 
-        // Insert authorized users if any
+        // Inserir usuários autorizados para nova sala
         if (room.authorizedUsers?.length > 0 && newRoom) {
+          console.log("Inserindo usuários autorizados para nova sala:", room.authorizedUsers);
+          
           const { error: authError } = await supabase
             .from('room_authorized_users')
             .insert(
@@ -182,7 +192,7 @@ const Rooms = () => {
     if (!roomToDelete) return;
 
     try {
-      // Delete room_students records first
+      // Excluir registros room_students primeiro
       const { error: studentsError } = await supabase
         .from('room_students')
         .delete()
@@ -190,7 +200,7 @@ const Rooms = () => {
 
       if (studentsError) throw studentsError;
 
-      // Delete room_authorized_users records
+      // Excluir registros room_authorized_users
       const { error: authUsersError } = await supabase
         .from('room_authorized_users')
         .delete()
@@ -198,7 +208,7 @@ const Rooms = () => {
 
       if (authUsersError) throw authUsersError;
 
-      // Finally delete the room
+      // Finalmente excluir a sala
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
