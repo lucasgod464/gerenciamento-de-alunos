@@ -7,7 +7,7 @@ import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBui
 import { AddFieldDialog } from "@/components/enrollment/EnrollmentAddFieldDialog";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminEnrollment = () => {
