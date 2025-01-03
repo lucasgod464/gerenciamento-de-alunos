@@ -25,31 +25,42 @@ export function useAuthorizedRooms() {
       }
 
       try {
-        // Fetch authorized rooms
-        const { data: authorizedRoomsData, error: authorizedRoomsError } = await supabase
+        console.log("Fetching rooms for user:", user.id);
+        
+        // First fetch the authorized room IDs for the user
+        const { data: authorizedRooms, error: authError } = await supabase
           .from('user_authorized_rooms')
+          .select('room_id')
+          .eq('user_id', user.id);
+
+        if (authError) throw authError;
+
+        if (!authorizedRooms?.length) {
+          console.log("No authorized rooms found");
+          setRooms([]);
+          setIsLoading(false);
+          return;
+        }
+
+        const roomIds = authorizedRooms.map(ar => ar.room_id);
+        console.log("Found authorized room IDs:", roomIds);
+
+        // Then fetch the full room details
+        const { data: roomsData, error: roomsError } = await supabase
+          .from('rooms')
           .select(`
-            room:room_id (
-              id,
-              name,
-              schedule,
-              location,
-              category,
-              status,
-              company_id,
-              study_room,
-              created_at,
-              room_students (
-                student:student_id (
-                  id,
-                  name
-                )
+            *,
+            room_students (
+              student:student_id (
+                id,
+                name
               )
             )
           `)
-          .eq('user_id', user.id);
+          .in('id', roomIds)
+          .eq('status', true);
 
-        if (authorizedRoomsError) throw authorizedRoomsError;
+        if (roomsError) throw roomsError;
 
         // Fetch categories
         const { data: categoriesData, error: categoriesError } = await supabase
@@ -60,21 +71,20 @@ export function useAuthorizedRooms() {
         if (categoriesError) throw categoriesError;
 
         // Transform rooms data
-        const transformedRooms = authorizedRoomsData
-          ?.filter(ar => ar.room && ar.room.status)
-          .map(ar => ({
-            id: ar.room.id,
-            name: ar.room.name,
-            schedule: ar.room.schedule,
-            location: ar.room.location,
-            category: ar.room.category,
-            status: ar.room.status,
-            companyId: ar.room.company_id,
-            studyRoom: ar.room.study_room,
-            createdAt: ar.room.created_at,
-            students: ar.room.room_students?.map(rs => rs.student) || []
-          })) || [];
+        const transformedRooms = roomsData?.map(room => ({
+          id: room.id,
+          name: room.name,
+          schedule: room.schedule,
+          location: room.location,
+          category: room.category,
+          status: room.status,
+          companyId: room.company_id,
+          studyRoom: room.study_room,
+          createdAt: room.created_at,
+          students: room.room_students?.map(rs => rs.student) || []
+        })) || [];
 
+        console.log("Transformed rooms:", transformedRooms);
         setRooms(transformedRooms);
         setCategories(categoriesData || []);
       } catch (error) {
