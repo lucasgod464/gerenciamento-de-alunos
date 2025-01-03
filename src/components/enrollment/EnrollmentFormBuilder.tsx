@@ -49,7 +49,6 @@ export const EnrollmentFormBuilder = () => {
 
       if (error) throw error;
 
-      // Convert and validate fields from Supabase
       const validatedFields = (formFields || [])
         .map((field: SupabaseFormField) => mapSupabaseFormField(field))
         .filter(field => 
@@ -57,7 +56,6 @@ export const EnrollmentFormBuilder = () => {
           !HIDDEN_FIELDS.includes(field.name)
         );
       
-      // Ensure default fields are always present
       const fieldsWithDefaults = [...DEFAULT_FIELDS];
       validatedFields.forEach(field => {
         if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
@@ -79,7 +77,6 @@ export const EnrollmentFormBuilder = () => {
   const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
       if (editingField) {
-        // Update existing field
         const { error } = await supabase
           .from('enrollment_form_fields')
           .update({
@@ -104,7 +101,6 @@ export const EnrollmentFormBuilder = () => {
           description: "O campo foi atualizado com sucesso.",
         });
       } else {
-        // Add new field
         const { data, error } = await supabase
           .from('enrollment_form_fields')
           .insert({
@@ -116,7 +112,8 @@ export const EnrollmentFormBuilder = () => {
 
         if (error) throw error;
 
-        setFields(prev => [...prev, data]);
+        const newField = mapSupabaseFormField(data as SupabaseFormField);
+        setFields(prev => [...prev, newField]);
         toast({
           title: "Campo adicionado",
           description: "O novo campo foi adicionado com sucesso.",
@@ -189,7 +186,6 @@ export const EnrollmentFormBuilder = () => {
     }));
 
     try {
-      // Update order for all non-default fields
       const updatePromises = updatedFields
         .filter(field => !DEFAULT_FIELDS.some(def => def.id === field.id))
         .map(field => 
