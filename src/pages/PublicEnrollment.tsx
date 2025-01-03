@@ -50,11 +50,9 @@ export default function PublicEnrollment() {
 
         if (error) throw error;
 
-        // Convert and validate fields from Supabase
         const validatedFields = (formFields || [])
           .map((field: SupabaseFormField) => mapSupabaseFormField(field));
 
-        // Ensure default fields are always present
         const fieldsWithDefaults = [...DEFAULT_FIELDS];
         validatedFields.forEach(field => {
           if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
@@ -89,7 +87,6 @@ export default function PublicEnrollment() {
     setIsLoading(true)
 
     try {
-      // Primeiro, inserir o aluno na tabela students
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .insert({
@@ -108,7 +105,6 @@ export default function PublicEnrollment() {
         description: "Inscrição realizada com sucesso!",
       });
 
-      // Limpar o formulário
       setFormData({});
       const form = e.target as HTMLFormElement;
       form.reset();
@@ -131,101 +127,115 @@ export default function PublicEnrollment() {
     }))
   }
 
+  const renderField = (field: FormField) => {
+    switch (field.type) {
+      case "text":
+      case "email":
+      case "tel":
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium mb-1">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <Input
+              type={field.type}
+              name={field.name}
+              required={field.required}
+              onChange={(e) => handleInputChange(field.name, e.target.value)}
+            />
+          </div>
+        );
+      case "date":
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium mb-1">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <Input
+              type="date"
+              name={field.name}
+              required={field.required}
+              onChange={(e) => handleInputChange(field.name, e.target.value)}
+            />
+          </div>
+        );
+      case "textarea":
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium mb-1">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <Textarea
+              name={field.name}
+              required={field.required}
+              onChange={(e) => handleInputChange(field.name, e.target.value)}
+            />
+          </div>
+        );
+      case "select":
+        return (
+          <div key={field.id}>
+            <label className="block text-sm font-medium mb-1">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <Select
+              name={field.name}
+              required={field.required}
+              onValueChange={(value) => handleInputChange(field.name, value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma opção" />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options?.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        );
+      case "multiple":
+        return (
+          <div key={field.id} className="space-y-2">
+            <label className="block text-sm font-medium">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            {field.options?.map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${field.name}-${option}`}
+                  checked={formData[field.name]?.includes(option)}
+                  onCheckedChange={(checked) => {
+                    const currentValues = formData[field.name] || [];
+                    const newValues = checked
+                      ? [...currentValues, option]
+                      : currentValues.filter((value: string) => value !== option);
+                    handleInputChange(field.name, newValues);
+                  }}
+                />
+                <label htmlFor={`${field.name}-${option}`}>{option}</label>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl">
         <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {fields.map((field) => {
-              switch (field.type) {
-                case "text":
-                  return (
-                    <div key={field.id}>
-                      <label className="block text-sm font-medium mb-1">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <Input
-                        type="text"
-                        name={field.name}
-                        required={field.required}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      />
-                    </div>
-                  )
-                case "date":
-                  return (
-                    <div key={field.id}>
-                      <label className="block text-sm font-medium mb-1">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <Input
-                        type="date"
-                        name={field.name}
-                        required={field.required}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      />
-                    </div>
-                  )
-                case "textarea":
-                  return (
-                    <div key={field.id}>
-                      <label className="block text-sm font-medium mb-1">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <Textarea
-                        name={field.name}
-                        required={field.required}
-                        onChange={(e) => handleInputChange(field.name, e.target.value)}
-                      />
-                    </div>
-                  )
-                case "checkbox":
-                  return (
-                    <div key={field.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={field.name}
-                        name={field.name}
-                        required={field.required}
-                        onCheckedChange={(checked) => handleInputChange(field.name, checked)}
-                      />
-                      <label htmlFor={field.name} className="text-sm font-medium">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                    </div>
-                  )
-                case "select":
-                  return (
-                    <div key={field.id}>
-                      <label className="block text-sm font-medium mb-1">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <Select
-                        name={field.name}
-                        required={field.required}
-                        onValueChange={(value) => handleInputChange(field.name, value)}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma opção" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options?.map((option) => (
-                            <SelectItem key={option} value={option}>
-                              {option}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )
-                default:
-                  return null
-              }
-            })}
+            {fields.map((field) => renderField(field))}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Enviando..." : "Enviar"}
             </Button>
@@ -233,5 +243,5 @@ export default function PublicEnrollment() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
