@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 
@@ -37,220 +37,201 @@ const DEFAULT_FIELDS: FormField[] = [
 export default function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([])
   const [formData, setFormData] = useState<Record<string, any>>({})
+  const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    loadFields()
-  }, [])
+    const loadFormFields = async () => {
+      try {
+        const { data: formFields, error } = await supabase
+          .from('enrollment_form_fields')
+          .select('*')
+          .order('order', { ascending: true });
 
-  const loadFields = async () => {
-    try {
-      const { data: formFields, error } = await supabase
-        .from('enrollment_form_fields')
-        .select('*')
-        .order('order');
+        if (error) throw error;
 
-      if (error) throw error;
+        // Validar e converter os tipos dos campos
+        const validatedFields = (formFields || []).map(field => ({
+          ...field,
+          type: field.type as FieldType,
+          options: Array.isArray(field.options) ? field.options : [],
+          required: Boolean(field.required)
+        }));
 
-      // Validar e converter os tipos dos campos
-      const validatedFields = (formFields || []).map(field => ({
-        ...field,
-        type: field.type as FieldType,
-        options: Array.isArray(field.options) ? field.options : [],
-        required: Boolean(field.required)
-      }));
+        // Garantir que os campos padrão estejam sempre presentes
+        const fieldsWithDefaults = [...DEFAULT_FIELDS];
+        validatedFields.forEach(field => {
+          if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
+            fieldsWithDefaults.push(field);
+          }
+        });
 
-      // Garantir que os campos padrão estejam sempre presentes
-      const fieldsWithDefaults = [...DEFAULT_FIELDS];
-      validatedFields.forEach(field => {
-        if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
-          fieldsWithDefaults.push(field);
-        }
-      });
-
-      setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
-      
-      const initialData: Record<string, any> = {}
-      fieldsWithDefaults.forEach((field: FormField) => {
-        if (field.type === "multiple") {
-          initialData[field.name] = []
-        }
-      })
-      setFormData(initialData)
-    } catch (error) {
-      console.error("Erro ao carregar campos do formulário:", error)
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o formulário. Por favor, tente novamente.",
-        variant: "destructive"
-      })
-    }
-  }
-
-  const handleInputChange = (name: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleMultipleChoiceChange = (name: string, option: string, checked: boolean) => {
-    setFormData((prev) => {
-      const currentValues = prev[name] || []
-      if (checked) {
-        return {
-          ...prev,
-          [name]: [...currentValues, option],
-        }
-      } else {
-        return {
-          ...prev,
-          [name]: currentValues.filter((value: string) => value !== option),
-        }
+        setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
+        
+        const initialData: Record<string, any> = {}
+        fieldsWithDefaults.forEach((field: FormField) => {
+          if (field.type === "multiple") {
+            initialData[field.name] = []
+          }
+        })
+        setFormData(initialData)
+      } catch (error) {
+        console.error('Error loading form fields:', error)
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar campos do formulário",
+          variant: "destructive",
+        })
       }
-    })
-  }
+    }
+
+    loadFormFields()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const missingFields = fields
-      .filter((field) => field.required)
-      .filter((field) => {
-        if (field.type === "multiple") {
-          return !formData[field.name] || formData[field.name].length === 0
-        }
-        return !formData[field.name]
-      })
-      .map((field) => field.label)
-
-    if (missingFields.length > 0) {
-      toast({
-        title: "Campos obrigatórios",
-        description: `Por favor, preencha os seguintes campos: ${missingFields.join(", ")}`,
-        variant: "destructive",
-      })
-      return
-    }
+    setIsLoading(true)
 
     try {
-      const { error } = await supabase
+      // Primeiro, inserir o aluno na tabela students
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
         .insert({
           name: formData.nome_completo,
           birth_date: formData.data_nascimento,
           status: true,
           custom_fields: formData
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (studentError) throw studentError;
 
-      setFormData({})
-      
       toast({
-        title: "Formulário enviado",
-        description: "Seus dados foram enviados com sucesso!",
-      })
+        title: "Sucesso",
+        description: "Inscrição realizada com sucesso!",
+      });
+
+      // Limpar o formulário
+      setFormData({});
+      const form = e.target as HTMLFormElement;
+      form.reset();
     } catch (error) {
-      console.error("Erro ao enviar formulário:", error)
+      console.error('Error submitting form:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível enviar o formulário. Por favor, tente novamente.",
-        variant: "destructive"
-      })
+        description: "Erro ao enviar formulário",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  const renderField = (field: FormField) => {
-    switch (field.type) {
-      case "textarea":
-        return (
-          <Textarea
-            id={field.name}
-            name={field.name}
-            value={formData[field.name] || ""}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            required={field.required}
-            className="min-h-[100px] resize-y"
-          />
-        )
-      case "select":
-        return (
-          <Select
-            value={formData[field.name] || ""}
-            onValueChange={(value) => handleInputChange(field.name, value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma opção" />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )
-      case "multiple":
-        return (
-          <div className="space-y-2">
-            {field.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${field.name}-${option}`}
-                  checked={(formData[field.name] || []).includes(option)}
-                  onCheckedChange={(checked) => 
-                    handleMultipleChoiceChange(field.name, option, checked as boolean)
-                  }
-                />
-                <label
-                  htmlFor={`${field.name}-${option}`}
-                  className="text-sm text-gray-700"
-                >
-                  {option}
-                </label>
-              </div>
-            ))}
-          </div>
-        )
-      default:
-        return (
-          <Input
-            id={field.name}
-            name={field.name}
-            type={field.type}
-            value={formData[field.name] || ""}
-            onChange={(e) => handleInputChange(field.name, e.target.value)}
-            required={field.required}
-          />
-        )
-    }
+  const handleInputChange = (name: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardContent className="p-6">
-          <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
+      <Card className="w-full max-w-2xl">
+        <CardContent className="pt-6">
           <form onSubmit={handleSubmit} className="space-y-4">
-            {fields.map((field) => (
-              <div key={field.id} className="text-left">
-                <label 
-                  htmlFor={field.name} 
-                  className="block text-sm font-medium text-gray-700 mb-1"
-                >
-                  {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                {field.description && (
-                  <p className="text-sm text-gray-500 mb-2">{field.description}</p>
-                )}
-                {renderField(field)}
-              </div>
-            ))}
-            <Button type="submit" className="w-full">
-              Enviar
+            {fields.map((field) => {
+              switch (field.type) {
+                case "text":
+                  return (
+                    <div key={field.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <Input
+                        type="text"
+                        name={field.name}
+                        required={field.required}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                      />
+                    </div>
+                  )
+                case "date":
+                  return (
+                    <div key={field.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <Input
+                        type="date"
+                        name={field.name}
+                        required={field.required}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                      />
+                    </div>
+                  )
+                case "textarea":
+                  return (
+                    <div key={field.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <Textarea
+                        name={field.name}
+                        required={field.required}
+                        onChange={(e) => handleInputChange(field.name, e.target.value)}
+                      />
+                    </div>
+                  )
+                case "checkbox":
+                  return (
+                    <div key={field.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={field.name}
+                        name={field.name}
+                        required={field.required}
+                        onCheckedChange={(checked) => handleInputChange(field.name, checked)}
+                      />
+                      <label htmlFor={field.name} className="text-sm font-medium">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                    </div>
+                  )
+                case "select":
+                  return (
+                    <div key={field.id}>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                        {field.required && <span className="text-red-500">*</span>}
+                      </label>
+                      <Select
+                        name={field.name}
+                        required={field.required}
+                        onValueChange={(value) => handleInputChange(field.name, value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma opção" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {field.options?.map((option) => (
+                            <SelectItem key={option} value={option}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )
+                default:
+                  return null
+              }
+            })}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Enviando..." : "Enviar"}
             </Button>
           </form>
         </CardContent>
