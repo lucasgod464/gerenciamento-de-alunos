@@ -6,6 +6,6 @@ export interface Study {
   status: StudyStatus;
   startDate: string | null;
   endDate: string | null;
-  companyId: string | null;
-  createdAt: string;
+  companyId?: string | null;
+  createdAt?: string;
 }
