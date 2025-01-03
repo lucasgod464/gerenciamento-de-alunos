@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { UserActions } from "./table/UserActions";
 import { UserTags } from "./table/UserTags";
+import { UserInfoDialog } from "./UserInfoDialog";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableRowProps {
@@ -17,6 +18,7 @@ interface UserTableRowProps {
 export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTableRowProps) {
   const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
   const [categoryName, setCategoryName] = useState<string>("");
+  const [showingInfo, setShowingInfo] = useState<User | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -61,40 +63,48 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
   };
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">{user.name}</TableCell>
-      <TableCell className="text-muted-foreground">{user.email}</TableCell>
-      <TableCell>{categoryName}</TableCell>
-      <TableCell>{user.specialization}</TableCell>
-      <TableCell>
-        <div className="max-w-[200px] overflow-hidden text-sm">
-          {authorizedRoomNames.length > 0 
-            ? authorizedRoomNames.join(", ")
-            : "Nenhuma sala autorizada"}
-        </div>
-      </TableCell>
-      <TableCell>
-        <UserTags tags={user.tags} />
-      </TableCell>
-      <TableCell className="text-center">
-        <Switch
-          checked={user.status === "active"}
-          onCheckedChange={handleStatusChange}
-        />
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {user.created_at}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {user.last_access}
-      </TableCell>
-      <TableCell>
-        <UserActions 
-          user={user}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
-      </TableCell>
-    </TableRow>
+    <>
+      <TableRow>
+        <TableCell className="font-medium">{user.name}</TableCell>
+        <TableCell className="text-muted-foreground">{user.email}</TableCell>
+        <TableCell>{categoryName}</TableCell>
+        <TableCell>{user.specialization}</TableCell>
+        <TableCell>
+          <div className="max-w-[200px] overflow-hidden text-sm">
+            {authorizedRoomNames.length > 0 
+              ? authorizedRoomNames.join(", ")
+              : "Nenhuma sala autorizada"}
+          </div>
+        </TableCell>
+        <TableCell>
+          <UserTags tags={user.tags} />
+        </TableCell>
+        <TableCell className="text-center">
+          <Switch
+            checked={user.status === "active"}
+            onCheckedChange={handleStatusChange}
+          />
+        </TableCell>
+        <TableCell className="text-sm text-muted-foreground">
+          {user.created_at}
+        </TableCell>
+        <TableCell className="text-sm text-muted-foreground">
+          {user.last_access}
+        </TableCell>
+        <TableCell>
+          <UserActions 
+            user={user}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onView={setShowingInfo}
+          />
+        </TableCell>
+      </TableRow>
+
+      <UserInfoDialog 
+        user={showingInfo} 
+        onClose={() => setShowingInfo(null)} 
+      />
+    </>
   );
 }
