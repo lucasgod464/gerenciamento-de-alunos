@@ -168,6 +168,53 @@ export type Database = {
           },
         ]
       }
+      enrollment_form_fields: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          name: string
+          options: Json | null
+          order: number
+          required: boolean | null
+          type: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          name: string
+          options?: Json | null
+          order: number
+          required?: boolean | null
+          type: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          name?: string
+          options?: Json | null
+          order?: number
+          required?: boolean | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollment_form_fields_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_authorized_users: {
         Row: {
           created_at: string

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 export default function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([])
@@ -20,33 +21,36 @@ export default function PublicEnrollment() {
   const { toast } = useToast()
 
   useEffect(() => {
-    const loadFields = () => {
-      try {
-        const savedFields = localStorage.getItem("enrollmentFields")
-        if (savedFields) {
-          const parsedFields = JSON.parse(savedFields)
-          setFields(parsedFields)
-          
-          const initialData: Record<string, any> = {}
-          parsedFields.forEach((field: FormField) => {
-            if (field.type === "multiple") {
-              initialData[field.name] = []
-            }
-          })
-          setFormData(initialData)
-        }
-      } catch (error) {
-        console.error("Erro ao carregar campos do formulário:", error)
-      }
-    }
-
     loadFields()
-
-    window.addEventListener("formFieldsUpdated", loadFields)
-    return () => {
-      window.removeEventListener("formFieldsUpdated", loadFields)
-    }
   }, [])
+
+  const loadFields = async () => {
+    try {
+      const { data: formFields, error } = await supabase
+        .from('enrollment_form_fields')
+        .select('*')
+        .order('order');
+
+      if (error) throw error;
+
+      setFields(formFields);
+      
+      const initialData: Record<string, any> = {}
+      formFields.forEach((field: FormField) => {
+        if (field.type === "multiple") {
+          initialData[field.name] = []
+        }
+      })
+      setFormData(initialData)
+    } catch (error) {
+      console.error("Erro ao carregar campos do formulário:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o formulário. Por favor, tente novamente.",
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleInputChange = (name: string, value: any) => {
     setFormData((prev) => ({
@@ -72,7 +76,7 @@ export default function PublicEnrollment() {
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     const missingFields = fields
@@ -94,36 +98,34 @@ export default function PublicEnrollment() {
       return
     }
 
-    // Salvar o novo aluno no localStorage
-    const enrollments = JSON.parse(localStorage.getItem("enrollments") || "[]")
-    const newStudent = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: formData.nome_completo,
-      birthDate: formData.data_nascimento,
-      status: "active",
-      room: "",
-      createdAt: new Date().toLocaleDateString(),
-      companyId: null,
-      customFields: { ...formData }
+    try {
+      const { error } = await supabase
+        .from('students')
+        .insert({
+          name: formData.nome_completo,
+          birth_date: formData.data_nascimento,
+          status: true,
+          custom_fields: formData
+        });
+
+      if (error) throw error;
+
+      // Limpar formulário
+      setFormData({})
+      
+      toast({
+        title: "Formulário enviado",
+        description: "Seus dados foram enviados com sucesso!",
+      })
+    } catch (error) {
+      console.error("Erro ao enviar formulário:", error)
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o formulário. Por favor, tente novamente.",
+        variant: "destructive"
+      })
     }
-    
-    enrollments.push(newStudent)
-    localStorage.setItem("enrollments", JSON.stringify(enrollments))
-    
-    // Disparar evento de nova inscrição
-    window.dispatchEvent(new Event("enrollmentAdded"))
-
-    // Limpar formulário
-    setFormData({})
-    
-    toast({
-      title: "Formulário enviado",
-      description: "Seus dados foram enviados com sucesso!",
-    })
   }
-
-  // Ordena os campos pelo número da ordem
-  const sortedFields = [...fields].sort((a, b) => a.order - b.order)
 
   const renderField = (field: FormField) => {
     switch (field.type) {
@@ -198,7 +200,7 @@ export default function PublicEnrollment() {
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold mb-6">Formulário de Inscrição</h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {sortedFields.map((field) => (
+            {fields.map((field) => (
               <div key={field.id} className="text-left">
                 <label 
                   htmlFor={field.name} 
