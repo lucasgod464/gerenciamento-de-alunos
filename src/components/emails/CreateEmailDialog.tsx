@@ -6,6 +6,7 @@ import { Email, mapSupabaseEmailToEmail } from "@/types/email";
 import { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { CompanySelect } from "./form/CompanySelect";
 
 interface CreateEmailDialogProps {
   onEmailCreated: (email: Email) => void;
@@ -13,6 +14,11 @@ interface CreateEmailDialogProps {
 
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
   const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [accessLevel, setAccessLevel] = useState<"Admin" | "Usuário Comum">("Usuário Comum");
+  const [companyId, setCompanyId] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -49,6 +55,7 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
         title: "Email criado",
         description: "O email foi criado com sucesso.",
       });
+      resetForm();
     },
     onError: (error) => {
       console.error('Error creating email:', error);
@@ -60,6 +67,35 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
     },
   });
 
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setAccessLevel("Usuário Comum");
+    setCompanyId("");
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId) {
+      toast({
+        title: "Erro ao criar",
+        description: "Selecione uma empresa.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createEmail.mutate({
+      name,
+      email,
+      password,
+      accessLevel,
+      companyId,
+      status: "active",
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button onClick={() => setOpen(true)}>
@@ -69,17 +105,30 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Email</DialogTitle>
         </DialogHeader>
-        <EmailFormFields
-          name=""
-          email=""
-          password=""
-          accessLevel="Usuário Comum"
-          onNameChange={() => {}}
-          onEmailChange={() => {}}
-          onPasswordChange={() => {}}
-          onAccessLevelChange={() => {}}
-          onSubmit={createEmail.mutate}
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <EmailFormFields
+            name={name}
+            email={email}
+            password={password}
+            accessLevel={accessLevel}
+            onNameChange={setName}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onAccessLevelChange={setAccessLevel}
+          />
+          <CompanySelect
+            value={companyId}
+            onChange={setCompanyId}
+          />
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit">
+              Criar
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

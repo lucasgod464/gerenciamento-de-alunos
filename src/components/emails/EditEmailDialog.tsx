@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { Email } from "@/types/email";
+import { Email, mapSupabaseEmailToEmail } from "@/types/email";
 import { supabase } from "@/integrations/supabase/client";
 import { EmailFormFields } from "./form/EmailFormFields";
 import { CompanySelect } from "./form/CompanySelect";
@@ -88,11 +88,11 @@ export function EditEmailDialog({
         throw new Error("No data returned from update");
       }
 
-      return data;
+      return mapSupabaseEmailToEmail(data);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["emails"] });
-      onEmailUpdated(data as Email);
+      onEmailUpdated(data);
       onOpenChange(false);
       toast({
         title: "Email atualizado",
@@ -131,6 +131,15 @@ export function EditEmailDialog({
       return;
     }
 
+    if (!companyId) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Selecione uma empresa.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateEmailMutation.mutate({
       name,
       email: emailAddress,
@@ -147,7 +156,7 @@ export function EditEmailDialog({
         <DialogHeader>
           <DialogTitle>Editar Email</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <EmailFormFields
             name={name}
             email={emailAddress}
