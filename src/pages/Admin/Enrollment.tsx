@@ -5,11 +5,8 @@ import { ExternalLink, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminEnrollment = () => {
-  const { user: currentUser } = useAuth();
   const enrollmentUrl = `${window.location.origin}/enrollment`;
 
   const copyLink = () => {
