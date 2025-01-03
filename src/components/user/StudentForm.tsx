@@ -31,9 +31,11 @@ export const StudentForm = ({
   availableRooms = [],
   onTransfer
 }: StudentFormProps) => {
-  const [status, setStatus] = useState<"active" | "inactive">(
-    initialData?.status || "active"
-  );
+
+const [status, setStatus] = useState<boolean>(
+  initialData?.status ?? true
+);
+
   const [selectedRoom, setSelectedRoom] = useState<string>(
     initialData?.room || ""
   );
@@ -94,20 +96,23 @@ export const StudentForm = ({
     }
 
     const formData = new FormData(e.currentTarget);
-    
-    const studentData: Student = {
-      id: initialData?.id || Math.random().toString(36).substr(2, 9),
-      name: formData.get("fullName") as string,
-      birthDate: formData.get("birthDate") as string,
-      room: selectedRoom,
-      status: status,
-      createdAt: initialData?.createdAt || new Date().toISOString(),
-      companyId: currentUser?.companyId || null,
-      customFields: customFields.reduce((acc: Record<string, string>, field) => {
-        acc[field.name] = formData.get(field.name) as string;
-        return acc;
-      }, {}),
-    };
+
+const studentData: Student = {
+  id: initialData?.id || Math.random().toString(36).substr(2, 9),
+  name: formData.get("fullName") as string,
+  birthDate: formData.get("birthDate") as string,
+  room: selectedRoom,
+  status: status,
+  email: null,
+  document: null,
+  address: null,
+  customFields: customFields.reduce((acc: Record<string, string>, field) => {
+    acc[field.name] = formData.get(field.name) as string;
+    return acc;
+  }, {}),
+  createdAt: initialData?.createdAt || new Date().toISOString(),
+  companyId: currentUser?.companyId || null,
+};
 
     onSubmit(studentData);
   };

@@ -1,13 +1,21 @@
+export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
+
 export interface Email {
   id: string;
   name: string;
   email: string;
-  password?: string;
-  accessLevel: "Admin" | "Usuário Comum";
-  company: string;
+  password: string;
+  accessLevel: AccessLevel;
   companyId: string;
-  companyStatus: "Ativa" | "Inativa";
+  location?: string | null;
+  specialization?: string | null;
   createdAt: string;
+  updatedAt: string;
+  company?: {
+    id: string;
+    name: string;
+    status: string;
+  };
 }
 
 export interface SupabaseEmail {
@@ -15,8 +23,10 @@ export interface SupabaseEmail {
   name: string;
   email: string;
   password: string;
-  access_level: "Admin" | "Usuário Comum";
+  access_level: AccessLevel;
   company_id: string;
+  location: string | null;
+  specialization: string | null;
   created_at: string;
   updated_at: string;
   companies: {
@@ -26,16 +36,18 @@ export interface SupabaseEmail {
   };
 }
 
-export function mapSupabaseEmailToEmail(supabaseEmail: SupabaseEmail): Email {
+export function mapSupabaseEmailToEmail(email: SupabaseEmail): Email {
   return {
-    id: supabaseEmail.id,
-    name: supabaseEmail.name,
-    email: supabaseEmail.email,
-    password: supabaseEmail.password,
-    accessLevel: supabaseEmail.access_level,
-    company: supabaseEmail.companies?.name || '',
-    companyId: supabaseEmail.company_id,
-    companyStatus: supabaseEmail.companies?.status as "Ativa" | "Inativa",
-    createdAt: new Date(supabaseEmail.created_at).toLocaleDateString(),
+    id: email.id,
+    name: email.name,
+    email: email.email,
+    password: email.password,
+    accessLevel: email.access_level,
+    companyId: email.company_id,
+    location: email.location,
+    specialization: email.specialization,
+    createdAt: email.created_at,
+    updatedAt: email.updated_at,
+    company: email.companies
   };
 }

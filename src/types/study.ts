@@ -1,4 +1,4 @@
-export type StudyStatus = 'active' | 'inactive' | 'completed';
+export type StudyStatus = "active" | "inactive" | "completed";
 
 export interface Study {
   id: string;
@@ -28,6 +28,6 @@ export function mapSupabaseStudyToStudy(study: SupabaseStudy): Study {
     startDate: study.start_date,
     endDate: study.end_date,
     companyId: study.company_id,
-    createdAt: study.created_at,
+    createdAt: study.created_at
   };
 }

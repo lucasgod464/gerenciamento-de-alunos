@@ -42,11 +42,15 @@ export function mapSupabaseRoomToRoom(supabaseRoom: SupabaseRoom): Room {
     students: supabaseRoom.room_students?.map(student => ({
       id: student.student_id,
       name: '',
-      birthDate: '',
-      room: supabaseRoom.id,
-      status: 'active',
-      createdAt: '',
-      companyId: supabaseRoom.company_id
+      birthDate: null,
+      status: true,
+      email: null,
+      document: null,
+      address: null,
+      customFields: null,
+      companyId: supabaseRoom.company_id,
+      createdAt: supabaseRoom.created_at,
+      room: supabaseRoom.id
     })) || [],
     created_at: supabaseRoom.created_at
   };

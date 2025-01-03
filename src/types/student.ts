@@ -1,5 +1,7 @@
 import { Json } from "@/integrations/supabase/types";
 
+export type StudentStatus = "active" | "inactive";
+
 export interface Student {
   id: string;
   name: string;
