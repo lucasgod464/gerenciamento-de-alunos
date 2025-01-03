@@ -28,14 +28,22 @@ const Rooms = () => {
         .select(`
           *,
           room_authorized_users (
-            user_id
+            id,
+            user_id,
+            is_main_teacher,
+            user:users (
+              id,
+              name,
+              email
+            )
           ),
           room_students (
             student:students (
               *
             )
           )
-        `);
+        `)
+        .eq('company_id', user?.companyId);
 
       if (error) throw error;
 
@@ -58,7 +66,7 @@ const Rooms = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [user?.companyId]);
 
   const handleEdit = (room: Room) => {
     setEditingRoom(room);
@@ -88,13 +96,37 @@ const Rooms = () => {
 
         if (updateError) throw updateError;
 
+        // Update authorized users
+        if (room.authorizedUsers?.length > 0) {
+          // First, delete existing authorizations
+          const { error: deleteAuthError } = await supabase
+            .from('room_authorized_users')
+            .delete()
+            .eq('room_id', editingRoom.id);
+
+          if (deleteAuthError) throw deleteAuthError;
+
+          // Then, insert new authorizations
+          const { error: insertAuthError } = await supabase
+            .from('room_authorized_users')
+            .insert(
+              room.authorizedUsers.map(userId => ({
+                room_id: editingRoom.id,
+                user_id: userId,
+                is_main_teacher: false // You might want to add UI to set this
+              }))
+            );
+
+          if (insertAuthError) throw insertAuthError;
+        }
+
         toast({
           title: "Sala atualizada",
           description: "A sala foi atualizada com sucesso!",
         });
       } else {
         // Create new room
-        const { error: createError } = await supabase
+        const { data: newRoom, error: createError } = await supabase
           .from('rooms')
           .insert({
             name: room.name,
@@ -104,9 +136,26 @@ const Rooms = () => {
             status: room.status,
             study_room: room.studyRoom || '',
             company_id: user?.companyId,
-          });
+          })
+          .select()
+          .single();
 
         if (createError) throw createError;
+
+        // Insert authorized users if any
+        if (room.authorizedUsers?.length > 0 && newRoom) {
+          const { error: authError } = await supabase
+            .from('room_authorized_users')
+            .insert(
+              room.authorizedUsers.map(userId => ({
+                room_id: newRoom.id,
+                user_id: userId,
+                is_main_teacher: false
+              }))
+            );
+
+          if (authError) throw authError;
+        }
 
         toast({
           title: "Sala criada",
