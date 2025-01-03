@@ -30,12 +30,17 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       const { data: roomStudents, error } = await supabase
         .from('room_students')
         .select(`
-          student:student_id (
+          student:students (
             id,
             name,
             birth_date,
             status,
-            created_at
+            created_at,
+            email,
+            document,
+            address,
+            custom_fields,
+            company_id
           )
         `)
         .eq('room_id', room.id);
@@ -56,7 +61,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       }
 
       const studentsList: Student[] = roomStudents
-        .filter(rs => rs.student && typeof rs.student === 'object') // Ensure student is a valid object
+        .filter(rs => rs.student && typeof rs.student === 'object')
         .map(rs => 
           mapSupabaseStudentToStudent(
             rs.student,
@@ -144,7 +149,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
       <Table>
         <RoomTableHeader />
         <TableBody>
-          {rooms.map((room) => (
+          {rooms?.map((room) => (
             <RoomTableRow
               key={room.id}
               room={room}

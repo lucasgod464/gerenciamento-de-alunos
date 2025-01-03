@@ -10,6 +10,8 @@ import { Room, SupabaseRoom, mapSupabaseRoomToRoom } from "@/types/room";
 const Rooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const { toast } = useToast();
 
   const fetchRooms = async () => {
@@ -22,7 +24,7 @@ const Rooms = () => {
             user_id
           ),
           room_students (
-            student (
+            student:students (
               *
             )
           )
@@ -65,9 +67,14 @@ const Rooms = () => {
           </p>
         </div>
 
-        <RoomStats data={rooms} />
-        <RoomFilters />
-        <RoomTable data={rooms} onRefresh={fetchRooms} />
+        <RoomStats rooms={rooms} />
+        <RoomFilters 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+        <RoomTable rooms={rooms} onEdit={() => {}} onDelete={() => {}} />
       </div>
     </DashboardLayout>
   );
