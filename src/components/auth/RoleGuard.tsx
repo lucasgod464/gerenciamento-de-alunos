@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { AccessLevel, ROLE_PERMISSIONS, RolePermissions } from "@/types/auth";
+import { UserRole, Permission } from "@/types/auth";
 import { Navigate } from "react-router-dom";
 
 interface RoleGuardProps {
   children: ReactNode;
-  allowedRoles?: AccessLevel[];
+  allowedRoles?: UserRole[];
   companyId?: string;
-  requiredPermissions?: Array<keyof RolePermissions>;
+  requiredPermissions?: Permission[];
 }
 
 export function RoleGuard({

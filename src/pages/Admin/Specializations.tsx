@@ -6,7 +6,7 @@ import { SpecializationDialog } from "@/components/specializations/Specializatio
 import { DeleteConfirmDialog } from "@/components/specializations/DeleteConfirmDialog";
 import { SpecializationList } from "@/components/specializations/SpecializationList";
 import { SpecializationHeader } from "@/components/specializations/SpecializationHeader";
-import type { Specialization } from "@/services/specializations";
+import { Specialization } from "@/types/specialization";
 
 const Specializations = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,8 +45,11 @@ const Specializations = () => {
     setSelectedSpecialization(null);
   };
 
-  const handleToggleStatus = (id: string, status: boolean) => {
-    toggleStatus({ id, status });
+  const handleToggleStatus = (id: string) => {
+    const spec = specializations.find(s => s.id === id);
+    if (spec) {
+      toggleStatus({ id, status: !spec.status });
+    }
   };
 
   const filteredSpecializations = specializations.filter(spec => {
@@ -78,12 +81,7 @@ const Specializations = () => {
             setSelectedSpecialization(spec);
             setIsDeleteDialogOpen(true);
           }}
-          onToggleStatus={(id) => {
-            const spec = specializations.find(s => s.id === id);
-            if (spec) {
-              handleToggleStatus(id, spec.status);
-            }
-          }}
+          onToggleStatus={handleToggleStatus}
         />
 
         <SpecializationDialog
