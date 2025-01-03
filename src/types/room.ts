@@ -1,5 +1,3 @@
-import { Student } from "./student";
-
 export interface Room {
   id: string;
   name: string;
@@ -7,11 +5,11 @@ export interface Room {
   location: string;
   category: string;
   status: boolean;
-  companyId: string;
+  companyId: string | null;
   studyRoom: string;
-  authorizedUsers: any[];
-  students: Student[];
   createdAt: string;
+  authorizedUsers?: string[];
+  students?: { id: string; name: string }[];
 }
 
 export interface SupabaseRoom {
@@ -21,21 +19,13 @@ export interface SupabaseRoom {
   location: string;
   category: string;
   status: boolean;
-  company_id: string;
+  company_id: string | null;
   study_room: string;
   created_at: string;
   room_students?: {
     student: {
       id: string;
       name: string;
-      birth_date: string | null;
-      status: boolean;
-      email: string | null;
-      document: string | null;
-      address: string | null;
-      custom_fields: Record<string, any> | null;
-      company_id: string | null;
-      created_at: string;
     };
   }[];
 }
@@ -50,19 +40,7 @@ export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
     status: room.status,
     companyId: room.company_id,
     studyRoom: room.study_room,
-    authorizedUsers: [],
-    students: room.room_students?.map(rs => ({
-      id: rs.student.id,
-      name: rs.student.name,
-      birthDate: rs.student.birth_date,
-      status: rs.student.status,
-      email: rs.student.email,
-      document: rs.student.document,
-      address: rs.student.address,
-      customFields: rs.student.custom_fields as Record<string, string> | null,
-      companyId: rs.student.company_id,
-      createdAt: rs.student.created_at
-    })) || [],
     createdAt: room.created_at,
+    students: room.room_students?.map(rs => rs.student)
   };
 }

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { UserList } from "@/components/users/UserList";
 import { mapDatabaseUser } from "@/types/user";
+import { UsersHeader } from "@/components/users/UsersHeader";
 
 export default function Users() {
   const { user: currentUser } = useAuth();
@@ -42,22 +43,18 @@ export default function Users() {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Usuários</h1>
-          <p className="text-muted-foreground">
-            Gerencie os usuários do sistema
-          </p>
-        </div>
-
+        <UsersHeader onUserCreated={(user) => {
+          setUsers(prev => [...prev, user]);
+        }} />
         <UserList 
-  users={users} 
-  onUpdateUser={(user) => {
-    setUsers(users.map(u => u.id === user.id ? user : u));
-  }}
-  onDeleteUser={(id) => {
-    setUsers(users.filter(u => u.id !== id));
-  }}
-/>
+          users={users} 
+          onUpdateUser={(user) => {
+            setUsers(users.map(u => u.id === user.id ? user : u));
+          }}
+          onDeleteUser={(id) => {
+            setUsers(users.filter(u => u.id !== id));
+          }}
+        />
       </div>
     </DashboardLayout>
   );

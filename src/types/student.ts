@@ -24,7 +24,7 @@ export interface SupabaseStudent {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Json | null;
+  custom_fields: Json;
   company_id: string | null;
   created_at: string;
 }
