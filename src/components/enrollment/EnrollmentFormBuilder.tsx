@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
 import { AddFieldDialog } from "./EnrollmentAddFieldDialog";
-import { FormPreview } from "./EnrollmentFormPreview";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { EnrollmentFormHeader } from "./EnrollmentFormHeader";
+import { EnrollmentFormConfig } from "./EnrollmentFormConfig";
 
 const DEFAULT_FIELDS: FormField[] = [
   {
@@ -209,24 +207,17 @@ export const EnrollmentFormBuilder = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Campos do Formulário de Inscrição</h2>
-          <Button onClick={() => {
-            setEditingField(undefined);
-            setIsAddingField(true);
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Campo
-          </Button>
-        </div>
-        <FormPreview 
-          fields={fields} 
-          onDeleteField={handleDeleteField}
-          onEditField={handleEditField}
-          onReorderFields={handleReorderFields}
-        />
-      </Card>
+      <EnrollmentFormHeader />
+      <EnrollmentFormConfig 
+        fields={fields}
+        onAddField={() => {
+          setEditingField(undefined);
+          setIsAddingField(true);
+        }}
+        onDeleteField={handleDeleteField}
+        onEditField={handleEditField}
+        onReorderFields={handleReorderFields}
+      />
 
       <AddFieldDialog
         open={isAddingField}
