@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { UserTable } from "@/components/users/UserTable";
+import { UserList } from "@/components/users/UserList";
 import { mapDatabaseUser } from "@/types/user";
 
 export default function Users() {
@@ -49,7 +49,15 @@ export default function Users() {
           </p>
         </div>
 
-        <UserTable users={users} />
+        <UserList 
+  users={users} 
+  onUpdateUser={(user) => {
+    setUsers(users.map(u => u.id === user.id ? user : u));
+  }}
+  onDeleteUser={(id) => {
+    setUsers(users.filter(u => u.id !== id));
+  }}
+/>
       </div>
     </DashboardLayout>
   );

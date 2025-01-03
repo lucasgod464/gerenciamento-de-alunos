@@ -72,10 +72,10 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
           />
         </TableCell>
         <TableCell className="text-sm text-muted-foreground">
-          {user.created_at}
+          {user.createdAt}
         </TableCell>
         <TableCell className="text-sm text-muted-foreground">
-          {user.last_access}
+          {user.lastAccess}
         </TableCell>
         <TableCell>
           <UserActions 

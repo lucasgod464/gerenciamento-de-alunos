@@ -43,15 +43,15 @@ export function UserInfoDialog({ user, onClose }: UserInfoDialogProps) {
           )}
           <div className="flex flex-col space-y-1.5">
             <label className="font-semibold">Nível de Acesso</label>
-            <p className="text-sm text-muted-foreground">{user.access_level}</p>
+            <p className="text-sm text-muted-foreground">{user.accessLevel}</p>
           </div>
           <div className="flex flex-col space-y-1.5">
             <label className="font-semibold">Data de Criação</label>
-            <p className="text-sm text-muted-foreground">{user.created_at}</p>
+            <p className="text-sm text-muted-foreground">{user.createdAt}</p>
           </div>
           <div className="flex flex-col space-y-1.5">
             <label className="font-semibold">Último Acesso</label>
-            <p className="text-sm text-muted-foreground">{user.last_access || "Nunca acessou"}</p>
+            <p className="text-sm text-muted-foreground">{user.lastAccess || "Nunca acessou"}</p>
           </div>
         </div>
       </DialogContent>

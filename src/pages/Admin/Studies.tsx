@@ -1,19 +1,19 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { StudyStats } from "@/components/studies/StudyStats";
-import { StudiesTable } from "@/components/studies/StudiesTable";
 import { useEffect, useState } from "react";
 import { Study } from "@/types/study";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { StudyStats } from "@/components/studies/StudyStats";
+import { StudiesTable } from "@/components/studies/StudiesTable";
 
 export default function Studies() {
-  const [studies, setStudies] = useState<Study[]>([]);
   const { user: currentUser } = useAuth();
+  const [studies, setStudies] = useState<Study[]>([]);
 
   const fetchStudies = async () => {
     if (!currentUser?.companyId) return;
 
-    const { data, error } = await supabase
+    const { data: studiesData, error } = await supabase
       .from('studies')
       .select('*')
       .eq('company_id', currentUser.companyId);
@@ -23,8 +23,18 @@ export default function Studies() {
       return;
     }
 
-    if (data) {
-      setStudies(data as Study[]);
+    if (studiesData) {
+      // Map the database fields to our Study type
+      const mappedStudies: Study[] = studiesData.map(study => ({
+        id: study.id,
+        name: study.name,
+        status: study.status as Study['status'],
+        startDate: study.start_date,
+        endDate: study.end_date,
+        companyId: study.company_id,
+        createdAt: study.created_at
+      }));
+      setStudies(mappedStudies);
     }
   };
 
@@ -43,9 +53,10 @@ export default function Studies() {
         </div>
 
         <StudyStats studies={studies} />
+
         <StudiesTable 
           studies={studies} 
-          onStudiesChange={fetchStudies}
+          onStudyChange={fetchStudies}
         />
       </div>
     </DashboardLayout>

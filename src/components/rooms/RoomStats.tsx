@@ -1,30 +1,63 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { DoorOpen } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Room } from "@/types/room";
 
-interface RoomStatsProps {
-  totalRooms: number
-  activeRooms: number
+export interface RoomStatsProps {
+  rooms: Room[];
+  totalRooms?: number;
+  activeRooms?: number;
+  totalCompanies?: number;
+  totalStudents?: number;
 }
 
-export function RoomStats({ totalRooms, activeRooms }: RoomStatsProps) {
+export function RoomStats({ 
+  rooms,
+  totalRooms,
+  activeRooms,
+  totalCompanies,
+  totalStudents 
+}: RoomStatsProps) {
+  // Calculate stats from rooms if not provided directly
+  const calculatedTotalRooms = totalRooms ?? rooms.length;
+  const calculatedActiveRooms = activeRooms ?? rooms.filter(room => room.status).length;
+
   return (
-    <Card>
-      <CardContent className="flex items-center p-6">
-        <div className="flex items-center gap-4">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <DoorOpen className="h-6 w-6 text-purple-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Total de Salas
-            </p>
-            <h2 className="text-2xl font-bold">{totalRooms}</h2>
-            <p className="text-sm text-muted-foreground">
-              {activeRooms} salas ativas
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{calculatedTotalRooms}</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{calculatedActiveRooms}</div>
+        </CardContent>
+      </Card>
+      {totalCompanies !== undefined && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalCompanies}</div>
+          </CardContent>
+        </Card>
+      )}
+      {totalStudents !== undefined && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalStudents}</div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
