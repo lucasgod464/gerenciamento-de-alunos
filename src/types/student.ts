@@ -1,23 +1,21 @@
-export type StudentStatus = boolean;
-
 export interface Student {
   id: string;
   name: string;
-  birthDate: string | null;
-  status: StudentStatus;
+  birthDate: string;
+  status: boolean;
   email: string | null;
   document: string | null;
   address: string | null;
   customFields: Record<string, any> | null;
   companyId: string | null;
   createdAt: string;
-  room?: string | null;
+  room?: string;
 }
 
 export interface SupabaseStudent {
   id: string;
   name: string;
-  birth_date: string | null;
+  birth_date: string;
   status: boolean;
   email: string | null;
   document: string | null;
@@ -27,11 +25,7 @@ export interface SupabaseStudent {
   created_at: string;
 }
 
-export function mapSupabaseStudentToStudent(
-  student: SupabaseStudent,
-  roomId?: string | null,
-  companyId?: string | null
-): Student {
+export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
   return {
     id: student.id,
     name: student.name,
@@ -41,8 +35,7 @@ export function mapSupabaseStudentToStudent(
     document: student.document,
     address: student.address,
     customFields: student.custom_fields,
-    companyId: companyId || student.company_id,
-    createdAt: student.created_at,
-    room: roomId
+    companyId: student.company_id,
+    createdAt: student.created_at
   };
 }

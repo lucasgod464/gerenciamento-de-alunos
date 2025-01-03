@@ -32,25 +32,36 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   useEffect(() => {
     const loadUserData = async () => {
       if (user?.id) {
-        // Load authorized rooms
-        const { data: roomData } = await supabase
-          .from('user_authorized_rooms')
-          .select('room_id')
-          .eq('user_id', user.id);
+        try {
+          // Load authorized rooms
+          const { data: roomData, error: roomError } = await supabase
+            .from('user_authorized_rooms')
+            .select('room_id')
+            .eq('user_id', user.id);
 
-        const authorizedRooms = roomData?.map(r => r.room_id) || [];
-        
-        setFormData(user);
-        setNewPassword("");
-        setSelectedRooms(authorizedRooms);
-        setSelectedTags(user.tags || []);
+          if (roomError) throw roomError;
+
+          const authorizedRooms = roomData?.map(r => r.room_id) || [];
+          
+          setFormData(user);
+          setNewPassword("");
+          setSelectedRooms(authorizedRooms);
+          setSelectedTags(user.tags || []);
+        } catch (error) {
+          console.error('Error loading user data:', error);
+          toast({
+            title: "Erro ao carregar dados",
+            description: "Não foi possível carregar os dados do usuário.",
+            variant: "destructive",
+          });
+        }
       }
     };
 
     if (user) {
       loadUserData();
     }
-  }, [user]);
+  }, [user, toast]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -82,10 +93,12 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
       if (updateError) throw updateError;
 
       // Delete existing room authorizations
-      await supabase
+      const { error: deleteRoomError } = await supabase
         .from('user_authorized_rooms')
         .delete()
         .eq('user_id', formData.id);
+
+      if (deleteRoomError) throw deleteRoomError;
 
       // Insert new room authorizations
       if (selectedRooms.length > 0) {
@@ -102,10 +115,12 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
       }
 
       // Update tags
-      await supabase
+      const { error: deleteTagError } = await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', formData.id);
+
+      if (deleteTagError) throw deleteTagError;
 
       if (selectedTags.length > 0) {
         const tagsData = selectedTags.map(tag => ({

@@ -24,6 +24,9 @@ export interface SupabaseRoom {
   company_id: string | null;
   study_room: string;
   created_at: string;
+  room_students?: Array<{
+    student: Student;
+  }>;
 }
 
 export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
@@ -37,6 +40,6 @@ export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
     companyId: room.company_id,
     studyRoom: room.study_room,
     createdAt: room.created_at,
-    students: []
+    students: room.room_students?.map(rs => rs.student) || []
   };
 }
