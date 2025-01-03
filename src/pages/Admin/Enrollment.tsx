@@ -1,197 +1,102 @@
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import { FormField } from "@/types/form";
-import { AddFieldDialog } from "./EnrollmentAddFieldDialog";
-import { FormPreview } from "./EnrollmentFormPreview";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import { Link } from "react-router-dom";
+import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
+import { AddFieldDialog } from "@/components/enrollment/EnrollmentAddFieldDialog";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
-
-const DEFAULT_FIELDS: FormField[] = [
-  {
-    id: "default-name",
-    name: "nome_completo",
-    label: "Nome Completo",
-    type: "text",
-    required: true,
-    order: 0,
-  },
-  {
-    id: "default-birthdate",
-    name: "data_nascimento",
-    label: "Data de Nascimento",
-    type: "date",
-    required: true,
-    order: 1,
-  }
-];
-
-const HIDDEN_FIELDS = ["sala", "status"];
-
-export const EnrollmentFormBuilder = () => {
-  const { toast } = useToast();
+const AdminEnrollment = () => {
+  const [formConfig, setFormConfig] = useState(null);
   const { user: currentUser } = useAuth();
-  const [fields, setFields] = useState<FormField[]>([]);
-  const [isAddingField, setIsAddingField] = useState(false);
-  const [editingField, setEditingField] = useState<FormField | undefined>();
-  const [deletedFields, setDeletedFields] = useState<string[]>([]);
 
-  // Carregar campos do Supabase
+  // Carregar configuração do formulário
   useEffect(() => {
-    const loadFields = async () => {
+    const loadFormConfig = async () => {
       if (!currentUser?.companyId) return;
-
+      
       const { data, error } = await supabase
-        .from('enrollment_form_fields')
+        .from('enrollment_forms')
         .select('*')
         .eq('company_id', currentUser.companyId)
-        .order('order');
+        .single();
 
       if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar campos do formulário",
-          variant: "destructive"
-        });
+        toast.error("Erro ao carregar configurações do formulário");
         return;
       }
 
-      const fieldsWithDefaults = [...DEFAULT_FIELDS];
-      data.forEach(field => {
-        if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
-          fieldsWithDefaults.push(field);
-        }
-      });
-
-      setFields(fieldsWithDefaults);
+      setFormConfig(data);
     };
 
-    loadFields();
+    loadFormConfig();
   }, [currentUser]);
 
-  // Salvar campos no Supabase
-  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
-    if (!currentUser?.companyId) return;
+  const enrollmentUrl = `${window.location.origin}/enrollment`;
 
-    try {
-      const { data, error } = await supabase
-        .from('enrollment_form_fields')
-        .insert([{
-          ...field,
-          company_id: currentUser.companyId,
-          order: fields.length
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setFields(prev => [...prev, data]);
-      toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso."
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar campo",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteField = (id: string) => {
-    if (DEFAULT_FIELDS.some(field => field.id === id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser removido.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setFields(prev => prev.filter(field => field.id !== id));
-    setDeletedFields(prev => [...prev, id]);
-    
-    toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
-    });
-  };
-
-  const handleEditField = (field: FormField) => {
-    if (DEFAULT_FIELDS.some(defaultField => defaultField.id === field.id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Este campo é obrigatório e não pode ser editado.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setEditingField(field);
-    setIsAddingField(true);
-  };
-
-  const handleReorderFields = async (reorderedFields: FormField[]) => {
-    if (!currentUser?.companyId) return;
-
-    try {
-      const updates = reorderedFields.map((field, index) => ({
-        id: field.id,
-        order: index
-      }));
-
-      const { error } = await supabase
-        .from('enrollment_form_fields')
-        .upsert(updates);
-
-      if (error) throw error;
-
-      setFields(reorderedFields);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao reordenar campos",
-        variant: "destructive"
-      });
-    }
+  const copyLink = () => {
+    navigator.clipboard.writeText(enrollmentUrl);
+    toast.success("Link copiado para a área de transferência!");
   };
 
   return (
-    <div className="space-y-6">
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-semibold">Campos do Formulário de Inscrição</h2>
-          <Button onClick={() => {
-            setEditingField(undefined);
-            setIsAddingField(true);
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Adicionar Campo
-          </Button>
+    <DashboardLayout role="admin">
+      <div className="max-w-5xl mx-auto space-y-8">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Inscrição Online</h1>
+          <p className="text-muted-foreground">
+            Configure o formulário de inscrição e compartilhe o link com os interessados
+          </p>
         </div>
-        <FormPreview 
-          fields={fields} 
-          onDeleteField={handleDeleteField}
-          onEditField={handleEditField}
-          onReorderFields={handleReorderFields}
-        />
-      </Card>
+        
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Link do Formulário</CardTitle>
+                  <CardDescription>
+                    Compartilhe este link para receber inscrições
+                  </CardDescription>
+                </div>
+                <Button asChild>
+                  <Link to="/enrollment" target="_blank">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Visualizar Formulário
+                  </Link>
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
+                <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <code className="text-sm flex-1 break-all">{enrollmentUrl}</code>
+                <Button variant="secondary" onClick={copyLink}>
+                  Copiar Link
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-      <AddFieldDialog
-        open={isAddingField}
-        onClose={() => {
-          setIsAddingField(false);
-          setEditingField(undefined);
-        }}
-        onAddField={handleAddField}
-        editingField={editingField}
-      />
-    </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Configuração do Formulário</CardTitle>
+              <CardDescription>
+                Personalize os campos e seções do formulário de inscrição
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EnrollmentFormBuilder />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 };
+
+export default AdminEnrollment;
