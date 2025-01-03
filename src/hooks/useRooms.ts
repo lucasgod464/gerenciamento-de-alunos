@@ -78,9 +78,11 @@ export function useRooms() {
     }
 
     try {
+      let result;
+      
       if (room.id) {
         // Update existing room
-        const { error: updateError } = await supabase
+        result = await supabase
           .from('rooms')
           .update({
             name: room.name,
@@ -89,19 +91,14 @@ export function useRooms() {
             category: room.category,
             status: room.status,
             study_room: room.studyRoom || '',
+            company_id: user.companyId,
           })
           .eq('id', room.id)
-          .eq('company_id', user.companyId);
-
-        if (updateError) throw updateError;
-
-        toast({
-          title: "Sala atualizada",
-          description: "A sala foi atualizada com sucesso!",
-        });
+          .select()
+          .single();
       } else {
         // Create new room
-        const { error: createError } = await supabase
+        result = await supabase
           .from('rooms')
           .insert({
             name: room.name,
@@ -111,18 +108,20 @@ export function useRooms() {
             status: room.status,
             study_room: room.studyRoom || '',
             company_id: user.companyId,
-          });
-
-        if (createError) throw createError;
-
-        toast({
-          title: "Sala criada",
-          description: "A sala foi criada com sucesso!",
-        });
+          })
+          .select()
+          .single();
       }
 
+      if (result.error) throw result.error;
+
+      toast({
+        title: room.id ? "Sala atualizada" : "Sala criada",
+        description: room.id ? "A sala foi atualizada com sucesso!" : "A sala foi criada com sucesso!",
+      });
+
       fetchRooms();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving room:", error);
       toast({
         title: "Erro ao salvar sala",
@@ -139,8 +138,7 @@ export function useRooms() {
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId)
-        .eq('company_id', user.companyId);
+        .eq('id', roomId);
 
       if (deleteError) throw deleteError;
 
