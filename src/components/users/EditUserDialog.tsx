@@ -30,11 +30,25 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    const loadUserData = async () => {
+      if (user?.id) {
+        // Load authorized rooms
+        const { data: roomData } = await supabase
+          .from('user_authorized_rooms')
+          .select('room_id')
+          .eq('user_id', user.id);
+
+        const authorizedRooms = roomData?.map(r => r.room_id) || [];
+        
+        setFormData(user);
+        setNewPassword("");
+        setSelectedRooms(authorizedRooms);
+        setSelectedTags(user.tags || []);
+      }
+    };
+
     if (user) {
-      setFormData(user);
-      setNewPassword("");
-      setSelectedRooms(user.authorizedRooms || []);
-      setSelectedTags(user.tags || []);
+      loadUserData();
     }
   }, [user]);
 
@@ -67,22 +81,27 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (updateError) throw updateError;
 
+      // Delete existing room authorizations
       await supabase
         .from('user_authorized_rooms')
         .delete()
         .eq('user_id', formData.id);
 
+      // Insert new room authorizations
       if (selectedRooms.length > 0) {
         const roomsData = selectedRooms.map(roomId => ({
           user_id: formData.id,
           room_id: roomId,
         }));
 
-        await supabase
+        const { error: roomError } = await supabase
           .from('user_authorized_rooms')
           .insert(roomsData);
+
+        if (roomError) throw roomError;
       }
 
+      // Update tags
       await supabase
         .from('user_tags')
         .delete()
@@ -94,9 +113,11 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           tag_id: tag.id,
         }));
 
-        await supabase
+        const { error: tagError } = await supabase
           .from('user_tags')
           .insert(tagsData);
+
+        if (tagError) throw tagError;
       }
 
       const finalUser: User = {
