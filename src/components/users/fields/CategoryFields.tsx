@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { CategorySelect } from "../CategorySelect";
 import {
@@ -7,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CategoryFieldsProps {
   defaultValues?: {
@@ -17,6 +20,31 @@ interface CategoryFieldsProps {
 }
 
 export function CategoryFields({ defaultValues, specializations }: CategoryFieldsProps) {
+  const [availableSpecializations, setAvailableSpecializations] = useState<Array<{ id: string; name: string }>>([]);
+  const { user: currentUser } = useAuth();
+
+  useEffect(() => {
+    const fetchSpecializations = async () => {
+      if (!currentUser?.companyId) return;
+
+      const { data: specializationsData, error } = await supabase
+        .from('specializations')
+        .select('id, name')
+        .eq('company_id', currentUser.companyId)
+        .eq('status', true)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching specializations:', error);
+        return;
+      }
+
+      setAvailableSpecializations(specializationsData);
+    };
+
+    fetchSpecializations();
+  }, [currentUser?.companyId]);
+
   return (
     <>
       <div className="space-y-2">
@@ -33,7 +61,7 @@ export function CategoryFields({ defaultValues, specializations }: CategoryField
             <SelectValue placeholder="Selecione a especialização" />
           </SelectTrigger>
           <SelectContent>
-            {specializations.map((spec) => (
+            {availableSpecializations.map((spec) => (
               <SelectItem key={spec.id} value={spec.id}>
                 {spec.name}
               </SelectItem>
