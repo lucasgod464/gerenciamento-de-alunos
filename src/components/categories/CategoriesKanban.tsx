@@ -5,7 +5,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Category } from "@/types/category";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 
 interface CategoriesKanbanProps {
   categories: Category[];
@@ -32,14 +31,7 @@ export const CategoriesKanban = ({
         
         const { data: roomsData, error } = await supabase
           .from('rooms')
-          .select(`
-            *,
-            room_students (
-              student:student_id (
-                *
-              )
-            )
-          `)
+          .select('*')
           .eq('company_id', companyId);
 
         if (error) {
@@ -64,9 +56,7 @@ export const CategoriesKanban = ({
           companyId: room.company_id,
           studyRoom: room.study_room || '',
           createdAt: room.created_at,
-          students: room.room_students?.map(rs => 
-            mapSupabaseStudentToStudent(rs.student, room.id, room.company_id)
-          ) || []
+          students: []
         }));
 
         console.log('Transformed rooms:', transformedRooms);
