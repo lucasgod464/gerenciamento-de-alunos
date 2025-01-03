@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Room, SupabaseRoom, mapSupabaseRoomToRoom } from "@/types/room";
 import { RoomActions } from "@/components/rooms/RoomActions";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const Rooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -113,7 +115,7 @@ const Rooms = () => {
               room.authorizedUsers.map(userId => ({
                 room_id: editingRoom.id,
                 user_id: userId,
-                is_main_teacher: false // You might want to add UI to set this
+                is_main_teacher: false
               }))
             );
 
@@ -229,11 +231,17 @@ const Rooms = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6 p-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Gerenciamento de Salas</h1>
-          <p className="text-muted-foreground">
-            Gerencie todas as salas cadastradas no sistema
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Gerenciamento de Salas</h1>
+            <p className="text-muted-foreground">
+              Gerencie todas as salas cadastradas no sistema
+            </p>
+          </div>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova Sala
+          </Button>
         </div>
 
         <RoomStats rooms={rooms} />
