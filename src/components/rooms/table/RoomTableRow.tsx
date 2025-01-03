@@ -5,6 +5,7 @@ import { Pencil, Trash2, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { UserWithTags } from "@/components/categories/UserWithTags";
 
 interface RoomTableRowProps {
   room: Room;
@@ -20,11 +21,11 @@ export const RoomTableRow = ({
   onShowStudents,
 }: RoomTableRowProps) => {
   const [categoryName, setCategoryName] = useState("");
-  const [teacherName, setTeacherName] = useState("Não atribuído");
+  const [authorizedTeachers, setAuthorizedTeachers] = useState<{ name: string; id: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchCategoryAndTeacher = async () => {
+    const fetchCategoryAndTeachers = async () => {
       try {
         // Fetch category name
         if (room.category) {
@@ -38,28 +39,29 @@ export const RoomTableRow = ({
           if (categoryData) setCategoryName(categoryData.name);
         }
 
-        // Fetch teacher from user_authorized_rooms and emails tables
+        // Fetch authorized teachers for this room
         const { data: authorizedUsers, error: authError } = await supabase
           .from('user_authorized_rooms')
           .select(`
-            user_id,
-            emails!inner (
+            user:user_id (
               name,
-              access_level
+              id
             )
           `)
           .eq('room_id', room.id);
 
         if (authError) throw authError;
         
-        const teacher = authorizedUsers?.find(user => 
-          user.emails?.access_level === 'Usuário Comum' || 
-          user.emails?.access_level === 'Admin'
-        );
-
-        if (teacher && teacher.emails) {
-          setTeacherName(teacher.emails.name);
+        if (authorizedUsers) {
+          const teachers = authorizedUsers
+            .filter(au => au.user)
+            .map(au => ({
+              name: au.user.name,
+              id: au.user.id
+            }));
+          setAuthorizedTeachers(teachers);
         }
+
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -70,7 +72,7 @@ export const RoomTableRow = ({
       }
     };
 
-    fetchCategoryAndTeacher();
+    fetchCategoryAndTeachers();
   }, [room, toast]);
 
   return (
@@ -79,7 +81,21 @@ export const RoomTableRow = ({
       <TableCell>{room.schedule}</TableCell>
       <TableCell>{room.location}</TableCell>
       <TableCell>{categoryName}</TableCell>
-      <TableCell>{teacherName}</TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          {authorizedTeachers.length > 0 ? (
+            authorizedTeachers.map(teacher => (
+              <UserWithTags 
+                key={teacher.id}
+                userName={teacher.name}
+                companyId={room.companyId}
+              />
+            ))
+          ) : (
+            <span className="text-sm text-muted-foreground">Não atribuído</span>
+          )}
+        </div>
+      </TableCell>
       <TableCell>
         <Button
           variant="ghost"
