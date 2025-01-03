@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Room {
   id: string;
@@ -10,66 +12,105 @@ interface Room {
   schedule: string;
   location: string;
   category: string;
-  capacity: number;
-  resources: string;
   status: boolean;
   companyId: string | null;
-  students: any[];
-  authorizedUsers: string[];
+  studyRoom: string;
+  createdAt: string;
 }
 
 interface Category {
   id: string;
   name: string;
-  status: boolean;
-  companyId: string | null;
 }
 
 export function UserRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!user?.id || !user?.companyId) {
-      console.log("No user ID or companyId found");
-      return;
-    }
+    const fetchRoomsAndCategories = async () => {
+      if (!user?.id || !user?.companyId) {
+        console.log("No user ID or companyId found");
+        return;
+      }
 
-    // Carregar categorias
-    const allCategories = JSON.parse(localStorage.getItem("categories") || "[]");
-    const companyCategories = allCategories.filter(
-      (cat: Category) => cat.companyId === user.companyId
-    );
-    setCategories(companyCategories);
+      try {
+        // Fetch authorized rooms for the user
+        const { data: authorizedRooms, error: roomsError } = await supabase
+          .from('user_authorized_rooms')
+          .select(`
+            room:room_id (
+              id,
+              name,
+              schedule,
+              location,
+              category,
+              status,
+              company_id,
+              study_room,
+              created_at,
+              room_students (
+                student:student_id (
+                  id,
+                  name
+                )
+              )
+            )
+          `)
+          .eq('user_id', user.id);
 
-    // Carregar salas
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const currentUserData = users.find((u: any) => u.id === user.id || u.email === user.email);
+        if (roomsError) throw roomsError;
 
-    const companyRooms = allRooms.filter((room: Room) => 
-      room.companyId === user.companyId && 
-      room.status === true
-    );
+        // Fetch categories
+        const { data: categoriesData, error: categoriesError } = await supabase
+          .from('categories')
+          .select('id, name')
+          .eq('company_id', user.companyId);
 
-    if (currentUserData?.authorizedRooms?.length) {
-      const authorizedRooms = companyRooms.filter((room: Room) =>
-        currentUserData.authorizedRooms.includes(room.id)
-      );
-      setRooms(authorizedRooms);
-    } else {
-      setRooms([]);
-    }
-  }, [user]);
+        if (categoriesError) throw categoriesError;
+
+        // Transform the rooms data
+        const transformedRooms = authorizedRooms
+          ?.filter(ar => ar.room && ar.room.status)
+          .map(ar => ({
+            id: ar.room.id,
+            name: ar.room.name,
+            schedule: ar.room.schedule,
+            location: ar.room.location,
+            category: ar.room.category,
+            status: ar.room.status,
+            companyId: ar.room.company_id,
+            studyRoom: ar.room.study_room,
+            createdAt: ar.room.created_at,
+            students: ar.room.room_students || []
+          })) || [];
+
+        setRooms(transformedRooms);
+        setCategories(categoriesData || []);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar as salas",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchRoomsAndCategories();
+  }, [user, toast]);
 
   const getStudentCount = (room: Room) => {
     return room.students?.filter(student => typeof student === 'object').length || 0;
   };
 
   const getCapacityPercentage = (room: Room) => {
-    if (!room.capacity) return 0;
-    return Math.min((getStudentCount(room) / room.capacity) * 100, 100);
+    const studentCount = getStudentCount(room);
+    const estimatedCapacity = 30; // You might want to make this dynamic based on room settings
+    return Math.min((studentCount / estimatedCapacity) * 100, 100);
   };
 
   const getCategoryName = (categoryId: string) => {
@@ -129,18 +170,14 @@ export function UserRooms() {
                     <span className="text-sm font-medium">
                       {getStudentCount(room)} alunos
                     </span>
-                    {room.capacity > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        Capacidade: {room.capacity}
-                      </span>
-                    )}
+                    <span className="text-sm text-muted-foreground">
+                      Capacidade estimada: 30
+                    </span>
                   </div>
-                  {room.capacity > 0 && (
-                    <Progress 
-                      value={getCapacityPercentage(room)} 
-                      className="h-2"
-                    />
-                  )}
+                  <Progress 
+                    value={getCapacityPercentage(room)} 
+                    className="h-2"
+                  />
                 </div>
               </div>
 
