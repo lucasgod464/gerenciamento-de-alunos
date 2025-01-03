@@ -61,6 +61,23 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
+      // Verificar se o email já existe
+      const { data: existingEmails, error: checkError } = await supabase
+        .from('emails')
+        .select('id')
+        .eq('email', email);
+
+      if (checkError) throw checkError;
+
+      if (existingEmails && existingEmails.length > 0) {
+        toast({
+          title: "Erro ao criar usuário",
+          description: "Este email já está cadastrado no sistema.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Create new user in emails table
       const { data: newUser, error: createError } = await supabase
         .from('emails')
@@ -77,7 +94,14 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         .select()
         .single();
 
-      if (createError) throw createError;
+      if (createError) {
+        console.error('Error creating user:', createError);
+        throw createError;
+      }
+
+      if (!newUser) {
+        throw new Error('No data returned after creating user');
+      }
 
       // Insert room authorizations
       if (selectedRooms.length > 0) {
@@ -90,7 +114,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
             }))
           );
 
-        if (roomsError) throw roomsError;
+        if (roomsError) {
+          console.error('Error creating room authorizations:', roomsError);
+          throw roomsError;
+        }
       }
 
       // Insert user tags
@@ -104,7 +131,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
             }))
           );
 
-        if (tagsError) throw tagsError;
+        if (tagsError) {
+          console.error('Error creating user tags:', tagsError);
+          throw tagsError;
+        }
       }
 
       const createdUser: User = {
