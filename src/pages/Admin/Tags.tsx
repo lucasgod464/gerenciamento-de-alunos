@@ -17,7 +17,6 @@ export interface TagType {
   company_id: string;
 }
 
-// Componente principal de Tags
 const Tags = () => {
   const [tags, setTags] = useState<TagType[]>([]);
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
@@ -29,7 +28,10 @@ const Tags = () => {
   const { user } = useAuth();
 
   const fetchTags = async () => {
-    if (!user?.companyId) return;
+    if (!user?.companyId) {
+      console.log('Nenhuma empresa selecionada:', user);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -40,6 +42,7 @@ const Tags = () => {
         .select('*')
         .order('name');
 
+      // Se não for SUPER_ADMIN, filtra por company_id
       if (user.role !== 'SUPER_ADMIN') {
         query = query.eq('company_id', user.companyId);
       }
@@ -66,14 +69,21 @@ const Tags = () => {
   };
 
   useEffect(() => {
-    fetchTags();
+    if (user?.companyId) {
+      console.log('Iniciando busca de tags para empresa:', user.companyId);
+      fetchTags();
+    }
   }, [user]);
 
   const handleSubmit = async (tagData: Omit<TagType, "id" | "company_id">) => {
-    if (!user?.companyId) return;
+    if (!user?.companyId) {
+      console.error('Nenhuma empresa selecionada para salvar a tag');
+      return;
+    }
 
     try {
       if (editingTag) {
+        console.log('Atualizando tag:', editingTag.id, tagData);
         const { error } = await supabase
           .from('tags')
           .update({
@@ -92,6 +102,7 @@ const Tags = () => {
           description: "Tag atualizada com sucesso!",
         });
       } else {
+        console.log('Criando nova tag para empresa:', user.companyId);
         const { error } = await supabase
           .from('tags')
           .insert([{
@@ -120,12 +131,14 @@ const Tags = () => {
   };
 
   const handleEdit = (tag: TagType) => {
+    console.log('Editando tag:', tag);
     setEditingTag(tag);
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     try {
+      console.log('Deletando tag:', id);
       const { error } = await supabase
         .from('tags')
         .delete()
@@ -160,6 +173,8 @@ const Tags = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  console.log('Tags filtradas:', filteredTags);
 
   return (
     <DashboardLayout role="admin">
