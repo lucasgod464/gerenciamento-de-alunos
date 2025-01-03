@@ -1,12 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/user";
 
-interface CreateUserData extends Omit<User, 'id' | 'createdAt' | 'updatedAt'> {
+interface CreateUserData {
+  name: string;
+  email: string;
   password: string;
+  accessLevel: "Admin" | "Usuário Comum";
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status?: string;
 }
 
 export const userService = {
-  async createUser(userData: CreateUserData) {
+  async createUser(userData: CreateUserData): Promise<User> {
     try {
       const { data, error } = await supabase
         .from('emails')
@@ -19,7 +26,7 @@ export const userService = {
             company_id: userData.companyId,
             location: userData.location,
             specialization: userData.specialization,
-            status: userData.status,
+            status: userData.status || 'active',
           }
         ])
         .select()
@@ -27,7 +34,20 @@ export const userService = {
 
       if (error) throw error;
       
-      return data;
+      return {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        companyId: data.company_id,
+        location: data.location,
+        specialization: data.specialization,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        lastAccess: data.last_access,
+        status: data.status as 'active' | 'inactive',
+        accessLevel: data.access_level,
+      };
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;

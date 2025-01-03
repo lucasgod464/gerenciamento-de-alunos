@@ -1,10 +1,10 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
+import { DashboardLayout } from "@/components/DashboardLayout";
+import { StudyStats } from "@/components/studies/StudyStats";
+import { StudiesTable } from "@/components/studies/StudiesTable";
 import { Study } from "@/types/study";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { StudyStats } from "@/components/studies/StudyStats";
-import { StudiesTable } from "@/components/studies/StudiesTable";
 
 export default function Studies() {
   const { user: currentUser } = useAuth();
@@ -24,7 +24,6 @@ export default function Studies() {
     }
 
     if (studiesData) {
-      // Map the database fields to our Study type
       const mappedStudies: Study[] = studiesData.map(study => ({
         id: study.id,
         name: study.name,
@@ -52,11 +51,14 @@ export default function Studies() {
           </p>
         </div>
 
-        <StudyStats studies={studies} />
+        <StudyStats
+          totalStudies={studies.length}
+          activeStudies={studies.filter(s => s.status === 'active').length}
+        />
 
-        <StudiesTable 
-          studies={studies} 
-          onStudyChange={fetchStudies}
+        <StudiesTable
+          studies={studies}
+          onEdit={(id) => console.log('Edit study:', id)}
         />
       </div>
     </DashboardLayout>

@@ -1,57 +1,44 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { User } from "@/types/user";
+import { format } from "date-fns";
 
 interface UserInfoDialogProps {
-  user: User | null;
-  onClose: () => void;
+  user: User;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function UserInfoDialog({ user, onClose }: UserInfoDialogProps) {
-  if (!user) return null;
-
+export function UserInfoDialog({ user, open, onOpenChange }: UserInfoDialogProps) {
   return (
-    <Dialog open={!!user} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Informações do Usuário</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex flex-col space-y-1.5">
-            <label className="font-semibold">Nome</label>
+          <div>
+            <h3 className="font-medium">Nome</h3>
             <p className="text-sm text-muted-foreground">{user.name}</p>
           </div>
-          <div className="flex flex-col space-y-1.5">
-            <label className="font-semibold">Email</label>
+          <div>
+            <h3 className="font-medium">Email</h3>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
-          {user.location && (
-            <div className="flex flex-col space-y-1.5">
-              <label className="font-semibold">Local</label>
-              <p className="text-sm text-muted-foreground">{user.location}</p>
-            </div>
-          )}
-          {user.specialization && (
-            <div className="flex flex-col space-y-1.5">
-              <label className="font-semibold">Especialização</label>
-              <p className="text-sm text-muted-foreground">{user.specialization}</p>
-            </div>
-          )}
-          <div className="flex flex-col space-y-1.5">
-            <label className="font-semibold">Nível de Acesso</label>
+          <div>
+            <h3 className="font-medium">Nível de Acesso</h3>
             <p className="text-sm text-muted-foreground">{user.accessLevel}</p>
           </div>
-          <div className="flex flex-col space-y-1.5">
-            <label className="font-semibold">Data de Criação</label>
-            <p className="text-sm text-muted-foreground">{user.createdAt}</p>
+          <div>
+            <h3 className="font-medium">Data de Criação</h3>
+            <p className="text-sm text-muted-foreground">
+              {format(new Date(user.createdAt), 'dd/MM/yyyy HH:mm')}
+            </p>
           </div>
-          <div className="flex flex-col space-y-1.5">
-            <label className="font-semibold">Último Acesso</label>
-            <p className="text-sm text-muted-foreground">{user.lastAccess || "Nunca acessou"}</p>
+          <div>
+            <h3 className="font-medium">Último Acesso</h3>
+            <p className="text-sm text-muted-foreground">
+              {user.lastAccess ? format(new Date(user.lastAccess), 'dd/MM/yyyy HH:mm') : 'Nunca acessou'}
+            </p>
           </div>
         </div>
       </DialogContent>
