@@ -54,7 +54,7 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
       <TableRow>
         <TableCell className="font-medium">{user.name}</TableCell>
         <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>{user.specialization}</TableCell>
+        <TableCell>{user.specialization || "Não definida"}</TableCell>
         <TableCell>
           <div className="max-w-[200px] overflow-hidden text-sm">
             {authorizedRoomNames.length > 0 
