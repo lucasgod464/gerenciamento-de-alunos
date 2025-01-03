@@ -1,4 +1,4 @@
-export type AccessLevel = "Admin" | "Usuário Comum";
+export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
 
 export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 

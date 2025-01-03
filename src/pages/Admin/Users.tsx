@@ -3,7 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { User, AccessLevel } from "@/types/user";
+import { User } from "@/types/user";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { useQuery } from "@tanstack/react-query";
@@ -48,8 +48,8 @@ const Users = () => {
         company_id: email.company_id,
         created_at: email.created_at,
         last_access: email.updated_at,
-        status: email.access_level === 'Inativo' ? 'inactive' : 'active',
-        access_level: email.access_level as AccessLevel,
+        status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
+        access_level: email.access_level,
         location: email.location,
         specialization: email.specialization,
         password: '',
@@ -127,8 +127,8 @@ const Users = () => {
       user.email.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = 
       statusFilter === "all" || 
-      (statusFilter === "active" && user.access_level !== "Inativo") ||
-      (statusFilter === "inactive" && user.access_level === "Inativo");
+      (statusFilter === "active" && user.status === "active") ||
+      (statusFilter === "inactive" && user.status === "inactive");
 
     return matchesSearch && matchesStatus;
   });

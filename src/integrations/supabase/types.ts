@@ -537,7 +537,7 @@ export type Database = {
             foreignKeyName: "user_tags_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "emails"
             referencedColumns: ["id"]
           },
         ]
