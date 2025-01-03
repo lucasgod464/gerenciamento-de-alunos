@@ -7,11 +7,11 @@ export interface Email {
   password: string;
   accessLevel: AccessLevel;
   companyId: string;
-  location?: string | null;
-  specialization?: string | null;
+  location?: string;
+  specialization?: string;
   createdAt: string;
   updatedAt: string;
-  company: {
+  company?: {
     id: string;
     name: string;
     status: string;
@@ -25,11 +25,11 @@ export interface SupabaseEmail {
   password: string;
   access_level: AccessLevel;
   company_id: string;
-  location: string | null;
-  specialization: string | null;
+  location?: string;
+  specialization?: string;
   created_at: string;
   updated_at: string;
-  companies: {
+  companies?: {
     id: string;
     name: string;
     status: string;
@@ -48,6 +48,10 @@ export function mapSupabaseEmailToEmail(email: SupabaseEmail): Email {
     specialization: email.specialization,
     createdAt: email.created_at,
     updatedAt: email.updated_at,
-    company: email.companies
+    company: email.companies ? {
+      id: email.companies.id,
+      name: email.companies.name,
+      status: email.companies.status,
+    } : undefined,
   };
 }

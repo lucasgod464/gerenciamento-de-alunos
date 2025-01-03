@@ -7,11 +7,11 @@ export interface Room {
   location: string;
   category: string;
   status: boolean;
-  companyId: string | null;
+  companyId: string;
   studyRoom: string;
-  authorizedUsers: string[];
+  authorizedUsers: any[];
   students: Student[];
-  created_at?: string;
+  createdAt: string;
 }
 
 export interface SupabaseRoom {
@@ -21,37 +21,27 @@ export interface SupabaseRoom {
   location: string;
   category: string;
   status: boolean;
-  company_id: string | null;
+  company_id: string;
   study_room: string;
   created_at: string;
-  room_authorized_users?: { user_id: string }[];
-  room_students?: { student_id: string }[];
 }
 
-export function mapSupabaseRoomToRoom(supabaseRoom: SupabaseRoom): Room {
+export function mapSupabaseRoomToRoom(
+  room: SupabaseRoom, 
+  authorizedUsers: any[] = [], 
+  students: Student[] = []
+): Room {
   return {
-    id: supabaseRoom.id,
-    name: supabaseRoom.name,
-    schedule: supabaseRoom.schedule,
-    location: supabaseRoom.location,
-    category: supabaseRoom.category,
-    status: supabaseRoom.status,
-    companyId: supabaseRoom.company_id,
-    studyRoom: supabaseRoom.study_room || '',
-    authorizedUsers: supabaseRoom.room_authorized_users?.map(auth => auth.user_id) || [],
-    students: supabaseRoom.room_students?.map(student => ({
-      id: student.student_id,
-      name: '',
-      birthDate: null,
-      status: true,
-      email: null,
-      document: null,
-      address: null,
-      customFields: null,
-      companyId: supabaseRoom.company_id,
-      createdAt: supabaseRoom.created_at,
-      room: supabaseRoom.id
-    })) || [],
-    created_at: supabaseRoom.created_at
+    id: room.id,
+    name: room.name,
+    schedule: room.schedule,
+    location: room.location,
+    category: room.category,
+    status: room.status,
+    companyId: room.company_id,
+    studyRoom: room.study_room,
+    authorizedUsers,
+    students,
+    createdAt: room.created_at,
   };
 }

@@ -4,9 +4,9 @@ export interface Study {
   id: string;
   name: string;
   status: StudyStatus;
-  startDate: string | null;
-  endDate: string | null;
-  companyId: string | null;
+  startDate?: string;
+  endDate?: string;
+  companyId?: string;
   createdAt: string;
 }
 
@@ -25,9 +25,9 @@ export function mapSupabaseStudyToStudy(study: SupabaseStudy): Study {
     id: study.id,
     name: study.name,
     status: study.status as StudyStatus,
-    startDate: study.start_date,
-    endDate: study.end_date,
-    companyId: study.company_id,
-    createdAt: study.created_at
+    startDate: study.start_date || undefined,
+    endDate: study.end_date || undefined,
+    companyId: study.company_id || undefined,
+    createdAt: study.created_at,
   };
 }

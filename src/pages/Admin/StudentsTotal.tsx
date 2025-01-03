@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
-import { mapSupabaseStudentToStudent } from "@/types/student";
+import { useEffect, useState } from "react";
 
 export function StudentsTotal() {
   const { user: currentUser } = useAuth();
@@ -20,9 +19,19 @@ export function StudentsTotal() {
 
       if (error) throw error;
 
-      const mappedStudents = studentsData.map(student => 
-        mapSupabaseStudentToStudent(student)
-      );
+      const mappedStudents = studentsData.map(student => ({
+        id: student.id,
+        name: student.name,
+        birthDate: student.birth_date,
+        status: student.status,
+        email: student.email,
+        document: student.document,
+        address: student.address,
+        customFields: student.custom_fields,
+        companyId: student.company_id,
+        createdAt: student.created_at,
+      }));
+      
       setStudents(mappedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -48,7 +57,6 @@ export function StudentsTotal() {
           </p>
         </div>
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* Render your student data here */}
           {students.map(student => (
             <div key={student.id} className="p-4 border-b">
               <h2 className="text-lg font-semibold">{student.name}</h2>
@@ -60,3 +68,5 @@ export function StudentsTotal() {
     </DashboardLayout>
   );
 }
+
+export default StudentsTotal;
