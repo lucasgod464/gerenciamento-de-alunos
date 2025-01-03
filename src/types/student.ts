@@ -1,43 +1,43 @@
-export type StudentStatus = "active" | "inactive";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Student {
   id: string;
   name: string;
-  birthDate: string;
-  room: string;
-  status: StudentStatus;
-  createdAt: string;
+  birthDate: string | null;
+  status: boolean;
+  email: string | null;
+  document: string | null;
+  address: string | null;
+  customFields: Record<string, string> | null;
   companyId: string | null;
-  email?: string;
-  document?: string;
-  address?: string;
-  customFields?: Record<string, string>;
+  createdAt: string;
+  room?: string | null;
 }
 
 export interface SupabaseStudent {
   id: string;
   name: string;
-  birth_date: string;
+  birth_date: string | null;
   status: boolean;
+  email: string | null;
+  document: string | null;
+  address: string | null;
+  custom_fields: Json | null;
+  company_id: string | null;
   created_at: string;
-  email?: string;
-  document?: string;
-  address?: string;
-  custom_fields?: Record<string, string>;
 }
 
-export function mapSupabaseStudentToStudent(supabaseStudent: SupabaseStudent, roomId: string, companyId: string | null): Student {
+export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
   return {
-    id: supabaseStudent.id,
-    name: supabaseStudent.name,
-    birthDate: supabaseStudent.birth_date,
-    room: roomId,
-    status: supabaseStudent.status ? "active" : "inactive",
-    createdAt: new Date(supabaseStudent.created_at).toLocaleDateString(),
-    companyId,
-    email: supabaseStudent.email,
-    document: supabaseStudent.document,
-    address: supabaseStudent.address,
-    customFields: supabaseStudent.custom_fields
+    id: student.id,
+    name: student.name,
+    birthDate: student.birth_date,
+    status: student.status,
+    email: student.email,
+    document: student.document,
+    address: student.address,
+    customFields: student.custom_fields as Record<string, string> | null,
+    companyId: student.company_id,
+    createdAt: student.created_at,
   };
 }

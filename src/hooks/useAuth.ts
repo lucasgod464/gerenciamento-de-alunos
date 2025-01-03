@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AuthResponse } from "@/types/auth";
+import { User, AuthResponse, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROLE_PERMISSIONS } from "@/types/permissions";
-import { AccessLevel } from "@/types/auth";
+import { ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -57,7 +56,7 @@ export function useAuth() {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.role as AccessLevel,
+            role: userData.role as UserRole,
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
@@ -81,7 +80,7 @@ export function useAuth() {
 
       if (emailData && emailData.password === password) {
         // Map access_level to role
-        const roleMap: { [key: string]: string } = {
+        const roleMap: { [key: string]: UserRole } = {
           'Admin': 'ADMIN',
           'Usuário Comum': 'USER'
         };
@@ -91,7 +90,7 @@ export function useAuth() {
             id: emailData.id,
             name: emailData.name || '',
             email: emailData.email,
-            role: roleMap[emailData.access_level] as any,
+            role: roleMap[emailData.access_level],
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
@@ -122,7 +121,7 @@ export function useAuth() {
   const isAuthenticated = !!session?.user?.id && !!session?.token;
   const user = session?.user;
 
-  const can = (permission: keyof typeof ROLE_PERMISSIONS[keyof typeof ROLE_PERMISSIONS]) => {
+  const can = (permission: keyof typeof ROLE_PERMISSIONS[UserRole]) => {
     if (!user) return false;
     return ROLE_PERMISSIONS[user.role][permission];
   };
