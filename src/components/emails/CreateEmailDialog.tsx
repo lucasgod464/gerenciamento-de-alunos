@@ -60,10 +60,6 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
     },
   });
 
-  const handleSubmit = (email: Omit<Email, "id" | "createdAt" | "updatedAt" | "company">) => {
-    createEmail.mutate(email);
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <Button onClick={() => setOpen(true)}>
@@ -73,7 +69,17 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Email</DialogTitle>
         </DialogHeader>
-        <EmailFormFields onSubmit={handleSubmit} />
+        <EmailFormFields
+          name=""
+          email=""
+          password=""
+          accessLevel="Usuário Comum"
+          onNameChange={() => {}}
+          onEmailChange={() => {}}
+          onPasswordChange={() => {}}
+          onAccessLevelChange={() => {}}
+          onSubmit={createEmail.mutate}
+        />
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -7,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Email } from "@/types/email";
 
 interface EmailFormFieldsProps {
   name: string;
@@ -19,6 +21,7 @@ interface EmailFormFieldsProps {
   onAccessLevelChange: (value: "Admin" | "Usuário Comum") => void;
   onGeneratePassword?: () => void;
   showPasswordGenerator?: boolean;
+  onSubmit?: (email: Omit<Email, "id" | "createdAt" | "updatedAt" | "company">) => void;
 }
 
 export function EmailFormFields({
@@ -32,9 +35,24 @@ export function EmailFormFields({
   onAccessLevelChange,
   onGeneratePassword,
   showPasswordGenerator = false,
+  onSubmit,
 }: EmailFormFieldsProps) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSubmit) {
+      onSubmit({
+        name,
+        email,
+        password,
+        accessLevel,
+        companyId: "", // This will be set by the parent component
+        status: "active",
+      });
+    }
+  };
+
   return (
-    <>
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Nome Completo</Label>
         <Input
@@ -90,6 +108,11 @@ export function EmailFormFields({
           </SelectContent>
         </Select>
       </div>
-    </>
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="submit">
+          Salvar
+        </Button>
+      </div>
+    </form>
   );
 }
