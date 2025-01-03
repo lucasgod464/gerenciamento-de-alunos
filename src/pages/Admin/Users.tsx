@@ -1,5 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
+import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { UserList } from "@/components/users/UserList";
@@ -7,7 +8,7 @@ import { mapDatabaseUser } from "@/types/user";
 
 export default function Users() {
   const { user: currentUser } = useAuth();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const fetchUsers = async () => {
     if (!currentUser?.companyId) return;
@@ -47,7 +48,16 @@ export default function Users() {
             Gerencie os usuários do sistema
           </p>
         </div>
-        <UserList users={users} />
+
+        <UserList 
+  users={users} 
+  onUpdateUser={(user) => {
+    setUsers(users.map(u => u.id === user.id ? user : u));
+  }}
+  onDeleteUser={(id) => {
+    setUsers(users.filter(u => u.id !== id));
+  }}
+/>
       </div>
     </DashboardLayout>
   );
