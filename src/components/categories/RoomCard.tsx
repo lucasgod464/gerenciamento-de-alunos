@@ -51,16 +51,23 @@ export const RoomCard = ({
       if (authorizedError) throw authorizedError;
 
       if (authorizedData) {
-        const users = authorizedData.map(item => ({
-          id: item.users.id,
-          name: item.users.name,
-          email: item.users.email,
-          is_main_teacher: item.is_main_teacher
-        }));
+        const users = authorizedData
+          .filter(item => item.users) // Filter out any null users
+          .map(item => ({
+            id: item.users.id,
+            name: item.users.name,
+            email: item.users.email,
+            is_main_teacher: item.is_main_teacher
+          }));
         setAuthorizedUsers(users);
       }
     } catch (error) {
       console.error('Error fetching authorized users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Não foi possível carregar os usuários vinculados.",
+        variant: "destructive",
+      });
     }
   };
 
