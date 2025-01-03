@@ -35,6 +35,8 @@ export const RoomCard = ({
 
   const fetchAuthorizedUsers = async () => {
     try {
+      console.log('Fetching authorized users for room:', room.id);
+      
       const { data: authorizedData, error: authorizedError } = await supabase
         .from('room_authorized_users')
         .select(`
@@ -48,7 +50,12 @@ export const RoomCard = ({
         `)
         .eq('room_id', room.id);
 
-      if (authorizedError) throw authorizedError;
+      if (authorizedError) {
+        console.error('Error details:', authorizedError);
+        throw authorizedError;
+      }
+
+      console.log('Authorized users data:', authorizedData);
 
       if (authorizedData) {
         const users = authorizedData
@@ -59,6 +66,7 @@ export const RoomCard = ({
             email: item.users.email,
             is_main_teacher: item.is_main_teacher
           }));
+        console.log('Processed users:', users);
         setAuthorizedUsers(users);
       }
     } catch (error) {
