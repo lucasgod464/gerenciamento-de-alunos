@@ -1,7 +1,6 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
-import { EnrollmentFormHeader } from "@/components/enrollment/EnrollmentFormHeader";
 
 const AdminEnrollment = () => {
   return (
@@ -15,8 +14,6 @@ const AdminEnrollment = () => {
         </div>
         
         <div className="grid gap-6">
-          <EnrollmentFormHeader />
-
           <Card>
             <CardHeader>
               <CardTitle>Configuração do Formulário</CardTitle>
