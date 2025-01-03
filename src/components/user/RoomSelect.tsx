@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -8,13 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-interface Room {
-  id: string;
-  name: string;
-  companyId: string;
-  status: boolean;
-}
-
 interface RoomSelectProps {
   value: string;
   onChange: (value: string) => void;
@@ -22,45 +16,33 @@ interface RoomSelectProps {
 }
 
 export const RoomSelect = ({ value, onChange, required = false }: RoomSelectProps) => {
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    if (!currentUser?.companyId) return;
-    
-    const loadAuthorizedRooms = () => {
-      // Carregar todos os usuários para obter as salas autorizadas
-      const users = JSON.parse(localStorage.getItem("users") || "[]");
-      const currentUserData = users.find((u: any) => 
-        u.id === currentUser.id || u.email === currentUser.email
-      );
+    const loadRooms = async () => {
+      if (!currentUser?.companyId) return;
 
-      // Carregar todas as salas
-      const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-      
-      // Filtrar salas da empresa que estão ativas
-      const companyRooms = allRooms.filter((room: Room) => 
-        room.companyId === currentUser.companyId && 
-        room.status === true
-      );
+      try {
+        const { data, error } = await supabase
+          .from('rooms')
+          .select('id, name')
+          .eq('company_id', currentUser.companyId)
+          .eq('status', true);
 
-      // Se o usuário tem salas autorizadas, mostrar apenas essas
-      if (currentUserData?.authorizedRooms?.length) {
-        const authorizedRooms = companyRooms.filter((room: Room) =>
-          currentUserData.authorizedRooms.includes(room.id)
-        );
-        setRooms(authorizedRooms);
-        
-        // Se não há valor selecionado e existem salas autorizadas, seleciona a primeira
-        if (!value && authorizedRooms.length > 0) {
-          onChange(authorizedRooms[0].id);
+        if (error) throw error;
+        setRooms(data || []);
+
+        // If no value is selected and rooms are available, select the first one
+        if (!value && data && data.length > 0) {
+          onChange(data[0].id);
         }
-      } else {
-        setRooms([]);
+      } catch (error) {
+        console.error('Error loading rooms:', error);
       }
     };
 
-    loadAuthorizedRooms();
+    loadRooms();
   }, [currentUser, value, onChange]);
 
   return (

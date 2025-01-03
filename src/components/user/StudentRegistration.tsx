@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -22,127 +23,181 @@ export const StudentRegistration = () => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const loadStudents = () => {
+  const loadStudents = async () => {
     if (!currentUser?.companyId) return;
     
-    // Carregar todos os usuários para obter as salas autorizadas
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
-    const currentUserData = users.find((u: any) => 
-      u.id === currentUser.id || u.email === currentUser.email
-    );
-    
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
-    // Filtrar apenas as salas da empresa atual E que o usuário tem acesso
-    const authorizedRooms = allRooms.filter((room: any) => 
-      room.companyId === currentUser.companyId && 
-      currentUserData?.authorizedRooms?.includes(room.id)
-    );
+    try {
+      // Fetch rooms first
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .eq('company_id', currentUser.companyId)
+        .eq('status', true);
 
-    setRooms(authorizedRooms);
+      if (roomsError) throw roomsError;
+      setRooms(roomsData || []);
 
-    // Coletar todos os alunos das salas autorizadas
-    const authorizedStudents: Student[] = [];
-    authorizedRooms.forEach((room: any) => {
-      if (room.students && Array.isArray(room.students)) {
-        const roomStudents = room.students.filter((student: any) => 
-          typeof student === 'object' && student.companyId === currentUser.companyId
-        );
-        authorizedStudents.push(...roomStudents);
-      }
-    });
+      // Fetch students with their room assignments
+      const { data: studentsData, error: studentsError } = await supabase
+        .from('students')
+        .select(`
+          *,
+          room_students(room_id)
+        `)
+        .eq('company_id', currentUser.companyId);
 
-    setStudents(authorizedStudents);
+      if (studentsError) throw studentsError;
+
+      const mappedStudents = (studentsData || []).map(student => ({
+        id: student.id,
+        name: student.name,
+        birthDate: student.birth_date,
+        status: student.status,
+        email: student.email,
+        document: student.document,
+        address: student.address,
+        customFields: student.custom_fields,
+        companyId: student.company_id,
+        createdAt: student.created_at,
+        room: student.room_students?.[0]?.room_id
+      }));
+
+      setStudents(mappedStudents);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar os dados",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
     loadStudents();
   }, [currentUser]);
 
-  const handleAddStudent = (newStudent: Student) => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
-    // Encontrar a sala onde o aluno será adicionado
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.id === newStudent.room) {
-        // Inicializar o array de alunos se não existir
-        if (!room.students) {
-          room.students = [];
-        }
-        // Adicionar o novo aluno à sala
-        room.students.push(newStudent);
-      }
-      return room;
-    });
+  const handleAddStudent = async (newStudent: Student) => {
+    try {
+      // Insert student
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .insert({
+          name: newStudent.name,
+          birth_date: newStudent.birthDate,
+          status: newStudent.status,
+          email: newStudent.email,
+          document: newStudent.document,
+          address: newStudent.address,
+          custom_fields: newStudent.customFields,
+          company_id: currentUser?.companyId
+        })
+        .select()
+        .single();
 
-    // Atualizar o localStorage
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    
-    // Recarregar a lista de alunos
-    loadStudents();
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno cadastrado com sucesso!",
-    });
+      if (studentError) throw studentError;
+
+      // If room is selected, create room assignment
+      if (newStudent.room) {
+        const { error: roomError } = await supabase
+          .from('room_students')
+          .insert({
+            student_id: studentData.id,
+            room_id: newStudent.room
+          });
+
+        if (roomError) throw roomError;
+      }
+
+      loadStudents();
+      toast({
+        title: "Sucesso",
+        description: "Aluno cadastrado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error adding student:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao cadastrar aluno",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteStudent = (id: string) => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
-    // Encontrar e remover o aluno apenas das salas autorizadas da empresa atual
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.companyId === currentUser?.companyId && room.students) {
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
-        const currentUserData = users.find((u: any) => 
-          u.id === currentUser.id || u.email === currentUser.email
-        );
-        
-        if (currentUserData?.authorizedRooms?.includes(room.id)) {
-          room.students = room.students.filter((student: Student) => student.id !== id);
-        }
-      }
-      return room;
-    });
+  const handleDeleteStudent = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', id);
 
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    loadStudents();
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno excluído com sucesso!",
-    });
+      if (error) throw error;
+
+      loadStudents();
+      toast({
+        title: "Sucesso",
+        description: "Aluno excluído com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir aluno",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUpdateStudent = (updatedStudent: Student) => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    
-    // Atualizar o aluno apenas nas salas autorizadas da empresa atual
-    const updatedRooms = allRooms.map((room: any) => {
-      if (room.companyId === currentUser?.companyId && 
-          room.id === updatedStudent.room) {
-        
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
-        const currentUserData = users.find((u: any) => 
-          u.id === currentUser.id || u.email === currentUser.email
-        );
-        
-        if (currentUserData?.authorizedRooms?.includes(room.id) && room.students) {
-          room.students = room.students.map((student: Student) =>
-            student.id === updatedStudent.id ? updatedStudent : student
-          );
-        }
-      }
-      return room;
-    });
+  const handleUpdateStudent = async (updatedStudent: Student) => {
+    try {
+      // Update student data
+      const { error: studentError } = await supabase
+        .from('students')
+        .update({
+          name: updatedStudent.name,
+          birth_date: updatedStudent.birthDate,
+          status: updatedStudent.status,
+          email: updatedStudent.email,
+          document: updatedStudent.document,
+          address: updatedStudent.address,
+          custom_fields: updatedStudent.customFields
+        })
+        .eq('id', updatedStudent.id);
 
-    localStorage.setItem("rooms", JSON.stringify(updatedRooms));
-    loadStudents();
-    
-    toast({
-      title: "Sucesso",
-      description: "Aluno atualizado com sucesso!",
-    });
+      if (studentError) throw studentError;
+
+      // Update room assignment
+      if (updatedStudent.room) {
+        // Remove existing room assignment
+        await supabase
+          .from('room_students')
+          .delete()
+          .eq('student_id', updatedStudent.id);
+
+        // Add new room assignment
+        const { error: roomError } = await supabase
+          .from('room_students')
+          .insert({
+            student_id: updatedStudent.id,
+            room_id: updatedStudent.room
+          });
+
+        if (roomError) throw roomError;
+      }
+
+      loadStudents();
+      toast({
+        title: "Sucesso",
+        description: "Aluno atualizado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error updating student:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar aluno",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredStudents = students.filter((student) => {
