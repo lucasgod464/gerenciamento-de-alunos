@@ -55,7 +55,7 @@ export const CategoriesKanban = ({
           students: room.room_students?.map(rs => 
             mapSupabaseStudentToStudent(rs.student, room.id, room.company_id)
           ) || [],
-          created_at: room.created_at
+          createdAt: room.created_at
         }));
 
         setRooms(transformedRooms);
