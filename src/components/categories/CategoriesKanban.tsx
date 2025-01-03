@@ -40,7 +40,15 @@ export const CategoriesKanban = ({
           `)
           .eq('company_id', companyId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching rooms:', error);
+          throw error;
+        }
+
+        if (!roomsData) {
+          setRooms([]);
+          return;
+        }
 
         const transformedRooms: Room[] = roomsData.map(room => ({
           id: room.id,
@@ -51,11 +59,10 @@ export const CategoriesKanban = ({
           status: Boolean(room.status),
           companyId: room.company_id,
           studyRoom: room.study_room || '',
-          authorizedUsers: [],
+          createdAt: room.created_at,
           students: room.room_students?.map(rs => 
             mapSupabaseStudentToStudent(rs.student, room.id, room.company_id)
-          ) || [],
-          createdAt: room.created_at
+          ) || []
         }));
 
         setRooms(transformedRooms);
