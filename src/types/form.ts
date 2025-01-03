@@ -1,14 +1,14 @@
-export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple" | "checkbox";
+export type FieldType = 'text' | 'number' | 'email' | 'date' | 'select' | 'checkbox' | 'radio' | 'textarea';
 
 export interface FormField {
   id: string;
   name: string;
   label: string;
-  description?: string | null;
   type: FieldType;
+  description?: string | null;
   required: boolean;
   order: number;
-  options?: string[] | null;
+  options?: string[];
   company_id?: string | null;
   created_at?: string;
 }
@@ -17,21 +17,19 @@ export interface SupabaseFormField {
   id: string;
   name: string;
   label: string;
-  description: string | null;
   type: string;
+  description: string | null;
   required: boolean;
   order: number;
-  options: any[] | null;
+  options: any;
   company_id: string | null;
   created_at: string;
 }
 
-export function mapSupabaseFormField(field: SupabaseFormField): FormField {
+export const mapSupabaseFormField = (field: SupabaseFormField): FormField => {
   return {
     ...field,
     type: field.type as FieldType,
-    options: Array.isArray(field.options) 
-      ? field.options.map(opt => String(opt))
-      : null
+    options: Array.isArray(field.options) ? field.options.map(String) : undefined
   };
-}
+};

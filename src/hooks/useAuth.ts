@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { User, AuthResponse, UserRole } from "@/types/auth";
+import { AuthUser, AuthResponse, UserRole, ROLE_PERMISSIONS } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -46,7 +45,7 @@ export function useAuth() {
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("User login response:", { userData, userError });
 
@@ -60,6 +59,7 @@ export function useAuth() {
             companyId: userData.company_id || null,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
+            status: userData.status ? 'active' : 'inactive',
           },
           token: `${userData.role.toLowerCase()}-token`,
         };
@@ -74,7 +74,7 @@ export function useAuth() {
         .from('emails')
         .select('*, companies:company_id(*)')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       console.log("Email login response:", { emailData, emailError });
 
@@ -94,6 +94,7 @@ export function useAuth() {
             companyId: emailData.company_id || null,
             createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
+            status: emailData.status === 'active' ? 'active' : 'inactive',
           },
           token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
         };
