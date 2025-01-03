@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { createUser } from "@/services/userService";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -61,117 +61,19 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
-      console.log('Creating new user with data:', {
+      const user = await createUser({
         email,
         name,
         password,
         access_level,
         company_id: currentUser.companyId,
         location,
-        specialization
+        specialization,
+        selectedRooms,
+        selectedTags
       });
 
-      // Check if email already exists
-      const { data: existingEmails, error: checkError } = await supabase
-        .from('emails')
-        .select('id')
-        .eq('email', email);
-
-      if (checkError) {
-        console.error('Error checking existing email:', checkError);
-        throw checkError;
-      }
-
-      if (existingEmails && existingEmails.length > 0) {
-        toast({
-          title: "Erro ao criar usuário",
-          description: "Este email já está cadastrado no sistema.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create new user in emails table
-      const { data: newUser, error: createError } = await supabase
-        .from('emails')
-        .insert({
-          name,
-          email,
-          password,
-          access_level,
-          company_id: currentUser.companyId,
-          location,
-          specialization,
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error creating user:', createError);
-        throw createError;
-      }
-
-      if (!newUser) {
-        throw new Error('No data returned after creating user');
-      }
-
-      console.log('User created successfully:', newUser);
-
-      // Insert room authorizations
-      if (selectedRooms.length > 0) {
-        console.log('Creating room authorizations:', selectedRooms);
-        const { error: roomsError } = await supabase
-          .from('user_authorized_rooms')
-          .insert(
-            selectedRooms.map(roomId => ({
-              user_id: newUser.id,
-              room_id: roomId
-            }))
-          );
-
-        if (roomsError) {
-          console.error('Error creating room authorizations:', roomsError);
-          throw roomsError;
-        }
-      }
-
-      // Insert user tags
-      if (selectedTags.length > 0) {
-        console.log('Creating user tags:', selectedTags);
-        const { error: tagsError } = await supabase
-          .from('user_tags')
-          .insert(
-            selectedTags.map(tag => ({
-              user_id: newUser.id,
-              tag_id: tag.id
-            }))
-          );
-
-        if (tagsError) {
-          console.error('Error creating user tags:', tagsError);
-          throw tagsError;
-        }
-      }
-
-      const createdUser: User = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        password: newUser.password,
-        role: newUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
-        company_id: newUser.company_id,
-        created_at: newUser.created_at,
-        last_access: null,
-        status: 'active',
-        access_level: newUser.access_level,
-        location: newUser.location || null,
-        specialization: newUser.specialization || null,
-        authorizedRooms: selectedRooms,
-        tags: selectedTags
-      };
-
-      onUserCreated(createdUser);
+      onUserCreated(user);
       
       toast({
         title: "Usuário criado",
@@ -179,11 +81,11 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       });
 
       setOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in handleSubmit:', error);
       toast({
         title: "Erro ao criar usuário",
-        description: "Ocorreu um erro ao criar o usuário. Por favor, tente novamente.",
+        description: error.message || "Ocorreu um erro ao criar o usuário. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
