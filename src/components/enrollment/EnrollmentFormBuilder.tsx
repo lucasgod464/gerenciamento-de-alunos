@@ -6,8 +6,6 @@ import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./EnrollmentAddFieldDialog";
 import { FormPreview } from "./EnrollmentFormPreview";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
 
 const ENROLLMENT_FIELDS_KEY = "enrollmentFields";
 
@@ -34,74 +32,82 @@ const HIDDEN_FIELDS = ["sala", "status"];
 
 export const EnrollmentFormBuilder = () => {
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
   const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | undefined>();
   const [deletedFields, setDeletedFields] = useState<string[]>([]);
 
-  // Carregar campos do Supabase
+  // Load fields from localStorage on component mount
   useEffect(() => {
-    const loadFields = async () => {
-      if (!currentUser?.companyId) return;
-
-      const { data, error } = await supabase
-        .from('enrollment_form_fields')
-        .select('*')
-        .eq('company_id', currentUser.companyId)
-        .order('order');
-
-      if (error) {
-        toast({
-          title: "Erro",
-          description: "Erro ao carregar campos do formulário",
-          variant: "destructive"
-        });
-        return;
+    try {
+      const savedFields = localStorage.getItem(ENROLLMENT_FIELDS_KEY);
+      const savedDeletedFields = localStorage.getItem('deletedFields');
+      
+      if (savedDeletedFields) {
+        setDeletedFields(JSON.parse(savedDeletedFields));
       }
 
-      const fieldsWithDefaults = [...DEFAULT_FIELDS];
-      data.forEach(field => {
-        if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
-          fieldsWithDefaults.push(field);
-        }
-      });
+      if (savedFields) {
+        const parsedFields = JSON.parse(savedFields);
+        const uniqueFields = parsedFields.filter((field: FormField) => {
+          return !deletedFields.includes(field.id) && 
+                 !HIDDEN_FIELDS.includes(field.name);
+        });
+        
+        // Ensure default fields are present
+        const fieldsWithDefaults = [...DEFAULT_FIELDS];
+        uniqueFields.forEach(field => {
+          if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
+            fieldsWithDefaults.push(field);
+          }
+        });
 
-      setFields(fieldsWithDefaults);
-    };
+        setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
+      } else {
+        setFields(DEFAULT_FIELDS);
+      }
+    } catch (error) {
+      console.error("Error loading form builder fields:", error);
+      setFields(DEFAULT_FIELDS);
+    }
+  }, []);
 
-    loadFields();
-  }, [currentUser]);
-
-  // Salvar campos no Supabase
-  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
-    if (!currentUser?.companyId) return;
-
+  // Save fields to localStorage whenever they change
+  useEffect(() => {
     try {
-      const { data, error } = await supabase
-        .from('enrollment_form_fields')
-        .insert([{
-          ...field,
-          company_id: currentUser.companyId,
-          order: fields.length
-        }])
-        .select()
-        .single();
+      localStorage.setItem(ENROLLMENT_FIELDS_KEY, JSON.stringify(fields));
+      localStorage.setItem('deletedFields', JSON.stringify(deletedFields));
+      window.dispatchEvent(new Event('formFieldsUpdated'));
+    } catch (error) {
+      console.error("Error saving form builder fields:", error);
+    }
+  }, [fields, deletedFields]);
 
-      if (error) throw error;
-
-      setFields(prev => [...prev, data]);
+  const handleAddField = (field: Omit<FormField, "id" | "order">) => {
+    if (editingField) {
+      const updatedFields = fields.map((f) =>
+        f.id === editingField.id ? { ...f, ...field } : f
+      );
+      setFields(updatedFields);
+      setEditingField(undefined);
+      toast({
+        title: "Campo atualizado",
+        description: "O campo foi atualizado com sucesso.",
+      });
+    } else {
+      const newField: FormField = {
+        ...field,
+        id: crypto.randomUUID(),
+        order: fields.length,
+      };
+      
+      setFields(prev => [...prev, newField]);
       toast({
         title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso."
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar campo",
-        variant: "destructive"
+        description: "O novo campo foi adicionado com sucesso.",
       });
     }
+    setIsAddingField(false);
   };
 
   const handleDeleteField = (id: string) => {
@@ -137,29 +143,12 @@ export const EnrollmentFormBuilder = () => {
     setIsAddingField(true);
   };
 
-  const handleReorderFields = async (reorderedFields: FormField[]) => {
-    if (!currentUser?.companyId) return;
-
-    try {
-      const updates = reorderedFields.map((field, index) => ({
-        id: field.id,
-        order: index
-      }));
-
-      const { error } = await supabase
-        .from('enrollment_form_fields')
-        .upsert(updates);
-
-      if (error) throw error;
-
-      setFields(reorderedFields);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao reordenar campos",
-        variant: "destructive"
-      });
-    }
+  const handleReorderFields = (reorderedFields: FormField[]) => {
+    const updatedFields = reorderedFields.map((field, index) => ({
+      ...field,
+      order: index,
+    }));
+    setFields(updatedFields);
   };
 
   return (
