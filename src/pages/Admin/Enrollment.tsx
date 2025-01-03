@@ -4,38 +4,9 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
-import { AddFieldDialog } from "@/components/enrollment/EnrollmentAddFieldDialog";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminEnrollment = () => {
-  const [formConfig, setFormConfig] = useState(null);
-  const { user: currentUser } = useAuth();
-
-  // Carregar configuração do formulário
-  useEffect(() => {
-    const loadFormConfig = async () => {
-      if (!currentUser?.companyId) return;
-      
-      const { data, error } = await supabase
-        .from('enrollment_forms')
-        .select('*')
-        .eq('company_id', currentUser.companyId)
-        .single();
-
-      if (error) {
-        toast.error("Erro ao carregar configurações do formulário");
-        return;
-      }
-
-      setFormConfig(data);
-    };
-
-    loadFormConfig();
-  }, [currentUser]);
-
   const enrollmentUrl = `${window.location.origin}/enrollment`;
 
   const copyLink = () => {
