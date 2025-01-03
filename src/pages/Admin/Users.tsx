@@ -48,7 +48,7 @@ const Users = () => {
         company_id: email.company_id,
         created_at: email.created_at,
         last_access: email.updated_at,
-        status: email.access_level === 'Inativo' ? 'inactive' as const : 'active' as const,
+        status: email.access_level === 'Inativo' ? 'inactive' : 'active',
         access_level: email.access_level as AccessLevel,
         location: email.location,
         specialization: email.specialization,
@@ -91,7 +91,6 @@ const Users = () => {
 
   const handleDeleteUser = async (id: string) => {
     try {
-      // First, delete related records in user_authorized_rooms
       const { error: authRoomsError } = await supabase
         .from('user_authorized_rooms')
         .delete()
@@ -99,7 +98,6 @@ const Users = () => {
 
       if (authRoomsError) throw authRoomsError;
 
-      // Then delete the user
       const { error } = await supabase
         .from('emails')
         .delete()
