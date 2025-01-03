@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/useAuth"; // Caminho corrigido
 import { supabase } from "@/integrations/supabase/client";
 
 const AdminEnrollment = () => {
