@@ -8,7 +8,10 @@ export const specializationService = {
       .select('*')
       .order('name');
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching specializations:', error);
+      throw error;
+    }
     return data as Specialization[];
   },
 
@@ -25,7 +28,10 @@ export const specializationService = {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating specialization:', error);
+      throw error;
+    }
     return data as Specialization;
   },
 
@@ -37,7 +43,10 @@ export const specializationService = {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating specialization:', error);
+      throw error;
+    }
     return data as Specialization;
   },
 
@@ -47,7 +56,10 @@ export const specializationService = {
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error deleting specialization:', error);
+      throw error;
+    }
   },
 
   async toggleStatus(id: string, status: boolean) {
@@ -56,7 +68,10 @@ export const specializationService = {
       .update({ status: !status })
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error toggling specialization status:', error);
+      throw error;
+    }
   }
 };
 

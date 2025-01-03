@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { specializationService, Specialization } from "@/services/specializations";
+import { specializationService } from "@/services/specializations";
 import { useToast } from "@/hooks/use-toast";
 
 export function useSpecializations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: specializations = [], isLoading } = useQuery({
+  const { data: specializations = [], isLoading, error } = useQuery({
     queryKey: ['specializations'],
     queryFn: specializationService.getSpecializations,
   });
@@ -21,7 +21,8 @@ export function useSpecializations() {
         description: "A especialização foi criada com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error creating specialization:', error);
       toast({
         title: "Erro",
         description: "Não foi possível criar a especialização.",
@@ -40,7 +41,8 @@ export function useSpecializations() {
         description: "A especialização foi atualizada com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error updating specialization:', error);
       toast({
         title: "Erro",
         description: "Não foi possível atualizar a especialização.",
@@ -58,7 +60,8 @@ export function useSpecializations() {
         description: "A especialização foi excluída com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error deleting specialization:', error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir a especialização.",
@@ -72,8 +75,13 @@ export function useSpecializations() {
       specializationService.toggleStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['specializations'] });
+      toast({
+        title: "Status atualizado",
+        description: "O status da especialização foi atualizado com sucesso.",
+      });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Error toggling specialization status:', error);
       toast({
         title: "Erro",
         description: "Não foi possível alterar o status da especialização.",
@@ -85,6 +93,7 @@ export function useSpecializations() {
   return {
     specializations,
     isLoading,
+    error,
     createSpecialization: createMutation.mutate,
     updateSpecialization: updateMutation.mutate,
     deleteSpecialization: deleteMutation.mutate,
