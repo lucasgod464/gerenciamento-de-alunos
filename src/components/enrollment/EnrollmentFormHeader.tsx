@@ -15,28 +15,26 @@ export const EnrollmentFormHeader = () => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Link do Formulário</CardTitle>
-            <CardDescription>
-              Compartilhe este link para receber inscrições
-            </CardDescription>
-          </div>
-          <Button asChild>
-            <Link to="/enrollment" target="_blank">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Visualizar Formulário
-            </Link>
-          </Button>
-        </div>
+        <CardTitle>Link do Formulário</CardTitle>
+        <CardDescription>
+          Compartilhe este link para receber inscrições
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
           <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <code className="text-sm flex-1 break-all">{enrollmentUrl}</code>
-          <Button variant="secondary" onClick={copyLink}>
-            Copiar Link
-          </Button>
+          <div className="flex gap-2">
+            <Button asChild variant="secondary">
+              <Link to="/enrollment" target="_blank">
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Visualizar Formulário
+              </Link>
+            </Button>
+            <Button variant="secondary" onClick={copyLink}>
+              Copiar Link
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
