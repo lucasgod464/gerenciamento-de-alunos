@@ -379,7 +379,7 @@ export type Database = {
       students: {
         Row: {
           address: string | null
-          birth_date: string | null
+          birth_date: string
           company_id: string | null
           created_at: string
           custom_fields: Json | null
@@ -391,7 +391,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          birth_date?: string | null
+          birth_date: string
           company_id?: string | null
           created_at?: string
           custom_fields?: Json | null
@@ -403,7 +403,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          birth_date?: string | null
+          birth_date?: string
           company_id?: string | null
           created_at?: string
           custom_fields?: Json | null

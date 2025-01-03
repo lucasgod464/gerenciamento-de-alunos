@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { User, mapDatabaseUser } from "@/types/user";
 
 export async function createUser({
   email,
