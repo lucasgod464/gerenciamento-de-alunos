@@ -68,7 +68,7 @@ const Rooms = () => {
 
     try {
       if (editingRoom) {
-        // Update existing room
+        // Atualizar sala existente
         const { error } = await supabase
           .from('rooms')
           .update({
@@ -87,7 +87,7 @@ const Rooms = () => {
           description: "A sala foi atualizada com sucesso.",
         });
       } else {
-        // Create new room
+        // Criar nova sala
         const { error } = await supabase
           .from('rooms')
           .insert({
@@ -134,6 +134,19 @@ const Rooms = () => {
     if (!roomToDelete || !currentUser?.companyId) return;
 
     try {
+      // Primeiro, excluir registros relacionados
+      await Promise.all([
+        supabase
+          .from('room_authorized_users')
+          .delete()
+          .eq('room_id', roomToDelete),
+        supabase
+          .from('room_students')
+          .delete()
+          .eq('room_id', roomToDelete)
+      ]);
+
+      // Depois, excluir a sala
       const { error } = await supabase
         .from('rooms')
         .delete()
