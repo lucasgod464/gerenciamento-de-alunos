@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { Tag as TagIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
 
 interface Tag {
   id: string;
@@ -21,6 +22,7 @@ interface TagSelectionFieldsProps {
 
 export function TagSelectionFields({ selectedTags, onTagToggle, defaultValues }: TagSelectionFieldsProps) {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
@@ -45,12 +47,22 @@ export function TagSelectionFields({ selectedTags, onTagToggle, defaultValues }:
     fetchTags();
   }, [currentUser?.companyId]);
 
+  const filteredTags = tags.filter(tag =>
+    tag.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="space-y-2">
       <Label>Etiquetas</Label>
+      <Input
+        placeholder="Buscar etiquetas..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="mb-2"
+      />
       <ScrollArea className="h-[200px] w-full rounded-md border p-4">
         <div className="space-y-4">
-          {tags.map((tag) => (
+          {filteredTags.map((tag) => (
             <div key={tag.id} className="flex items-center space-x-2">
               <Checkbox
                 id={`tag-${tag.id}`}
@@ -70,9 +82,9 @@ export function TagSelectionFields({ selectedTags, onTagToggle, defaultValues }:
               </label>
             </div>
           ))}
-          {tags.length === 0 && (
+          {filteredTags.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Nenhuma etiqueta disponível
+              {searchTerm ? "Nenhuma etiqueta encontrada" : "Nenhuma etiqueta disponível"}
             </p>
           )}
         </div>
