@@ -4,11 +4,11 @@ export interface FormField {
   id: string;
   name: string;
   label: string;
-  description?: string;
+  description?: string | null;
   type: FieldType;
   required: boolean;
   order: number;
-  options?: string[];
-  company_id?: string;
+  options?: string[] | null;
+  company_id?: string | null;
   created_at?: string;
 }

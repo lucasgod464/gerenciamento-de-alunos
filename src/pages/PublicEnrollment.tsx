@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { FormField } from "@/types/form"
+import { FormField, FieldType } from "@/types/form"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -14,6 +14,25 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+
+const DEFAULT_FIELDS: FormField[] = [
+  {
+    id: "default-name",
+    name: "nome_completo",
+    label: "Nome Completo",
+    type: "text" as FieldType,
+    required: true,
+    order: 0,
+  },
+  {
+    id: "default-birthdate",
+    name: "data_nascimento",
+    label: "Data de Nascimento",
+    type: "date" as FieldType,
+    required: true,
+    order: 1,
+  }
+];
 
 export default function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([])
@@ -34,15 +53,25 @@ export default function PublicEnrollment() {
       if (error) throw error;
 
       // Validar e converter os tipos dos campos
-      const validatedFields: FormField[] = formFields.map(field => ({
+      const validatedFields = (formFields || []).map(field => ({
         ...field,
         type: field.type as FieldType,
+        options: Array.isArray(field.options) ? field.options : [],
+        required: Boolean(field.required)
       }));
 
-      setFields(validatedFields);
+      // Garantir que os campos padrão estejam sempre presentes
+      const fieldsWithDefaults = [...DEFAULT_FIELDS];
+      validatedFields.forEach(field => {
+        if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
+          fieldsWithDefaults.push(field);
+        }
+      });
+
+      setFields(fieldsWithDefaults.sort((a, b) => a.order - b.order));
       
       const initialData: Record<string, any> = {}
-      validatedFields.forEach((field: FormField) => {
+      fieldsWithDefaults.forEach((field: FormField) => {
         if (field.type === "multiple") {
           initialData[field.name] = []
         }

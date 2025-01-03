@@ -49,9 +49,12 @@ export const EnrollmentFormBuilder = () => {
 
       if (error) throw error;
 
-      const validatedFields = formFields.map(field => ({
+      // Converter e validar os campos do Supabase
+      const validatedFields = (formFields || []).map(field => ({
         ...field,
-        type: field.type as FieldType
+        type: field.type as FieldType,
+        options: Array.isArray(field.options) ? field.options : [],
+        required: Boolean(field.required)
       }));
 
       const uniqueFields = validatedFields.filter((field) => {
@@ -59,7 +62,7 @@ export const EnrollmentFormBuilder = () => {
                !HIDDEN_FIELDS.includes(field.name);
       });
       
-      // Ensure default fields are present
+      // Garantir que os campos padrão estejam sempre presentes
       const fieldsWithDefaults = [...DEFAULT_FIELDS];
       uniqueFields.forEach(field => {
         if (!DEFAULT_FIELDS.some(def => def.name === field.name)) {
