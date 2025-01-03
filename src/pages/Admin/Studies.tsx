@@ -24,7 +24,6 @@ export default function Studies() {
     }
 
     if (studiesData) {
-      // Map the database fields to our Study type
       const mappedStudies: Study[] = studiesData.map(study => ({
         id: study.id,
         name: study.name,
@@ -42,6 +41,9 @@ export default function Studies() {
     fetchStudies();
   }, [currentUser]);
 
+  const totalStudies = studies.length;
+  const activeStudies = studies.filter(study => study.status === 'active').length;
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -52,11 +54,11 @@ export default function Studies() {
           </p>
         </div>
 
-        <StudyStats studies={studies} />
+        <StudyStats totalStudies={totalStudies} activeStudies={activeStudies} />
 
         <StudiesTable 
           studies={studies} 
-          onStudyChange={fetchStudies}
+          onEdit={() => fetchStudies()}
         />
       </div>
     </DashboardLayout>

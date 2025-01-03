@@ -9,29 +9,10 @@ export default function SuperAdminRooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [stats, setStats] = useState({
-    totalRooms: 0,
-    activeRooms: 0,
-    totalCompanies: 0,
-    totalStudents: 0,
-  });
 
   useEffect(() => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     setRooms(allRooms);
-
-    const activeRooms = allRooms.filter((room: Room) => room.status).length;
-    const uniqueCompanies = new Set(allRooms.map((room: Room) => room.companyId)).size;
-    const totalStudents = allRooms.reduce((acc: number, room: Room) => {
-      return acc + (room.students?.length || 0);
-    }, 0);
-
-    setStats({
-      totalRooms: allRooms.length,
-      activeRooms,
-      totalCompanies: uniqueCompanies,
-      totalStudents,
-    });
   }, []);
 
   const filteredRooms = rooms.filter((room) => {
@@ -55,7 +36,7 @@ export default function SuperAdminRooms() {
             </p>
           </div>
 
-          <RoomStats {...stats} />
+          <RoomStats rooms={rooms} />
         </div>
 
         <div className="space-y-6">

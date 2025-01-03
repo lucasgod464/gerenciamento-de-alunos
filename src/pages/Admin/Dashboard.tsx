@@ -5,6 +5,7 @@ import { UserStats } from "@/components/users/UserStats";
 import { RoomStats } from "@/components/rooms/RoomStats";
 import { StudyStats } from "@/components/studies/StudyStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { Room } from "@/types/room";
 
 const AdminDashboard = () => {
   const { user: currentUser } = useAuth();
@@ -16,6 +17,7 @@ const AdminDashboard = () => {
     totalStudies: 0,
     activeStudies: 0,
   });
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
     if (!currentUser?.companyId) return;
@@ -29,6 +31,7 @@ const AdminDashboard = () => {
     const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
     const companyRooms = allRooms.filter((room: any) => room.companyId === currentUser.companyId);
     const activeRooms = companyRooms.filter((room: any) => room.status);
+    setRooms(companyRooms);
 
     // Load studies stats
     const allStudies = JSON.parse(localStorage.getItem("studies") || "[]");
@@ -57,7 +60,7 @@ const AdminDashboard = () => {
 
         <div className="grid gap-4 md:grid-cols-3">
           <UserStats totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
-          <RoomStats totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
+          <RoomStats rooms={rooms} totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
           <StudyStats totalStudies={stats.totalStudies} activeStudies={stats.activeStudies} />
         </div>
 
