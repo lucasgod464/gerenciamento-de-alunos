@@ -55,9 +55,9 @@ export function useAuthorizedRooms() {
       try {
         console.log("Fetching rooms for user:", user.id);
         
-        // Buscar salas autorizadas através da tabela room_authorized_users
+        // Buscar salas autorizadas através da tabela user_authorized_rooms
         const { data: authorizedRooms, error: authError } = await supabase
-          .from('room_authorized_users')
+          .from('user_authorized_rooms')
           .select('room_id')
           .eq('user_id', user.id);
 
