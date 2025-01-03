@@ -1,26 +1,27 @@
-import { useEffect, useState } from "react"
-import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useAuth } from "@/hooks/useAuth"
-import { Tag as TagIcon } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
+import { useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
+import { Tag as TagIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Tag {
-  id: string
-  name: string
-  color: string
-  status: boolean
+  id: string;
+  name: string;
+  color: string;
+  status: boolean;
 }
 
 interface TagSelectionFieldsProps {
-  selectedTags: { id: string; name: string; color: string; }[]
-  onTagToggle: (tag: { id: string; name: string; color: string; }) => void
+  selectedTags: { id: string; name: string; color: string; }[];
+  onTagToggle: (tag: { id: string; name: string; color: string; }) => void;
+  defaultValues?: any;
 }
 
-export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFieldsProps) {
-  const [tags, setTags] = useState<Tag[]>([])
-  const { user: currentUser } = useAuth()
+export function TagSelectionFields({ selectedTags, onTagToggle, defaultValues }: TagSelectionFieldsProps) {
+  const [tags, setTags] = useState<Tag[]>([]);
+  const { user: currentUser } = useAuth();
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -42,7 +43,7 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
     };
 
     fetchTags();
-  }, [currentUser?.companyId])
+  }, [currentUser?.companyId]);
 
   return (
     <div className="space-y-2">
@@ -77,5 +78,5 @@ export function TagSelectionFields({ selectedTags, onTagToggle }: TagSelectionFi
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }

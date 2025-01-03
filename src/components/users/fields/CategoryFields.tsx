@@ -7,14 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CategoryFieldsProps {
   defaultValues?: {
     specialization?: string;
   };
-  specializations: Array<{ id: string; name: string }>;
 }
 
 export function CategoryFields({ defaultValues }: CategoryFieldsProps) {
@@ -26,23 +25,22 @@ export function CategoryFields({ defaultValues }: CategoryFieldsProps) {
     const fetchSpecializations = async () => {
       if (!currentUser?.companyId) return;
 
-      const { data: specializationsData, error } = await supabase
-        .from('specializations')
-        .select('id, name')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true)
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('specializations')
+          .select('id, name')
+          .eq('company_id', currentUser.companyId)
+          .eq('status', true);
 
-      if (error) {
+        if (error) throw error;
+        setAvailableSpecializations(data || []);
+      } catch (error) {
         console.error('Error fetching specializations:', error);
-        return;
       }
-
-      setAvailableSpecializations(specializationsData);
     };
 
     fetchSpecializations();
-  }, [currentUser?.companyId]);
+  }, [currentUser]);
 
   return (
     <div className="space-y-2">

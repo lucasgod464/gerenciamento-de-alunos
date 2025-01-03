@@ -20,6 +20,7 @@ interface RoomSelectionFieldsProps {
   rooms?: Room[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
+  defaultValues?: any;
 }
 
 export function RoomSelectionFields({
@@ -28,6 +29,7 @@ export function RoomSelectionFields({
   rooms = [],
   searchQuery = "",
   onSearchChange = () => {},
+  defaultValues
 }: RoomSelectionFieldsProps) {
   const [localRooms, setLocalRooms] = useState<Room[]>(rooms);
   const { user: currentUser } = useAuth();
