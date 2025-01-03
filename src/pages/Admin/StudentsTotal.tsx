@@ -4,20 +4,23 @@ import { useToast } from "@/hooks/use-toast";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 export function StudentsTotal() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStudents = async () => {
     try {
       const { data: studentsData, error } = await supabase
         .from('students')
-        .select('*')
+        .select(`
+          *,
+          room_students(room_id)
+        `)
         .eq('company_id', currentUser?.companyId);
 
       if (error) throw error;
@@ -33,6 +36,7 @@ export function StudentsTotal() {
         customFields: student.custom_fields as Record<string, string> | null,
         companyId: student.company_id,
         createdAt: student.created_at,
+        room: student.room_students?.[0]?.room_id
       }));
       
       setStudents(mappedStudents);
@@ -48,9 +52,90 @@ export function StudentsTotal() {
     }
   };
 
+  const fetchRooms = async () => {
+    try {
+      const { data: roomsData, error } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .eq('company_id', currentUser?.companyId);
+
+      if (error) throw error;
+      setRooms(roomsData);
+    } catch (error) {
+      console.error('Error fetching rooms:', error);
+    }
+  };
+
+  const handleDeleteStudent = async (studentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', studentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Aluno excluído",
+        description: "O aluno foi excluído com sucesso.",
+      });
+
+      fetchStudents();
+    } catch (error) {
+      console.error('Error deleting student:', error);
+      toast({
+        title: "Erro ao excluir aluno",
+        description: "Ocorreu um erro ao excluir o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTransferStudent = async (studentId: string, newRoomId: string | null) => {
+    try {
+      // First, delete any existing room assignments
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', studentId);
+
+      // If a new room is selected, create the assignment
+      if (newRoomId) {
+        const { error } = await supabase
+          .from('room_students')
+          .insert({
+            student_id: studentId,
+            room_id: newRoomId
+          });
+
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Aluno transferido",
+        description: "O aluno foi transferido com sucesso.",
+      });
+
+      fetchStudents();
+    } catch (error) {
+      console.error('Error transferring student:', error);
+      toast({
+        title: "Erro ao transferir aluno",
+        description: "Ocorreu um erro ao transferir o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
-    fetchStudents();
+    if (currentUser?.companyId) {
+      fetchStudents();
+      fetchRooms();
+    }
   }, [currentUser]);
+
+  const studentsWithRoom = students.filter(student => student.room);
+  const studentsWithoutRoom = students.filter(student => !student.room);
 
   return (
     <DashboardLayout role="admin">
@@ -64,36 +149,13 @@ export function StudentsTotal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Data de Nascimento</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Documento</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>
-                    {student.birthDate ? new Date(student.birthDate).toLocaleDateString('pt-BR') : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={student.status ? "success" : "destructive"}>
-                      {student.status ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{student.email || '-'}</TableCell>
-                  <TableCell>{student.document || '-'}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <StudentColumns
+          studentsWithoutRoom={studentsWithoutRoom}
+          studentsWithRoom={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={handleDeleteStudent}
+          onTransferStudent={handleTransferStudent}
+        />
       </div>
     </DashboardLayout>
   );
