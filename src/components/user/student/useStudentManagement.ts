@@ -85,8 +85,6 @@ export const useStudentManagement = () => {
           filter: `company_id=eq.${user.companyId}`
         },
         (payload) => {
-          console.log('Real-time update:', payload);
-          
           if (payload.eventType === 'UPDATE') {
             setStudents(prev => 
               prev.map(student => 
