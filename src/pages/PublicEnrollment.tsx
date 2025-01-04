@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormField } from "@/types/form";
+import { FormField, mapSupabaseFormField, defaultFields } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,27 +34,8 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      // Primeiro, carregamos os campos padrão
-      const defaultFields: FormField[] = [
-        {
-          id: "nome_completo",
-          name: "nome_completo",
-          label: "Nome Completo",
-          type: "text",
-          required: true,
-          order: 0,
-        },
-        {
-          id: "data_nascimento",
-          name: "data_nascimento",
-          label: "Data de Nascimento",
-          type: "date",
-          required: true,
-          order: 1,
-        }
-      ];
+      console.log("Carregando campos para company_id:", companyId);
 
-      // Depois, carregamos os campos personalizados do banco
       const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
@@ -68,28 +49,17 @@ export function PublicEnrollment() {
 
       console.log("Campos personalizados carregados:", customFields);
 
-      if (!customFields) {
-        console.log("Nenhum campo personalizado encontrado");
-        setFields(defaultFields);
-        return;
-      }
-
-      const mappedCustomFields = customFields.map(field => ({
-        id: field.id,
-        name: field.name,
-        label: field.label,
-        type: field.type as FormField['type'],
-        description: field.description || undefined,
-        required: field.required || false,
-        order: field.order,
-        options: field.options as string[] | undefined,
-      }));
-
+      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
       console.log("Campos personalizados mapeados:", mappedCustomFields);
 
-      // Combinamos os campos padrão com os personalizados
-      const allFields = [...defaultFields, ...mappedCustomFields];
-      console.log("Todos os campos:", allFields);
+      // Filtramos os campos padrão que não queremos mostrar
+      const filteredDefaultFields = defaultFields.filter(
+        field => field.name !== "sala" && field.name !== "status"
+      );
+
+      const allFields = [...filteredDefaultFields, ...mappedCustomFields];
+      console.log("Todos os campos combinados:", allFields);
+      
       setFields(allFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
