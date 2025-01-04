@@ -29,6 +29,9 @@ export function EditUserDialog({
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     user?.tags || []
   );
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(
+    user?.authorizedRooms?.map(room => room.id) || []
+  );
 
   const handleUpdateUser = async (formData: FormData) => {
     if (!user) return;
@@ -73,6 +76,27 @@ export function EditUserDialog({
         if (insertTagsError) throw insertTagsError;
       }
 
+      // Update rooms
+      const { error: deleteRoomsError } = await supabase
+        .from('user_rooms')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteRoomsError) throw deleteRoomsError;
+
+      if (selectedRooms.length > 0) {
+        const roomInserts = selectedRooms.map(roomId => ({
+          user_id: user.id,
+          room_id: roomId
+        }));
+
+        const { error: insertRoomsError } = await supabase
+          .from('user_rooms')
+          .insert(roomInserts);
+
+        if (insertRoomsError) throw insertRoomsError;
+      }
+
       const updatedUser: User = {
         ...user,
         name: updateData.name,
@@ -80,9 +104,10 @@ export function EditUserDialog({
         role: updateData.access_level,
         location: updateData.location,
         specialization: updateData.specialization,
-        status: updateData.status,
+        status: updateData.status ? 'active' : 'inactive',
         tags: selectedTags,
-        accessLevel: updateData.access_level
+        accessLevel: updateData.access_level,
+        authorizedRooms: selectedRooms.map(roomId => ({ id: roomId, name: '' }))
       };
 
       toast({
@@ -122,11 +147,13 @@ export function EditUserDialog({
               email: user.email,
               specialization: user.specialization || '',
               location: user.location || '',
-              status: user.status ? 'active' : 'inactive',
+              status: user.status === 'active' ? 'active' : 'inactive',
               tags: user.tags,
-              accessLevel: user.accessLevel
+              accessLevel: user.accessLevel,
+              authorizedRooms: user.authorizedRooms
             }}
             onTagsChange={setSelectedTags}
+            onRoomsChange={setSelectedRooms}
             isEditing
           />
           <div className="flex justify-end">
