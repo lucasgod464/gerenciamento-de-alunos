@@ -1,7 +1,6 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ptBR } from "date-fns/locale";
 
 interface AttendanceCalendarProps {
   selectedDate: Date | undefined;
@@ -20,35 +19,6 @@ export const AttendanceCalendar = ({
   isAttendanceDay,
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
-  // Função para normalizar a data removendo o horário
-  const normalizeDate = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  };
-
-  // Modifiers para o calendário com datas normalizadas
-  const modifiers = {
-    attendance: attendanceDays.map(date => normalizeDate(date))
-  };
-
-  // Estilos dos modifiers
-  const modifiersStyles = {
-    attendance: {
-      backgroundColor: "#22c55e",
-      color: "white",
-      borderRadius: "50%"
-    }
-  };
-
-  // Função para verificar se uma data está selecionada
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      const normalizedDate = normalizeDate(date);
-      onSelectDate(normalizedDate);
-    } else {
-      onSelectDate(undefined);
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -58,13 +28,19 @@ export const AttendanceCalendar = ({
         <div className="flex justify-center">
           <Calendar
             mode="single"
-            selected={selectedDate ? normalizeDate(selectedDate) : undefined}
-            onSelect={handleDateSelect}
+            selected={selectedDate}
+            onSelect={onSelectDate}
             className="rounded-md border"
-            modifiers={modifiers}
-            modifiersStyles={modifiersStyles}
-            disabled={{ before: new Date(2000, 0) }}
-            locale={ptBR}
+            modifiers={{
+              attendance: attendanceDays
+            }}
+            modifiersStyles={{
+              attendance: {
+                backgroundColor: "#22c55e",
+                color: "white",
+                borderRadius: "50%"
+              }
+            }}
           />
         </div>
         <div className="flex gap-2">

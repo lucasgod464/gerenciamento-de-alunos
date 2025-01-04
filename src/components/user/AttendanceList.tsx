@@ -1,36 +1,24 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AttendanceStatus } from "@/types/attendance";
+import { Student } from "@/types/attendance";
 import { useToast } from "@/hooks/use-toast";
-
-interface Student {
-  id: string;
-  name: string;
-  room: string;
-  status: AttendanceStatus;
-}
 
 interface AttendanceListProps {
   students: Student[];
-  onStatusChange: (studentId: string, status: AttendanceStatus) => void;
+  onStatusChange: (studentId: string, status: Student["status"]) => void;
   date: Date;
 }
 
-export const AttendanceList = ({ students = [], onStatusChange, date }: AttendanceListProps) => {
+export const AttendanceList = ({ students, onStatusChange, date }: AttendanceListProps) => {
   const { toast } = useToast();
 
-  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+  const handleStatusChange = (studentId: string, status: Student["status"]) => {
     onStatusChange(studentId, status);
     toast({
       title: "Status atualizado",
       description: "O status de presença foi atualizado com sucesso."
     });
   };
-
-  if (!Array.isArray(students)) {
-    console.error('students prop is not an array:', students);
-    return null;
-  }
 
   return (
     <Table>
@@ -50,7 +38,7 @@ export const AttendanceList = ({ students = [], onStatusChange, date }: Attendan
               <Select
                 defaultValue="present"
                 value={student.status}
-                onValueChange={(value: AttendanceStatus) =>
+                onValueChange={(value: Student["status"]) =>
                   handleStatusChange(student.id, value)
                 }
               >

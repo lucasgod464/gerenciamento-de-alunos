@@ -6,19 +6,14 @@ interface AttendanceStatsProps {
   students: Student[];
 }
 
-export const AttendanceStats = ({ students = [] }: AttendanceStatsProps) => {
+export const AttendanceStats = ({ students }: AttendanceStatsProps) => {
   const getAttendanceStats = () => {
-    if (!Array.isArray(students)) {
-      console.error('students prop is not an array:', students);
-      return [];
-    }
-
     const stats = students.reduce(
       (acc, student) => {
-        if (student?.status === "present") acc.present += 1;
-        else if (student?.status === "absent") acc.absent += 1;
-        else if (student?.status === "late") acc.late += 1;
-        else if (student?.status === "justified") acc.justified += 1;
+        if (student.status === "present") acc.present += 1;
+        else if (student.status === "absent") acc.absent += 1;
+        else if (student.status === "late") acc.late += 1;
+        else if (student.status === "justified") acc.justified += 1;
         return acc;
       },
       { present: 0, absent: 0, late: 0, justified: 0 }
