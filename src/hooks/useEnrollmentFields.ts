@@ -32,10 +32,10 @@ export const useEnrollmentFields = () => {
 
   const addField = async (field: Omit<FormField, "id" | "order">) => {
     try {
-      const newField = {
-        ...mapFormFieldToSupabase(field as FormField),
+      const newField = mapFormFieldToSupabase({
+        ...field,
         order: fields.length,
-      };
+      });
 
       const { data, error } = await supabase
         .from('enrollment_form_fields')
@@ -108,9 +108,10 @@ export const useEnrollmentFields = () => {
     }
 
     try {
+      const supabaseField = mapFormFieldToSupabase(updatedField);
       const { error } = await supabase
         .from('enrollment_form_fields')
-        .update(mapFormFieldToSupabase(updatedField))
+        .update(supabaseField)
         .eq('id', updatedField.id);
 
       if (error) throw error;
@@ -138,8 +139,8 @@ export const useEnrollmentFields = () => {
     
     try {
       const updates = customFields.map((field, index) => ({
-        id: field.id,
         ...mapFormFieldToSupabase(field),
+        id: field.id,
         order: defaultFields.length + index
       }));
 

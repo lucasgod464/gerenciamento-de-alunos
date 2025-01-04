@@ -7,7 +7,7 @@ export interface CustomField {
   fieldName: string;
   label: string;
   value: any;
-  type: string;
+  type: FieldType;
 }
 
 export interface FormField {
