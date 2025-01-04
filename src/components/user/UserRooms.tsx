@@ -24,8 +24,16 @@ export function UserRooms() {
           .from('user_rooms')
           .select(`
             room:room_id (
-              *,
-              room_students!inner (
+              id,
+              name,
+              schedule,
+              location,
+              category,
+              status,
+              company_id,
+              study_room,
+              created_at,
+              room_students (
                 student:students (
                   id,
                   name,
