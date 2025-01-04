@@ -21,40 +21,40 @@ export function RoomStats({
   const calculatedActiveRooms = activeRooms ?? rooms.filter(room => room.status).length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 max-w-4xl mx-auto">
-      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Total de Salas</CardTitle>
+          <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-center text-gray-900">{calculatedTotalRooms}</div>
+          <div className="text-2xl font-bold">{calculatedTotalRooms}</div>
         </CardContent>
       </Card>
-      <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium text-gray-600">Salas Ativas</CardTitle>
+          <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-3xl font-bold text-center text-gray-900">{calculatedActiveRooms}</div>
+          <div className="text-2xl font-bold">{calculatedActiveRooms}</div>
         </CardContent>
       </Card>
       {totalCompanies !== undefined && (
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Empresas</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Empresas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-center text-gray-900">{totalCompanies}</div>
+            <div className="text-2xl font-bold">{totalCompanies}</div>
           </CardContent>
         </Card>
       )}
       {totalStudents !== undefined && (
-        <Card className="bg-white shadow-sm hover:shadow-md transition-shadow">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total de Alunos</CardTitle>
+            <CardTitle className="text-sm font-medium">Total de Alunos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-center text-gray-900">{totalStudents}</div>
+            <div className="text-2xl font-bold">{totalStudents}</div>
           </CardContent>
         </Card>
       )}
