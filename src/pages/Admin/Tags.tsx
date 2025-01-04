@@ -174,25 +174,14 @@ const Tags = () => {
     return matchesSearch && matchesStatus;
   });
 
-  console.log('Tags filtradas:', filteredTags);
-
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
-            <p className="text-muted-foreground">
-              Gerencie as etiquetas do sistema
-            </p>
-          </div>
-          <Button onClick={() => {
-            setEditingTag(null);
-            setDialogOpen(true);
-          }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Criar Etiqueta
-          </Button>
+      <div className="max-w-6xl mx-auto space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
+          <p className="text-muted-foreground">
+            Gerencie as etiquetas do sistema
+          </p>
         </div>
 
         <TagDialog
@@ -217,6 +206,10 @@ const Tags = () => {
             setSearchTerm={setSearchTerm}
             statusFilter={statusFilter}
             setStatusFilter={setStatusFilter}
+            onCreateClick={() => {
+              setEditingTag(null);
+              setDialogOpen(true);
+            }}
           />
         </div>
       </div>

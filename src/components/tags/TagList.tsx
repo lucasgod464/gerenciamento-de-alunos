@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tag, Trash2, Edit2 } from "lucide-react";
+import { Tag, Trash2, Edit2, Plus } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,6 +26,7 @@ interface TagListProps {
   setSearchTerm: (term: string) => void;
   statusFilter: "all" | "active" | "inactive";
   setStatusFilter: (status: "all" | "active" | "inactive") => void;
+  onCreateClick: () => void;
 }
 
 export const TagList = ({
@@ -36,6 +37,7 @@ export const TagList = ({
   setSearchTerm,
   statusFilter,
   setStatusFilter,
+  onCreateClick,
 }: TagListProps) => {
   return (
     <div className="space-y-4">
@@ -48,12 +50,12 @@ export const TagList = ({
           />
         </div>
         
-        <div className="space-y-2">
+        <div className="flex items-center space-x-2">
           <Select
             value={statusFilter}
             onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
@@ -62,6 +64,10 @@ export const TagList = ({
               <SelectItem value="inactive">Inativas</SelectItem>
             </SelectContent>
           </Select>
+          <Button onClick={onCreateClick}>
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Etiqueta
+          </Button>
         </div>
       </div>
 
