@@ -27,15 +27,28 @@ export const StudentRegistration = () => {
     if (!currentUser?.companyId) return;
     
     try {
-      // Fetch rooms first
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true);
+      // Fetch only authorized rooms for the current user
+      const { data: userRooms, error: roomsError } = await supabase
+        .from('user_rooms')
+        .select(`
+          room:room_id (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', currentUser.id);
 
       if (roomsError) throw roomsError;
-      setRooms(roomsData || []);
+      
+      // Transform the rooms data structure
+      const authorizedRooms = userRooms
+        ?.filter(ur => ur.room) // Filter out any null rooms
+        .map(ur => ({
+          id: ur.room.id,
+          name: ur.room.name
+        })) || [];
+      
+      setRooms(authorizedRooms);
 
       // Fetch students with their room assignments
       const { data: studentsData, error: studentsError } = await supabase
