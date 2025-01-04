@@ -48,17 +48,17 @@ const CustomLegend = (props: any) => {
   if (!payload) return null;
   
   return (
-    <div className="flex flex-wrap justify-center gap-6">
+    <div className="flex flex-col gap-2 items-start">
       {payload.map((entry: any, index: number) => {
         if (!entry || !entry.payload) return null;
         
         return (
-          <div key={`legend-${index}`} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+          <div key={`legend-${index}`} className="flex items-center gap-2">
             <div
-              className="w-4 h-4 rounded-full"
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm font-medium">
+            <span className="text-sm">
               {entry.value}: {entry.payload.value} ({entry.payload.percentage?.toFixed(1)}%)
             </span>
           </div>
@@ -152,7 +152,7 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
   }
 
   return (
-    <div className="h-[300px] w-full flex flex-col items-center justify-center space-y-4">
+    <div className="h-[300px] w-full flex flex-col items-center justify-center space-y-6">
       <div className="w-full h-[220px] bg-gradient-to-br from-background to-muted/20 rounded-xl p-4">
         <ResponsiveContainer>
           <PieChart>
