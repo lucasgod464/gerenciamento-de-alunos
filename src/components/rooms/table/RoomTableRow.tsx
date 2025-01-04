@@ -39,16 +39,28 @@ export const RoomTableRow = ({
           if (categoryData) setCategoryName(categoryData.name);
         }
 
-        // Fetch teachers for this room's company
-        const { data: teachersData, error: teachersError } = await supabase
-          .from('emails')
-          .select('id, name')
-          .eq('company_id', room.companyId);
+        // Fetch teachers for this room through user_rooms table
+        const { data: roomUsers, error: roomUsersError } = await supabase
+          .from('user_rooms')
+          .select(`
+            user:user_id (
+              id,
+              name
+            )
+          `)
+          .eq('room_id', room.id);
 
-        if (teachersError) throw teachersError;
+        if (roomUsersError) throw roomUsersError;
         
-        if (teachersData) {
-          setTeachers(teachersData);
+        if (roomUsers) {
+          const validTeachers = roomUsers
+            .filter(ru => ru.user && typeof ru.user === 'object')
+            .map(ru => ({
+              id: ru.user.id,
+              name: ru.user.name
+            }));
+          
+          setTeachers(validTeachers);
         }
 
       } catch (error) {
@@ -72,7 +84,7 @@ export const RoomTableRow = ({
       <TableCell>{categoryName}</TableCell>
       <TableCell>
         <div className="flex flex-col gap-1">
-          {teachers.length > 0 ? (
+          {teachers && teachers.length > 0 ? (
             teachers.map(teacher => (
               <UserWithTags 
                 key={teacher.id}
@@ -81,7 +93,7 @@ export const RoomTableRow = ({
               />
             ))
           ) : (
-            <span className="text-sm text-muted-foreground">Não atribuído</span>
+            <span className="text-sm text-muted-foreground">Nenhum usuário vinculado</span>
           )}
         </div>
       </TableCell>
