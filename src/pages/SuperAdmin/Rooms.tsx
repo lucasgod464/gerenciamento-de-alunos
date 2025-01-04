@@ -16,7 +16,7 @@ export default function SuperAdminRooms() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        console.log("Buscando salas...");
+        console.log("Iniciando busca de salas...");
         const { data: roomsData, error } = await supabase
           .from('rooms')
           .select(`
@@ -40,7 +40,7 @@ export default function SuperAdminRooms() {
         }
 
         if (roomsData) {
-          console.log("Salas encontradas:", roomsData);
+          console.log("Dados brutos das salas:", roomsData);
           const transformedRooms: Room[] = roomsData.map(room => ({
             id: room.id,
             name: room.name,
@@ -54,7 +54,10 @@ export default function SuperAdminRooms() {
             createdAt: room.created_at,
             students: []
           }));
+          console.log("Salas transformadas:", transformedRooms);
           setRooms(transformedRooms);
+        } else {
+          console.log("Nenhuma sala encontrada");
         }
       } catch (error) {
         console.error('Erro:', error);
