@@ -1,6 +1,4 @@
-import { Json } from "@/integrations/supabase/types";
-
-export type FieldType = "text" | "email" | "tel" | "date" | "textarea" | "select" | "multiple";
+export type FieldType = 'text' | 'number' | 'date' | 'select' | 'multiple' | 'phone' | 'email';
 
 export interface FormField {
   id: string;
@@ -8,15 +6,15 @@ export interface FormField {
   label: string;
   type: FieldType;
   description?: string;
-  required: boolean;
+  required?: boolean;
   order: number;
   options?: string[];
-  isDefault?: boolean;
 }
 
 export interface CustomField {
+  id: string;
   name: string;
-  value: string | string[];
+  value: string;
   type: FieldType;
 }
 
@@ -25,12 +23,12 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description: string | null;
-  required: boolean;
+  description?: string;
+  required?: boolean;
   order: number;
-  options: Json | null;
-  company_id: string | null;
-  created_at: string;
+  options?: string[];
+  company_id?: string;
+  created_at?: string;
 }
 
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
@@ -38,19 +36,17 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description || undefined,
+  description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options as string[] | undefined,
+  options: field.options
 });
 
-export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'order'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description || null,
+  description: field.description,
   required: field.required,
-  options: field.options || null,
-  order: 0, // Será definido ao inserir
-  company_id: null
+  options: field.options
 });

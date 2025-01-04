@@ -53,3 +53,6 @@ export const mapSupabaseRoom = (room: SupabaseRoom): Room => ({
   created_at: room.created_at,
   room_students: room.room_students
 });
+
+// Alias para manter compatibilidade com código existente
+export const mapSupabaseRoomToRoom = mapSupabaseRoom;
