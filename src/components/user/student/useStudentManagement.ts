@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Student, mapSupabaseStudentToStudent } from "@/types/student";
+import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,17 +16,6 @@ export const useStudentManagement = () => {
     if (!currentUser?.companyId) return;
     
     try {
-      // Fetch rooms first
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true);
-
-      if (roomsError) throw roomsError;
-      setRooms(roomsData || []);
-
-      // Fetch students with their room assignments
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select(`
@@ -37,25 +26,34 @@ export const useStudentManagement = () => {
 
       if (studentsError) throw studentsError;
 
-      const mappedStudents = (studentsData || []).map(mapSupabaseStudentToStudent);
+      const mappedStudents = (studentsData || []).map(student => ({
+        id: student.id,
+        name: student.name,
+        birthDate: student.birth_date,
+        status: student.status,
+        email: student.email,
+        document: student.document,
+        address: student.address,
+        customFields: student.custom_fields,
+        companyId: student.company_id,
+        createdAt: student.created_at,
+        room: student.room_students?.[0]?.room_id
+      }));
+      
       setStudents(mappedStudents);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error loading students:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao carregar os dados",
+        title: "Erro ao carregar alunos",
+        description: "Não foi possível carregar a lista de alunos.",
         variant: "destructive",
       });
     }
   };
 
-  useEffect(() => {
-    loadStudents();
-  }, [currentUser]);
-
   const handleAddStudent = async (newStudent: Student) => {
     try {
-      // Insert student
+      // Insert student data
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .insert({
@@ -73,7 +71,7 @@ export const useStudentManagement = () => {
 
       if (studentError) throw studentError;
 
-      // If room is selected, create room assignment
+      // If a room is selected, create room assignment
       if (newStudent.room) {
         const { error: roomError } = await supabase
           .from('room_students')
@@ -85,16 +83,17 @@ export const useStudentManagement = () => {
         if (roomError) throw roomError;
       }
 
-      loadStudents();
       toast({
         title: "Sucesso",
         description: "Aluno cadastrado com sucesso!",
       });
+
+      loadStudents(); // Reload the students list
     } catch (error) {
       console.error('Error adding student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao cadastrar aluno",
+        title: "Erro ao cadastrar aluno",
+        description: "Não foi possível cadastrar o aluno.",
         variant: "destructive",
       });
     }
@@ -109,7 +108,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
 
-      loadStudents();
+      setStudents(prev => prev.filter(student => student.id !== id));
       toast({
         title: "Sucesso",
         description: "Aluno excluído com sucesso!",
@@ -117,8 +116,8 @@ export const useStudentManagement = () => {
     } catch (error) {
       console.error('Error deleting student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao excluir aluno",
+        title: "Erro ao excluir aluno",
+        description: "Não foi possível excluir o aluno.",
         variant: "destructive",
       });
     }
@@ -142,7 +141,7 @@ export const useStudentManagement = () => {
 
       if (studentError) throw studentError;
 
-      // Update room assignment
+      // Update room assignment if room has changed
       if (updatedStudent.room) {
         // Remove existing room assignment
         await supabase
@@ -161,20 +160,27 @@ export const useStudentManagement = () => {
         if (roomError) throw roomError;
       }
 
-      loadStudents();
       toast({
         title: "Sucesso",
         description: "Aluno atualizado com sucesso!",
       });
+
+      loadStudents(); // Reload the students list
     } catch (error) {
       console.error('Error updating student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao atualizar aluno",
+        title: "Erro ao atualizar aluno",
+        description: "Não foi possível atualizar o aluno.",
         variant: "destructive",
       });
     }
   };
+
+  useEffect(() => {
+    if (currentUser?.companyId) {
+      loadStudents();
+    }
+  }, [currentUser]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = student.name
