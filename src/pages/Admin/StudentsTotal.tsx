@@ -18,6 +18,7 @@ export function StudentsTotal() {
       console.log("Iniciando busca de alunos...");
       console.log("Company ID do usuário:", currentUser?.companyId);
       
+      // Query para buscar alunos da tabela students
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
