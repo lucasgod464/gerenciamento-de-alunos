@@ -85,8 +85,12 @@ export function StudentTable({
   const handleSubmit = (student: Student) => {
     if (onUpdateStudent) {
       onUpdateStudent(student);
+      setEditingStudent(null);
+      toast({
+        title: "Sucesso",
+        description: "Dados do aluno atualizados com sucesso!",
+      });
     }
-    setEditingStudent(null);
   };
 
   return (
@@ -123,7 +127,7 @@ export function StudentTable({
                   student={student}
                   showTransferOption={showTransferOption}
                   onInfoClick={setShowingInfo}
-                  onEditClick={handleEditClick}
+                  onEditClick={setEditingStudent}
                   onDeleteClick={handleDelete}
                 />
               </TableCell>
