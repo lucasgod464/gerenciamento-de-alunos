@@ -16,7 +16,7 @@ interface AttendanceListProps {
   date: Date;
 }
 
-export const AttendanceList = ({ students, onStatusChange, date }: AttendanceListProps) => {
+export const AttendanceList = ({ students = [], onStatusChange, date }: AttendanceListProps) => {
   const { toast } = useToast();
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
@@ -26,6 +26,11 @@ export const AttendanceList = ({ students, onStatusChange, date }: AttendanceLis
       description: "O status de presença foi atualizado com sucesso."
     });
   };
+
+  if (!Array.isArray(students)) {
+    console.error('students prop is not an array:', students);
+    return null;
+  }
 
   return (
     <Table>

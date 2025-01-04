@@ -19,13 +19,14 @@ export const AttendanceControl = () => {
   } = useAttendance();
 
   const getCurrentDayStudents = () => {
-    if (!selectedDate) return [];
+    if (!selectedDate || !dailyAttendances) return [];
     const dateStr = selectedDate.toISOString().split('T')[0];
     const attendance = dailyAttendances.find(da => da.date === dateStr);
     return attendance?.students || [];
   };
 
   const isAttendanceDay = (date: Date) => {
+    if (!attendanceDays) return false;
     return attendanceDays.some(attendanceDate => 
       attendanceDate.toISOString().split('T')[0] === date.toISOString().split('T')[0]
     );
