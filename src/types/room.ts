@@ -1,3 +1,4 @@
+import { Json } from "@/integrations/supabase/types";
 import { Student } from "./student";
 
 export interface Room {
@@ -32,7 +33,7 @@ export interface SupabaseRoom {
       email: string | null;
       document: string | null;
       address: string | null;
-      custom_fields: Record<string, any> | null;
+      custom_fields: Json;
       company_id: string | null;
       created_at: string;
     };
@@ -58,7 +59,7 @@ export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
       email: rs.student.email,
       document: rs.student.document,
       address: rs.student.address,
-      customFields: rs.student.custom_fields,
+      customFields: rs.student.custom_fields as Record<string, any>,
       companyId: rs.student.company_id,
       createdAt: rs.student.created_at
     })) || []
