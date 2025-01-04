@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { AuthResponse, UserRole, AuthUser } from "@/types/auth";
+import { AuthUser, AuthResponse, UserRole, ROLE_PERMISSIONS } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
-  const { data: session, refetch } = useQuery({
+  const { data: session, isLoading, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
       const storedSession = localStorage.getItem("session");
@@ -135,8 +134,9 @@ export function useAuth() {
   };
 
   return {
-    user,
-    isAuthenticated,
+    user: session?.user,
+    isAuthenticated: !!session?.user?.id && !!session?.token,
+    isLoading,
     login,
     logout,
     can,
