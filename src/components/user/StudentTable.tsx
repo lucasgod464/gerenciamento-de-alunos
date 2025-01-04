@@ -44,12 +44,10 @@ export function StudentTable({
 
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      // Atualizar a lista local de estudantes
       setLocalStudents(prev => 
         prev.map(s => s.id === updatedStudent.id ? updatedStudent : s)
       );
 
-      // Chamar o callback de atualização se existir
       if (onUpdateStudent) {
         await onUpdateStudent(updatedStudent);
       }
