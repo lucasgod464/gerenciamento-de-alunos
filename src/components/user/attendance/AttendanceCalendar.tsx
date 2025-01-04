@@ -19,6 +19,10 @@ export const AttendanceCalendar = ({
   isAttendanceDay,
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
+  const modifiedAttendanceDays = attendanceDays.filter(
+    date => !selectedDate || date.getTime() !== selectedDate.getTime()
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -32,7 +36,7 @@ export const AttendanceCalendar = ({
             onSelect={onSelectDate}
             className="rounded-md border"
             modifiers={{
-              attendance: attendanceDays
+              attendance: modifiedAttendanceDays
             }}
             modifiersStyles={{
               attendance: {
