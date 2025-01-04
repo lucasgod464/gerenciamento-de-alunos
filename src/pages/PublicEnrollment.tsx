@@ -65,6 +65,7 @@ export default function PublicEnrollment() {
           birth_date: data.data_nascimento,
           status: true,
           custom_fields: customFields,
+          company_id: null // This will be assigned by RLS policy
         })
         .select()
         .single();

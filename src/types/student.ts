@@ -55,6 +55,6 @@ export const mapStudentToSupabase = (student: Partial<Student>): Partial<Supabas
   const { room, ...rest } = student;
   return {
     ...rest,
-    custom_fields: student.custom_fields as Json,
+    custom_fields: student.custom_fields as unknown as Json,
   };
 };
