@@ -30,6 +30,7 @@ export interface SupabaseStudent {
   custom_fields: Json;
   company_id: string;
   created_at: string;
+  room_students?: { room_id: string }[];
 }
 
 export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => ({
@@ -40,12 +41,13 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   email: student.email,
   document: student.document,
   address: student.address,
-  custom_fields: student.custom_fields as Record<string, {
+  custom_fields: (student.custom_fields as Record<string, {
     fieldName: string;
     label: string;
     value: any;
     type: string;
-  }> || {},
+  }>) || {},
   company_id: student.company_id,
   created_at: student.created_at,
+  room: student.room_students?.[0]?.room_id,
 });

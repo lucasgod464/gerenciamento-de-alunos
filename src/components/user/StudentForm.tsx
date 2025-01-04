@@ -12,9 +12,10 @@ import {
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import { CustomTextField } from "./student/form-fields/CustomTextField";
+import { CustomPhoneField } from "./student/form-fields/CustomPhoneField";
+import { CustomSelectField } from "./student/form-fields/CustomSelectField";
+import { CustomMultipleField } from "./student/form-fields/CustomMultipleField";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -25,7 +26,6 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(initialData || {});
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const { toast } = useToast();
 
   useEffect(() => {
     const loadCustomFields = async () => {
@@ -86,9 +86,46 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     }));
   };
 
-  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>, field: FormField) => {
-    const value = e.target.value.replace(/\D/g, '');
-    handleCustomFieldChange(field, value);
+  const renderCustomField = (field: FormField) => {
+    const value = formData.custom_fields?.[field.name]?.value;
+
+    switch (field.type) {
+      case "text":
+      case "email":
+        return (
+          <CustomTextField
+            field={field}
+            value={value || ""}
+            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
+          />
+        );
+      case "tel":
+        return (
+          <CustomPhoneField
+            field={field}
+            value={value || ""}
+            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
+          />
+        );
+      case "select":
+        return (
+          <CustomSelectField
+            field={field}
+            value={value || ""}
+            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
+          />
+        );
+      case "multiple":
+        return (
+          <CustomMultipleField
+            field={field}
+            value={value || []}
+            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -152,117 +189,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </div>
 
       {customFields.map((field) => (
-        <div key={field.id} className="space-y-2">
-          <Label htmlFor={field.name}>
-            {field.label}
-            {field.required && <span className="text-red-500 ml-1">*</span>}
-          </Label>
-          
-          {field.type === "text" && (
-            <Input
-              id={field.name}
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
-              required={field.required}
-            />
-          )}
-          
-          {field.type === "email" && (
-            <Input
-              id={field.name}
-              type="email"
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
-              required={field.required}
-            />
-          )}
-
-          {field.type === "tel" && (
-            <Input
-              id={field.name}
-              type="tel"
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onChange={(e) => handlePhoneInput(e, field)}
-              required={field.required}
-              pattern="[0-9]*"
-              inputMode="numeric"
-              maxLength={15}
-              onInvalid={() => {
-                toast({
-                  title: "Campo inválido",
-                  description: "Por favor, insira apenas números no campo de telefone",
-                  variant: "destructive",
-                });
-              }}
-            />
-          )}
-          
-          {field.type === "textarea" && (
-            <Textarea
-              id={field.name}
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
-              required={field.required}
-            />
-          )}
-          
-          {field.type === "date" && (
-            <Input
-              id={field.name}
-              type="date"
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onChange={(e) => handleCustomFieldChange(field, e.target.value)}
-              required={field.required}
-            />
-          )}
-          
-          {field.type === "select" && field.options && (
-            <Select
-              value={formData.custom_fields?.[field.name]?.value || ""}
-              onValueChange={(value) => handleCustomFieldChange(field, value)}
-              required={field.required}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma opção" />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          
-          {field.type === "multiple" && field.options && (
-            <div className="space-y-2">
-              {field.options.map((option) => (
-                <div key={option} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${field.name}-${option}`}
-                    checked={Array.isArray(formData.custom_fields?.[field.name]?.value) && 
-                      formData.custom_fields?.[field.name]?.value?.includes(option)}
-                    onCheckedChange={(checked) => {
-                      const currentValues = Array.isArray(formData.custom_fields?.[field.name]?.value) 
-                        ? formData.custom_fields?.[field.name]?.value 
-                        : [];
-                      const newValues = checked
-                        ? [...currentValues, option]
-                        : currentValues.filter((value: string) => value !== option);
-                      handleCustomFieldChange(field, newValues);
-                    }}
-                  />
-                  <label
-                    htmlFor={`${field.name}-${option}`}
-                    className="text-sm font-medium leading-none"
-                  >
-                    {option}
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
+        <div key={field.id}>
+          {renderCustomField(field)}
         </div>
       ))}
 
