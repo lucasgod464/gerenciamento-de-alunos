@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/utils/dateUtils";
 
@@ -11,6 +11,7 @@ interface AttendanceChartProps {
 interface ChartData {
   name: string;
   value: number;
+  percentage: number;
 }
 
 const COLORS = {
@@ -25,6 +26,40 @@ const STATUS_LABELS = {
   absent: "Ausente",
   late: "Atrasado",
   justified: "Justificado"
+};
+
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white p-2 border rounded shadow-sm">
+        <p className="font-medium">{data.name}</p>
+        <p className="text-sm">
+          {data.value} alunos ({data.percentage.toFixed(1)}%)
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomLegend = (props: any) => {
+  const { payload } = props;
+  return (
+    <div className="flex flex-wrap justify-center gap-4 mt-4">
+      {payload.map((entry: any, index: number) => (
+        <div key={`legend-${index}`} className="flex items-center gap-2">
+          <div
+            className="w-3 h-3 rounded-sm"
+            style={{ backgroundColor: entry.color }}
+          />
+          <span className="text-sm">
+            {entry.value}: {entry.payload.value} ({entry.payload.percentage.toFixed(1)}%)
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
@@ -63,12 +98,16 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
         console.log('Contagem por status:', statusCount);
 
-        // Converter para o formato do gráfico
+        // Calcular total para percentagens
+        const total = Object.values(statusCount).reduce((a, b) => a + b, 0);
+
+        // Converter para o formato do gráfico com percentagens
         const chartData = Object.entries(statusCount)
           .filter(([_, value]) => value > 0)
           .map(([status, value]) => ({
-            name: status,
-            value
+            name: STATUS_LABELS[status as keyof typeof STATUS_LABELS],
+            value,
+            percentage: (value / total) * 100
           }));
 
         console.log('Dados do gráfico:', chartData);
@@ -111,14 +150,14 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
   }
 
   return (
-    <div className="h-[200px]">
+    <div className="h-[300px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
             cx="50%"
-            cy="50%"
-            innerRadius={40}
+            cy="45%"
+            innerRadius={60}
             outerRadius={80}
             paddingAngle={5}
             dataKey="value"
@@ -126,13 +165,15 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
             {data.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
-                fill={COLORS[entry.name as keyof typeof COLORS]} 
+                fill={COLORS[entry.name.toLowerCase().replace('presente', 'present')
+                  .replace('ausente', 'absent')
+                  .replace('atrasado', 'late')
+                  .replace('justificado', 'justified') as keyof typeof COLORS]} 
               />
             ))}
           </Pie>
-          <Legend
-            formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS]}
-          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend content={<CustomLegend />} />
         </PieChart>
       </ResponsiveContainer>
     </div>
