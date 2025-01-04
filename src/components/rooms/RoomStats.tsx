@@ -3,11 +3,13 @@ import { Room } from "@/types/room";
 
 export interface RoomStatsProps {
   rooms: Room[];
-  activeRooms: number;
-  inactiveRooms: number;
 }
 
-export const RoomStats = ({ rooms, activeRooms, inactiveRooms }: RoomStatsProps) => {
+export function RoomStats({ rooms }: RoomStatsProps) {
+  const totalRooms = rooms.length;
+  const activeRooms = rooms.filter(room => room.status).length;
+  const inactiveRooms = totalRooms - activeRooms;
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
@@ -15,7 +17,7 @@ export const RoomStats = ({ rooms, activeRooms, inactiveRooms }: RoomStatsProps)
           <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{rooms.length}</div>
+          <div className="text-2xl font-bold">{totalRooms}</div>
         </CardContent>
       </Card>
       <Card>
@@ -23,7 +25,7 @@ export const RoomStats = ({ rooms, activeRooms, inactiveRooms }: RoomStatsProps)
           <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{activeRooms}</div>
+          <div className="text-2xl font-bold text-green-600">{activeRooms}</div>
         </CardContent>
       </Card>
       <Card>
@@ -31,9 +33,9 @@ export const RoomStats = ({ rooms, activeRooms, inactiveRooms }: RoomStatsProps)
           <CardTitle className="text-sm font-medium">Salas Inativas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{inactiveRooms}</div>
+          <div className="text-2xl font-bold text-red-600">{inactiveRooms}</div>
         </CardContent>
       </Card>
     </div>
   );
-};
+}

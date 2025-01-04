@@ -1,4 +1,6 @@
-export type FieldType = 'text' | 'number' | 'date' | 'select' | 'multiple' | 'phone' | 'email';
+import { Json } from "@/integrations/supabase/types";
+
+export type FieldType = "text" | "email" | "tel" | "date" | "textarea" | "select" | "multiple";
 
 export interface FormField {
   id: string;
@@ -6,15 +8,15 @@ export interface FormField {
   label: string;
   type: FieldType;
   description?: string;
-  required?: boolean;
+  required: boolean;
   order: number;
   options?: string[];
+  isDefault?: boolean;
 }
 
 export interface CustomField {
-  id: string;
   name: string;
-  value: string;
+  value: string | string[];
   type: FieldType;
 }
 
@@ -23,12 +25,12 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description?: string;
-  required?: boolean;
+  description: string | null;
+  required: boolean;
   order: number;
-  options?: string[];
-  company_id?: string;
-  created_at?: string;
+  options: Json | null;
+  company_id: string | null;
+  created_at: string;
 }
 
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
@@ -36,17 +38,19 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description,
+  description: field.description || undefined,
   required: field.required,
   order: field.order,
-  options: field.options
+  options: field.options as string[] | undefined,
 });
 
-export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'order'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description,
+  description: field.description || null,
   required: field.required,
-  options: field.options
+  options: field.options || null,
+  order: 0, // Será definido ao inserir
+  company_id: null
 });
