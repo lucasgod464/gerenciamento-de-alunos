@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/student";
-import { Eye, UserCog, Trash2, ArrowRightFromLine, Pencil } from "lucide-react";
+import { Eye, Trash2, ArrowRightFromLine, Pencil } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
