@@ -7,11 +7,13 @@ import { Student } from "@/types/student";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AttendanceListProps {
   students: Student[];
   date: Date;
   onSave: () => void;
+  disabled?: boolean;
 }
 
 type AttendanceStatus = "present" | "absent" | "late" | "justified";
@@ -22,9 +24,10 @@ interface StudentAttendance {
   observation: string;
 }
 
-export function AttendanceList({ students, date, onSave }: AttendanceListProps) {
+export function AttendanceList({ students, date, onSave, disabled }: AttendanceListProps) {
   const [attendanceData, setAttendanceData] = useState<StudentAttendance[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendanceData(prev => {
@@ -47,12 +50,14 @@ export function AttendanceList({ students, date, onSave }: AttendanceListProps) 
   };
 
   const handleSaveAttendance = async () => {
+    if (!user?.companyId) return;
+
     try {
       const attendanceRecords = attendanceData.map(record => ({
         date: date.toISOString().split('T')[0],
         student_id: record.studentId,
         status: record.status,
-        observation: record.observation
+        company_id: user.companyId
       }));
 
       const { error } = await supabase
@@ -77,8 +82,25 @@ export function AttendanceList({ students, date, onSave }: AttendanceListProps) 
     }
   };
 
+  if (disabled) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">
+          A chamada já foi realizada para esta data.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Lista de Presença</h3>
+        <Button onClick={handleSaveAttendance} disabled={attendanceData.length === 0}>
+          Iniciar Chamada
+        </Button>
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -125,11 +147,6 @@ export function AttendanceList({ students, date, onSave }: AttendanceListProps) 
           ))}
         </TableBody>
       </Table>
-      <div className="flex justify-end">
-        <Button onClick={handleSaveAttendance}>
-          Salvar Chamada
-        </Button>
-      </div>
     </div>
   );
 }

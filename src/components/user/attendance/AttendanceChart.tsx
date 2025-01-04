@@ -1,0 +1,119 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+
+interface AttendanceChartProps {
+  date: Date;
+}
+
+interface AttendanceCount {
+  name: string;
+  value: number;
+}
+
+const COLORS = {
+  present: "#22c55e",
+  absent: "#ef4444",
+  late: "#f59e0b",
+  justified: "#6366f1"
+};
+
+const CHART_CONFIG = {
+  present: { label: "Presente", color: COLORS.present },
+  absent: { label: "Ausente", color: COLORS.absent },
+  late: { label: "Atrasado", color: COLORS.late },
+  justified: { label: "Justificado", color: COLORS.justified }
+};
+
+export function AttendanceChart({ date }: AttendanceChartProps) {
+  const [data, setData] = useState<AttendanceCount[]>([]);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      if (!user?.companyId) return;
+
+      try {
+        const { data: attendance, error } = await supabase
+          .from('daily_attendance')
+          .select('status')
+          .eq('date', date.toISOString().split('T')[0])
+          .eq('company_id', user.companyId);
+
+        if (error) throw error;
+
+        const counts = {
+          present: 0,
+          absent: 0,
+          late: 0,
+          justified: 0
+        };
+
+        attendance?.forEach(record => {
+          if (record.status in counts) {
+            counts[record.status as keyof typeof counts]++;
+          }
+        });
+
+        const chartData = Object.entries(counts).map(([name, value]) => ({
+          name,
+          value
+        }));
+
+        setData(chartData);
+      } catch (error) {
+        console.error('Erro ao buscar dados de presença:', error);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [date, user?.companyId]);
+
+  if (data.length === 0) {
+    return (
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Resumo da Chamada</h3>
+        <p className="text-muted-foreground text-center py-8">
+          Nenhum dado de presença registrado para esta data
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h3 className="text-lg font-semibold mb-4">Resumo da Chamada</h3>
+      <div className="h-[200px]">
+        <ChartContainer config={CHART_CONFIG}>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={5}
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[entry.name as keyof typeof COLORS]}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+          <ChartLegend
+            content={
+              <ChartLegendContent
+                className="flex flex-wrap justify-center gap-4"
+              />
+            }
+          />
+        </ChartContainer>
+      </div>
+    </div>
+  );
+}
