@@ -1,18 +1,25 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Student } from "@/types/attendance";
+import { AttendanceStatus } from "@/types/attendance";
 import { useToast } from "@/hooks/use-toast";
+
+interface Student {
+  id: string;
+  name: string;
+  room: string;
+  status: AttendanceStatus;
+}
 
 interface AttendanceListProps {
   students: Student[];
-  onStatusChange: (studentId: string, status: Student["status"]) => void;
+  onStatusChange: (studentId: string, status: AttendanceStatus) => void;
   date: Date;
 }
 
 export const AttendanceList = ({ students, onStatusChange, date }: AttendanceListProps) => {
   const { toast } = useToast();
 
-  const handleStatusChange = (studentId: string, status: Student["status"]) => {
+  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     onStatusChange(studentId, status);
     toast({
       title: "Status atualizado",
@@ -38,7 +45,7 @@ export const AttendanceList = ({ students, onStatusChange, date }: AttendanceLis
               <Select
                 defaultValue="present"
                 value={student.status}
-                onValueChange={(value: Student["status"]) =>
+                onValueChange={(value: AttendanceStatus) =>
                   handleStatusChange(student.id, value)
                 }
               >
