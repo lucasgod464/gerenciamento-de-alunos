@@ -23,17 +23,19 @@ export const AttendanceCalendar = ({
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       const normalizedDate = normalizeDate(date);
-      console.log('Data selecionada:', normalizedDate);
       onSelectDate(normalizedDate);
     } else {
       onSelectDate(undefined);
     }
   };
 
+  // Normaliza todas as datas de presença
   const normalizedAttendanceDays = attendanceDays.map(date => normalizeDate(date));
-  const modifiedAttendanceDays = normalizedAttendanceDays.filter(
-    date => !selectedDate || date.getTime() !== normalizeDate(selectedDate).getTime()
-  );
+
+  // Filtra a data selecionada da lista de dias com presença
+  const modifiedAttendanceDays = selectedDate 
+    ? normalizedAttendanceDays.filter(date => date.getTime() !== normalizeDate(selectedDate).getTime())
+    : normalizedAttendanceDays;
 
   return (
     <Card>
@@ -44,7 +46,7 @@ export const AttendanceCalendar = ({
         <div className="flex justify-center">
           <Calendar
             mode="single"
-            selected={selectedDate ? normalizeDate(selectedDate) : undefined}
+            selected={selectedDate}
             onSelect={handleDateSelect}
             className="rounded-md border"
             modifiers={{

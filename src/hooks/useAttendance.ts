@@ -18,7 +18,6 @@ export function useAttendance(selectedDate: Date | undefined) {
     try {
       const days = await attendanceDataService.getAttendanceDays(currentUser.companyId);
       const normalizedDays = days.map(day => normalizeDate(new Date(day)));
-      console.log('Dias normalizados:', normalizedDays);
       setAttendanceDays(normalizedDays);
     } catch (error) {
       console.error('Error fetching attendance days:', error);
@@ -108,17 +107,17 @@ export function useAttendance(selectedDate: Date | undefined) {
       const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
       const dateStr = formatDate(selectedDate);
 
-      // Iniciar chamada sem definir status inicial
       for (const student of students) {
         await attendanceDataService.saveAttendance({
           date: dateStr,
           studentId: student.id,
-          status: "" as AttendanceStudent["status"], // Status vazio inicial
+          status: "" as AttendanceStudent["status"],
           companyId: currentUser.companyId
         });
       }
 
-      await fetchAttendanceDays();
+      // Atualiza a lista de dias imediatamente
+      setAttendanceDays(prev => [...prev, normalizeDate(selectedDate)]);
       await fetchDailyAttendance();
 
       toast({
@@ -142,11 +141,10 @@ export function useAttendance(selectedDate: Date | undefined) {
       const dateStr = formatDate(selectedDate);
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
       
-      // Atualizar a lista de dias de presença imediatamente após o cancelamento
-      const updatedDays = attendanceDays.filter(date => 
+      // Atualiza a lista de dias imediatamente após o cancelamento
+      setAttendanceDays(prev => prev.filter(date => 
         !areDatesEqual(normalizeDate(date), normalizeDate(selectedDate))
-      );
-      setAttendanceDays(updatedDays);
+      ));
       setDailyAttendances([]);
       setObservation('');
 
@@ -167,7 +165,7 @@ export function useAttendance(selectedDate: Date | undefined) {
   const isAttendanceDay = (date: Date) => {
     const normalizedDate = normalizeDate(date);
     return attendanceDays.some(attendanceDate => 
-      areDatesEqual(normalizedDate, attendanceDate)
+      areDatesEqual(normalizeDate(date), attendanceDate)
     );
   };
 

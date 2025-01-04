@@ -5,7 +5,7 @@ export const formatDate = (date: Date) => {
 };
 
 export const normalizeDate = (date: Date) => {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return startOfDay(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
 };
 
 export const areDatesEqual = (date1: Date, date2: Date) => {
