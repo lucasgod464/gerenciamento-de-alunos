@@ -1,10 +1,12 @@
-import { Json } from "@/integrations/supabase/types";
+import { Json } from "@/types/supabase";
+
+export type AttendanceStatus = "present" | "absent" | "late" | "justified";
 
 export interface AttendanceStudent {
   id: string;
   name: string;
   room: string;
-  status: "present" | "absent" | "late" | "justified";
+  status: AttendanceStatus;
   companyId: string;
 }
 

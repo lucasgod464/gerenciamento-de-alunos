@@ -84,11 +84,6 @@ export function useAttendance(selectedDate: Date | undefined) {
       });
 
       await fetchDailyAttendance();
-
-      toast({
-        title: "Status atualizado",
-        description: "O status de presença foi atualizado com sucesso."
-      });
     } catch (error) {
       console.error('Error updating attendance:', error);
       toast({
@@ -160,7 +155,7 @@ export function useAttendance(selectedDate: Date | undefined) {
 
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
-
+      
       const { error: attendanceError } = await supabase
         .from('daily_attendance')
         .delete()
@@ -202,7 +197,6 @@ export function useAttendance(selectedDate: Date | undefined) {
   };
 
   return {
-    dailyAttendances,
     observation,
     observations,
     attendanceDays,

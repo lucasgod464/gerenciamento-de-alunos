@@ -22,7 +22,7 @@ export const attendanceService = {
       id: rs.students.id,
       name: rs.students.name,
       room: rs.room_id,
-      status: "present" as const,
+      status: "present",
       companyId: rs.students.company_id
     }));
   },
