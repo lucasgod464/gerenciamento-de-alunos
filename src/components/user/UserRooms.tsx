@@ -20,43 +20,44 @@ export function UserRooms() {
       }
 
       try {
+        // Primeiro, buscar as salas autorizadas para o usuário
         const { data: userRooms, error: userRoomsError } = await supabase
           .from('user_rooms')
-          .select(`
-            room:room_id (
-              id,
-              name,
-              schedule,
-              location,
-              category,
-              status,
-              company_id,
-              study_room,
-              created_at,
-              room_students (
-                student:students (
-                  id,
-                  name,
-                  birth_date,
-                  status,
-                  email,
-                  document,
-                  address,
-                  custom_fields,
-                  company_id,
-                  created_at
-                )
-              )
-            )
-          `)
+          .select('room_id')
           .eq('user_id', user.id);
 
-        if (userRoomsError) throw userRoomsError;
+        console.log('Salas do usuário:', userRooms);
 
-        if (userRooms) {
-          const transformedRooms = userRooms
-            .filter(ur => ur.room) // Filter out any null rooms
-            .map(ur => mapSupabaseRoomToRoom(ur.room));
+        if (userRoomsError) {
+          console.error('Error fetching user rooms:', userRoomsError);
+          throw userRoomsError;
+        }
+
+        if (!userRooms?.length) {
+          setRooms([]);
+          return;
+        }
+
+        // Depois, buscar os detalhes das salas
+        const roomIds = userRooms.map(ur => ur.room_id);
+        const { data: roomsData, error: roomsError } = await supabase
+          .from('rooms')
+          .select(`
+            *,
+            room_students (
+              student:students (*)
+            )
+          `)
+          .in('id', roomIds);
+
+        if (roomsError) {
+          console.error('Error fetching rooms:', roomsError);
+          throw roomsError;
+        }
+
+        if (roomsData) {
+          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
+          console.log('Salas transformadas:', transformedRooms);
           setRooms(transformedRooms);
         }
 
