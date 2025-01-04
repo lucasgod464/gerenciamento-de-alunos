@@ -6,7 +6,7 @@ export interface Student {
   id: string;
   name: string;
   room?: string;
-  status: AttendanceStatus;
+  status?: AttendanceStatus;
   birth_date?: string;
   email?: string | null;
   document?: string | null;

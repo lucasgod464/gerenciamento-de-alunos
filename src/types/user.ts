@@ -30,6 +30,7 @@ export interface DatabaseUser {
   location?: string;
   specialization?: string;
   address?: string;
+  password: string;
 }
 
 export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
