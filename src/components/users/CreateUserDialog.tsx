@@ -36,7 +36,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       const { data: emailData, error: emailError } = await supabase
         .from('emails')
-        .insert([userData])
+        .insert(userData)
         .select()
         .single();
 
@@ -57,12 +57,28 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         if (tagsError) throw tagsError;
       }
 
+      const mappedUser: User = {
+        id: emailData.id,
+        name: emailData.name,
+        email: emailData.email,
+        role: emailData.access_level,
+        companyId: emailData.company_id,
+        location: emailData.location,
+        specialization: emailData.specialization,
+        createdAt: emailData.created_at,
+        updatedAt: emailData.updated_at,
+        lastAccess: null,
+        status: emailData.status as "active" | "inactive",
+        accessLevel: emailData.access_level,
+        tags: selectedTags
+      };
+
       toast({
         title: "Usuário criado",
         description: "O usuário foi criado com sucesso.",
       });
 
-      onUserCreated(emailData);
+      onUserCreated(mappedUser);
       setOpen(false);
     } catch (error) {
       console.error('Error creating user:', error);
@@ -83,7 +99,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Criar Novo Usuário</DialogTitle>
         </DialogHeader>
-        <form action={handleCreateUser} className="space-y-4">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleCreateUser(new FormData(e.currentTarget));
+        }} className="space-y-4">
           <UserFormFields
             generateStrongPassword={() => {
               const newPassword = generateStrongPassword();

@@ -9,7 +9,7 @@ import { User } from "@/types/user";
 interface EditUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUserUpdated: () => void;
+  onUserUpdated: (user: User) => void;
   user: User | null;
 }
 
@@ -61,10 +61,10 @@ export function EditUserDialog({
       const updateData = {
         name: formData.get('name')?.toString() || '',
         email: formData.get('email')?.toString() || '',
-        access_level: formData.get('accessLevel')?.toString() || 'Usuário Comum',
+        access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
         specialization: formData.get('specialization')?.toString() || '',
-        status: formData.get('status')?.toString() || 'active',
+        status: formData.get('status')?.toString() || 'active'
       };
 
       const { error: updateError } = await supabase
@@ -99,12 +99,23 @@ export function EditUserDialog({
         if (insertTagsError) throw insertTagsError;
       }
 
+      const updatedUser: User = {
+        ...user,
+        name: updateData.name,
+        email: updateData.email,
+        accessLevel: updateData.access_level,
+        location: updateData.location,
+        specialization: updateData.specialization,
+        status: updateData.status as "active" | "inactive",
+        tags: selectedTags
+      };
+
       toast({
         title: "Usuário atualizado",
         description: "O usuário foi atualizado com sucesso.",
       });
 
-      onUserUpdated();
+      onUserUpdated(updatedUser);
       onOpenChange(false);
     } catch (error) {
       console.error('Error updating user:', error);
@@ -126,7 +137,10 @@ export function EditUserDialog({
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
-        <form action={handleUpdateUser} className="space-y-4">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleUpdateUser(new FormData(e.currentTarget));
+        }} className="space-y-4">
           <UserFormFields
             defaultValues={{
               name: user.name,
