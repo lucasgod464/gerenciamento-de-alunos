@@ -34,8 +34,9 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      console.log("Carregando campos para company_id:", companyId);
+      console.log("Iniciando carregamento de campos para company_id:", companyId);
 
+      // Primeiro, carregamos os campos personalizados
       const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
@@ -47,9 +48,20 @@ export function PublicEnrollment() {
         throw error;
       }
 
-      console.log("Campos personalizados carregados:", customFields);
+      console.log("Campos personalizados brutos:", customFields);
 
-      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
+      // Mapeamos os campos personalizados
+      const mappedCustomFields = customFields ? customFields.map(field => ({
+        id: field.id,
+        name: field.name,
+        label: field.label,
+        type: field.type as FormField['type'],
+        description: field.description || undefined,
+        required: field.required || false,
+        order: field.order,
+        options: field.options as string[] | undefined,
+      })) : [];
+
       console.log("Campos personalizados mapeados:", mappedCustomFields);
 
       // Filtramos os campos padrão que não queremos mostrar
@@ -57,12 +69,15 @@ export function PublicEnrollment() {
         field => field.name !== "sala" && field.name !== "status"
       );
 
+      console.log("Campos padrão filtrados:", filteredDefaultFields);
+
+      // Combinamos os campos
       const allFields = [...filteredDefaultFields, ...mappedCustomFields];
       console.log("Todos os campos combinados:", allFields);
       
       setFields(allFields);
     } catch (error) {
-      console.error("Error loading form fields:", error);
+      console.error("Erro ao carregar campos do formulário:", error);
       toast({
         title: "Erro ao carregar formulário",
         description: "Não foi possível carregar os campos do formulário.",
@@ -83,6 +98,8 @@ export function PublicEnrollment() {
 
     setIsSubmitting(true);
     try {
+      console.log("Dados do formulário a serem enviados:", data);
+
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
@@ -95,6 +112,8 @@ export function PublicEnrollment() {
           };
         }
       });
+
+      console.log("Campos personalizados formatados:", customFields);
 
       const { error: studentError } = await supabase
         .from('students')
@@ -118,7 +137,7 @@ export function PublicEnrollment() {
         setValue(key, '');
       });
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Erro ao enviar formulário:", error);
       toast({
         title: "Erro ao enviar formulário",
         description: "Não foi possível enviar o formulário. Tente novamente.",
