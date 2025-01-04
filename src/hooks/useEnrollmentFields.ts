@@ -32,8 +32,9 @@ export const useEnrollmentFields = () => {
 
   const addField = async (field: Omit<FormField, "id" | "order">) => {
     try {
+      const supabaseField = mapFormFieldToSupabase(field as FormField);
       const newField = {
-        ...mapFormFieldToSupabase(field as FormField),
+        ...supabaseField,
         order: fields.length,
       };
 
