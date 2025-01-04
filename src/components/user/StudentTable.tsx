@@ -55,6 +55,10 @@ export function StudentTable({
     }
   };
 
+  // Adicionar log para debug
+  console.log("Rooms disponíveis:", rooms);
+  console.log("Estudantes com suas salas:", localStudents);
+
   return (
     <>
       <Table>
