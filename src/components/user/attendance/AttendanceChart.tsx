@@ -32,9 +32,9 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-3 border rounded-lg shadow-lg">
-        <p className="font-medium text-base mb-1">{data.name}</p>
-        <p className="text-sm text-muted-foreground">
+      <div className="bg-white p-2 border rounded shadow-sm">
+        <p className="font-medium">{data.name}</p>
+        <p className="text-sm">
           {data.value} alunos ({data.percentage?.toFixed(1)}%)
         </p>
       </div>
@@ -48,14 +48,14 @@ const CustomLegend = (props: any) => {
   if (!payload) return null;
   
   return (
-    <div className="flex flex-col gap-2 items-start">
+    <div className="flex flex-wrap justify-center gap-4 mt-4">
       {payload.map((entry: any, index: number) => {
         if (!entry || !entry.payload) return null;
         
         return (
           <div key={`legend-${index}`} className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-3 h-3 rounded-sm"
               style={{ backgroundColor: entry.color }}
             />
             <span className="text-sm">
@@ -88,6 +88,7 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
         console.log('Dados recebidos:', attendanceData);
 
+        // Contagem de status
         const statusCount = {
           present: 0,
           absent: 0,
@@ -103,8 +104,10 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
         console.log('Contagem por status:', statusCount);
 
+        // Calcular total para percentagens
         const total = Object.values(statusCount).reduce((a, b) => a + b, 0);
 
+        // Converter para o formato do gráfico com percentagens
         const chartData = Object.entries(statusCount)
           .filter(([_, value]) => value > 0)
           .map(([status, value]) => ({
@@ -122,6 +125,7 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
     fetchAttendanceData();
 
+    // Configurar canal realtime
     const channel = supabase
       .channel('attendance-changes')
       .on(
@@ -145,43 +149,39 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
   if (data.length === 0) {
     return (
-      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
         Nenhum dado disponível
       </div>
     );
   }
 
   return (
-    <div className="h-[300px] w-full flex flex-col items-center justify-center space-y-6">
-      <div className="w-full h-[220px] bg-gradient-to-br from-background to-muted/20 rounded-xl p-4">
-        <ResponsiveContainer>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={50}
-              outerRadius={70}
-              paddingAngle={8}
-              dataKey="value"
-              strokeWidth={2}
-              stroke="#ffffff"
-            >
-              {data.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={COLORS[entry.name.toLowerCase().replace('presente', 'present')
-                    .replace('ausente', 'absent')
-                    .replace('atrasado', 'late')
-                    .replace('justificado', 'justified') as keyof typeof COLORS]} 
-                />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-      <Legend content={<CustomLegend />} />
+    <div className="h-[300px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="45%"
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={5}
+            dataKey="value"
+          >
+            {data.map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`} 
+                fill={COLORS[entry.name.toLowerCase().replace('presente', 'present')
+                  .replace('ausente', 'absent')
+                  .replace('atrasado', 'late')
+                  .replace('justificado', 'justified') as keyof typeof COLORS]} 
+              />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend content={<CustomLegend />} />
+        </PieChart>
+      </ResponsiveContainer>
     </div>
   );
 };
