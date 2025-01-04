@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Student } from "@/types/student";
+import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,20 +26,7 @@ export const useStudentManagement = () => {
 
       if (studentsError) throw studentsError;
 
-      const mappedStudents: Student[] = (studentsData || []).map(student => ({
-        id: student.id,
-        name: student.name,
-        birth_date: student.birth_date,
-        status: student.status,
-        email: student.email,
-        document: student.document,
-        address: student.address,
-        custom_fields: student.custom_fields || {},
-        company_id: student.company_id,
-        created_at: student.created_at,
-        room: student.room_students?.[0]?.room_id
-      }));
-      
+      const mappedStudents: Student[] = (studentsData || []).map(mapSupabaseStudentToStudent);
       setStudents(mappedStudents);
     } catch (error) {
       console.error('Error loading students:', error);

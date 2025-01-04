@@ -1,4 +1,5 @@
 import { Json } from "@/integrations/supabase/types";
+import { CustomField } from "./form";
 
 export interface Student {
   id: string;
@@ -8,12 +9,7 @@ export interface Student {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Record<string, {
-    fieldName: string;
-    label: string;
-    value: any;
-    type: string;
-  }>;
+  custom_fields: Record<string, CustomField>;
   company_id: string;
   created_at: string;
   room?: string;
@@ -33,21 +29,22 @@ export interface SupabaseStudent {
   room_students?: { room_id: string }[];
 }
 
-export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => ({
-  id: student.id,
-  name: student.name,
-  birth_date: student.birth_date,
-  status: student.status,
-  email: student.email,
-  document: student.document,
-  address: student.address,
-  custom_fields: (student.custom_fields as Record<string, {
-    fieldName: string;
-    label: string;
-    value: any;
-    type: string;
-  }>) || {},
-  company_id: student.company_id,
-  created_at: student.created_at,
-  room: student.room_students?.[0]?.room_id,
-});
+export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
+  const customFields = typeof student.custom_fields === 'object' && student.custom_fields
+    ? student.custom_fields as Record<string, CustomField>
+    : {};
+
+  return {
+    id: student.id,
+    name: student.name,
+    birth_date: student.birth_date,
+    status: student.status,
+    email: student.email,
+    document: student.document,
+    address: student.address,
+    custom_fields: customFields,
+    company_id: student.company_id,
+    created_at: student.created_at,
+    room: student.room_students?.[0]?.room_id,
+  };
+};
