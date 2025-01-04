@@ -61,9 +61,8 @@ export function StudentTable({
 
   const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";
-    const foundRoom = rooms.find(room => room.id === roomId);
-    console.log("Procurando sala:", roomId, "Sala encontrada:", foundRoom);
-    return foundRoom?.name || "Sem sala";
+    const room = rooms.find(r => r.id === roomId);
+    return room ? room.name : "Sem sala";
   };
 
   const handleSubmit = async (student: Student) => {
@@ -77,10 +76,6 @@ export function StudentTable({
       console.error("Erro ao atualizar aluno:", error);
     }
   };
-
-  // Adicionar log para debug
-  console.log("Rooms disponíveis:", rooms);
-  console.log("Estudantes com suas salas:", localStudents);
 
   return (
     <>
