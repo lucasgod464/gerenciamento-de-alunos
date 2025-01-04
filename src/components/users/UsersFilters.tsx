@@ -40,11 +40,11 @@ export function UsersFilters({
           </div>
           <div className="flex items-center gap-3">
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Todos os Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Status</SelectItem>
+                <SelectItem value="all">Todos os Status</SelectItem>
                 <SelectItem value="active">Ativo</SelectItem>
                 <SelectItem value="inactive">Inativo</SelectItem>
               </SelectContent>
