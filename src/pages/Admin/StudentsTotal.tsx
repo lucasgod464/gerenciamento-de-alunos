@@ -15,6 +15,7 @@ export function StudentsTotal() {
 
   const fetchStudents = async () => {
     try {
+      console.log("Iniciando busca de alunos...");
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
@@ -25,20 +26,23 @@ export function StudentsTotal() {
 
       if (error) throw error;
 
+      console.log("Dados brutos dos alunos:", studentsData);
+
       const mappedStudents: Student[] = studentsData.map(student => ({
         id: student.id,
         name: student.name,
         birth_date: student.birth_date,
         status: student.status ?? true,
-        email: student.email,
-        document: student.document,
-        address: student.address,
+        email: student.email || '',
+        document: student.document || '',
+        address: student.address || '',
         custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
         company_id: student.company_id || '',
         created_at: student.created_at,
         room: student.room_students?.[0]?.room_id
       }));
       
+      console.log("Alunos mapeados:", mappedStudents);
       setStudents(mappedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
@@ -54,12 +58,15 @@ export function StudentsTotal() {
 
   const fetchRooms = async () => {
     try {
+      console.log("Iniciando busca de salas...");
       const { data: roomsData, error } = await supabase
         .from('rooms')
         .select('id, name')
         .eq('company_id', currentUser?.companyId);
 
       if (error) throw error;
+
+      console.log("Salas encontradas:", roomsData);
       setRooms(roomsData);
     } catch (error) {
       console.error('Error fetching rooms:', error);
@@ -136,6 +143,9 @@ export function StudentsTotal() {
 
   const studentsWithRoom = students.filter(student => student.room);
   const studentsWithoutRoom = students.filter(student => !student.room);
+
+  console.log("Alunos com sala:", studentsWithRoom);
+  console.log("Alunos sem sala:", studentsWithoutRoom);
 
   return (
     <DashboardLayout role="admin">
