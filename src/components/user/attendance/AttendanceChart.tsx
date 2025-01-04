@@ -32,9 +32,9 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-white p-2 border rounded shadow-sm">
-        <p className="font-medium">{data.name}</p>
-        <p className="text-sm">
+      <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <p className="font-medium text-base mb-1">{data.name}</p>
+        <p className="text-sm text-muted-foreground">
           {data.value} alunos ({data.percentage?.toFixed(1)}%)
         </p>
       </div>
@@ -48,17 +48,17 @@ const CustomLegend = (props: any) => {
   if (!payload) return null;
   
   return (
-    <div className="flex flex-wrap justify-center gap-4">
+    <div className="flex flex-wrap justify-center gap-6">
       {payload.map((entry: any, index: number) => {
         if (!entry || !entry.payload) return null;
         
         return (
-          <div key={`legend-${index}`} className="flex items-center gap-2">
+          <div key={`legend-${index}`} className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg shadow-sm hover:shadow-md transition-shadow">
             <div
-              className="w-3 h-3 rounded-sm"
+              className="w-4 h-4 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm">
+            <span className="text-sm font-medium">
               {entry.value}: {entry.payload.value} ({entry.payload.percentage?.toFixed(1)}%)
             </span>
           </div>
@@ -88,7 +88,6 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
         console.log('Dados recebidos:', attendanceData);
 
-        // Contagem de status
         const statusCount = {
           present: 0,
           absent: 0,
@@ -104,10 +103,8 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
         console.log('Contagem por status:', statusCount);
 
-        // Calcular total para percentagens
         const total = Object.values(statusCount).reduce((a, b) => a + b, 0);
 
-        // Converter para o formato do gráfico com percentagens
         const chartData = Object.entries(statusCount)
           .filter(([_, value]) => value > 0)
           .map(([status, value]) => ({
@@ -125,7 +122,6 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
     fetchAttendanceData();
 
-    // Configurar canal realtime
     const channel = supabase
       .channel('attendance-changes')
       .on(
@@ -156,8 +152,8 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
   }
 
   return (
-    <div className="h-[300px] w-full flex flex-col items-center justify-center">
-      <div className="w-full h-[220px]">
+    <div className="h-[300px] w-full flex flex-col items-center justify-center space-y-4">
+      <div className="w-full h-[220px] bg-gradient-to-br from-background to-muted/20 rounded-xl p-4">
         <ResponsiveContainer>
           <PieChart>
             <Pie
@@ -166,8 +162,10 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
               cy="50%"
               innerRadius={50}
               outerRadius={70}
-              paddingAngle={5}
+              paddingAngle={8}
               dataKey="value"
+              strokeWidth={2}
+              stroke="#ffffff"
             >
               {data.map((entry, index) => (
                 <Cell 
