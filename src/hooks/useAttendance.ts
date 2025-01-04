@@ -1,34 +1,23 @@
 import { useState, useEffect } from "react";
-import { AttendanceStudent, DailyAttendance, DailyObservation } from "@/services/attendance/types";
-import { attendanceService } from "@/services/attendance/attendanceService";
+import { AttendanceStudent, DailyAttendance } from "@/services/attendance/types";
+import { attendanceDataService } from "@/services/attendance/attendanceDataService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { format, startOfDay } from "date-fns";
+import { formatDate, areDatesEqual, normalizeDate } from "@/utils/dateUtils";
 
 export function useAttendance(selectedDate: Date | undefined) {
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
   const [observation, setObservation] = useState("");
-  const [observations, setObservations] = useState<DailyObservation[]>([]);
   const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
-
-  const formatDate = (date: Date) => {
-    return format(date, 'yyyy-MM-dd');
-  };
-
-  const normalizeDate = (date: Date) => {
-    return startOfDay(date).getTime();
-  };
 
   const fetchAttendanceDays = async () => {
     if (!currentUser?.companyId) return;
 
     try {
-      const days = await attendanceService.getAttendanceDays(currentUser.companyId);
-      // Normalize dates to start of day for comparison
-      const normalizedDays = days.map(day => new Date(normalizeDate(day)));
-      setAttendanceDays(normalizedDays);
+      const days = await attendanceDataService.getAttendanceDays(currentUser.companyId);
+      setAttendanceDays(days.map(day => normalizeDate(day)));
     } catch (error) {
       console.error('Error fetching attendance days:', error);
       toast({
@@ -45,10 +34,10 @@ export function useAttendance(selectedDate: Date | undefined) {
     const dateStr = formatDate(selectedDate);
     
     try {
-      const attendanceData = await attendanceService.getDailyAttendance(dateStr, currentUser.companyId);
+      const attendanceData = await attendanceDataService.getDailyAttendance(dateStr, currentUser.companyId);
 
       if (attendanceData.length === 0) {
-        const students = await attendanceService.getCompanyStudents(currentUser.companyId);
+        const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
         setDailyAttendances([{ date: dateStr, students }]);
       } else {
         const students = attendanceData.map(record => ({
@@ -87,7 +76,7 @@ export function useAttendance(selectedDate: Date | undefined) {
     const dateStr = formatDate(selectedDate);
 
     try {
-      await attendanceService.saveAttendance({
+      await attendanceDataService.saveAttendance({
         date: dateStr,
         studentId,
         status,
@@ -107,36 +96,18 @@ export function useAttendance(selectedDate: Date | undefined) {
 
   const handleObservationChange = async (text: string) => {
     if (!selectedDate || !currentUser?.companyId) return;
-    
-    const dateStr = formatDate(selectedDate);
-
-    try {
-      await attendanceService.saveObservation({
-        date: dateStr,
-        text,
-        companyId: currentUser.companyId
-      });
-
-      setObservation(text);
-    } catch (error) {
-      console.error('Error updating observation:', error);
-      toast({
-        title: "Erro ao salvar observação",
-        description: "Ocorreu um erro ao salvar a observação.",
-        variant: "destructive"
-      });
-    }
+    setObservation(text);
   };
 
   const startAttendance = async () => {
     if (!selectedDate || !currentUser?.companyId) return;
 
     try {
-      const students = await attendanceService.getCompanyStudents(currentUser.companyId);
+      const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
       const dateStr = formatDate(selectedDate);
 
       for (const student of students) {
-        await attendanceService.saveAttendance({
+        await attendanceDataService.saveAttendance({
           date: dateStr,
           studentId: student.id,
           status: 'present',
@@ -166,7 +137,7 @@ export function useAttendance(selectedDate: Date | undefined) {
 
     try {
       const dateStr = formatDate(selectedDate);
-      await attendanceService.cancelAttendance(dateStr, currentUser.companyId);
+      await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
 
       await fetchAttendanceDays();
       setDailyAttendances([]);
@@ -187,15 +158,13 @@ export function useAttendance(selectedDate: Date | undefined) {
   };
 
   const isAttendanceDay = (date: Date) => {
-    const normalizedTargetDate = normalizeDate(date);
     return attendanceDays.some(attendanceDate => 
-      normalizeDate(attendanceDate) === normalizedTargetDate
+      areDatesEqual(attendanceDate, date)
     );
   };
 
   return {
     observation,
-    observations,
     attendanceDays,
     handleStatusChange,
     handleObservationChange,
