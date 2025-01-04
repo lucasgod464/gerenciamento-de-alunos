@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export type FieldType = 'text' | 'email' | 'tel' | 'select' | 'multiple' | 'textarea' | 'date';
 
 export interface FormField {
@@ -17,7 +19,7 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description: string;
+  description: string | null;
   required: boolean;
   order: number;
   options: string[];
@@ -33,15 +35,15 @@ export interface CustomField {
   type: FieldType;
 }
 
-export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+export const mapSupabaseFormField = (field: any): FormField => ({
   id: field.id,
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description,
-  required: field.required,
+  description: field.description || undefined,
+  required: field.required || false,
   order: field.order,
-  options: field.options
+  options: Array.isArray(field.options) ? field.options : [],
 });
 
 export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'order'> => ({

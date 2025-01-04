@@ -29,8 +29,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       const { data, error } = await supabase
         .from('room_students')
         .select(`
-          student_id,
-          students (
+          student:students (
             id,
             name
           )
