@@ -9,5 +9,7 @@ export const normalizeDate = (date: Date) => {
 };
 
 export const areDatesEqual = (date1: Date, date2: Date) => {
-  return normalizeDate(date1).getTime() === normalizeDate(date2).getTime();
+  const d1 = normalizeDate(date1);
+  const d2 = normalizeDate(date2);
+  return d1.getTime() === d2.getTime();
 };

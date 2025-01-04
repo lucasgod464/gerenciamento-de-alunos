@@ -1,6 +1,7 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { normalizeDate } from "@/utils/dateUtils";
 
 interface AttendanceCalendarProps {
   selectedDate: Date | undefined;
@@ -19,6 +20,14 @@ export const AttendanceCalendar = ({
   isAttendanceDay,
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      onSelectDate(normalizeDate(date));
+    } else {
+      onSelectDate(undefined);
+    }
+  };
+
   const modifiedAttendanceDays = attendanceDays.filter(
     date => !selectedDate || date.getTime() !== selectedDate.getTime()
   );
@@ -33,7 +42,7 @@ export const AttendanceCalendar = ({
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={onSelectDate}
+            onSelect={handleDateSelect}
             className="rounded-md border"
             modifiers={{
               attendance: modifiedAttendanceDays
