@@ -63,6 +63,54 @@ export const useStudentManagement = () => {
     }
   };
 
+  // Configuração do real-time subscription
+  useEffect(() => {
+    if (!user?.companyId) return;
+
+    const channel = supabase
+      .channel('students_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'students',
+          filter: `company_id=eq.${user.companyId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE') {
+            setStudents(prev => 
+              prev.map(student => 
+                student.id === payload.new.id 
+                  ? {
+                      ...student,
+                      ...payload.new,
+                      custom_fields: payload.new.custom_fields 
+                        ? JSON.parse(JSON.stringify(payload.new.custom_fields))
+                        : {}
+                    }
+                  : student
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setStudents(prev => prev.filter(student => student.id !== payload.old.id));
+          } else if (payload.eventType === 'INSERT') {
+            setStudents(prev => [...prev, {
+              ...payload.new,
+              custom_fields: payload.new.custom_fields 
+                ? JSON.parse(JSON.stringify(payload.new.custom_fields))
+                : {}
+            }]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.companyId]);
+
   const handleAddStudent = async (student: Omit<Student, "id" | "created_at">) => {
     try {
       const { data, error } = await supabase
@@ -97,8 +145,6 @@ export const useStudentManagement = () => {
         title: "Sucesso",
         description: "Aluno adicionado com sucesso!",
       });
-      
-      fetchStudents();
     } catch (error) {
       console.error('Error adding student:', error);
       toast({
@@ -122,8 +168,6 @@ export const useStudentManagement = () => {
         title: "Sucesso",
         description: "Aluno excluído com sucesso!",
       });
-
-      fetchStudents();
     } catch (error) {
       console.error('Error deleting student:', error);
       toast({
@@ -171,8 +215,6 @@ export const useStudentManagement = () => {
         title: "Sucesso",
         description: "Dados do aluno atualizados com sucesso!",
       });
-
-      fetchStudents();
     } catch (error) {
       console.error('Error updating student:', error);
       toast({
