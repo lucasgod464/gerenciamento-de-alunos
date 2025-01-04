@@ -19,22 +19,29 @@ export interface SupabaseFormField {
   label: string;
   type: string;
   description: string | null;
-  required: boolean;
+  required: boolean | null;
   order: number;
   options: Json | null;
   company_id: string | null;
   created_at: string;
 }
 
-export const mapSupabaseFormField = (field: SupabaseFormField): FormField => {
-  return {
-    id: field.id,
-    name: field.name,
-    label: field.label,
-    type: field.type as FieldType,
-    description: field.description || undefined,
-    required: field.required,
-    order: field.order,
-    options: field.options ? (field.options as string[]) : undefined,
-  };
-};
+export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+  id: field.id,
+  name: field.name,
+  label: field.label,
+  type: field.type as FieldType,
+  description: field.description || undefined,
+  required: field.required ?? false,
+  order: field.order,
+  options: field.options ? (field.options as string[]) : undefined,
+});
+
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Partial<SupabaseFormField> => ({
+  name: field.name,
+  label: field.label,
+  type: field.type,
+  description: field.description || null,
+  required: field.required,
+  options: field.options || null,
+});
