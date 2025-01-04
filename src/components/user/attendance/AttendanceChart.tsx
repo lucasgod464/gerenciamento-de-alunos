@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload }: any) => {
       <div className="bg-white p-2 border rounded shadow-sm">
         <p className="font-medium">{data.name}</p>
         <p className="text-sm">
-          {data.value} alunos ({data.percentage.toFixed(1)}%)
+          {data.value} alunos ({data.percentage?.toFixed(1)}%)
         </p>
       </div>
     );
@@ -45,19 +45,25 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 const CustomLegend = (props: any) => {
   const { payload } = props;
+  if (!payload) return null;
+  
   return (
     <div className="flex flex-wrap justify-center gap-4 mt-4">
-      {payload.map((entry: any, index: number) => (
-        <div key={`legend-${index}`} className="flex items-center gap-2">
-          <div
-            className="w-3 h-3 rounded-sm"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="text-sm">
-            {entry.value}: {entry.payload.value} ({entry.payload.percentage.toFixed(1)}%)
-          </span>
-        </div>
-      ))}
+      {payload.map((entry: any, index: number) => {
+        if (!entry || !entry.payload) return null;
+        
+        return (
+          <div key={`legend-${index}`} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-sm">
+              {entry.value}: {entry.payload.value} ({entry.payload.percentage?.toFixed(1)}%)
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
