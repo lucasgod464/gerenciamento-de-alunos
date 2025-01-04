@@ -3,7 +3,7 @@ import { UsersHeader } from "@/components/users/UsersHeader";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
-import { User, mapDatabaseUser, mapUserToDatabase } from "@/types/user";
+import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
@@ -17,7 +17,7 @@ const Users = () => {
         .select('*');
 
       if (error) throw error;
-      setUsers(data.map(mapDatabaseUser));
+      setUsers(data);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -32,7 +32,7 @@ const Users = () => {
     try {
       const { error } = await supabase
         .from('users')
-        .update(mapUserToDatabase(updatedUser))
+        .update(updatedUser)
         .eq('id', updatedUser.id);
 
       if (error) throw error;

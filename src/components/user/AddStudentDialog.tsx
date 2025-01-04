@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
-import StudentForm from "./StudentForm";
+import { StudentForm } from "./StudentForm";
 import { Student } from "@/types/student";
 
 interface AddStudentDialogProps {
@@ -28,11 +28,9 @@ export const AddStudentDialog = ({ onStudentAdded }: AddStudentDialogProps) => {
           <DialogTitle>Novo Aluno</DialogTitle>
         </DialogHeader>
         <StudentForm
-          fields={[]} // You'll need to pass the appropriate fields here
-          onSubmit={async (student) => {
-            await onStudentAdded(student);
+          onSubmit={(student) => {
+            onStudentAdded(student);
           }}
-          submitButtonText="Adicionar Aluno"
         />
       </DialogContent>
     </Dialog>

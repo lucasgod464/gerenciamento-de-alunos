@@ -3,7 +3,7 @@ import { AuthUser, AuthResponse, UserRole, ROLE_PERMISSIONS } from "@/types/auth
 import { supabase } from "@/integrations/supabase/client";
 
 export function useAuth() {
-  const { data: session, isLoading, refetch } = useQuery({
+  const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
       const storedSession = localStorage.getItem("session");
@@ -134,9 +134,8 @@ export function useAuth() {
   };
 
   return {
-    user: session?.user,
-    isAuthenticated: !!session?.user?.id && !!session?.token,
-    isLoading,
+    user,
+    isAuthenticated,
     login,
     logout,
     can,
