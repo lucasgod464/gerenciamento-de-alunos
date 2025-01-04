@@ -14,6 +14,12 @@ export interface FormField {
   isDefault?: boolean;
 }
 
+export interface CustomField {
+  name: string;
+  value: string | string[];
+  type: FieldType;
+}
+
 export interface SupabaseFormField {
   id: string;
   name: string;
@@ -38,13 +44,13 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   options: field.options as string[] | undefined,
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description || null,
   required: field.required,
   options: field.options || null,
-  order: field.order,
+  order: 0, // Será definido ao inserir
   company_id: null
 });

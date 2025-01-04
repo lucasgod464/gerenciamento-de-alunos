@@ -1,5 +1,4 @@
 import { Json } from "@/integrations/supabase/types";
-import { Student } from "./student";
 
 export interface Room {
   id: string;
@@ -8,10 +7,25 @@ export interface Room {
   location: string;
   category: string;
   status: boolean;
-  companyId: string | null;
-  studyRoom: string;
-  createdAt: string;
-  students: Student[];
+  company_id: string;
+  study_room: string;
+  created_at: string;
+  room_students?: RoomStudent[];
+}
+
+export interface RoomStudent {
+  student: {
+    id: string;
+    name: string;
+    birth_date: string;
+    status: boolean;
+    email: string | null;
+    document: string | null;
+    address: string | null;
+    custom_fields: Json;
+    company_id: string;
+    created_at: string;
+  };
 }
 
 export interface SupabaseRoom {
@@ -21,47 +35,21 @@ export interface SupabaseRoom {
   location: string;
   category: string;
   status: boolean;
-  company_id: string | null;
+  company_id: string;
   study_room: string;
   created_at: string;
-  room_students?: Array<{
-    student: {
-      id: string;
-      name: string;
-      birth_date: string;
-      status: boolean;
-      email: string | null;
-      document: string | null;
-      address: string | null;
-      custom_fields: Json;
-      company_id: string | null;
-      created_at: string;
-    };
-  }>;
+  room_students: RoomStudent[];
 }
 
-export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
-  return {
-    id: room.id,
-    name: room.name,
-    schedule: room.schedule,
-    location: room.location,
-    category: room.category,
-    status: room.status,
-    companyId: room.company_id,
-    studyRoom: room.study_room,
-    createdAt: room.created_at,
-    students: room.room_students?.map(rs => ({
-      id: rs.student.id,
-      name: rs.student.name,
-      birth_date: rs.student.birth_date,
-      status: rs.student.status,
-      email: rs.student.email,
-      document: rs.student.document,
-      address: rs.student.address,
-      custom_fields: rs.student.custom_fields as Record<string, any>,
-      company_id: rs.student.company_id || '',
-      created_at: rs.student.created_at
-    })) || []
-  };
-}
+export const mapSupabaseRoom = (room: SupabaseRoom): Room => ({
+  id: room.id,
+  name: room.name,
+  schedule: room.schedule,
+  location: room.location,
+  category: room.category,
+  status: room.status,
+  company_id: room.company_id,
+  study_room: room.study_room,
+  created_at: room.created_at,
+  room_students: room.room_students
+});
