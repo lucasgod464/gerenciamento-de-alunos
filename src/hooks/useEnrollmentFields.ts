@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FormField, mapSupabaseFormField, mapFormFieldToSupabase, defaultFields } from "@/types/form";
+import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase, defaultFields } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,13 +33,13 @@ export const useEnrollmentFields = () => {
   const addField = async (field: Omit<FormField, "id" | "order">) => {
     try {
       const newField = {
-        ...mapFormFieldToSupabase(field as FormField),
+        ...field,
         order: fields.length,
       };
 
       const { data, error } = await supabase
         .from('enrollment_form_fields')
-        .insert([newField])
+        .insert([mapFormFieldToSupabase(newField as FormField)])
         .select()
         .single();
 
@@ -138,8 +138,8 @@ export const useEnrollmentFields = () => {
     
     try {
       const updates = customFields.map((field, index) => ({
-        id: field.id,
         ...mapFormFieldToSupabase(field),
+        id: field.id,
         order: defaultFields.length + index
       }));
 
