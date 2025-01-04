@@ -108,11 +108,12 @@ export function useAttendance(selectedDate: Date | undefined) {
       const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
       const dateStr = formatDate(selectedDate);
 
+      // Iniciar chamada sem definir status inicial
       for (const student of students) {
         await attendanceDataService.saveAttendance({
           date: dateStr,
           studentId: student.id,
-          status: 'present',
+          status: "" as AttendanceStudent["status"], // Status vazio inicial
           companyId: currentUser.companyId
         });
       }
@@ -140,8 +141,12 @@ export function useAttendance(selectedDate: Date | undefined) {
     try {
       const dateStr = formatDate(selectedDate);
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
-
-      await fetchAttendanceDays();
+      
+      // Atualizar a lista de dias de presença imediatamente após o cancelamento
+      const updatedDays = attendanceDays.filter(date => 
+        !areDatesEqual(normalizeDate(date), normalizeDate(selectedDate))
+      );
+      setAttendanceDays(updatedDays);
       setDailyAttendances([]);
       setObservation('');
 

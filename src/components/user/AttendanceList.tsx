@@ -36,14 +36,13 @@ export const AttendanceList = ({ students, onStatusChange, date }: AttendanceLis
             <TableCell>{student.room}</TableCell>
             <TableCell>
               <Select
-                defaultValue="present"
-                value={student.status}
+                value={student.status || ""}
                 onValueChange={(value: Student["status"]) =>
                   handleStatusChange(student.id, value)
                 }
               >
                 <SelectTrigger className="w-[140px]">
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="present">Presente</SelectItem>
