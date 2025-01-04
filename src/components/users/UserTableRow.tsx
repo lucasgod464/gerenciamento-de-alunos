@@ -23,11 +23,19 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        if (user.authorizedRooms?.length) {
+        const { data: userRooms, error } = await supabase
+          .from('user_rooms')
+          .select('room_id')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (userRooms?.length) {
+          const roomIds = userRooms.map(ur => ur.room_id);
           const { data: rooms } = await supabase
             .from('rooms')
             .select('name')
-            .in('id', user.authorizedRooms);
+            .in('id', roomIds);
 
           if (rooms) {
             setAuthorizedRoomNames(rooms.map(room => room.name));
@@ -39,7 +47,7 @@ export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTab
     };
 
     fetchRooms();
-  }, [user]);
+  }, [user.id]);
 
   const handleStatusChange = (checked: boolean) => {
     onStatusChange(user.id, checked);
