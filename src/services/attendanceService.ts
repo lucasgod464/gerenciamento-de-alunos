@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { DailyAttendance, DailyObservation, AttendanceStatus } from "@/types/attendance";
 
-export const fetchDailyAttendance = async (dateStr: string, companyId: string) => {
+export const fetchAttendanceData = async (dateStr: string, companyId: string) => {
   const { data: attendanceData, error: attendanceError } = await supabase
     .from('daily_attendance')
     .select(`
@@ -23,7 +23,7 @@ export const fetchDailyAttendance = async (dateStr: string, companyId: string) =
     .eq('company_id', companyId);
 
   if (attendanceError) throw attendanceError;
-  return attendanceData;
+  return attendanceData as DailyAttendance[];
 };
 
 export const fetchDailyObservation = async (dateStr: string, companyId: string) => {
@@ -37,17 +37,20 @@ export const fetchDailyObservation = async (dateStr: string, companyId: string) 
   if (observationError && observationError.code !== 'PGRST116') {
     throw observationError;
   }
-  return observationData;
+  return observationData as DailyObservation;
 };
 
 export const fetchAttendanceDays = async (companyId: string) => {
-  const { data: daysData, error: daysError } = await supabase
+  const { data, error } = await supabase
     .from('daily_attendance')
     .select('date')
     .eq('company_id', companyId);
 
-  if (daysError) throw daysError;
-  return [...new Set(daysData.map(day => day.date))];
+  if (error) throw error;
+  
+  // Remove duplicates and convert to Date objects
+  const uniqueDates = [...new Set(data.map(item => item.date))];
+  return uniqueDates.map(date => new Date(date));
 };
 
 export const updateAttendanceStatus = async (
@@ -84,11 +87,7 @@ export const updateDailyObservation = async (
   if (error) throw error;
 };
 
-export const startNewAttendance = async (
-  students: any[],
-  dateStr: string,
-  companyId: string
-) => {
+export const startNewAttendance = async (students: any[], dateStr: string, companyId: string) => {
   const attendanceRecords = students.map(student => ({
     student_id: student.id,
     date: dateStr,
