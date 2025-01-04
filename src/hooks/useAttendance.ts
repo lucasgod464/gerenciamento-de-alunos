@@ -46,7 +46,12 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        setAttendanceDays(daysData.map(day => new Date(day)));
+        // Convert dates to Date objects and ensure they're at midnight UTC
+        const formattedDays = daysData.map(day => {
+          const date = new Date(day);
+          return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        });
+        setAttendanceDays(formattedDays);
       }
     } catch (error) {
       console.error('Error fetching attendance data:', error);
