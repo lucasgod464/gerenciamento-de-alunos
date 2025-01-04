@@ -33,14 +33,22 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
   const fetchAttendanceData = async () => {
     if (!user?.companyId) return;
 
+    const formattedDate = date.toISOString().split('T')[0];
+    console.log('Buscando dados para a data:', formattedDate);
+
     try {
       const { data: attendance, error } = await supabase
         .from('daily_attendance')
         .select('status')
-        .eq('date', date.toISOString().split('T')[0])
+        .eq('date', formattedDate)
         .eq('company_id', user.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar dados:', error);
+        throw error;
+      }
+
+      console.log('Dados recebidos:', attendance);
 
       const counts = {
         present: 0,
@@ -55,13 +63,16 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
         }
       });
 
+      console.log('Contagem por status:', counts);
+
       const chartData = Object.entries(counts)
-        .filter(([_, value]) => value > 0) // Só inclui status que têm pelo menos um aluno
+        .filter(([_, value]) => value > 0)
         .map(([name, value]) => ({
           name,
           value
         }));
 
+      console.log('Dados do gráfico:', chartData);
       setData(chartData);
     } catch (error) {
       console.error('Erro ao buscar dados de presença:', error);
@@ -71,7 +82,6 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
   useEffect(() => {
     fetchAttendanceData();
 
-    // Inscreve no canal de realtime para atualizações
     const channel = supabase
       .channel('attendance-changes')
       .on(
@@ -82,7 +92,8 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
           table: 'daily_attendance',
           filter: `date=eq.${date.toISOString().split('T')[0]}`
         },
-        () => {
+        (payload) => {
+          console.log('Mudança detectada:', payload);
           fetchAttendanceData();
         }
       )
