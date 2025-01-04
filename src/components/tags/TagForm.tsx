@@ -4,9 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { HexColorPicker } from "react-colorful";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Palette } from "lucide-react";
+import { ColorPicker } from "./ColorPicker";
 
 interface TagFormProps {
   editingTag: TagType | null;
@@ -27,7 +25,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#8E9196");
   const [status, setStatus] = useState(true);
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (editingTag) {
@@ -38,7 +35,7 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     }
   }, [editingTag]);
 
-  const colors = [
+  const presetColors = [
     "#8E9196",
     "#9b87f5",
     "#7E69AB",
@@ -56,17 +53,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     setDescription("");
     setColor("#8E9196");
     setStatus(true);
-  };
-
-  const handleColorChange = (newColor: string) => {
-    setColor(newColor);
-  };
-
-  const handleCustomColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newColor = e.target.value;
-    if (newColor.startsWith('#') && /^#[0-9A-Fa-f]{0,6}$/.test(newColor)) {
-      setColor(newColor);
-    }
   };
 
   return (
@@ -93,62 +79,11 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
 
         <div className="space-y-2">
           <Label>Cor</Label>
-          <div className="flex flex-wrap gap-3">
-            {colors.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={`w-10 h-10 rounded-lg transition-all duration-200 ${
-                  color === c ? "ring-2 ring-offset-2 ring-black scale-110" : ""
-                }`}
-                style={{ backgroundColor: c }}
-                onClick={() => setColor(c)}
-              />
-            ))}
-            <Popover 
-              open={showColorPicker} 
-              onOpenChange={setShowColorPicker}
-            >
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors gap-1 group ${
-                    showColorPicker ? "border-primary" : ""
-                  }`}
-                  style={{ 
-                    backgroundColor: !colors.includes(color) ? color : 'transparent'
-                  }}
-                >
-                  <Palette 
-                    size={16} 
-                    className={`${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
-                  />
-                  <span className={`text-[10px] ${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
-                    Custom
-                  </span>
-                </button>
-              </PopoverTrigger>
-              <PopoverContent 
-                className="w-auto p-3"
-                side="right"
-                align="start"
-                sideOffset={5}
-                onPointerDownOutside={(e) => e.preventDefault()}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="space-y-3">
-                  <HexColorPicker color={color} onChange={handleColorChange} />
-                  <Input
-                    type="text"
-                    value={color}
-                    onChange={handleCustomColorInputChange}
-                    className="mt-2"
-                    placeholder="#000000"
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+          <ColorPicker
+            value={color}
+            onChange={setColor}
+            presetColors={presetColors}
+          />
         </div>
 
         <div className="space-y-2">
