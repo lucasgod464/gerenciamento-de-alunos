@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Link as LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export const EnrollmentFormHeader = () => {
-  const enrollmentUrl = `${window.location.origin}/enrollment`;
+  const { user } = useAuth();
+  const companyId = user?.companyId;
+  const enrollmentUrl = `${window.location.origin}/enrollment/${companyId}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(enrollmentUrl);
@@ -23,7 +26,7 @@ export const EnrollmentFormHeader = () => {
             </CardDescription>
           </div>
           <Button asChild>
-            <Link to="/enrollment" target="_blank">
+            <Link to={`/enrollment/${companyId}`} target="_blank">
               <ExternalLink className="mr-2 h-4 w-4" />
               Visualizar Formulário
             </Link>

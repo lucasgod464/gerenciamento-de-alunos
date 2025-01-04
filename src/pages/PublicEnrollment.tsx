@@ -9,22 +9,35 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams, useNavigate } from "react-router-dom";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { companyId } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "Link de inscrição inválido.",
+        variant: "destructive",
+      });
+      navigate("/");
+      return;
+    }
     loadFields();
-  }, []);
+  }, [companyId]);
 
   const loadFields = async () => {
     try {
       const { data: formFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
+        .eq('company_id', companyId)
         .order('order');
 
       if (error) throw error;
@@ -54,15 +67,6 @@ export function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const { data: companies, error: companiesError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('status', 'Ativa')
-        .limit(1)
-        .single();
-
-      if (companiesError) throw companiesError;
-
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
@@ -83,7 +87,7 @@ export function PublicEnrollment() {
           birth_date: data.data_nascimento,
           status: true,
           custom_fields: customFields,
-          company_id: companies.id
+          company_id: companyId
         });
 
       if (studentError) throw studentError;
@@ -213,6 +217,6 @@ export function PublicEnrollment() {
       </Card>
     </div>
   );
-}
+};
 
 export default PublicEnrollment;
