@@ -49,7 +49,22 @@ export function useAttendanceActions(
 
   const handleObservationChange = async (text: string) => {
     if (!selectedDate || !currentUser?.companyId) return;
-    setObservation(text);
+    
+    try {
+      await attendanceDataService.saveObservation({
+        date: formatDate(selectedDate),
+        text,
+        companyId: currentUser.companyId
+      });
+      setObservation(text);
+    } catch (error) {
+      console.error('Error saving observation:', error);
+      toast({
+        title: "Erro ao salvar observação",
+        description: "Ocorreu um erro ao salvar a observação.",
+        variant: "destructive"
+      });
+    }
   };
 
   const startAttendance = async () => {

@@ -62,13 +62,13 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
 
   useEffect(() => {
     fetchAttendanceDays();
-  }, [currentUser]);
+  }, [currentUser?.companyId]);
 
   useEffect(() => {
     if (selectedDate) {
       fetchDailyAttendance();
     }
-  }, [selectedDate]);
+  }, [selectedDate, currentUser?.companyId]);
 
   return {
     dailyAttendances,

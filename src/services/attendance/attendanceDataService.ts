@@ -64,7 +64,7 @@ export const attendanceDataService = {
       name: rs.students.name,
       room: rs.room_id,
       roomName: rs.rooms?.name || '',
-      status: "present",
+      status: "",
       companyId: rs.students.company_id
     }));
   },
@@ -87,13 +87,39 @@ export const attendanceDataService = {
     if (error) throw error;
   },
 
-  async cancelAttendance(date: string, companyId: string) {
+  async saveObservation(observation: {
+    date: string;
+    text: string;
+    companyId: string;
+  }) {
     const { error } = await supabase
+      .from('daily_observations')
+      .upsert({
+        date: observation.date,
+        text: observation.text,
+        company_id: observation.companyId
+      });
+
+    if (error) throw error;
+  },
+
+  async cancelAttendance(date: string, companyId: string) {
+    // Primeiro deleta as observações
+    const { error: observationError } = await supabase
+      .from('daily_observations')
+      .delete()
+      .eq('date', date)
+      .eq('company_id', companyId);
+
+    if (observationError) throw observationError;
+
+    // Depois deleta as presenças
+    const { error: attendanceError } = await supabase
       .from('daily_attendance')
       .delete()
       .eq('date', date)
       .eq('company_id', companyId);
 
-    if (error) throw error;
+    if (attendanceError) throw attendanceError;
   }
 };
