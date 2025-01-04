@@ -25,17 +25,17 @@ export function StudentsTotal() {
 
       if (error) throw error;
 
-      const mappedStudents = studentsData.map(student => ({
+      const mappedStudents: Student[] = studentsData.map(student => ({
         id: student.id,
         name: student.name,
-        birthDate: student.birth_date,
+        birth_date: student.birth_date,
         status: student.status,
         email: student.email,
         document: student.document,
         address: student.address,
-        customFields: student.custom_fields as Record<string, string> | null,
-        companyId: student.company_id,
-        createdAt: student.created_at,
+        custom_fields: student.custom_fields || {},
+        company_id: student.company_id,
+        created_at: student.created_at,
         room: student.room_students?.[0]?.room_id
       }));
       

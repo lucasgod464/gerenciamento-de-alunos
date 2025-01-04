@@ -26,17 +26,17 @@ export const useStudentManagement = () => {
 
       if (studentsError) throw studentsError;
 
-      const mappedStudents = (studentsData || []).map(student => ({
+      const mappedStudents: Student[] = (studentsData || []).map(student => ({
         id: student.id,
         name: student.name,
-        birthDate: student.birth_date,
+        birth_date: student.birth_date,
         status: student.status,
         email: student.email,
         document: student.document,
         address: student.address,
-        customFields: student.custom_fields,
-        companyId: student.company_id,
-        createdAt: student.created_at,
+        custom_fields: student.custom_fields || {},
+        company_id: student.company_id,
+        created_at: student.created_at,
         room: student.room_students?.[0]?.room_id
       }));
       
@@ -53,17 +53,16 @@ export const useStudentManagement = () => {
 
   const handleAddStudent = async (newStudent: Student) => {
     try {
-      // Insert student data
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .insert({
           name: newStudent.name,
-          birth_date: newStudent.birthDate,
+          birth_date: newStudent.birth_date,
           status: newStudent.status,
           email: newStudent.email,
           document: newStudent.document,
           address: newStudent.address,
-          custom_fields: newStudent.customFields,
+          custom_fields: newStudent.custom_fields,
           company_id: currentUser?.companyId
         })
         .select()
@@ -71,7 +70,6 @@ export const useStudentManagement = () => {
 
       if (studentError) throw studentError;
 
-      // If a room is selected, create room assignment
       if (newStudent.room) {
         const { error: roomError } = await supabase
           .from('room_students')
@@ -88,7 +86,7 @@ export const useStudentManagement = () => {
         description: "Aluno cadastrado com sucesso!",
       });
 
-      loadStudents(); // Reload the students list
+      loadStudents();
     } catch (error) {
       console.error('Error adding student:', error);
       toast({
@@ -125,31 +123,27 @@ export const useStudentManagement = () => {
 
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      // Update student data
       const { error: studentError } = await supabase
         .from('students')
         .update({
           name: updatedStudent.name,
-          birth_date: updatedStudent.birthDate,
+          birth_date: updatedStudent.birth_date,
           status: updatedStudent.status,
           email: updatedStudent.email,
           document: updatedStudent.document,
           address: updatedStudent.address,
-          custom_fields: updatedStudent.customFields
+          custom_fields: updatedStudent.custom_fields
         })
         .eq('id', updatedStudent.id);
 
       if (studentError) throw studentError;
 
-      // Update room assignment if room has changed
       if (updatedStudent.room) {
-        // Remove existing room assignment
         await supabase
           .from('room_students')
           .delete()
           .eq('student_id', updatedStudent.id);
 
-        // Add new room assignment
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
@@ -165,7 +159,7 @@ export const useStudentManagement = () => {
         description: "Aluno atualizado com sucesso!",
       });
 
-      loadStudents(); // Reload the students list
+      loadStudents();
     } catch (error) {
       console.error('Error updating student:', error);
       toast({
