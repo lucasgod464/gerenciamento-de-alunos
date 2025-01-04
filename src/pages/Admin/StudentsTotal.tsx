@@ -16,17 +16,26 @@ export function StudentsTotal() {
   const fetchStudents = async () => {
     try {
       console.log("Iniciando busca de alunos...");
+      console.log("Company ID do usuário:", currentUser?.companyId);
+      
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
           *,
           room_students!left (
-            room_id
+            room_id,
+            rooms (
+              id,
+              name
+            )
           )
         `)
         .eq('company_id', currentUser?.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar alunos:', error);
+        throw error;
+      }
 
       console.log("Dados brutos dos alunos:", studentsData);
 
