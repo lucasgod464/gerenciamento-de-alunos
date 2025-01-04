@@ -1,39 +1,33 @@
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { User } from "@/types/user"
-import { UserTableRow } from "./UserTableRow"
-import { EditUserDialog } from "./EditUserDialog"
-import { useState } from "react"
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { User } from "@/types/user";
+import { UserTableRow } from "./UserTableRow";
+import { EditUserDialog } from "./EditUserDialog";
+import { useState } from "react";
 
 interface UserListProps {
-  users: User[]
-  onUpdateUser: (user: User) => void
-  onDeleteUser: (id: string) => void
+  users: User[];
+  onUpdateUser: (user: User) => void;
+  onDeleteUser: (id: string) => void;
 }
 
 export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
-  const [editingUser, setEditingUser] = useState<User | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleStatusChange = (id: string, checked: boolean) => {
-    const user = users.find((u) => u.id === id)
+    const user = users.find((u) => u.id === id);
     if (user) {
       onUpdateUser({
         ...user,
         status: checked ? "active" : "inactive",
-      })
+      });
     }
-  }
+  };
 
   const handleEditClick = (user: User) => {
-    setEditingUser(user)
-    setIsEditDialogOpen(true)
-  }
+    setEditingUser(user);
+    setIsEditDialogOpen(true);
+  };
 
   return (
     <>
@@ -71,5 +65,5 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
         onUserUpdated={onUpdateUser}
       />
     </>
-  )
+  );
 }
