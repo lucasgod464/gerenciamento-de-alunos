@@ -81,7 +81,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       ...prev,
       custom_fields: {
         ...(prev.custom_fields || {}),
-        [field.name]: {
+        [field.id]: {
+          fieldId: field.id,
           fieldName: field.name,
           label: field.label,
           value: value,
@@ -92,10 +93,10 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const renderCustomField = (field: FormField) => {
-    const currentValue = formData.custom_fields?.[field.name]?.value || "";
+    const currentValue = formData.custom_fields?.[field.id]?.value || "";
 
     const commonProps = {
-      key: `${field.id}-${field.name}`,
+      key: field.id,
       field: field,
       value: currentValue,
       onChange: (newValue: any) => handleCustomFieldChange(field, newValue)
@@ -177,7 +178,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </div>
 
       {customFields.map((field) => (
-        <div key={`field-wrapper-${field.id}-${field.name}`}>
+        <div key={`field-wrapper-${field.id}`}>
           {renderCustomField(field)}
         </div>
       ))}

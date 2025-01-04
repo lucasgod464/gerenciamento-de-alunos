@@ -19,15 +19,16 @@ export const CustomMultipleField = ({ field, value, onChange }: CustomMultipleFi
       <RadioGroup 
         value={value} 
         onValueChange={handleChange} 
-        name={`custom-field-${field.id}-${field.name}`}
+        name={`custom-field-${field.id}`}
+        className="space-y-2"
       >
         {field.options?.map((option) => (
-          <div key={`${field.id}-${field.name}-${option}`} className="flex items-center space-x-2">
+          <div key={`${field.id}-${option}`} className="flex items-center space-x-2">
             <RadioGroupItem 
               value={option} 
-              id={`${field.id}-${field.name}-${option}`} 
+              id={`${field.id}-${option}`}
             />
-            <Label htmlFor={`${field.id}-${field.name}-${option}`}>{option}</Label>
+            <Label htmlFor={`${field.id}-${option}`}>{option}</Label>
           </div>
         ))}
       </RadioGroup>
