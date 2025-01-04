@@ -43,7 +43,15 @@ export function UserRooms() {
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
-            *,
+            id,
+            name,
+            schedule,
+            location,
+            category,
+            status,
+            company_id,
+            study_room,
+            created_at,
             room_students (
               student:students (*)
             )
@@ -56,7 +64,18 @@ export function UserRooms() {
         }
 
         if (roomsData) {
-          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
+          const transformedRooms = roomsData.map(room => ({
+            id: room.id,
+            name: room.name,
+            schedule: room.schedule,
+            location: room.location,
+            category: room.category,
+            status: room.status,
+            companyId: room.company_id,
+            studyRoom: room.study_room,
+            createdAt: room.created_at,
+            students: room.room_students?.map(rs => rs.student) || []
+          }));
           console.log('Salas transformadas:', transformedRooms);
           setRooms(transformedRooms);
         }
