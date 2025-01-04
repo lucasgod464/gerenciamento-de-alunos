@@ -31,7 +31,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         company_id: currentUser?.companyId || '',
         location: formData.get('location')?.toString() || '',
         specialization: formData.get('specialization')?.toString() || '',
-        status: 'active'
+        status: 'active',
+        address: formData.get('address')?.toString() || ''
       };
 
       const { data: emailData, error: emailError } = await supabase
@@ -66,10 +67,10 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         location: emailData.location,
         specialization: emailData.specialization,
         createdAt: emailData.created_at,
-        updatedAt: emailData.updated_at,
         lastAccess: null,
-        status: emailData.status as "active" | "inactive",
+        status: emailData.status,
         accessLevel: emailData.access_level,
+        address: emailData.address,
         tags: selectedTags
       };
 

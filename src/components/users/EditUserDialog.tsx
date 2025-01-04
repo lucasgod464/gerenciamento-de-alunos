@@ -49,6 +49,8 @@ export function EditUserDialog({
         address: formData.get('address')?.toString() || ''
       };
 
+      console.log('Update data:', updateData);
+
       const { error: updateError } = await supabase
         .from('emails')
         .update(updateData)
