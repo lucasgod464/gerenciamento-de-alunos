@@ -37,10 +37,10 @@ export function StudentTable({
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { localStudents, handleUpdateStudent } = useStudentTableState(students);
 
-  const getRoomName = (roomId: string | undefined) => {
+  const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";
     const room = rooms.find(room => room.id === roomId);
-    return room?.name || "Sala não encontrada";
+    return room?.name || "Sem sala";
   };
 
   const handleSubmit = async (student: Student) => {
@@ -75,7 +75,7 @@ export function StudentTable({
           {localStudents.map((student) => (
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
-              <TableCell>{student.birth_date}</TableCell>
+              <TableCell>{student.birthDate}</TableCell>
               <TableCell>{getRoomName(student.room)}</TableCell>
               <TableCell>
                 <span
