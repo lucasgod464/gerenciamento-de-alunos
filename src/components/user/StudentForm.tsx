@@ -12,16 +12,18 @@ import {
 import { Student } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { RoomSelect } from "./RoomSelect";
+import { useCustomFields } from "@/hooks/useCustomFields";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StudentFormProps {
   initialData?: Student;
-  customFields?: { name: string; label: string }[];
   onSubmit: (student: Student) => void;
 }
 
 export const StudentForm = ({
   initialData,
-  customFields = [],
   onSubmit
 }: StudentFormProps) => {
   const [status, setStatus] = useState<boolean>(
@@ -31,10 +33,21 @@ export const StudentForm = ({
     initialData?.room || ""
   );
   const { user: currentUser } = useAuth();
+  const { fields, isLoading } = useCustomFields();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
+    const customFields = fields.reduce((acc: Record<string, any>, field) => {
+      if (field.type === "multiple") {
+        const selectedOptions = Array.from(formData.getAll(field.name));
+        acc[field.name] = selectedOptions.join(",");
+      } else {
+        acc[field.name] = formData.get(field.name);
+      }
+      return acc;
+    }, {});
 
     const studentData: Student = {
       id: initialData?.id || Math.random().toString(36).substr(2, 9),
@@ -45,16 +58,21 @@ export const StudentForm = ({
       email: null,
       document: null,
       address: null,
-      customFields: customFields.reduce((acc: Record<string, string>, field) => {
-        acc[field.name] = formData.get(field.name) as string;
-        return acc;
-      }, {}),
+      customFields,
       createdAt: initialData?.createdAt || new Date().toISOString(),
       companyId: currentUser?.companyId || null,
     };
 
     onSubmit(studentData);
   };
+
+  if (isLoading) {
+    return <div className="space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+    </div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,14 +122,59 @@ export const StudentForm = ({
         />
       </div>
 
-      {customFields.map((field) => (
-        <div key={field.name} className="space-y-2">
+      {fields.map((field) => (
+        <div key={field.id} className="space-y-2">
           <Label htmlFor={field.name}>{field.label}</Label>
-          <Input
-            id={field.name}
-            name={field.name}
-            defaultValue={initialData?.customFields?.[field.name]}
-          />
+          {field.type === "text" && (
+            <Input
+              id={field.name}
+              name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+            />
+          )}
+          {field.type === "textarea" && (
+            <Textarea
+              id={field.name}
+              name={field.name}
+              required={field.required}
+              defaultValue={initialData?.customFields?.[field.name]}
+            />
+          )}
+          {field.type === "select" && field.options && (
+            <Select
+              name={field.name}
+              defaultValue={initialData?.customFields?.[field.name]}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma opção" />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {field.type === "multiple" && field.options && (
+            <div className="space-y-2">
+              {field.options.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${field.name}-${option}`}
+                    name={field.name}
+                    value={option}
+                    defaultChecked={initialData?.customFields?.[field.name]?.includes(option)}
+                  />
+                  <Label htmlFor={`${field.name}-${option}`}>
+                    {option}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       ))}
 
