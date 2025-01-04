@@ -15,7 +15,9 @@ export const useStudentManagement = () => {
 
   const handleAddStudent = async (newStudent: Student) => {
     try {
-      const { error: studentError } = await supabase
+      console.log("Iniciando cadastro do aluno:", newStudent);
+
+      const { data, error } = await supabase
         .from('students')
         .insert({
           name: newStudent.name,
@@ -26,31 +28,24 @@ export const useStudentManagement = () => {
           address: newStudent.address,
           custom_fields: newStudent.customFields,
           company_id: user?.companyId
-        });
-
-      if (studentError) {
-        console.error('Erro ao inserir estudante:', studentError);
-        throw studentError;
-      }
-
-      // Busca o ID do estudante recém inserido
-      const { data: insertedStudent, error: fetchError } = await supabase
-        .from('students')
-        .select('id')
-        .eq('name', newStudent.name)
-        .eq('birth_date', newStudent.birthDate)
+        })
+        .select()
         .single();
 
-      if (fetchError) {
-        console.error('Erro ao buscar estudante inserido:', fetchError);
-        throw fetchError;
+      if (error) {
+        console.error('Erro ao inserir estudante:', error);
+        throw error;
       }
 
-      if (newStudent.room && insertedStudent) {
+      console.log("Aluno cadastrado com sucesso:", data);
+
+      if (newStudent.room && data) {
+        console.log("Vinculando aluno à sala:", newStudent.room);
+        
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
-            student_id: insertedStudent.id,
+            student_id: data.id,
             room_id: newStudent.room
           });
 
@@ -73,6 +68,7 @@ export const useStudentManagement = () => {
         description: error.message || "Não foi possível cadastrar o aluno.",
         variant: "destructive",
       });
+      throw error;
     }
   };
 
@@ -102,6 +98,8 @@ export const useStudentManagement = () => {
 
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
+      console.log("Atualizando aluno:", updatedStudent);
+
       const { error: studentError } = await supabase
         .from('students')
         .update({
