@@ -1,4 +1,5 @@
 import { Json } from "@/integrations/supabase/types";
+import { CustomField } from "./form";
 
 export interface Student {
   id: string;
@@ -31,16 +32,8 @@ export interface SupabaseStudent {
 export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
   let customFields: Record<string, any> = {};
   
-  if (student.custom_fields) {
-    if (typeof student.custom_fields === 'string') {
-      try {
-        customFields = JSON.parse(student.custom_fields);
-      } catch {
-        customFields = {};
-      }
-    } else {
-      customFields = student.custom_fields as Record<string, any>;
-    }
+  if (student.custom_fields && typeof student.custom_fields === 'object') {
+    customFields = student.custom_fields as Record<string, any>;
   }
 
   return {
