@@ -1,59 +1,39 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Room } from "@/types/room";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, Home, Ban } from "lucide-react";
 
-interface RoomStatsProps {
+export interface RoomStatsProps {
   rooms: Room[];
+  activeRooms: number;
+  inactiveRooms: number;
 }
 
-export function RoomStats({ rooms }: RoomStatsProps) {
-  const totalRooms = rooms.length;
-  const activeRooms = rooms.filter(room => room.status).length;
-  const inactiveRooms = totalRooms - activeRooms;
-
+export const RoomStats = ({ rooms, activeRooms, inactiveRooms }: RoomStatsProps) => {
   return (
-    <div className="grid gap-3 md:grid-cols-3">
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Home className="w-5 h-5 text-blue-600" />
-            </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Total de Salas
-            </h3>
-            <p className="text-3xl font-bold text-blue-600">{totalRooms}</p>
-          </div>
+    <div className="grid gap-4 md:grid-cols-3">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{rooms.length}</div>
         </CardContent>
       </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
-            <div className="p-2 bg-green-100 rounded-full">
-              <Users className="w-5 h-5 text-green-600" />
-            </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Salas Ativas
-            </h3>
-            <p className="text-3xl font-bold text-green-600">{activeRooms}</p>
-          </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{activeRooms}</div>
         </CardContent>
       </Card>
-
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
-            <div className="p-2 bg-red-100 rounded-full">
-              <Ban className="w-5 h-5 text-red-600" />
-            </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Salas Desativadas
-            </h3>
-            <p className="text-3xl font-bold text-red-600">{inactiveRooms}</p>
-          </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Salas Inativas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{inactiveRooms}</div>
         </CardContent>
       </Card>
     </div>
   );
-}
+};

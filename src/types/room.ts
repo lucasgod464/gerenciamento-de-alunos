@@ -1,5 +1,5 @@
-import { Json } from "@/integrations/supabase/types";
 import { Student } from "./student";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Room {
   id: string;
@@ -8,10 +8,15 @@ export interface Room {
   location: string;
   category: string;
   status: boolean;
-  companyId: string | null;
-  studyRoom: string;
-  createdAt: string;
-  students: Student[];
+  company_id: string;
+  study_room: string;
+  created_at: string;
+  room_students?: RoomStudent[];
+  students?: Student[];
+}
+
+export interface RoomStudent {
+  student: Student;
 }
 
 export interface SupabaseRoom {
@@ -21,10 +26,10 @@ export interface SupabaseRoom {
   location: string;
   category: string;
   status: boolean;
-  company_id: string | null;
+  company_id: string;
   study_room: string;
   created_at: string;
-  room_students?: Array<{
+  room_students?: {
     student: {
       id: string;
       name: string;
@@ -33,14 +38,21 @@ export interface SupabaseRoom {
       email: string | null;
       document: string | null;
       address: string | null;
-      custom_fields: Json;
-      company_id: string | null;
+      custom_fields: Record<string, any>;
+      company_id: string;
       created_at: string;
     };
-  }>;
+  }[];
 }
 
-export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
+export const mapSupabaseRoomToRoom = (room: SupabaseRoom): Room => {
+  const students = room.room_students?.map(rs => ({
+    ...rs.student,
+    custom_fields: typeof rs.student.custom_fields === 'string' 
+      ? JSON.parse(rs.student.custom_fields)
+      : rs.student.custom_fields
+  })) || [];
+  
   return {
     id: room.id,
     name: room.name,
@@ -48,20 +60,10 @@ export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
     location: room.location,
     category: room.category,
     status: room.status,
-    companyId: room.company_id,
-    studyRoom: room.study_room,
-    createdAt: room.created_at,
-    students: room.room_students?.map(rs => ({
-      id: rs.student.id,
-      name: rs.student.name,
-      birth_date: rs.student.birth_date,
-      status: rs.student.status,
-      email: rs.student.email,
-      document: rs.student.document,
-      address: rs.student.address,
-      custom_fields: rs.student.custom_fields as Record<string, any>,
-      company_id: rs.student.company_id || '',
-      created_at: rs.student.created_at
-    })) || []
+    company_id: room.company_id,
+    study_room: room.study_room,
+    created_at: room.created_at,
+    room_students: room.room_students,
+    students
   };
-}
+};

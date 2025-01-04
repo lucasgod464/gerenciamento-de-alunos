@@ -18,16 +18,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { StudentForm } from "./StudentForm";
 import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EditStudentDialog } from "./student/actions/EditStudentDialog";
+import { TransferStudentDialog } from "./student/actions/TransferStudentDialog";
 
 interface StudentTableActionsProps {
   student: Student;
@@ -50,20 +43,6 @@ export function StudentTableActions({
 }: StudentTableActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState("");
-
-  const handleEditSubmit = (updatedStudent: Student) => {
-    onEditClick(updatedStudent);
-    setShowEditDialog(false);
-  };
-
-  const handleTransfer = () => {
-    if (selectedRoom && onTransferStudent) {
-      onTransferStudent(student.id, selectedRoom);
-      setShowTransferDialog(false);
-      setSelectedRoom("");
-    }
-  };
 
   return (
     <>
@@ -148,51 +127,20 @@ export function StudentTableActions({
         </TooltipProvider>
       </div>
 
-      {/* Dialog de Edição */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Aluno</DialogTitle>
-          </DialogHeader>
-          <StudentForm
-            initialData={student}
-            onSubmit={handleEditSubmit}
-          />
-        </DialogContent>
-      </Dialog>
+      <EditStudentDialog
+        student={student}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={onEditClick}
+      />
 
-      {/* Dialog de Transferência */}
-      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Transferir Aluno</DialogTitle>
-            <DialogDescription>
-              Selecione a sala para onde deseja transferir o aluno {student.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma sala" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              className="w-full" 
-              onClick={handleTransfer}
-              disabled={!selectedRoom}
-            >
-              Confirmar Transferência
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <TransferStudentDialog
+        student={student}
+        open={showTransferDialog}
+        onOpenChange={setShowTransferDialog}
+        onTransferStudent={onTransferStudent}
+        rooms={rooms}
+      />
     </>
   );
 }
