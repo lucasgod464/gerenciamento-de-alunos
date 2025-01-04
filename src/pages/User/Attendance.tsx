@@ -1,5 +1,4 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { AttendanceControl } from "@/components/user/AttendanceControl";
 
 const AttendancePage = () => {
   return (
@@ -11,7 +10,6 @@ const AttendancePage = () => {
             Gerencie a presença dos seus alunos
           </p>
         </div>
-        <AttendanceControl />
       </div>
     </DashboardLayout>
   );
