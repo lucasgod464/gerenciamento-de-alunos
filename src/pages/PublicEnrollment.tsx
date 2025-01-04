@@ -61,11 +61,20 @@ export function PublicEnrollment() {
         .eq('company_id', companyId)
         .order('order');
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao carregar campos personalizados:", error);
+        throw error;
+      }
 
-      console.log("Campos personalizados carregados:", customFields); // Debug
+      console.log("Campos personalizados carregados:", customFields);
 
-      const mappedCustomFields = (customFields || []).map(field => ({
+      if (!customFields) {
+        console.log("Nenhum campo personalizado encontrado");
+        setFields(defaultFields);
+        return;
+      }
+
+      const mappedCustomFields = customFields.map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -76,9 +85,11 @@ export function PublicEnrollment() {
         options: field.options as string[] | undefined,
       }));
 
+      console.log("Campos personalizados mapeados:", mappedCustomFields);
+
       // Combinamos os campos padrão com os personalizados
       const allFields = [...defaultFields, ...mappedCustomFields];
-      console.log("Todos os campos:", allFields); // Debug
+      console.log("Todos os campos:", allFields);
       setFields(allFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
