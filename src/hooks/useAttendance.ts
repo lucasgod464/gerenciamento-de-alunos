@@ -3,32 +3,33 @@ import { Student, DailyAttendance, DailyObservation, AttendanceStatus } from "@/
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  fetchDailyAttendance,
-  fetchDailyObservation,
-  fetchAttendanceDays,
-  updateAttendanceStatus,
-  updateDailyObservation,
-  startNewAttendance,
-  cancelDailyAttendance
-} from "@/services/attendanceService";
 
 export function useAttendance() {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
   const [observation, setObservation] = useState("");
-  const [observations, setObservations] = useState<DailyObservation[]>([]);
   const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const normalizeDate = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  // Função para normalizar a data (remover horário)
+  const normalizeDate = (date: Date): Date => {
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
   };
 
-  const formatDateToString = (date: Date) => {
+  // Função para converter data para string no formato ISO
+  const formatDateToString = (date: Date): string => {
     const normalized = normalizeDate(date);
     return normalized.toISOString().split('T')[0];
+  };
+
+  // Função para verificar se duas datas são iguais (ignorando horário)
+  const areDatesEqual = (date1: Date, date2: Date): boolean => {
+    return formatDateToString(date1) === formatDateToString(date2);
   };
 
   const fetchAttendanceData = async (date: Date) => {
@@ -37,25 +38,63 @@ export function useAttendance() {
     const dateStr = formatDateToString(date);
     
     try {
-      const [attendanceData, observationData, daysData] = await Promise.all([
-        fetchDailyAttendance(dateStr, currentUser.companyId),
-        fetchDailyObservation(dateStr, currentUser.companyId),
-        fetchAttendanceDays(currentUser.companyId)
-      ]);
+      // Buscar presenças do dia
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('daily_attendance')
+        .select(`
+          *,
+          students (
+            id,
+            name,
+            birth_date,
+            status,
+            email,
+            document,
+            address,
+            custom_fields,
+            company_id,
+            created_at
+          )
+        `)
+        .eq('date', dateStr)
+        .eq('company_id', currentUser.companyId);
 
+      if (attendanceError) throw attendanceError;
+
+      // Buscar observação do dia
+      const { data: observationData, error: observationError } = await supabase
+        .from('daily_observations')
+        .select('*')
+        .eq('date', dateStr)
+        .eq('company_id', currentUser.companyId)
+        .maybeSingle();
+
+      if (observationError && observationError.code !== 'PGRST116') {
+        throw observationError;
+      }
+
+      // Buscar todos os dias com chamada
+      const { data: daysData, error: daysError } = await supabase
+        .from('daily_attendance')
+        .select('date')
+        .eq('company_id', currentUser.companyId)
+        .distinct();
+
+      if (daysError) throw daysError;
+
+      // Atualizar estados
       if (attendanceData) {
         setDailyAttendances(attendanceData as DailyAttendance[]);
       }
 
       if (observationData) {
         setObservation(observationData.text);
-        setObservations([observationData]);
       } else {
         setObservation("");
       }
 
       if (daysData) {
-        const formattedDays = daysData.map(day => new Date(day));
+        const formattedDays = [...new Set(daysData.map(day => new Date(day.date)))];
         setAttendanceDays(formattedDays.map(normalizeDate));
       }
     } catch (error) {
@@ -69,12 +108,22 @@ export function useAttendance() {
   };
 
   const handleStatusChange = async (studentId: string, status: AttendanceStatus) => {
-    if (!selectedDate || !currentUser?.companyId) return;
+    if (!currentUser?.companyId) return;
     
     const dateStr = formatDateToString(selectedDate);
 
     try {
-      await updateAttendanceStatus(studentId, dateStr, status, currentUser.companyId);
+      const { error } = await supabase
+        .from('daily_attendance')
+        .upsert({
+          student_id: studentId,
+          date: dateStr,
+          status,
+          company_id: currentUser.companyId
+        });
+
+      if (error) throw error;
+
       await fetchAttendanceData(selectedDate);
 
       toast({
@@ -92,12 +141,21 @@ export function useAttendance() {
   };
 
   const handleObservationChange = async (text: string) => {
-    if (!selectedDate || !currentUser?.companyId) return;
+    if (!currentUser?.companyId) return;
     
     const dateStr = formatDateToString(selectedDate);
 
     try {
-      await updateDailyObservation(dateStr, text, currentUser.companyId);
+      const { error } = await supabase
+        .from('daily_observations')
+        .upsert({
+          date: dateStr,
+          text,
+          company_id: currentUser.companyId
+        });
+
+      if (error) throw error;
+      
       setObservation(text);
     } catch (error) {
       console.error('Error updating observation:', error);
@@ -110,7 +168,7 @@ export function useAttendance() {
   };
 
   const startAttendance = async () => {
-    if (!selectedDate || !currentUser?.companyId) return;
+    if (!currentUser?.companyId) return;
 
     try {
       const { data: studentsData, error } = await supabase
@@ -121,11 +179,21 @@ export function useAttendance() {
       if (error) throw error;
 
       const dateStr = formatDateToString(selectedDate);
-      await startNewAttendance(studentsData, dateStr, currentUser.companyId);
+      const attendanceRecords = studentsData.map(student => ({
+        student_id: student.id,
+        date: dateStr,
+        status: 'present' as AttendanceStatus,
+        company_id: currentUser.companyId
+      }));
+
+      const { error: insertError } = await supabase
+        .from('daily_attendance')
+        .upsert(attendanceRecords);
+
+      if (insertError) throw insertError;
       
-      // Atualiza a lista de dias com chamada imediatamente
-      const newAttendanceDays = [...attendanceDays, normalizeDate(selectedDate)];
-      setAttendanceDays(newAttendanceDays);
+      // Atualiza a lista de dias com chamada
+      setAttendanceDays(prev => [...prev, normalizeDate(selectedDate)]);
       
       await fetchAttendanceData(selectedDate);
 
@@ -144,17 +212,31 @@ export function useAttendance() {
   };
 
   const cancelAttendance = async () => {
-    if (!selectedDate || !currentUser?.companyId) return;
+    if (!currentUser?.companyId) return;
 
     try {
       const dateStr = formatDateToString(selectedDate);
-      await cancelDailyAttendance(dateStr, currentUser.companyId);
       
-      // Remove o dia cancelado da lista de dias com chamada imediatamente
-      const updatedAttendanceDays = attendanceDays.filter(date => 
-        formatDateToString(date) !== dateStr
-      );
-      setAttendanceDays(updatedAttendanceDays);
+      // Remove presenças do dia
+      const { error: attendanceError } = await supabase
+        .from('daily_attendance')
+        .delete()
+        .eq('date', dateStr)
+        .eq('company_id', currentUser.companyId);
+
+      if (attendanceError) throw attendanceError;
+
+      // Remove observação do dia
+      const { error: observationError } = await supabase
+        .from('daily_observations')
+        .delete()
+        .eq('date', dateStr)
+        .eq('company_id', currentUser.companyId);
+
+      if (observationError) throw observationError;
+      
+      // Atualiza a lista de dias com chamada
+      setAttendanceDays(prev => prev.filter(date => !areDatesEqual(date, selectedDate)));
       
       await fetchAttendanceData(selectedDate);
 
@@ -172,6 +254,7 @@ export function useAttendance() {
     }
   };
 
+  // Atualiza os dados quando a data selecionada muda
   useEffect(() => {
     if (selectedDate) {
       fetchAttendanceData(selectedDate);
@@ -183,7 +266,6 @@ export function useAttendance() {
     setSelectedDate,
     dailyAttendances,
     observation,
-    observations,
     attendanceDays,
     handleStatusChange,
     handleObservationChange,
