@@ -59,10 +59,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     setStatus(true);
   };
 
-  const handleColorPickerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +95,10 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                 onClick={() => setColor(c)}
               />
             ))}
-            <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+            <Popover 
+              open={showColorPicker} 
+              onOpenChange={setShowColorPicker}
+            >
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -122,15 +121,22 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverContent 
                 className="w-auto p-3"
                 onInteractOutside={(e) => {
-                  e.preventDefault();
+                  if (showColorPicker) {
+                    e.preventDefault();
+                  }
                 }}
               >
-                <div className="space-y-3" onClick={handleColorPickerClick}>
+                <div 
+                  className="space-y-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <div className="flex items-center gap-3">
-                    <HexColorPicker 
-                      color={color} 
-                      onChange={setColor}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <HexColorPicker 
+                        color={color} 
+                        onChange={setColor}
+                      />
+                    </div>
                     <div className="flex flex-col gap-2">
                       <Input
                         type="text"
