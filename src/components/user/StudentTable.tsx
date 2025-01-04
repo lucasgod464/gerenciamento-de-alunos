@@ -41,7 +41,8 @@ export function StudentTable({
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { toast } = useToast();
 
-  const getRoomName = (roomId: string) => {
+  const getRoomName = (roomId: string | undefined) => {
+    if (!roomId) return "Sem sala";
     const room = rooms.find(room => room.id === roomId);
     return room?.name || "Sala não encontrada";
   };
@@ -110,7 +111,7 @@ export function StudentTable({
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birth_date}</TableCell>
-              <TableCell>{getRoomName(student.room || '')}</TableCell>
+              <TableCell>{getRoomName(student.room)}</TableCell>
               <TableCell>
                 <span
                   className={`px-2 py-1 rounded-full text-xs ${
