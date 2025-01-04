@@ -33,12 +33,14 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   let customFields: Record<string, CustomField> = {};
   
   if (student.custom_fields && typeof student.custom_fields === 'object') {
-    customFields = Object.entries(student.custom_fields).reduce((acc, [key, value]) => {
-      if (value && typeof value === 'object' && 'fieldName' in value) {
-        acc[key] = value as CustomField;
-      }
-      return acc;
-    }, {} as Record<string, CustomField>);
+    Object.entries(student.custom_fields as Record<string, any>).forEach(([key, value]) => {
+      customFields[key] = {
+        fieldName: key,
+        label: value.label || key,
+        value: value.value,
+        type: value.type || 'text'
+      };
+    });
   }
 
   return {

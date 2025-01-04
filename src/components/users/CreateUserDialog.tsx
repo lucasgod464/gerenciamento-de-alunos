@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
-import { UserFormFields } from "./UserFormFields";
+import UserFormFields from "./UserFormFields";
 
 interface CreateUserDialogProps {
   onUserCreated?: () => void;
@@ -43,7 +43,6 @@ export const CreateUserDialog = ({ onUserCreated }: CreateUserDialogProps) => {
         <UserFormFields
           onTagsChange={setSelectedTags}
           onRoomsChange={setSelectedRooms}
-          generatePassword={generateStrongPassword}
         />
       </DialogContent>
     </Dialog>

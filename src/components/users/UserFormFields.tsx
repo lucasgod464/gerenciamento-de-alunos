@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,7 +13,7 @@ import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
 
-interface UserFormFieldsProps {
+export interface UserFormFieldsProps {
   defaultValues?: {
     name?: string;
     email?: string;
@@ -30,12 +30,12 @@ interface UserFormFieldsProps {
   isEditing?: boolean;
 }
 
-const UserFormFields = ({ 
+const UserFormFields: React.FC<UserFormFieldsProps> = ({ 
   defaultValues = {}, 
   onTagsChange,
   onRoomsChange,
   isEditing
-}: UserFormFieldsProps) => {
+}) => {
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     defaultValues.tags || []
   );
@@ -43,7 +43,6 @@ const UserFormFields = ({
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
 
-  // Initialize selected rooms when defaultValues change
   useEffect(() => {
     if (defaultValues.authorizedRooms) {
       const roomIds = defaultValues.authorizedRooms.map(room => room.id);
@@ -62,14 +61,10 @@ const UserFormFields = ({
   };
 
   const handleRoomToggle = (roomId: string) => {
-    console.log('Room toggle called with:', roomId);
-    console.log('Current selectedRooms:', selectedRooms);
-    
     const newSelectedRooms = selectedRooms.includes(roomId)
       ? selectedRooms.filter(id => id !== roomId)
       : [...selectedRooms, roomId];
     
-    console.log('New selectedRooms:', newSelectedRooms);
     setSelectedRooms(newSelectedRooms);
     onRoomsChange?.(newSelectedRooms);
   };
