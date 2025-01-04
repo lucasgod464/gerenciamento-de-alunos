@@ -63,6 +63,13 @@ export const useStudentManagement = () => {
     }
   };
 
+  useEffect(() => {
+    if (user?.companyId) {
+      fetchStudents();
+      fetchRooms();
+    }
+  }, [user?.companyId]);
+
   // Configuração do real-time subscription
   useEffect(() => {
     if (!user?.companyId) return;
@@ -92,8 +99,16 @@ export const useStudentManagement = () => {
                   : student
               )
             );
+            toast({
+              title: "Aluno atualizado",
+              description: "As informações do aluno foram atualizadas com sucesso.",
+            });
           } else if (payload.eventType === 'DELETE') {
             setStudents(prev => prev.filter(student => student.id !== payload.old.id));
+            toast({
+              title: "Aluno removido",
+              description: "O aluno foi removido com sucesso.",
+            });
           } else if (payload.eventType === 'INSERT') {
             setStudents(prev => [...prev, {
               ...payload.new,
@@ -101,6 +116,10 @@ export const useStudentManagement = () => {
                 ? JSON.parse(JSON.stringify(payload.new.custom_fields))
                 : {}
             }]);
+            toast({
+              title: "Novo aluno",
+              description: "Um novo aluno foi adicionado.",
+            });
           }
         }
       )
@@ -109,22 +128,13 @@ export const useStudentManagement = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.companyId]);
+  }, [user?.companyId, toast]);
 
   const handleAddStudent = async (student: Omit<Student, "id" | "created_at">) => {
     try {
       const { data, error } = await supabase
         .from('students')
-        .insert([{ 
-          name: student.name,
-          birth_date: student.birth_date,
-          status: student.status,
-          email: student.email,
-          document: student.document,
-          address: student.address,
-          custom_fields: student.custom_fields,
-          company_id: user?.companyId 
-        }])
+        .insert([{ ...student, company_id: user?.companyId }])
         .select()
         .single();
 
@@ -155,12 +165,12 @@ export const useStudentManagement = () => {
     }
   };
 
-  const handleDeleteStudent = async (id: string) => {
+  const handleDeleteStudent = async (studentId: string) => {
     try {
       const { error } = await supabase
         .from('students')
         .delete()
-        .eq('id', id);
+        .eq('id', studentId);
 
       if (error) throw error;
 
@@ -195,6 +205,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
 
+      // Atualiza a sala do aluno
       if (student.room) {
         await supabase
           .from('room_students')
@@ -224,13 +235,6 @@ export const useStudentManagement = () => {
       });
     }
   };
-
-  useEffect(() => {
-    if (user?.companyId) {
-      fetchStudents();
-      fetchRooms();
-    }
-  }, [user?.companyId]);
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
