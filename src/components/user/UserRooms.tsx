@@ -20,7 +20,8 @@ export function UserRooms() {
       }
 
       try {
-        // Buscar todas as salas em uma única query
+        console.log("Buscando salas para o usuário:", user.id);
+        
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
@@ -39,11 +40,13 @@ export function UserRooms() {
           `);
 
         if (roomsError) {
-          console.error('Error fetching rooms:', roomsError);
+          console.error('Erro ao buscar salas:', roomsError);
           throw roomsError;
         }
 
         if (roomsData) {
+          console.log('Dados brutos das salas:', roomsData);
+          
           const transformedRooms = roomsData.map(room => ({
             id: room.id,
             name: room.name,
@@ -57,11 +60,11 @@ export function UserRooms() {
             students: room.room_students?.map(rs => rs.student) || []
           }));
           
-          console.log('Salas carregadas:', transformedRooms);
+          console.log('Salas transformadas:', transformedRooms);
           setRooms(transformedRooms);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Erro ao buscar dados:', error);
         toast({
           title: "Erro",
           description: "Erro ao carregar as salas",
