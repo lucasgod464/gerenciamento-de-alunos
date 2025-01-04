@@ -25,7 +25,11 @@ export interface SupabaseStudent {
   created_at: string;
 }
 
-export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
+export function mapSupabaseStudentToStudent(
+  student: SupabaseStudent, 
+  roomId?: string,
+  companyId?: string | null
+): Student {
   return {
     id: student.id,
     name: student.name,
@@ -35,7 +39,8 @@ export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
     document: student.document,
     address: student.address,
     customFields: student.custom_fields,
-    companyId: student.company_id,
-    createdAt: student.created_at
+    companyId: student.company_id || companyId || null,
+    createdAt: student.created_at,
+    room: roomId
   };
 }
