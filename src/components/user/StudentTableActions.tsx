@@ -51,10 +51,24 @@ export function StudentTableActions({
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState("");
+  const { toast } = useToast();
 
-  const handleEditSubmit = (updatedStudent: Student) => {
-    onEditClick(updatedStudent);
-    setShowEditDialog(false);
+  const handleEditSubmit = async (updatedStudent: Student) => {
+    try {
+      await onEditClick(updatedStudent);
+      setShowEditDialog(false);
+      toast({
+        title: "Sucesso",
+        description: "Aluno atualizado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar aluno:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o aluno.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTransfer = () => {

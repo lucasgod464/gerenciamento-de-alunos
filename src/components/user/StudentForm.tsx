@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +8,7 @@ import { CustomPhoneField } from "./student/form-fields/CustomPhoneField";
 import { CustomSelectField } from "./student/form-fields/CustomSelectField";
 import { CustomMultipleField } from "./student/form-fields/CustomMultipleField";
 import { useToast } from "@/hooks/use-toast";
+import { BasicInfoFields } from "./student/form/BasicInfoFields";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -30,6 +28,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadCustomFields = async () => {
@@ -68,26 +67,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     loadRooms();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSubmit && formData.name && formData.birthDate) {
-      try {
-        await onSubmit(formData as Student);
-        setFormData({}); // Limpa o formulário após sucesso
-      } catch (error) {
-        console.error('Erro ao salvar aluno:', error);
-        toast({
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar as alterações do aluno.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
   const handleCustomFieldChange = (field: FormField, value: any) => {
-    console.log('Updating field:', field.name, 'with value:', value);
-    
     setFormData(prev => ({
       ...prev,
       customFields: {
@@ -101,6 +81,34 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         }
       }
     }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.birthDate) {
+      toast({
+        title: "Erro",
+        description: "Nome e data de nascimento são obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await onSubmit(formData as Student);
+      setFormData({});
+      toast({
+        title: "Sucesso",
+        description: "Aluno salvo com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar aluno:', error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações do aluno.",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderCustomField = (field: FormField) => {
@@ -130,63 +138,11 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome Completo</Label>
-        <Input
-          id="name"
-          value={formData.name || ""}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="birthDate">Data de Nascimento</Label>
-        <Input
-          id="birthDate"
-          type="date"
-          value={formData.birthDate || ""}
-          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Sala</Label>
-        <Select
-          value={formData.room || ""}
-          onValueChange={(value) => setFormData({ ...formData, room: value })}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione uma sala" />
-          </SelectTrigger>
-          <SelectContent>
-            {rooms.map((room) => (
-              <SelectItem key={room.id} value={room.id}>
-                {room.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Status</Label>
-        <Select
-          value={formData.status ? "true" : "false"}
-          onValueChange={(value) => setFormData({ ...formData, status: value === "true" })}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="true">Ativo</SelectItem>
-            <SelectItem value="false">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <BasicInfoFields 
+        formData={formData}
+        setFormData={setFormData}
+        rooms={rooms}
+      />
 
       {customFields.map((field) => (
         <div key={`field-wrapper-${field.id}`}>
