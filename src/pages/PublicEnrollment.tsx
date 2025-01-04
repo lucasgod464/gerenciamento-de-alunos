@@ -27,9 +27,8 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      console.log("Loading fields for company:", companyId);
+      console.log("Carregando campos para empresa:", companyId);
       
-      // Carrega campos personalizados da empresa
       const { data: customFields, error: customError } = await supabase
         .from('enrollment_form_fields')
         .select('*')
@@ -37,11 +36,11 @@ export function PublicEnrollment() {
         .order('order');
 
       if (customError) {
-        console.error("Error loading custom fields:", customError);
+        console.error("Erro ao carregar campos personalizados:", customError);
         throw customError;
       }
 
-      console.log("Custom fields loaded:", customFields);
+      console.log("Campos personalizados carregados:", customFields);
 
       // Campos padrão do sistema
       const defaultFields: FormField[] = [
@@ -66,7 +65,7 @@ export function PublicEnrollment() {
       ];
 
       // Mapeia os campos personalizados para o formato correto
-      const mappedCustomFields: FormField[] = (customFields || []).map(field => ({
+      const mappedCustomFields: FormField[] = customFields ? customFields.map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -76,17 +75,17 @@ export function PublicEnrollment() {
         order: field.order,
         options: field.options as string[] | undefined,
         isDefault: false
-      }));
+      })) : [];
 
-      console.log("Mapped custom fields:", mappedCustomFields);
+      console.log("Campos personalizados mapeados:", mappedCustomFields);
 
       // Combina e ordena todos os campos
       const allFields = [...defaultFields, ...mappedCustomFields].sort((a, b) => a.order - b.order);
-      console.log("All fields combined:", allFields);
+      console.log("Todos os campos combinados:", allFields);
       
       setFields(allFields);
     } catch (error) {
-      console.error("Error loading form fields:", error);
+      console.error("Erro ao carregar campos do formulário:", error);
       toast({
         title: "Erro ao carregar formulário",
         description: "Não foi possível carregar os campos do formulário.",
@@ -110,7 +109,7 @@ export function PublicEnrollment() {
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (!field.isDefault) {
-          customFields[field.id] = {
+          customFields[field.name] = {
             fieldId: field.id,
             fieldName: field.name,
             label: field.label,
@@ -136,13 +135,8 @@ export function PublicEnrollment() {
         title: "Sucesso!",
         description: "Formulário enviado com sucesso.",
       });
-
-      // Reset form
-      Object.keys(data).forEach(key => {
-        setValue(key, '');
-      });
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Erro ao enviar formulário:", error);
       toast({
         title: "Erro ao enviar formulário",
         description: "Não foi possível enviar o formulário. Tente novamente.",

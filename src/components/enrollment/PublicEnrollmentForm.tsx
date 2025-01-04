@@ -15,9 +15,13 @@ interface PublicEnrollmentFormProps {
 export const PublicEnrollmentForm = ({ fields, onSubmit, isSubmitting }: PublicEnrollmentFormProps) => {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
+  console.log("Campos recebidos no formulário:", fields);
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {fields.map((field) => {
+        console.log("Renderizando campo:", field);
+
         if (field.name === "sala" || field.name === "status") {
           return null;
         }
