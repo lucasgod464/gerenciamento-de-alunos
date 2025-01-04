@@ -22,10 +22,20 @@ export function useAttendance() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
+  const normalizeDate = (date: Date) => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
+  };
+
+  const formatDateToString = (date: Date) => {
+    return normalizeDate(date).toISOString().split('T')[0];
+  };
+
   const fetchAttendanceData = async (date: Date) => {
     if (!currentUser?.companyId) return;
 
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = formatDateToString(date);
     
     try {
       const [attendanceData, observationData, daysData] = await Promise.all([
@@ -47,7 +57,7 @@ export function useAttendance() {
 
       if (daysData) {
         const formattedDays = daysData.map(day => new Date(day));
-        setAttendanceDays(formattedDays);
+        setAttendanceDays(formattedDays.map(normalizeDate));
       }
     } catch (error) {
       console.error('Error fetching attendance data:', error);
@@ -62,7 +72,7 @@ export function useAttendance() {
   const handleStatusChange = async (studentId: string, status: AttendanceStatus) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDateToString(selectedDate);
 
     try {
       await updateAttendanceStatus(studentId, dateStr, status, currentUser.companyId);
@@ -85,7 +95,7 @@ export function useAttendance() {
   const handleObservationChange = async (text: string) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDateToString(selectedDate);
 
     try {
       await updateDailyObservation(dateStr, text, currentUser.companyId);
@@ -111,12 +121,11 @@ export function useAttendance() {
 
       if (error) throw error;
 
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDateToString(selectedDate);
       await startNewAttendance(studentsData, dateStr, currentUser.companyId);
       
       // Atualiza a lista de dias com chamada imediatamente
-      const newAttendanceDays = [...attendanceDays];
-      newAttendanceDays.push(selectedDate);
+      const newAttendanceDays = [...attendanceDays, normalizeDate(selectedDate)];
       setAttendanceDays(newAttendanceDays);
       
       await fetchAttendanceData(selectedDate);
@@ -139,12 +148,12 @@ export function useAttendance() {
     if (!selectedDate || !currentUser?.companyId) return;
 
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDateToString(selectedDate);
       await cancelDailyAttendance(dateStr, currentUser.companyId);
       
       // Remove o dia cancelado da lista de dias com chamada imediatamente
       const updatedAttendanceDays = attendanceDays.filter(date => 
-        date.toISOString().split('T')[0] !== dateStr
+        formatDateToString(date) !== dateStr
       );
       setAttendanceDays(updatedAttendanceDays);
       

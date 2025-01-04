@@ -20,13 +20,16 @@ export const AttendanceCalendar = ({
   isAttendanceDay,
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
-  const formatDate = (date: Date) => {
-    return date.toISOString().split('T')[0];
+  // Função para normalizar a data removendo o horário
+  const normalizeDate = (date: Date) => {
+    const normalized = new Date(date);
+    normalized.setHours(0, 0, 0, 0);
+    return normalized;
   };
 
-  // Modifiers para o calendário
+  // Modifiers para o calendário com datas normalizadas
   const modifiers = {
-    attendance: attendanceDays.map(date => new Date(formatDate(date)))
+    attendance: attendanceDays.map(date => normalizeDate(date))
   };
 
   // Estilos dos modifiers
@@ -35,6 +38,16 @@ export const AttendanceCalendar = ({
       backgroundColor: "#22c55e",
       color: "white",
       borderRadius: "50%"
+    }
+  };
+
+  // Função para verificar se uma data está selecionada
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      const normalizedDate = normalizeDate(date);
+      onSelectDate(normalizedDate);
+    } else {
+      onSelectDate(undefined);
     }
   };
 
@@ -47,8 +60,8 @@ export const AttendanceCalendar = ({
         <div className="flex justify-center">
           <Calendar
             mode="single"
-            selected={selectedDate}
-            onSelect={onSelectDate}
+            selected={selectedDate ? normalizeDate(selectedDate) : undefined}
+            onSelect={handleDateSelect}
             className="rounded-md border"
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
