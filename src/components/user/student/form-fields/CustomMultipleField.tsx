@@ -16,11 +16,18 @@ export const CustomMultipleField = ({ field, value, onChange }: CustomMultipleFi
 
   return (
     <CustomFieldWrapper field={field}>
-      <RadioGroup value={value} onValueChange={handleChange} name={field.name}>
+      <RadioGroup 
+        value={value} 
+        onValueChange={handleChange} 
+        name={`custom-field-${field.id}-${field.name}`}
+      >
         {field.options?.map((option) => (
-          <div key={`${field.name}-${option}`} className="flex items-center space-x-2">
-            <RadioGroupItem value={option} id={`${field.name}-${option}`} />
-            <Label htmlFor={`${field.name}-${option}`}>{option}</Label>
+          <div key={`${field.id}-${field.name}-${option}`} className="flex items-center space-x-2">
+            <RadioGroupItem 
+              value={option} 
+              id={`${field.id}-${field.name}-${option}`} 
+            />
+            <Label htmlFor={`${field.id}-${field.name}-${option}`}>{option}</Label>
           </div>
         ))}
       </RadioGroup>

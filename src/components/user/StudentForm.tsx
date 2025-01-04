@@ -17,7 +17,16 @@ interface StudentFormProps {
 }
 
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
-  const [formData, setFormData] = useState<Partial<Student>>(initialData || {});
+  const [formData, setFormData] = useState<Partial<Student>>(() => {
+    if (initialData?.custom_fields) {
+      return {
+        ...initialData,
+        custom_fields: { ...initialData.custom_fields }
+      };
+    }
+    return initialData || {};
+  });
+  
   const [customFields, setCustomFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
 
@@ -83,44 +92,23 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const renderCustomField = (field: FormField) => {
     const currentValue = formData.custom_fields?.[field.name]?.value || "";
 
+    const commonProps = {
+      key: `${field.id}-${field.name}`,
+      field: field,
+      value: currentValue,
+      onChange: (newValue: any) => handleCustomFieldChange(field, newValue)
+    };
+
     switch (field.type) {
       case "text":
       case "email":
-        return (
-          <CustomTextField
-            key={field.id}
-            field={field}
-            value={currentValue}
-            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
-          />
-        );
+        return <CustomTextField {...commonProps} />;
       case "tel":
-        return (
-          <CustomPhoneField
-            key={field.id}
-            field={field}
-            value={currentValue}
-            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
-          />
-        );
+        return <CustomPhoneField {...commonProps} />;
       case "select":
-        return (
-          <CustomSelectField
-            key={field.id}
-            field={field}
-            value={currentValue}
-            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
-          />
-        );
+        return <CustomSelectField {...commonProps} />;
       case "multiple":
-        return (
-          <CustomMultipleField
-            key={field.id}
-            field={field}
-            value={currentValue}
-            onChange={(newValue) => handleCustomFieldChange(field, newValue)}
-          />
-        );
+        return <CustomMultipleField {...commonProps} />;
       default:
         return null;
     }
@@ -187,7 +175,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </div>
 
       {customFields.map((field) => (
-        <div key={field.id}>
+        <div key={`field-wrapper-${field.id}-${field.name}`}>
           {renderCustomField(field)}
         </div>
       ))}
