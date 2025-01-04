@@ -156,7 +156,11 @@ export const AttendanceControl = () => {
 
         <Card>
           <CardContent className="pt-6">
-            <AttendanceChart date={selectedDate} companyId={user?.companyId || ''} />
+            <AttendanceChart 
+              date={selectedDate} 
+              companyId={user?.companyId || ''} 
+              roomId={selectedRoom}
+            />
           </CardContent>
         </Card>
       </div>

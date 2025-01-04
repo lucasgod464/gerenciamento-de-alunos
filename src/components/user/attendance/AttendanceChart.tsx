@@ -6,6 +6,7 @@ import { formatDate } from "@/utils/dateUtils";
 interface AttendanceChartProps {
   date: Date;
   companyId: string;
+  roomId?: string;
 }
 
 interface ChartData {
@@ -48,14 +49,14 @@ const CustomLegend = (props: any) => {
   if (!payload) return null;
   
   return (
-    <div className="flex flex-wrap justify-center gap-4 mt-4">
+    <div className="flex flex-col gap-2 mt-4">
       {payload.map((entry: any, index: number) => {
         if (!entry || !entry.payload) return null;
         
         return (
           <div key={`legend-${index}`} className="flex items-center gap-2">
             <div
-              className="w-3 h-3 rounded-sm"
+              className="w-2 h-2 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
             <span className="text-sm">
@@ -68,64 +69,67 @@ const CustomLegend = (props: any) => {
   );
 };
 
-export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
+export const AttendanceChart = ({ date, companyId, roomId }: AttendanceChartProps) => {
   const [data, setData] = useState<ChartData[]>([]);
 
+  const fetchAttendanceData = async () => {
+    if (!companyId || !roomId) return;
+
+    try {
+      console.log('Buscando dados para a data:', formatDate(date));
+      
+      const { data: attendanceData, error } = await supabase
+        .from('daily_attendance')
+        .select('status')
+        .eq('date', formatDate(date))
+        .eq('company_id', companyId)
+        .eq('room_id', roomId);
+
+      if (error) throw error;
+
+      console.log('Dados recebidos:', attendanceData);
+
+      // Contagem de status
+      const statusCount = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        justified: 0
+      };
+
+      attendanceData.forEach(record => {
+        if (record.status in statusCount) {
+          statusCount[record.status as keyof typeof statusCount]++;
+        }
+      });
+
+      console.log('Contagem por status:', statusCount);
+
+      // Calcular total para percentagens
+      const total = Object.values(statusCount).reduce((a, b) => a + b, 0);
+
+      // Converter para o formato do gráfico com percentagens
+      const chartData = Object.entries(statusCount)
+        .filter(([_, value]) => value > 0)
+        .map(([status, value]) => ({
+          name: STATUS_LABELS[status as keyof typeof STATUS_LABELS],
+          value,
+          percentage: (value / total) * 100
+        }));
+
+      console.log('Dados do gráfico:', chartData);
+      setData(chartData);
+    } catch (error) {
+      console.error('Erro ao buscar dados de presença:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchAttendanceData = async () => {
-      if (!companyId) return;
-
-      try {
-        console.log('Buscando dados para a data:', formatDate(date));
-        
-        const { data: attendanceData, error } = await supabase
-          .from('daily_attendance')
-          .select('status')
-          .eq('date', formatDate(date))
-          .eq('company_id', companyId);
-
-        if (error) throw error;
-
-        console.log('Dados recebidos:', attendanceData);
-
-        // Contagem de status
-        const statusCount = {
-          present: 0,
-          absent: 0,
-          late: 0,
-          justified: 0
-        };
-
-        attendanceData.forEach(record => {
-          if (record.status in statusCount) {
-            statusCount[record.status as keyof typeof statusCount]++;
-          }
-        });
-
-        console.log('Contagem por status:', statusCount);
-
-        // Calcular total para percentagens
-        const total = Object.values(statusCount).reduce((a, b) => a + b, 0);
-
-        // Converter para o formato do gráfico com percentagens
-        const chartData = Object.entries(statusCount)
-          .filter(([_, value]) => value > 0)
-          .map(([status, value]) => ({
-            name: STATUS_LABELS[status as keyof typeof STATUS_LABELS],
-            value,
-            percentage: (value / total) * 100
-          }));
-
-        console.log('Dados do gráfico:', chartData);
-        setData(chartData);
-      } catch (error) {
-        console.error('Erro ao buscar dados de presença:', error);
-      }
-    };
-
     fetchAttendanceData();
 
     // Configurar canal realtime
+    if (!roomId) return;
+
     const channel = supabase
       .channel('attendance-changes')
       .on(
@@ -145,7 +149,15 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [date, companyId]);
+  }, [date, companyId, roomId]);
+
+  if (!roomId) {
+    return (
+      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+        Selecione uma sala para ver o gráfico
+      </div>
+    );
+  }
 
   if (data.length === 0) {
     return (
@@ -156,15 +168,15 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
   }
 
   return (
-    <div className="h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-[300px] space-y-6">
+      <ResponsiveContainer width="100%" height={220}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
-            cy="45%"
-            innerRadius={60}
-            outerRadius={80}
+            cy="50%"
+            innerRadius={50}
+            outerRadius={70}
             paddingAngle={5}
             dataKey="value"
           >
@@ -175,6 +187,8 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
                   .replace('ausente', 'absent')
                   .replace('atrasado', 'late')
                   .replace('justificado', 'justified') as keyof typeof COLORS]} 
+                stroke="#fff"
+                strokeWidth={2}
               />
             ))}
           </Pie>
