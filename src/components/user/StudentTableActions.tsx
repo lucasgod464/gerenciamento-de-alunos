@@ -42,9 +42,9 @@ export function StudentTableActions({
           </TooltipContent>
         </Tooltip>
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {showTransferOption ? (
+        {showTransferOption ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
@@ -54,22 +54,28 @@ export function StudentTableActions({
                 <ArrowRightFromLine className="mr-2 h-4 w-4" />
                 Transferir
               </Button>
-            ) : (
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Transferir aluno para uma sala</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 className="hover:bg-green-50 hover:text-green-600"
                 onClick={() => onEditClick(student)}
               >
-                <UserCog className="mr-2 h-4 w-4" />
-                Editar
+                <UserCog className="h-4 w-4" />
               </Button>
-            )}
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{showTransferOption ? "Transferir aluno para uma sala" : "Editar dados do aluno"}</p>
-          </TooltipContent>
-        </Tooltip>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Editar dados do aluno</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
 
         <Tooltip>
           <TooltipTrigger asChild>

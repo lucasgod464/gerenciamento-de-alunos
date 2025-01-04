@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useToast } from "@/hooks/use-toast";
 import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface StudentTableProps {
   students: Student[];
@@ -34,7 +36,8 @@ export function StudentTable({
   showTransferOption = false,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [isTransferMode, setIsTransferMode] = useState(false);
+  const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { toast } = useToast();
 
@@ -45,11 +48,21 @@ export function StudentTable({
 
   const handleEditClick = (student: Student) => {
     if (showTransferOption) {
-      setEditingStudent(student);
-      setIsTransferMode(true);
+      setTransferringStudent(student);
     } else {
       setEditingStudent(student);
-      setIsTransferMode(false);
+    }
+  };
+
+  const handleTransfer = () => {
+    if (transferringStudent && selectedRoom && onTransferStudent) {
+      onTransferStudent(transferringStudent.id, selectedRoom);
+      setTransferringStudent(null);
+      setSelectedRoom("");
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
     }
   };
 
@@ -67,13 +80,6 @@ export function StudentTable({
         variant: "destructive",
       });
     }
-  };
-
-  const handleTransfer = (studentId: string, newRoomId: string) => {
-    if (onTransferStudent) {
-      onTransferStudent(studentId, newRoomId);
-    }
-    setEditingStudent(null);
   };
 
   const handleSubmit = (student: Student) => {
@@ -129,13 +135,9 @@ export function StudentTable({
       <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>
-              {isTransferMode ? "Transferir Aluno" : "Editar Aluno"}
-            </DialogTitle>
+            <DialogTitle>Editar Aluno</DialogTitle>
             <DialogDescription>
-              {isTransferMode
-                ? "Selecione a sala para onde deseja transferir o aluno"
-                : "Edite as informações do aluno"}
+              Edite as informações do aluno
             </DialogDescription>
           </DialogHeader>
           {editingStudent && (
@@ -144,6 +146,38 @@ export function StudentTable({
               onSubmit={handleSubmit}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!transferringStudent} onOpenChange={() => setTransferringStudent(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transferir Aluno</DialogTitle>
+            <DialogDescription>
+              Selecione a sala para onde deseja transferir o aluno
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma sala" />
+              </SelectTrigger>
+              <SelectContent>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              className="w-full" 
+              onClick={handleTransfer}
+              disabled={!selectedRoom}
+            >
+              Confirmar Transferência
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
