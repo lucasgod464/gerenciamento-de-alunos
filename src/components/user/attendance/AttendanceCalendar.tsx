@@ -20,26 +20,22 @@ export const AttendanceCalendar = ({
   isAttendanceDay,
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
-  // Helper function to compare dates without time
-  const isSameDay = (date1: Date, date2: Date) => {
-    return date1.toISOString().split('T')[0] === date2.toISOString().split('T')[0];
+  const formatDate = (date: Date) => {
+    return date.toISOString().split('T')[0];
   };
 
-  // Create modifiers for the calendar
+  // Modifiers para o calendário
+  const modifiers = {
+    attendance: attendanceDays.map(date => new Date(formatDate(date)))
+  };
+
+  // Estilos dos modifiers
   const modifiersStyles = {
     attendance: {
       backgroundColor: "#22c55e",
       color: "white",
       borderRadius: "50%"
     }
-  };
-
-  // Create modifiers object for the calendar
-  const modifiers = {
-    attendance: attendanceDays.map(date => {
-      const d = new Date(date);
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    })
   };
 
   return (

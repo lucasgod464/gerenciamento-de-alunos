@@ -35,7 +35,7 @@ export function useAttendance() {
       ]);
 
       if (attendanceData) {
-        setDailyAttendances(attendanceData as DailyAttendance[]);
+        setDailyAttendances(attendanceData);
       }
 
       if (observationData) {
@@ -46,10 +46,7 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        const formattedDays = daysData.map(day => {
-          const date = new Date(day);
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        });
+        const formattedDays = daysData.map(day => new Date(day));
         setAttendanceDays(formattedDays);
       }
     } catch (error) {
@@ -93,7 +90,6 @@ export function useAttendance() {
     try {
       await updateDailyObservation(dateStr, text, currentUser.companyId);
       setObservation(text);
-      
     } catch (error) {
       console.error('Error updating observation:', error);
       toast({
@@ -118,11 +114,10 @@ export function useAttendance() {
       const dateStr = selectedDate.toISOString().split('T')[0];
       await startNewAttendance(studentsData, dateStr, currentUser.companyId);
       
-      // Atualiza a lista de dias com chamada após iniciar uma nova
-      const updatedAttendanceDays = [...attendanceDays];
-      const newAttendanceDate = new Date(dateStr);
-      updatedAttendanceDays.push(newAttendanceDate);
-      setAttendanceDays(updatedAttendanceDays);
+      // Atualiza a lista de dias com chamada imediatamente
+      const newAttendanceDays = [...attendanceDays];
+      newAttendanceDays.push(selectedDate);
+      setAttendanceDays(newAttendanceDays);
       
       await fetchAttendanceData(selectedDate);
 
@@ -147,7 +142,7 @@ export function useAttendance() {
       const dateStr = selectedDate.toISOString().split('T')[0];
       await cancelDailyAttendance(dateStr, currentUser.companyId);
       
-      // Remove o dia cancelado da lista de dias com chamada
+      // Remove o dia cancelado da lista de dias com chamada imediatamente
       const updatedAttendanceDays = attendanceDays.filter(date => 
         date.toISOString().split('T')[0] !== dateStr
       );
