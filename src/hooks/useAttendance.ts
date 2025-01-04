@@ -69,7 +69,7 @@ export function useAttendance(selectedDate: Date | undefined) {
     if (selectedDate) {
       fetchDailyAttendance();
     }
-  }, [selectedDate, currentUser]);
+  }, [selectedDate]);
 
   const handleStatusChange = async (studentId: string, status: AttendanceStudent["status"]) => {
     if (!selectedDate || !currentUser?.companyId) return;
@@ -84,7 +84,22 @@ export function useAttendance(selectedDate: Date | undefined) {
         companyId: currentUser.companyId
       });
 
-      await fetchDailyAttendance();
+      // Atualiza o estado localmente em vez de buscar novamente
+      setDailyAttendances(prev => {
+        const updatedAttendances = [...prev];
+        const attendance = updatedAttendances[0];
+        if (attendance) {
+          attendance.students = attendance.students.map(student => 
+            student.id === studentId ? { ...student, status } : student
+          );
+        }
+        return updatedAttendances;
+      });
+
+      toast({
+        title: "Status atualizado",
+        description: "O status de presença foi atualizado com sucesso.",
+      });
     } catch (error) {
       console.error('Error updating attendance:', error);
       toast({
@@ -116,9 +131,14 @@ export function useAttendance(selectedDate: Date | undefined) {
         });
       }
 
-      // Atualiza a lista de dias imediatamente
       setAttendanceDays(prev => [...prev, normalizeDate(selectedDate)]);
-      await fetchDailyAttendance();
+      setDailyAttendances([{ 
+        date: dateStr, 
+        students: students.map(student => ({
+          ...student,
+          status: "" as AttendanceStudent["status"]
+        }))
+      }]);
 
       toast({
         title: "Chamada iniciada",
@@ -141,7 +161,6 @@ export function useAttendance(selectedDate: Date | undefined) {
       const dateStr = formatDate(selectedDate);
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
       
-      // Atualiza a lista de dias imediatamente após o cancelamento
       setAttendanceDays(prev => prev.filter(date => 
         !areDatesEqual(normalizeDate(date), normalizeDate(selectedDate))
       ));
