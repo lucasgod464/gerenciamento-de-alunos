@@ -38,16 +38,15 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     }
   }, [editingTag]);
 
-  // Paleta de cores refinada
   const colors = [
-    "#8E9196", // Neutral Gray
-    "#9b87f5", // Primary Purple
-    "#7E69AB", // Secondary Purple
-    "#D6BCFA", // Light Purple
-    "#FFDEE2", // Soft Pink
-    "#FDE1D3", // Soft Peach
-    "#D3E4FD", // Soft Blue
-    "#F1F0FB"  // Soft Gray
+    "#8E9196",
+    "#9b87f5",
+    "#7E69AB",
+    "#D6BCFA",
+    "#FFDEE2",
+    "#FDE1D3",
+    "#D3E4FD",
+    "#F1F0FB"
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,6 +56,17 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     setDescription("");
     setColor("#8E9196");
     setStatus(true);
+  };
+
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+  };
+
+  const handleCustomColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    if (/^#[0-9A-Fa-f]{0,6}$/.test(newColor)) {
+      setColor(newColor);
+    }
   };
 
   return (
@@ -95,10 +105,7 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                 onClick={() => setColor(c)}
               />
             ))}
-            <Popover 
-              open={showColorPicker} 
-              onOpenChange={setShowColorPicker}
-            >
+            <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -118,19 +125,24 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                   </span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-3">
+              <PopoverContent 
+                className="w-auto p-3"
+                side="right"
+                onPointerDownOutside={(e) => e.preventDefault()}
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <HexColorPicker 
-                      color={color} 
-                      onChange={setColor}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <div className="custom-picker-container" onClick={(e) => e.stopPropagation()}>
+                      <HexColorPicker 
+                        color={color} 
+                        onChange={handleColorChange}
+                      />
+                    </div>
                     <div className="flex flex-col gap-2">
                       <Input
                         type="text"
                         value={color}
-                        onChange={(e) => setColor(e.target.value)}
+                        onChange={handleCustomColorInputChange}
                         className="w-24"
                         placeholder="#000000"
                         onClick={(e) => e.stopPropagation()}
