@@ -42,7 +42,7 @@ export const routes = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/enrollment/:companyId",
+    path: "/enrollment",
     element: <PublicEnrollment />,
   },
   // Super Admin Routes
