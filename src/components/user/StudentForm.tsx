@@ -1,64 +1,82 @@
 import { FormField } from "@/types/form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface StudentFormProps {
   fields: FormField[];
   onSubmit: (formData: any) => Promise<void>;
   submitButtonText: string;
+  initialData?: any;
 }
 
-const StudentForm = ({ fields, onSubmit, submitButtonText }: StudentFormProps) => {
-  const handleSubmit = (event: React.FormEvent) => {
+export const StudentForm = ({ fields, onSubmit, submitButtonText, initialData }: StudentFormProps) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData: any = {};
+    const formElement = event.currentTarget as HTMLFormElement;
+    
     fields.forEach(field => {
-      const input = event.currentTarget.elements[field.name] as HTMLInputElement;
+      const input = formElement.querySelector(`[name="${field.name}"]`) as HTMLInputElement | HTMLSelectElement;
       formData[field.name] = input.value;
     });
+    
     onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-4">
       {fields.map(field => (
-        <div key={field.id} className="mb-4">
-          <label htmlFor={field.name} className="block text-sm font-medium text-gray-700">
+        <div key={field.id} className="space-y-2">
+          <Label htmlFor={field.name}>
             {field.label}
-            {field.required && <span className="text-red-500">*</span>}
-          </label>
+            {field.required && <span className="text-red-500 ml-1">*</span>}
+          </Label>
+          
           {field.type === "text" && (
-            <input
+            <Input
               type="text"
+              id={field.name}
               name={field.name}
               required={field.required}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+              defaultValue={initialData?.[field.name] || ""}
             />
           )}
+          
           {field.type === "date" && (
-            <input
+            <Input
               type="date"
+              id={field.name}
               name={field.name}
               required={field.required}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+              defaultValue={initialData?.[field.name] || ""}
             />
           )}
+          
           {field.type === "select" && field.options && (
-            <select
+            <Select 
               name={field.name}
-              required={field.required}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:ring focus:ring-opacity-50"
+              defaultValue={initialData?.[field.name] || field.options[0]}
             >
-              {field.options.map(option => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options.map(option => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
       ))}
-      <button type="submit" className="mt-4 bg-blue-500 text-white py-2 px-4 rounded">
+      
+      <Button type="submit" className="w-full">
         {submitButtonText}
-      </button>
+      </Button>
     </form>
   );
 };

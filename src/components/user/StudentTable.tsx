@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
 import { useState } from "react";
-import { StudentForm } from "./StudentForm";
+import StudentForm from "./StudentForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { StudentTableActions } from "./StudentTableActions";
