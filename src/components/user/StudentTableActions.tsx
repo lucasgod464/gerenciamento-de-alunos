@@ -7,6 +7,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface StudentTableActionsProps {
   student: Student;
@@ -77,21 +88,31 @@ export function StudentTableActions({
           </Tooltip>
         )}
 
-        <Tooltip>
-          <TooltipTrigger asChild>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               className="hover:bg-red-50 hover:text-red-600"
-              onClick={() => onDeleteClick(student.id)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Excluir aluno</p>
-          </TooltipContent>
-        </Tooltip>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o aluno {student.name}? Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onDeleteClick(student.id)}>
+                Confirmar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </TooltipProvider>
     </div>
   );
