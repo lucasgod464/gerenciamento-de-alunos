@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserFormFields } from "./UserFormFields";
 import { generateStrongPassword } from "@/utils/passwordUtils";
 import { User } from "@/types/user";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -16,18 +17,20 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const [password, setPassword] = useState(generateStrongPassword());
+  const { user: currentUser } = useAuth();
 
   const handleCreateUser = async (formData: FormData) => {
     try {
       setLoading(true);
 
       const userData = {
-        name: formData.get('name') as string,
-        email: formData.get('email') as string,
-        password: formData.get('password') as string,
-        access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum",
-        location: formData.get('location') as string,
-        specialization: formData.get('specialization') as string,
+        name: formData.get('name')?.toString() || '',
+        email: formData.get('email')?.toString() || '',
+        password: formData.get('password')?.toString() || '',
+        access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
+        company_id: currentUser?.companyId || '',
+        location: formData.get('location')?.toString() || '',
+        specialization: formData.get('specialization')?.toString() || '',
         status: 'active'
       };
 
@@ -39,7 +42,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
 
       if (emailError) throw emailError;
 
-      const selectedTags = JSON.parse(formData.get('tags') as string || '[]');
+      const selectedTags = JSON.parse(formData.get('tags')?.toString() || '[]');
       
       if (selectedTags.length > 0) {
         const userTagsToInsert = selectedTags.map((tag: { id: string }) => ({

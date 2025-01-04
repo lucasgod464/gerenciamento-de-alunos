@@ -29,6 +29,11 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     setIsEditDialogOpen(true);
   };
 
+  const handleUserUpdate = (updatedUser: User) => {
+    onUpdateUser(updatedUser);
+    setIsEditDialogOpen(false);
+  };
+
   return (
     <>
       <Table>
@@ -62,7 +67,7 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
         user={editingUser}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        onUserUpdated={onUpdateUser}
+        onUserUpdated={handleUserUpdate}
       />
     </>
   );
