@@ -23,12 +23,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { StudentForm } from "./StudentForm";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudentTableActionsProps {
   student: Student;
@@ -56,8 +56,49 @@ export function StudentTableActions({
 
   const handleEditSubmit = async (updatedStudent: Student) => {
     try {
+      console.log("Atualizando aluno:", updatedStudent);
+
+      // Atualizar dados básicos do aluno
+      const { error: studentError } = await supabase
+        .from('students')
+        .update({
+          name: updatedStudent.name,
+          birth_date: updatedStudent.birthDate,
+          status: updatedStudent.status,
+          email: updatedStudent.email,
+          document: updatedStudent.document,
+          address: updatedStudent.address,
+          custom_fields: updatedStudent.customFields
+        })
+        .eq('id', updatedStudent.id);
+
+      if (studentError) throw studentError;
+
+      // Atualizar relação com a sala se necessário
+      if (updatedStudent.room) {
+        // Primeiro, remover qualquer relação existente
+        await supabase
+          .from('room_students')
+          .delete()
+          .eq('student_id', updatedStudent.id);
+
+        // Depois, criar a nova relação
+        const { error: roomError } = await supabase
+          .from('room_students')
+          .insert({
+            student_id: updatedStudent.id,
+            room_id: updatedStudent.room
+          });
+
+        if (roomError) throw roomError;
+      }
+
+      // Chamar o callback de atualização
       await onEditClick(updatedStudent);
+      
+      // Fechar o modal
       setShowEditDialog(false);
+      
       toast({
         title: "Sucesso",
         description: "Aluno atualizado com sucesso!",
@@ -72,11 +113,24 @@ export function StudentTableActions({
     }
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     if (selectedRoom && onTransferStudent) {
-      onTransferStudent(student.id, selectedRoom);
-      setShowTransferDialog(false);
-      setSelectedRoom("");
+      try {
+        await onTransferStudent(student.id, selectedRoom);
+        setShowTransferDialog(false);
+        setSelectedRoom("");
+        toast({
+          title: "Sucesso",
+          description: "Aluno transferido com sucesso!",
+        });
+      } catch (error) {
+        console.error('Erro ao transferir aluno:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível transferir o aluno.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -163,7 +217,6 @@ export function StudentTableActions({
         </TooltipProvider>
       </div>
 
-      {/* Dialog de Edição */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -176,14 +229,10 @@ export function StudentTableActions({
         </DialogContent>
       </Dialog>
 
-      {/* Dialog de Transferência */}
       <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Transferir Aluno</DialogTitle>
-            <DialogDescription>
-              Selecione a sala para onde deseja transferir o aluno {student.name}
-            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Select value={selectedRoom} onValueChange={setSelectedRoom}>

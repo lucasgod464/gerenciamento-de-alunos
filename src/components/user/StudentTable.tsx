@@ -7,13 +7,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
-import { useState, useEffect } from "react";
-import { StudentForm } from "./StudentForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
 import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
 import { useStudentTableState } from "./student/useStudentTableState";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface StudentTableProps {
@@ -35,56 +32,28 @@ export function StudentTable({
   currentRoomId,
   showTransferOption = false,
 }: StudentTableProps) {
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
-  const { localStudents, setLocalStudents, handleUpdateStudent } = useStudentTableState(students);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>(initialRooms);
+  const { localStudents, setLocalStudents } = useStudentTableState(students);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const loadRooms = async () => {
-      const { data: roomsData, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('status', true);
-
-      if (error) {
-        console.error('Erro ao carregar salas:', error);
-        return;
-      }
-
-      if (roomsData) {
-        setRooms(roomsData);
-      }
-    };
-
-    loadRooms();
-  }, []);
 
   const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";
-    const room = rooms.find(r => r.id === roomId);
+    const room = initialRooms.find(r => r.id === roomId);
     return room ? room.name : "Sem sala";
   };
 
-  const handleSubmit = async (student: Student) => {
+  const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      await handleUpdateStudent(student);
-      
       // Atualizar a lista local de estudantes
       setLocalStudents(prev => 
-        prev.map(s => s.id === student.id ? student : s)
+        prev.map(s => s.id === updatedStudent.id ? updatedStudent : s)
       );
 
       // Chamar o callback de atualização se existir
       if (onUpdateStudent) {
-        await onUpdateStudent(student);
+        await onUpdateStudent(updatedStudent);
       }
 
-      // Fechar o modal de edição
-      setEditingStudent(null);
-
-      // Mostrar mensagem de sucesso
       toast({
         title: "Sucesso",
         description: "Aluno atualizado com sucesso!",
@@ -133,30 +102,16 @@ export function StudentTable({
                   student={student}
                   showTransferOption={showTransferOption}
                   onInfoClick={setShowingInfo}
-                  onEditClick={setEditingStudent}
+                  onEditClick={handleUpdateStudent}
                   onDeleteClick={onDeleteStudent}
                   onTransferStudent={onTransferStudent}
-                  rooms={rooms}
+                  rooms={initialRooms}
                 />
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-
-      <Dialog open={!!editingStudent} onOpenChange={() => setEditingStudent(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Aluno</DialogTitle>
-          </DialogHeader>
-          {editingStudent && (
-            <StudentForm
-              initialData={editingStudent}
-              onSubmit={handleSubmit}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <StudentInfoDialog 
         student={showingInfo} 
