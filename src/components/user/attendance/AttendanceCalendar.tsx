@@ -22,9 +22,7 @@ export const AttendanceCalendar = ({
 }: AttendanceCalendarProps) => {
   // Função para normalizar a data removendo o horário
   const normalizeDate = (date: Date) => {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
 
   // Modifiers para o calendário com datas normalizadas

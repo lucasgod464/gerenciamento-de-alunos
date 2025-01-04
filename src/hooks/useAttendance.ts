@@ -23,13 +23,12 @@ export function useAttendance() {
   const { toast } = useToast();
 
   const normalizeDate = (date: Date) => {
-    const normalized = new Date(date);
-    normalized.setHours(0, 0, 0, 0);
-    return normalized;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   };
 
   const formatDateToString = (date: Date) => {
-    return normalizeDate(date).toISOString().split('T')[0];
+    const normalized = normalizeDate(date);
+    return normalized.toISOString().split('T')[0];
   };
 
   const fetchAttendanceData = async (date: Date) => {
