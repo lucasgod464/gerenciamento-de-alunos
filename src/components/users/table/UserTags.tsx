@@ -1,44 +1,28 @@
-import { Tag } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { User } from "@/types/user";
 
 interface UserTagsProps {
-  tags?: { id: string; name: string; color: string; }[];
+  user: User;
 }
 
-export const UserTags = ({ tags = [] }: UserTagsProps) => {
+export function UserTags({ user }: UserTagsProps) {
+  if (!user.tags || user.tags.length === 0) {
+    return <span className="text-sm text-muted-foreground">Sem etiquetas</span>;
+  }
+
   return (
-    <div className="flex flex-wrap gap-1 max-w-[150px]">
-      {tags.map((tag) => (
-        <TooltipProvider key={tag.id}>
-          <Tooltip>
-            <TooltipTrigger>
-              <div className="flex items-center">
-                <Tag 
-                  className="h-4 w-4" 
-                  style={{ 
-                    color: tag.color,
-                    fill: tag.color,
-                    fillOpacity: 0.2,
-                  }} 
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{tag.name}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div className="flex flex-wrap gap-1">
+      {user.tags.map((tag) => (
+        <Badge
+          key={tag.id}
+          style={{
+            backgroundColor: tag.color,
+            color: '#fff'
+          }}
+        >
+          {tag.name}
+        </Badge>
       ))}
-      {tags.length === 0 && (
-        <span className="text-muted-foreground text-xs">
-          Sem etiquetas
-        </span>
-      )}
     </div>
   );
-};
+}

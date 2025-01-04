@@ -5,9 +5,9 @@ export interface Student {
   name: string;
   birthDate: string;
   status: boolean;
-  email: string;
-  document: string;
-  address: string;
+  email: string | null;
+  document: string | null;
+  address: string | null;
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
@@ -19,23 +19,23 @@ export interface SupabaseStudent {
   name: string;
   birth_date: string;
   status: boolean;
-  email: string;
-  document: string;
-  address: string;
-  custom_fields: Record<string, any>;
+  email: string | null;
+  document: string | null;
+  address: string | null;
+  custom_fields: Json;
   company_id: string;
   created_at: string;
 }
 
-export const mapSupabaseStudent = (student: SupabaseStudent): Student => ({
+export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => ({
   id: student.id,
   name: student.name,
   birthDate: student.birth_date,
   status: student.status,
-  email: student.email || "",
-  document: student.document || "",
-  address: student.address || "",
-  customFields: student.custom_fields || {},
+  email: student.email,
+  document: student.document,
+  address: student.address,
+  customFields: student.custom_fields as Record<string, any> || {},
   companyId: student.company_id,
   createdAt: student.created_at,
 });

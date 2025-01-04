@@ -1,95 +1,92 @@
-import { useState, useEffect } from "react";
+import { TableCell, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Edit2, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { User } from "@/types/user";
-import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
 import { UserTags } from "./table/UserTags";
-import { UserActions } from "./table/UserActions";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableRowProps {
   user: User;
   onEdit: (user: User) => void;
-  onDelete: (user: User) => void;
-  onViewDetails: (user: User) => void;
+  onDelete: (id: string) => void;
+  onStatusChange: (id: string, checked: boolean) => void;
 }
 
-export const UserTableRow = ({ user, onEdit, onDelete, onViewDetails }: UserTableRowProps) => {
+export function UserTableRow({
+  user,
+  onEdit,
+  onDelete,
+  onStatusChange,
+}: UserTableRowProps) {
   const [authorizedRooms, setAuthorizedRooms] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchUserRooms = async () => {
-      try {
-        const { data: userRooms, error: userRoomsError } = await supabase
-          .from('user_rooms')
-          .select('room_id')
-          .eq('user_id', user.id);
+    const fetchAuthorizedRooms = async () => {
+      const { data: roomsData, error } = await supabase
+        .from('user_rooms')
+        .select(`
+          rooms (
+            name
+          )
+        `)
+        .eq('user_id', user.id);
 
-        if (userRoomsError) throw userRoomsError;
-
-        if (userRooms) {
-          const roomIds = userRooms.map(ur => ur.room_id);
-          const { data: rooms, error: roomsError } = await supabase
-            .from('rooms')
-            .select('name')
-            .in('id', roomIds);
-
-          if (roomsError) throw roomsError;
-          
-          if (rooms) {
-            setAuthorizedRooms(rooms.map(room => room.name));
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user rooms:', error);
+      if (!error && roomsData) {
+        const roomNames = roomsData
+          .map(rd => rd.rooms?.name)
+          .filter(Boolean) as string[];
+        setAuthorizedRooms(roomNames);
       }
     };
 
-    fetchUserRooms();
+    fetchAuthorizedRooms();
   }, [user.id]);
 
   return (
-    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-      <td className="p-4">
-        <div className="font-medium">{user.name}</div>
-        <div className="text-sm text-muted-foreground">{user.email}</div>
-      </td>
-      <td className="p-4">
-        <Badge variant={user.accessLevel === "Admin" ? "default" : "secondary"}>
-          {user.accessLevel}
-        </Badge>
-      </td>
-      <td className="p-4">
-        <div className="flex flex-wrap gap-1">
-          {authorizedRooms.map((room, index) => (
-            <Badge key={index} variant="outline">
-              {room}
-            </Badge>
-          ))}
-        </div>
-      </td>
-      <td className="p-4">
-        <UserTags userId={user.id} />
-      </td>
-      <td className="p-4">
-        {user.lastAccess && (
-          <span className="text-sm text-muted-foreground">
-            {format(new Date(user.lastAccess), "dd/MM/yyyy HH:mm")}
-          </span>
-        )}
-      </td>
-      <td className="p-4">
-        <Badge variant={user.status ? "success" : "secondary"}>
-          {user.status ? "Ativo" : "Inativo"}
-        </Badge>
-      </td>
-      <td className="p-4">
-        <UserActions
-          user={user}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onViewDetails={onViewDetails}
+    <TableRow>
+      <TableCell>{user.name}</TableCell>
+      <TableCell>{user.email}</TableCell>
+      <TableCell>{user.specialization || "Não definido"}</TableCell>
+      <TableCell>
+        {authorizedRooms.length > 0 
+          ? authorizedRooms.join(", ")
+          : "Nenhuma sala autorizada"}
+      </TableCell>
+      <TableCell>
+        <UserTags user={user} />
+      </TableCell>
+      <TableCell className="text-center">
+        <Switch
+          checked={user.status}
+          onCheckedChange={(checked) => onStatusChange(user.id, checked)}
         />
-      </td>
-    </tr>
+      </TableCell>
+      <TableCell>{new Date(user.createdAt || "").toLocaleDateString()}</TableCell>
+      <TableCell>
+        {user.lastAccess
+          ? new Date(user.lastAccess).toLocaleDateString()
+          : "Nunca"}
+      </TableCell>
+      <TableCell>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit(user)}
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onDelete(user.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
   );
-};
+}
