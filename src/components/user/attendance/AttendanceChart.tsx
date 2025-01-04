@@ -68,13 +68,36 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
       }
     };
 
+    // Busca inicial dos dados
     fetchAttendanceData();
+
+    // Inscreve no canal de realtime para atualizações
+    const channel = supabase
+      .channel('attendance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_attendance',
+          filter: `date=eq.${date.toISOString().split('T')[0]}`
+        },
+        () => {
+          // Atualiza os dados quando houver mudanças
+          fetchAttendanceData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [date, user?.companyId]);
 
   if (data.length === 0) {
     return (
       <div>
-        <h3 className="text-lg font-semibold mb-4">Resumo da Chamada</h3>
+        <h3 className="text-lg font-semibold mb-4">Estatísticas de Presença</h3>
         <p className="text-muted-foreground text-center py-8">
           Nenhum dado de presença registrado para esta data
         </p>
@@ -84,9 +107,9 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">Resumo da Chamada</h3>
+      <h3 className="text-lg font-semibold mb-4">Estatísticas de Presença</h3>
       <div className="h-[200px]">
-        <ChartContainer config={CHART_CONFIG}>
+        <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
@@ -105,14 +128,18 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
               ))}
             </Pie>
           </PieChart>
-          <ChartLegend
-            content={
-              <ChartLegendContent
-                className="flex flex-wrap justify-center gap-4"
+        </ResponsiveContainer>
+        <div className="flex justify-center gap-4 mt-4">
+          {Object.entries(CHART_CONFIG).map(([key, { label, color }]) => (
+            <div key={key} className="flex items-center gap-2">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: color }}
               />
-            }
-          />
-        </ChartContainer>
+              <span className="text-sm">{label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
