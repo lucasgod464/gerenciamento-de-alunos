@@ -27,6 +27,14 @@ export interface SupabaseFormField {
   created_at: string;
 }
 
+export interface CustomField {
+  fieldId: string;
+  fieldName: string;
+  label: string;
+  value: any;
+  type: string;
+}
+
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   id: field.id,
   name: field.name,

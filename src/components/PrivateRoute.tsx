@@ -10,7 +10,7 @@ export const PrivateRoute = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="admin">
       <Outlet />
     </DashboardLayout>
   );

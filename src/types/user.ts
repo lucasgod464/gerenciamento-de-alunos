@@ -25,12 +25,12 @@ export interface DatabaseUser {
   role: string;
   company_id: string;
   created_at: string;
-  last_access: string | null;
+  last_access: string;
   status: string;
   access_level: AccessLevel;
-  location?: string;
-  specialization?: string;
-  address?: string;
+  location: string | null;
+  specialization: string | null;
+  address: string | null;
   password: string;
 }
 
@@ -47,4 +47,6 @@ export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
   location: dbUser.location,
   specialization: dbUser.specialization,
   address: dbUser.address,
+  tags: [],
+  authorizedRooms: []
 });
