@@ -21,21 +21,37 @@ export const RoomSelect = ({ value, onChange, required = false }: RoomSelectProp
 
   useEffect(() => {
     const loadRooms = async () => {
-      if (!currentUser?.companyId) return;
+      if (!currentUser?.id) return;
 
       try {
+        // Fetch only rooms that the user has access to through user_rooms
         const { data, error } = await supabase
-          .from('rooms')
-          .select('id, name')
-          .eq('company_id', currentUser.companyId)
-          .eq('status', true);
+          .from('user_rooms')
+          .select(`
+            room_id,
+            rooms (
+              id,
+              name,
+              status
+            )
+          `)
+          .eq('user_id', currentUser.id);
 
         if (error) throw error;
-        setRooms(data || []);
+
+        // Transform and filter the data to get only active rooms
+        const authorizedRooms = data
+          .map(item => ({
+            id: item.rooms.id,
+            name: item.rooms.name
+          }))
+          .filter(room => room.id && room.name); // Ensure we have valid room data
+
+        setRooms(authorizedRooms);
 
         // If no value is selected and rooms are available, select the first one
-        if (!value && data && data.length > 0) {
-          onChange(data[0].id);
+        if (!value && authorizedRooms.length > 0) {
+          onChange(authorizedRooms[0].id);
         }
       } catch (error) {
         console.error('Error loading rooms:', error);

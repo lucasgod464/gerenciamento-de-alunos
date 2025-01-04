@@ -141,9 +141,7 @@ export function StudentTable({
           {editingStudent && (
             <StudentForm
               initialData={editingStudent}
-              isTransferMode={isTransferMode}
-              availableRooms={rooms}
-              onTransfer={handleTransfer}
+              customFields={[]}
               onSubmit={handleSubmit}
             />
           )}
