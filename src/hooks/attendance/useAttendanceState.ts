@@ -36,6 +36,7 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
       const attendanceData = await attendanceDataService.getDailyAttendance(dateStr, currentUser.companyId);
       setDailyAttendances([{ date: dateStr, students: attendanceData }]);
 
+      // Buscar observações do dia
       const observationData = await attendanceDataService.getDailyObservation(dateStr, currentUser.companyId);
       setObservation(observationData?.text || "");
     } catch (error) {

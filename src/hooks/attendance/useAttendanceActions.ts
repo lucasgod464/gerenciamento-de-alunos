@@ -29,10 +29,7 @@ export function useAttendanceActions(
       });
 
       await fetchDailyAttendance();
-      toast({
-        title: "Status atualizado",
-        description: "O status de presença foi atualizado com sucesso."
-      });
+
     } catch (error) {
       console.error('Error updating attendance:', error);
       toast({
@@ -53,10 +50,6 @@ export function useAttendanceActions(
         companyId: currentUser.companyId
       });
       setObservation(text);
-      toast({
-        title: "Observação salva",
-        description: "A observação foi salva com sucesso."
-      });
     } catch (error) {
       console.error('Error saving observation:', error);
       toast({
