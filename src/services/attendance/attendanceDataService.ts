@@ -16,7 +16,7 @@ export const attendanceDataService = {
     return uniqueDates.map(date => new Date(date));
   },
 
-  async getDailyAttendance(date: string, companyId: string) {
+  async getDailyAttendance(date: string, companyId: string): Promise<AttendanceStudent[]> {
     const { data: attendanceData, error } = await supabase
       .from('daily_attendance')
       .select(`
@@ -37,7 +37,15 @@ export const attendanceDataService = {
       .eq('company_id', companyId);
 
     if (error) throw error;
-    return attendanceData;
+
+    return attendanceData.map(record => ({
+      id: record.students.id,
+      name: record.students.name,
+      room: record.students.room_students?.[0]?.room_id || '',
+      roomName: record.students.room_students?.[0]?.rooms?.name || '',
+      status: record.status as AttendanceStudent["status"],
+      companyId
+    }));
   },
 
   async getCompanyStudents(companyId: string): Promise<AttendanceStudent[]> {

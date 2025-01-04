@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DailyAttendance } from "@/services/attendance/types";
+import { DailyAttendance, AttendanceStudent } from "@/services/attendance/types";
 import { formatDate, normalizeDate } from "@/utils/dateUtils";
 import { attendanceDataService } from "@/services/attendance/attendanceDataService";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +15,7 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
 
     try {
       const days = await attendanceDataService.getAttendanceDays(currentUser.companyId);
-      const normalizedDays = days.map(day => normalizeDate(new Date(day)));
-      setAttendanceDays(normalizedDays);
+      setAttendanceDays(days);
     } catch (error) {
       console.error('Error fetching attendance days:', error);
       toast({
@@ -34,22 +33,7 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
     
     try {
       const attendanceData = await attendanceDataService.getDailyAttendance(dateStr, currentUser.companyId);
-
-      if (attendanceData.length === 0) {
-        const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
-        setDailyAttendances([{ date: dateStr, students }]);
-      } else {
-        const students = attendanceData.map(record => ({
-          id: record.students.id,
-          name: record.students.name,
-          room: record.students.room_students?.[0]?.room_id || '',
-          roomName: record.students.room_students?.[0]?.rooms?.name || '',
-          status: record.status,
-          companyId: currentUser.companyId
-        }));
-
-        setDailyAttendances([{ date: dateStr, students }]);
-      }
+      setDailyAttendances([{ date: dateStr, students: attendanceData }]);
     } catch (error) {
       console.error('Error fetching daily attendance:', error);
       toast({
