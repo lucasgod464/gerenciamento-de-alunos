@@ -41,36 +41,36 @@ export const TagList = ({
 }: TagListProps) => {
   return (
     <div className="space-y-4">
-      <div className="flex gap-4 items-center mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <div className="flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9"
+            className="pl-8"
           />
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <Select
-            value={statusFilter}
-            onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filtrar por status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os status</SelectItem>
-              <SelectItem value="active">Ativas</SelectItem>
-              <SelectItem value="inactive">Inativas</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={onCreateClick}>
-            <Plus className="mr-2 h-4 w-4" />
-            Criar Etiqueta
-          </Button>
-        </div>
+        <Select
+          value={statusFilter}
+          onValueChange={(value) => setStatusFilter(value as "all" | "active" | "inactive")}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filtrar por status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="active">Ativas</SelectItem>
+            <SelectItem value="inactive">Inativas</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button 
+          onClick={onCreateClick}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Adicionar Etiqueta
+        </Button>
       </div>
 
       <Table>
