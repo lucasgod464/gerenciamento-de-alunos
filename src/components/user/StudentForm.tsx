@@ -81,39 +81,43 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const renderCustomField = (field: FormField) => {
-    const value = formData.custom_fields?.[field.name]?.value || "";
+    const currentValue = formData.custom_fields?.[field.name]?.value || "";
 
     switch (field.type) {
       case "text":
       case "email":
         return (
           <CustomTextField
+            key={field.id}
             field={field}
-            value={value}
+            value={currentValue}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
       case "tel":
         return (
           <CustomPhoneField
+            key={field.id}
             field={field}
-            value={value}
+            value={currentValue}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
       case "select":
         return (
           <CustomSelectField
+            key={field.id}
             field={field}
-            value={value}
+            value={currentValue}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
       case "multiple":
         return (
           <CustomMultipleField
+            key={field.id}
             field={field}
-            value={value}
+            value={currentValue}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );

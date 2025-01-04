@@ -10,11 +10,15 @@ interface CustomMultipleFieldProps {
 }
 
 export const CustomMultipleField = ({ field, value, onChange }: CustomMultipleFieldProps) => {
+  const handleChange = (newValue: string) => {
+    onChange(newValue);
+  };
+
   return (
     <CustomFieldWrapper field={field}>
-      <RadioGroup value={value} onValueChange={onChange}>
+      <RadioGroup value={value} onValueChange={handleChange} name={field.name}>
         {field.options?.map((option) => (
-          <div key={option} className="flex items-center space-x-2">
+          <div key={`${field.name}-${option}`} className="flex items-center space-x-2">
             <RadioGroupItem value={option} id={`${field.name}-${option}`} />
             <Label htmlFor={`${field.name}-${option}`}>{option}</Label>
           </div>
