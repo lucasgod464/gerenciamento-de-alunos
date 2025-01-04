@@ -22,19 +22,16 @@ export function UserRooms() {
       try {
         console.log("Iniciando busca de salas para o usuário:", user.id);
         
-        // Primeiro, buscar os IDs das salas do usuário em uma única query
-        const userRoomsQuery = await supabase
+        // Primeiro, buscar os IDs das salas do usuário
+        const { data: userRooms, error: userRoomsError } = await supabase
           .from('user_rooms')
           .select('room_id')
           .eq('user_id', user.id);
 
-        if (userRoomsQuery.error) {
-          console.error('Erro ao buscar user_rooms:', userRoomsQuery.error);
-          throw userRoomsQuery.error;
+        if (userRoomsError) {
+          console.error('Erro ao buscar user_rooms:', userRoomsError);
+          throw userRoomsError;
         }
-
-        const userRooms = userRoomsQuery.data;
-        console.log('User rooms encontradas:', userRooms);
 
         if (!userRooms?.length) {
           console.log('Nenhuma sala encontrada para o usuário');
@@ -45,8 +42,8 @@ export function UserRooms() {
         const roomIds = userRooms.map(ur => ur.room_id);
         console.log('IDs das salas para buscar:', roomIds);
         
-        // Agora buscar os detalhes das salas em uma única query
-        const roomsQuery = await supabase
+        // Agora buscar os detalhes das salas
+        const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
             id,
@@ -59,21 +56,29 @@ export function UserRooms() {
             study_room,
             created_at,
             room_students (
-              student:students (*)
+              student:students (
+                id,
+                name,
+                birth_date,
+                status,
+                email,
+                document,
+                address,
+                custom_fields,
+                company_id,
+                created_at
+              )
             )
           `)
           .in('id', roomIds);
 
-        if (roomsQuery.error) {
-          console.error('Erro ao buscar salas:', roomsQuery.error);
-          throw roomsQuery.error;
+        if (roomsError) {
+          console.error('Erro ao buscar salas:', roomsError);
+          throw roomsError;
         }
 
-        const roomsData = roomsQuery.data;
-        console.log('Dados brutos das salas:', roomsData);
-        
         if (roomsData) {
-          const transformedRooms = roomsData.map(room => ({
+          const transformedRooms: Room[] = roomsData.map(room => ({
             id: room.id,
             name: room.name,
             schedule: room.schedule,
@@ -83,7 +88,18 @@ export function UserRooms() {
             companyId: room.company_id,
             studyRoom: room.study_room,
             createdAt: room.created_at,
-            students: room.room_students?.map(rs => rs.student) || []
+            students: room.room_students?.map(rs => ({
+              id: rs.student.id,
+              name: rs.student.name,
+              birthDate: rs.student.birth_date,
+              status: rs.student.status || false,
+              email: rs.student.email || '',
+              document: rs.student.document || '',
+              address: rs.student.address || '',
+              customFields: rs.student.custom_fields as Record<string, any>,
+              companyId: rs.student.company_id,
+              createdAt: rs.student.created_at
+            })) || []
           }));
           
           console.log('Salas transformadas:', transformedRooms);
