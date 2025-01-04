@@ -3,7 +3,7 @@ import { AttendanceStudent, DailyAttendance, DailyObservation } from "@/services
 import { attendanceService } from "@/services/attendance/attendanceService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, startOfDay } from "date-fns";
 
 export function useAttendance(selectedDate: Date | undefined) {
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
@@ -17,12 +17,18 @@ export function useAttendance(selectedDate: Date | undefined) {
     return format(date, 'yyyy-MM-dd');
   };
 
+  const normalizeDate = (date: Date) => {
+    return startOfDay(date).getTime();
+  };
+
   const fetchAttendanceDays = async () => {
     if (!currentUser?.companyId) return;
 
     try {
       const days = await attendanceService.getAttendanceDays(currentUser.companyId);
-      setAttendanceDays(days);
+      // Normalize dates to start of day for comparison
+      const normalizedDays = days.map(day => new Date(normalizeDate(day)));
+      setAttendanceDays(normalizedDays);
     } catch (error) {
       console.error('Error fetching attendance days:', error);
       toast({
@@ -181,8 +187,9 @@ export function useAttendance(selectedDate: Date | undefined) {
   };
 
   const isAttendanceDay = (date: Date) => {
+    const normalizedTargetDate = normalizeDate(date);
     return attendanceDays.some(attendanceDate => 
-      formatDate(attendanceDate) === formatDate(date)
+      normalizeDate(attendanceDate) === normalizedTargetDate
     );
   };
 
