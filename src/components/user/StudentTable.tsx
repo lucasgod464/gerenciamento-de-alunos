@@ -7,15 +7,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { StudentForm } from "./StudentForm";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { useStudentTableState } from "./student/useStudentTableState";
 
 interface StudentTableProps {
   students: Student[];
@@ -37,15 +34,8 @@ export function StudentTable({
   showTransferOption = false,
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
-  const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
-  const [localStudents, setLocalStudents] = useState<Student[]>(students);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    setLocalStudents(students);
-  }, [students]);
+  const { localStudents, handleUpdateStudent } = useStudentTableState(students);
 
   const getRoomName = (roomId: string | undefined) => {
     if (!roomId) return "Sem sala";
@@ -53,95 +43,17 @@ export function StudentTable({
     return room?.name || "Sala não encontrada";
   };
 
-  const handleEditClick = (student: Student) => {
-    if (showTransferOption) {
-      setTransferringStudent(student);
-    } else {
-      setEditingStudent(student);
-    }
-  };
-
-  const handleTransfer = () => {
-    if (transferringStudent && selectedRoom && onTransferStudent) {
-      onTransferStudent(transferringStudent.id, selectedRoom);
-      setTransferringStudent(null);
-      setSelectedRoom("");
-      toast({
-        title: "Sucesso",
-        description: "Aluno transferido com sucesso!",
-      });
-    }
-  };
-
-  const handleDelete = (studentId: string) => {
-    try {
-      onDeleteStudent(studentId);
-      setLocalStudents(prev => prev.filter(student => student.id !== studentId));
-      toast({
-        title: "Sucesso",
-        description: "Aluno excluído com sucesso!",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir aluno",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleSubmit = async (student: Student) => {
-    if (onUpdateStudent) {
-      try {
+    try {
+      await handleUpdateStudent(student);
+      if (onUpdateStudent) {
         await onUpdateStudent(student);
-        setLocalStudents(prev => 
-          prev.map(s => s.id === student.id ? student : s)
-        );
-        setEditingStudent(null);
-        toast({
-          title: "Sucesso",
-          description: "Dados do aluno atualizados com sucesso!",
-        });
-      } catch (error) {
-        console.error("Erro ao atualizar aluno:", error);
-        toast({
-          title: "Erro",
-          description: "Erro ao atualizar dados do aluno",
-          variant: "destructive",
-        });
       }
+      setEditingStudent(null);
+    } catch (error) {
+      console.error("Erro ao atualizar aluno:", error);
     }
   };
-
-  // Configurar canal de tempo real
-  useEffect(() => {
-    const channel = supabase
-      .channel('students_updates')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'students' 
-        }, 
-        (payload) => {
-          // Atualizar a lista local quando houver mudanças
-          if (payload.eventType === 'UPDATE') {
-            setLocalStudents(prev => 
-              prev.map(student => 
-                student.id === payload.new.id 
-                  ? { ...student, ...payload.new }
-                  : student
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
 
   return (
     <>
@@ -178,7 +90,7 @@ export function StudentTable({
                   showTransferOption={showTransferOption}
                   onInfoClick={setShowingInfo}
                   onEditClick={setEditingStudent}
-                  onDeleteClick={handleDelete}
+                  onDeleteClick={onDeleteStudent}
                   onTransferStudent={onTransferStudent}
                   rooms={rooms}
                 />
@@ -192,9 +104,6 @@ export function StudentTable({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar Aluno</DialogTitle>
-            <DialogDescription>
-              Edite as informações do aluno
-            </DialogDescription>
           </DialogHeader>
           {editingStudent && (
             <StudentForm
@@ -202,38 +111,6 @@ export function StudentTable({
               onSubmit={handleSubmit}
             />
           )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!transferringStudent} onOpenChange={() => setTransferringStudent(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Transferir Aluno</DialogTitle>
-            <DialogDescription>
-              Selecione a sala para onde deseja transferir o aluno
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma sala" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              className="w-full" 
-              onClick={handleTransfer}
-              disabled={!selectedRoom}
-            >
-              Confirmar Transferência
-            </Button>
-          </div>
         </DialogContent>
       </Dialog>
 
