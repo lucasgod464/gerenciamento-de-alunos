@@ -70,11 +70,12 @@ export function useAttendance() {
         throw observationError;
       }
 
-      // Buscar todos os dias com chamada - Corrigido para não usar distinct
+      // Buscar todos os dias com chamada
       const { data: daysData, error: daysError } = await supabase
         .from('daily_attendance')
         .select('date')
-        .eq('company_id', currentUser.companyId);
+        .eq('company_id', currentUser.companyId)
+        .order('date');
 
       if (daysError) throw daysError;
 
@@ -90,8 +91,8 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        // Usar Set para remover datas duplicadas
-        const uniqueDates = [...new Set(daysData.map(day => day.date))];
+        // Remover datas duplicadas usando Set
+        const uniqueDates = Array.from(new Set(daysData.map(day => day.date)));
         const formattedDays = uniqueDates.map(date => new Date(date));
         setAttendanceDays(formattedDays.map(normalizeDate));
       }
