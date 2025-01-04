@@ -10,153 +10,159 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
-import { Room } from "@/types/room";
 import { MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AccessLevel } from "@/types/user";
+import { RoomSelectionFields } from "./fields/RoomSelectionFields";
+import { TagSelectionFields } from "./fields/TagSelectionFields";
 
-interface RoomFormFieldsProps {
-  onChange: (field: keyof Room, value: any) => void;
-  editingRoom?: Room | null;
+interface UserFormFieldsProps {
+  defaultValues?: {
+    name?: string;
+    email?: string;
+    specialization?: string;
+    location?: string;
+    status?: string;
+    tags?: { id: string; name: string; color: string; }[];
+    accessLevel?: AccessLevel;
+    authorizedRooms?: { id: string; name: string; }[];
+    address?: string;
+  };
+  onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
+  onRoomsChange?: (rooms: string[]) => void;
+  isEditing?: boolean;
+  generateStrongPassword?: () => string;
 }
 
-export function RoomFormFields({ onChange, editingRoom }: RoomFormFieldsProps) {
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const { user } = useAuth();
-  const { toast } = useToast();
+const UserFormFields = ({ 
+  defaultValues = {}, 
+  onTagsChange,
+  onRoomsChange,
+  isEditing,
+  generateStrongPassword
+}: UserFormFieldsProps) => {
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
+    defaultValues.tags || []
+  );
+  const [selectedRooms, setSelectedRooms] = useState<string[]>(
+    defaultValues.authorizedRooms?.map(room => room.id) || []
+  );
 
-  useEffect(() => {
-    fetchCategories();
-    if (editingRoom) {
-      const [start, end] = editingRoom.schedule.split(" - ");
-      setStartTime(start);
-      setEndTime(end);
-      
-      onChange("name", editingRoom.name);
-      onChange("location", editingRoom.location);
-      onChange("category", editingRoom.category);
-      onChange("status", editingRoom.status);
-    }
-  }, [editingRoom, user]);
-
-  const fetchCategories = async () => {
-    if (!user?.companyId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('categories')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast({
-        title: "Erro ao carregar categorias",
-        description: "Não foi possível carregar as categorias.",
-        variant: "destructive",
-      });
-    }
+  const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
+    const newSelectedTags = selectedTags.some(t => t.id === tag.id)
+      ? selectedTags.filter(t => t.id !== tag.id)
+      : [...selectedTags, tag];
+    
+    setSelectedTags(newSelectedTags);
+    onTagsChange?.(newSelectedTags);
   };
 
-  const handleTimeChange = (type: "start" | "end", value: string) => {
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(value)) return;
-
-    if (type === "start") {
-      setStartTime(value);
-      if (endTime) {
-        onChange("schedule", `${value} - ${endTime}`);
-      }
-    } else {
-      setEndTime(value);
-      if (startTime) {
-        onChange("schedule", `${startTime} - ${value}`);
-      }
-    }
+  const handleRoomToggle = (roomId: string) => {
+    const newSelectedRooms = selectedRooms.includes(roomId)
+      ? selectedRooms.filter(id => id !== roomId)
+      : [...selectedRooms, roomId];
+    
+    setSelectedRooms(newSelectedRooms);
+    onRoomsChange?.(newSelectedRooms);
   };
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nome da Sala</Label>
+        <Label htmlFor="name">Nome Completo</Label>
         <Input
           id="name"
-          defaultValue={editingRoom?.name}
-          onChange={(e) => onChange("name", e.target.value)}
-          className="transition-all duration-200 hover:border-primary focus:border-primary"
+          name="name"
+          defaultValue={defaultValues.name}
+          required
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="startTime">Horário Início</Label>
-          <Input
-            id="startTime"
-            type="time"
-            value={startTime}
-            onChange={(e) => handleTimeChange("start", e.target.value)}
-            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="endTime">Horário Fim</Label>
-          <Input
-            id="endTime"
-            type="time"
-            value={endTime}
-            onChange={(e) => handleTimeChange("end", e.target.value)}
-            className="w-full transition-all duration-200 hover:border-primary focus:border-primary"
-          />
-        </div>
-      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="location">Endereço</Label>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          defaultValue={defaultValues.email}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="location">Local</Label>
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             id="location"
-            defaultValue={editingRoom?.location}
-            onChange={(e) => onChange("location", e.target.value)}
-            className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
-            placeholder="Digite o endereço completo da sala..."
+            name="location"
+            defaultValue={defaultValues.location}
+            className="pl-9"
+            placeholder="Digite o local..."
           />
         </div>
       </div>
+
       <div className="space-y-2">
-        <Label htmlFor="category">Categoria</Label>
-        <Select 
-          defaultValue={editingRoom?.category}
-          onValueChange={(value) => onChange("category", value)}
-        >
-          <SelectTrigger className="transition-all duration-200 hover:border-primary focus:border-primary">
-            <SelectValue placeholder="Selecione uma categoria" />
+        <Label htmlFor="address">Endereço</Label>
+        <Input
+          id="address"
+          name="address"
+          defaultValue={defaultValues.address}
+          placeholder="Digite o endereço completo..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="specialization">Especialização</Label>
+        <Input
+          id="specialization"
+          name="specialization"
+          defaultValue={defaultValues.specialization}
+          placeholder="Digite a especialização..."
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="accessLevel">Nível de Acesso</Label>
+        <Select name="accessLevel" defaultValue={defaultValues.accessLevel}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o nível de acesso" />
           </SelectTrigger>
           <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
+            <SelectItem value="Admin">Admin</SelectItem>
+            <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center space-x-2">
+
+      <div className="space-y-2">
         <Label htmlFor="status">Status</Label>
-        <Switch
-          id="status"
-          defaultChecked={editingRoom?.status ?? true}
-          onCheckedChange={(checked) => onChange("status", checked)}
-        />
-        <span className="text-sm text-muted-foreground">
-          Ativa
-        </span>
+        <Select name="status" defaultValue={defaultValues.status || 'active'}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Ativo</SelectItem>
+            <SelectItem value="inactive">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+
+      <TagSelectionFields
+        selectedTags={selectedTags}
+        onTagToggle={handleTagToggle}
+        defaultValues={defaultValues}
+      />
+
+      <RoomSelectionFields
+        selectedRooms={selectedRooms}
+        onRoomToggle={handleRoomToggle}
+        defaultValues={defaultValues}
+      />
     </div>
   );
-}
+};
 
-export default RoomFormFields;
+export default UserFormFields;
