@@ -152,7 +152,7 @@ const Users = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-6xl mx-auto space-y-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
           <p className="text-muted-foreground">
