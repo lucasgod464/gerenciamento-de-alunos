@@ -22,18 +22,7 @@ export default function SuperAdminRooms() {
           .select(`
             *,
             room_students (
-              student:students (
-                id,
-                name,
-                birth_date,
-                status,
-                email,
-                document,
-                address,
-                custom_fields,
-                company_id,
-                created_at
-              )
+              student:students (*)
             )
           `);
 
