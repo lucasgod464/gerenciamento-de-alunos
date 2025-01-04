@@ -26,7 +26,10 @@ export const attendanceDataService = {
           id,
           name,
           room_students (
-            room_id
+            room_id,
+            rooms (
+              name
+            )
           )
         )
       `)
@@ -43,6 +46,9 @@ export const attendanceDataService = {
       .select(`
         student_id,
         room_id,
+        rooms (
+          name
+        ),
         students (
           id,
           name,
@@ -57,6 +63,7 @@ export const attendanceDataService = {
       id: rs.students.id,
       name: rs.students.name,
       room: rs.room_id,
+      roomName: rs.rooms?.name || '',
       status: "present",
       companyId: rs.students.company_id
     }));

@@ -2,6 +2,7 @@ export interface Student {
   id: string;
   name: string;
   room: string;
+  roomName?: string;
   status: "present" | "absent" | "late" | "justified";
   companyId: string | null;
 }
