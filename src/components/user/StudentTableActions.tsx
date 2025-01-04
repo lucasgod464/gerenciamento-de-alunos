@@ -28,6 +28,7 @@ import {
 import { StudentForm } from "./StudentForm";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentTableActionsProps {
   student: Student;

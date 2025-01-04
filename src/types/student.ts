@@ -3,9 +3,9 @@ export interface Student {
   name: string;
   birthDate: string;
   status: boolean;
-  email: string;
-  document: string;
-  address: string;
+  email: string | null;
+  document: string | null;
+  address: string | null;
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
