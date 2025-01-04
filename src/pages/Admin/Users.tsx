@@ -2,7 +2,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UserList } from "@/components/users/UserList";
 import { useEffect, useState } from "react";
-import { User, mapDatabaseUser } from "@/types/user";
+import { User, mapDatabaseUser, DatabaseUser } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,7 +18,7 @@ const AdminUsers = () => {
 
       if (error) throw error;
 
-      const mappedUsers = dbUsers.map(mapDatabaseUser);
+      const mappedUsers = (dbUsers as DatabaseUser[]).map(mapDatabaseUser);
       setUsers(mappedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -46,7 +46,12 @@ const AdminUsers = () => {
     <DashboardLayout role="admin">
       <div className="space-y-6">
         <UsersHeader onUserCreated={handleUserCreated} />
-        <UserList users={users} onUserUpdated={loadUsers} />
+        <UserList 
+          users={users} 
+          onDeleteUser={() => loadUsers()} 
+          onUpdateUser={() => loadUsers()} 
+          onEditField={() => loadUsers()}
+        />
       </div>
     </DashboardLayout>
   );

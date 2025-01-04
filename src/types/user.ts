@@ -9,7 +9,7 @@ export interface User {
   email: string;
   companyId: string;
   createdAt: string;
-  lastAccess: string;
+  lastAccess: string | null;
   status: UserStatus;
   accessLevel: AccessLevel;
   location?: string | null;
@@ -23,10 +23,9 @@ export interface DatabaseUser {
   id: string;
   name: string;
   email: string;
-  role: string;
   company_id: string;
   created_at: string;
-  last_access: string;
+  updated_at: string;
   status: string;
   access_level: AccessLevel;
   location: string | null;
@@ -41,7 +40,7 @@ export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
   email: dbUser.email,
   companyId: dbUser.company_id,
   createdAt: dbUser.created_at,
-  lastAccess: dbUser.last_access,
+  lastAccess: null,
   status: dbUser.status as UserStatus,
   accessLevel: dbUser.access_level,
   location: dbUser.location,

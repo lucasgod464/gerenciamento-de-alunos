@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User, mapDatabaseUser } from "@/types/user";
+import { User, DatabaseUser, mapDatabaseUser } from "@/types/user";
 
 interface CreateUserData {
   email: string;
@@ -15,7 +15,7 @@ interface CreateUserData {
   selectedTags?: { id: string; name: string; color: string; }[];
 }
 
-const createUser = async (userData: CreateUserData) => {
+const createUser = async (userData: CreateUserData): Promise<User> => {
   try {
     const { data, error } = await supabase
       .from('emails')
@@ -36,7 +36,7 @@ const createUser = async (userData: CreateUserData) => {
 
     if (error) throw error;
     
-    return mapDatabaseUser(data);
+    return mapDatabaseUser(data as DatabaseUser);
   } catch (error) {
     console.error('Error creating user:', error);
     throw error;
