@@ -140,7 +140,6 @@ export const AddFieldDialog = ({
               onValueChange={(value: FieldType) =>
                 setFieldData({ ...fieldData, type: value })
               }
-              required
             >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo" />
