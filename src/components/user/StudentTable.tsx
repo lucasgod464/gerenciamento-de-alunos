@@ -129,6 +129,8 @@ export function StudentTable({
                   onInfoClick={setShowingInfo}
                   onEditClick={setEditingStudent}
                   onDeleteClick={handleDelete}
+                  onTransferStudent={onTransferStudent}
+                  rooms={rooms}
                 />
               </TableCell>
             </TableRow>

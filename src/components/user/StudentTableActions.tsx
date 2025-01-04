@@ -36,7 +36,7 @@ interface StudentTableActionsProps {
   onEditClick: (student: Student) => void;
   onDeleteClick: (studentId: string) => void;
   onTransferStudent?: (studentId: string, newRoomId: string) => void;
-  rooms?: { id: string; name: string }[];
+  rooms: { id: string; name: string }[];
 }
 
 export function StudentTableActions({
@@ -46,7 +46,7 @@ export function StudentTableActions({
   onEditClick,
   onDeleteClick,
   onTransferStudent,
-  rooms = [],
+  rooms,
 }: StudentTableActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
@@ -176,7 +176,7 @@ export function StudentTableActions({
                 <SelectValue placeholder="Selecione uma sala" />
               </SelectTrigger>
               <SelectContent>
-                {rooms?.map((room) => (
+                {rooms.map((room) => (
                   <SelectItem key={room.id} value={room.id}>
                     {room.name}
                   </SelectItem>
