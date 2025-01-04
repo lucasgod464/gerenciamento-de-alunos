@@ -6,11 +6,12 @@ import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
 import { useToast } from "@/hooks/use-toast";
-
-const FORM_FIELDS_KEY = "formFields";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const FormBuilder = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const defaultFields: FormField[] = [
     {
       id: "nome_completo",
@@ -52,54 +53,73 @@ export const FormBuilder = () => {
   const [editingField, setEditingField] = useState<FormField | null>(null);
 
   useEffect(() => {
-    const loadFields = () => {
-      try {
-        const savedFields = localStorage.getItem(FORM_FIELDS_KEY);
-        if (savedFields) {
-          const parsedFields = JSON.parse(savedFields);
-          const mergedFields = defaultFields.concat(
-            parsedFields.filter((field: FormField) => 
-              !defaultFields.some(defaultField => defaultField.id === field.id)
-            )
-          );
-          setFields(mergedFields);
-        } else {
-          setFields(defaultFields);
-          localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(defaultFields));
-        }
-      } catch (error) {
-        console.error("Error loading form fields:", error);
-        setFields(defaultFields);
-      }
-    };
-
     loadFields();
   }, []);
 
-  useEffect(() => {
+  const loadFields = async () => {
     try {
-      localStorage.setItem(FORM_FIELDS_KEY, JSON.stringify(fields));
-      window.dispatchEvent(new Event('formFieldsUpdated'));
-    } catch (error) {
-      console.error("Error saving form fields:", error);
-    }
-  }, [fields]);
+      const { data: customFields, error } = await supabase
+        .from('admin_form_fields')
+        .select('*')
+        .order('order');
 
-  const handleAddField = (field: Omit<FormField, "id" | "order">) => {
-    const newField: FormField = {
-      ...field,
-      id: crypto.randomUUID(),
-      order: fields.length,
-    };
-    
-    const updatedFields = [...fields, newField];
-    setFields(updatedFields);
-    setIsAddingField(false);
-    
-    toast({
-      title: "Campo adicionado",
-      description: "O novo campo foi adicionado com sucesso.",
-    });
+      if (error) throw error;
+
+      const mergedFields = defaultFields.concat(
+        customFields.map((field: any) => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type,
+          description: field.description,
+          required: field.required,
+          order: field.order,
+          options: field.options,
+        }))
+      );
+
+      setFields(mergedFields);
+    } catch (error) {
+      console.error("Error loading form fields:", error);
+      toast({
+        title: "Erro ao carregar campos",
+        description: "Não foi possível carregar os campos do formulário.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
+    try {
+      const newField = {
+        ...field,
+        order: fields.length,
+      };
+
+      const { data, error } = await supabase
+        .from('admin_form_fields')
+        .insert([newField])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const updatedFields = [...fields, { ...data, id: data.id }];
+      setFields(updatedFields);
+      setIsAddingField(false);
+      
+      toast({
+        title: "Campo adicionado",
+        description: "O novo campo foi adicionado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error adding field:", error);
+      toast({
+        title: "Erro ao adicionar campo",
+        description: "Não foi possível adicionar o campo.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditField = (field: FormField) => {
@@ -116,26 +136,45 @@ export const FormBuilder = () => {
     setIsAddingField(true);
   };
 
-  const handleUpdateField = (updatedField: Omit<FormField, "id" | "order">) => {
+  const handleUpdateField = async (updatedField: Omit<FormField, "id" | "order">) => {
     if (!editingField) return;
 
-    const updatedFields = fields.map(field => 
-      field.id === editingField.id 
-        ? { ...updatedField, id: field.id, order: field.order }
-        : field
-    );
+    try {
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .update({
+          ...updatedField,
+          order: editingField.order,
+        })
+        .eq('id', editingField.id);
 
-    setFields(updatedFields);
-    setEditingField(null);
-    setIsAddingField(false);
+      if (error) throw error;
 
-    toast({
-      title: "Campo atualizado",
-      description: "O campo foi atualizado com sucesso.",
-    });
+      const updatedFields = fields.map(field => 
+        field.id === editingField.id 
+          ? { ...updatedField, id: field.id, order: field.order }
+          : field
+      );
+
+      setFields(updatedFields);
+      setEditingField(null);
+      setIsAddingField(false);
+
+      toast({
+        title: "Campo atualizado",
+        description: "O campo foi atualizado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error updating field:", error);
+      toast({
+        title: "Erro ao atualizar campo",
+        description: "Não foi possível atualizar o campo.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeleteField = (id: string) => {
+  const handleDeleteField = async (id: string) => {
     const defaultFieldIds = defaultFields.map(field => field.id);
     if (defaultFieldIds.includes(id)) {
       toast({
@@ -146,19 +185,58 @@ export const FormBuilder = () => {
       return;
     }
 
-    setFields(prevFields => prevFields.filter(field => field.id !== id));
-    toast({
-      title: "Campo removido",
-      description: "O campo foi removido com sucesso.",
-    });
+    try {
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setFields(prevFields => prevFields.filter(field => field.id !== id));
+      toast({
+        title: "Campo removido",
+        description: "O campo foi removido com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error deleting field:", error);
+      toast({
+        title: "Erro ao remover campo",
+        description: "Não foi possível remover o campo.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleReorderFields = (reorderedFields: FormField[]) => {
-    const updatedFields = reorderedFields.map((field, index) => ({
-      ...field,
-      order: index,
-    }));
-    setFields(updatedFields);
+  const handleReorderFields = async (reorderedFields: FormField[]) => {
+    try {
+      const customFields = reorderedFields.filter(field => !defaultFields.map(f => f.id).includes(field.id));
+      
+      const updates = customFields.map((field, index) => ({
+        id: field.id,
+        order: defaultFields.length + index,
+      }));
+
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .upsert(updates);
+
+      if (error) throw error;
+
+      const updatedFields = reorderedFields.map((field, index) => ({
+        ...field,
+        order: index,
+      }));
+
+      setFields(updatedFields);
+    } catch (error) {
+      console.error("Error reordering fields:", error);
+      toast({
+        title: "Erro ao reordenar campos",
+        description: "Não foi possível reordenar os campos.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
