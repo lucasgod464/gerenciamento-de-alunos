@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tag, Trash2, Edit2, Plus } from "lucide-react";
+import { Tag, Trash2, Edit2, Plus, Search } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -41,12 +41,14 @@ export const TagList = ({
 }: TagListProps) => {
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div className="space-y-2">
+      <div className="flex gap-4 items-center mb-6">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
           />
         </div>
         

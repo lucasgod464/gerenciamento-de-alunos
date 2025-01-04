@@ -5,8 +5,6 @@ import { TagList } from "@/components/tags/TagList";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 
 export interface TagType {
   id: string;
@@ -176,28 +174,27 @@ const Tags = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Etiquetas</h1>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto max-w-7xl">
+        <div className="flex flex-col items-center mb-8 text-center">
+          <h1 className="text-3xl font-bold tracking-tight mb-2">
+            Gerenciamento de Etiquetas
+          </h1>
+          <p className="text-muted-foreground max-w-2xl">
             Gerencie as etiquetas do sistema
           </p>
         </div>
 
-        <TagDialog
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setEditingTag(null);
-          }}
-          editingTag={editingTag}
-          onSubmit={handleSubmit}
-        />
-
         <div className="bg-white p-6 rounded-lg shadow">
-          <h2 className="text-lg font-semibold mb-4">
-            {isLoading ? "Carregando etiquetas..." : "Gerenciar Etiquetas"}
-          </h2>
+          <TagDialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) setEditingTag(null);
+            }}
+            editingTag={editingTag}
+            onSubmit={handleSubmit}
+          />
+
           <TagList
             tags={filteredTags}
             onEdit={handleEdit}
