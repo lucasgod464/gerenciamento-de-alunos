@@ -1,18 +1,18 @@
 import { createBrowserRouter } from "react-router-dom";
 import { PrivateRoute } from "@/components/PrivateRoute";
 import { PublicRoute } from "@/components/PublicRoute";
-import { Login } from "@/pages/Login";
-import { Register } from "@/pages/Register";
-import { Dashboard } from "@/pages/Dashboard";
-import { Profile } from "@/pages/Profile";
-import { Companies } from "@/pages/Admin/Companies";
-import { Users } from "@/pages/Admin/Users";
-import { Rooms } from "@/pages/Admin/Rooms";
-import { Students } from "@/pages/Admin/Students";
-import { StudentsTotal } from "@/pages/Admin/StudentsTotal";
-import { Enrollment } from "@/pages/Admin/Enrollment";
-import { PublicEnrollment } from "@/pages/PublicEnrollment";
-import { NotFound } from "@/pages/NotFound";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import Dashboard from "@/pages/Dashboard";
+import Profile from "@/pages/Profile";
+import Companies from "@/pages/Admin/Companies";
+import Users from "@/pages/Admin/Users";
+import Rooms from "@/pages/Admin/Rooms";
+import Students from "@/pages/Admin/Students";
+import StudentsTotal from "@/pages/Admin/StudentsTotal";
+import Enrollment from "@/pages/Admin/Enrollment";
+import PublicEnrollment from "@/pages/PublicEnrollment";
+import NotFound from "@/pages/NotFound";
 
 export const routes = [
   {
