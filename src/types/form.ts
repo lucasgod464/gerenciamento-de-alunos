@@ -1,6 +1,6 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type FieldType = "text" | "email" | "tel" | "date" | "textarea" | "select" | "multiple";
+export type FieldType = 'text' | 'email' | 'tel' | 'select' | 'multiple' | 'textarea' | 'date';
 
 export interface FormField {
   id: string;
@@ -14,12 +14,6 @@ export interface FormField {
   isDefault?: boolean;
 }
 
-export interface CustomField {
-  name: string;
-  value: string | string[];
-  type: FieldType;
-}
-
 export interface SupabaseFormField {
   id: string;
   name: string;
@@ -28,29 +22,35 @@ export interface SupabaseFormField {
   description: string | null;
   required: boolean;
   order: number;
-  options: Json | null;
-  company_id: string | null;
-  created_at: string;
+  options: string[];
+  company_id?: string;
+  created_at?: string;
 }
 
-export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+export interface CustomField {
+  fieldId: string;
+  fieldName: string;
+  label: string;
+  value: any;
+  type: FieldType;
+}
+
+export const mapSupabaseFormField = (field: any): FormField => ({
   id: field.id,
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
   description: field.description || undefined,
-  required: field.required,
+  required: field.required || false,
   order: field.order,
-  options: field.options as string[] | undefined,
+  options: Array.isArray(field.options) ? field.options : [],
 });
 
-export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'order'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description || null,
+  description: field.description || '',
   required: field.required,
-  options: field.options || null,
-  order: 0, // Será definido ao inserir
-  company_id: null
+  options: field.options || []
 });
