@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CreateUserDialog } from "./CreateUserDialog";
 import { User } from "@/types/user";
 
@@ -6,6 +7,8 @@ interface UsersHeaderProps {
 }
 
 export function UsersHeader({ onUserCreated }: UsersHeaderProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -14,7 +17,11 @@ export function UsersHeader({ onUserCreated }: UsersHeaderProps) {
           Gerencie os usuários do sistema
         </p>
       </div>
-      <CreateUserDialog onUserCreated={onUserCreated} />
+      <CreateUserDialog 
+        open={open} 
+        onOpenChange={setOpen} 
+        onUserCreated={onUserCreated} 
+      />
     </div>
   );
 }

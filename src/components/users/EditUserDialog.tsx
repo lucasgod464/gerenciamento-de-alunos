@@ -38,6 +38,7 @@ export function EditUserDialog({
 
     try {
       setLoading(true);
+      console.log('Updating user with rooms:', selectedRooms);
 
       const updateData = {
         name: formData.get('name')?.toString() || '',
@@ -72,6 +73,7 @@ export function EditUserDialog({
       }
 
       // Update rooms
+      console.log('Deleting existing room assignments for user:', user.id);
       const { error: deleteRoomsError } = await supabase
         .from('user_rooms')
         .delete()
@@ -80,6 +82,7 @@ export function EditUserDialog({
       if (deleteRoomsError) throw deleteRoomsError;
 
       if (selectedRooms.length > 0) {
+        console.log('Inserting new room assignments:', selectedRooms);
         const { error: insertRoomsError } = await supabase
           .from('user_rooms')
           .insert(selectedRooms.map(roomId => ({
@@ -100,20 +103,15 @@ export function EditUserDialog({
 
       const updatedUser: User = {
         ...user,
-        name: updateData.name,
-        email: updateData.email,
-        role: updateData.access_level,
-        location: updateData.location,
-        specialization: updateData.specialization,
-        status: updateData.status,
+        ...updateData,
         tags: selectedTags,
-        accessLevel: updateData.access_level,
-        address: updateData.address,
         authorizedRooms: roomsData?.map(room => ({ 
           id: room.id, 
           name: room.name 
         })) || []
       };
+
+      console.log('Updated user with rooms:', updatedUser);
 
       toast({
         title: "Usuário atualizado",
