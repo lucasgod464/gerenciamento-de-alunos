@@ -26,7 +26,7 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
       category: "",
       status: true,
       studyRoom: "",
-      authorizedUsers: []
+      students: []
     }
   );
 
@@ -41,7 +41,7 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
         category: "",
         status: true,
         studyRoom: "",
-        authorizedUsers: []
+        students: []
       });
     }
   }, [editingRoom]);

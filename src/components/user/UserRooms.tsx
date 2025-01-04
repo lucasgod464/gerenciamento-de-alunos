@@ -5,90 +5,52 @@ import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface Room {
-  id: string;
-  name: string;
-  schedule: string;
-  location: string;
-  category: string;
-  status: boolean;
-  companyId: string | null;
-  studyRoom: string;
-  createdAt: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-}
+import { Room } from "@/types/room";
 
 export function UserRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRoomsAndCategories = async () => {
+    const fetchRooms = async () => {
       if (!user?.id || !user?.companyId) {
         console.log("No user ID or companyId found");
         return;
       }
 
       try {
-        // Fetch authorized rooms for the user
-        const { data: authorizedRooms, error: roomsError } = await supabase
-          .from('user_authorized_rooms')
+        const { data: roomsData, error } = await supabase
+          .from('rooms')
           .select(`
-            room:room_id (
-              id,
-              name,
-              schedule,
-              location,
-              category,
-              status,
-              company_id,
-              study_room,
-              created_at,
-              room_students (
-                student:student_id (
-                  id,
-                  name
-                )
+            *,
+            room_students (
+              student:student_id (
+                id,
+                name
               )
             )
           `)
-          .eq('user_id', user.id);
-
-        if (roomsError) throw roomsError;
-
-        // Fetch categories
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categories')
-          .select('id, name')
           .eq('company_id', user.companyId);
 
-        if (categoriesError) throw categoriesError;
+        if (error) throw error;
 
-        // Transform the rooms data
-        const transformedRooms = authorizedRooms
-          ?.filter(ar => ar.room && ar.room.status)
-          .map(ar => ({
-            id: ar.room.id,
-            name: ar.room.name,
-            schedule: ar.room.schedule,
-            location: ar.room.location,
-            category: ar.room.category,
-            status: ar.room.status,
-            companyId: ar.room.company_id,
-            studyRoom: ar.room.study_room,
-            createdAt: ar.room.created_at,
-            students: ar.room.room_students || []
-          })) || [];
+        if (roomsData) {
+          const transformedRooms = roomsData.map(room => ({
+            id: room.id,
+            name: room.name,
+            schedule: room.schedule,
+            location: room.location,
+            category: room.category,
+            status: room.status,
+            companyId: room.company_id,
+            studyRoom: room.study_room,
+            createdAt: room.created_at,
+            students: room.room_students?.map(rs => rs.student) || []
+          }));
 
-        setRooms(transformedRooms);
-        setCategories(categoriesData || []);
+          setRooms(transformedRooms);
+        }
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -100,16 +62,16 @@ export function UserRooms() {
       }
     };
 
-    fetchRoomsAndCategories();
+    fetchRooms();
   }, [user, toast]);
 
   const getStudentCount = (room: Room) => {
-    return room.students?.filter(student => typeof student === 'object').length || 0;
+    return room.students?.length || 0;
   };
 
   const getCapacityPercentage = (room: Room) => {
     const studentCount = getStudentCount(room);
-    const estimatedCapacity = 30; // You might want to make this dynamic based on room settings
+    const estimatedCapacity = 30;
     return Math.min((studentCount / estimatedCapacity) * 100, 100);
   };
 
