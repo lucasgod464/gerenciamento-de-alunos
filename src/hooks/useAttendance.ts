@@ -46,11 +46,7 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        const formattedDays = daysData.map(day => {
-          const date = new Date(day);
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-        });
-        setAttendanceDays(formattedDays);
+        setAttendanceDays(daysData.map(day => new Date(day)));
       }
     } catch (error) {
       console.error('Error fetching attendance data:', error);
@@ -118,11 +114,8 @@ export function useAttendance() {
       const dateStr = selectedDate.toISOString().split('T')[0];
       await startNewAttendance(studentsData, dateStr, currentUser.companyId);
       
-      // Atualiza a lista de dias com chamada após iniciar uma nova
-      const updatedAttendanceDays = [...attendanceDays];
-      const newAttendanceDate = new Date(dateStr);
-      updatedAttendanceDays.push(newAttendanceDate);
-      setAttendanceDays(updatedAttendanceDays);
+      // Atualiza a lista de dias com chamada imediatamente
+      setAttendanceDays(prev => [...prev, selectedDate]);
       
       await fetchAttendanceData(selectedDate);
 
@@ -147,17 +140,17 @@ export function useAttendance() {
       const dateStr = selectedDate.toISOString().split('T')[0];
       await cancelDailyAttendance(dateStr, currentUser.companyId);
       
-      // Remove o dia cancelado da lista de dias com chamada
-      const updatedAttendanceDays = attendanceDays.filter(date => 
+      // Remove o dia cancelado da lista imediatamente
+      setAttendanceDays(prev => prev.filter(date => 
         date.toISOString().split('T')[0] !== dateStr
-      );
-      setAttendanceDays(updatedAttendanceDays);
+      ));
       
       await fetchAttendanceData(selectedDate);
 
       toast({
         title: "Chamada cancelada",
         description: "A chamada foi cancelada para o dia selecionado.",
+        variant: "destructive",
       });
     } catch (error) {
       console.error('Error canceling attendance:', error);
