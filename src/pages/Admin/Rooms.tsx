@@ -4,8 +4,6 @@ import { RoomStats } from "@/components/rooms/RoomStats";
 import { RoomFilters } from "@/components/rooms/RoomFilters";
 import { RoomTable } from "@/components/rooms/RoomTable";
 import { useRooms } from "@/hooks/useRooms";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { RoomActions } from "@/components/rooms/RoomActions";
 import { Room } from "@/types/room";
 
@@ -37,6 +35,11 @@ export default function AdminRooms() {
     setDeleteDialogOpen(true);
   };
 
+  const handleAddRoom = () => {
+    setEditingRoom(null);
+    setIsDialogOpen(true);
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="container mx-auto max-w-7xl">
@@ -47,16 +50,6 @@ export default function AdminRooms() {
           <p className="text-muted-foreground max-w-2xl mb-6">
             Gerencie todas as salas cadastradas no sistema
           </p>
-          <Button 
-            onClick={() => {
-              setEditingRoom(null);
-              setIsDialogOpen(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Adicionar Sala
-          </Button>
         </div>
 
         <div className="space-y-8">
@@ -66,8 +59,9 @@ export default function AdminRooms() {
             <RoomFilters
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
-              filterType={filterType}
-              onFilterChange={setFilterType}
+              statusFilter={filterType}
+              onStatusFilterChange={setFilterType}
+              onAddRoom={handleAddRoom}
             />
 
             <RoomTable 
