@@ -20,7 +20,9 @@ export function StudentsTotal() {
         .from('students')
         .select(`
           *,
-          room_students(room_id)
+          room_students!left (
+            room_id
+          )
         `)
         .eq('company_id', currentUser?.companyId);
 
@@ -75,6 +77,13 @@ export function StudentsTotal() {
 
   const handleDeleteStudent = async (studentId: string) => {
     try {
+      // Primeiro, remover todas as associações com salas
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', studentId);
+
+      // Depois, remover o aluno
       const { error } = await supabase
         .from('students')
         .delete()
@@ -100,13 +109,13 @@ export function StudentsTotal() {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string | null) => {
     try {
-      // First, delete any existing room assignments
+      // Primeiro, remover qualquer associação existente
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', studentId);
 
-      // If a new room is selected, create the assignment
+      // Se um nova sala foi selecionada, criar a associação
       if (newRoomId) {
         const { error } = await supabase
           .from('room_students')
@@ -141,7 +150,7 @@ export function StudentsTotal() {
     }
   }, [currentUser]);
 
-  // Corrigindo a filtragem dos alunos
+  // Filtragem dos alunos
   const studentsWithRoom = students.filter(student => student.room !== null);
   const studentsWithoutRoom = students.filter(student => student.room === null);
 

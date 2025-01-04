@@ -17,6 +17,9 @@ export const StudentColumns = ({
   onDeleteStudent,
   onTransferStudent,
 }: StudentColumnsProps) => {
+  console.log("Alunos sem sala:", studentsWithoutRoom);
+  console.log("Alunos com sala:", studentsWithRoom);
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>

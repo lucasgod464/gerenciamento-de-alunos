@@ -13,21 +13,13 @@ export const useStudentData = (userId: string | undefined) => {
     try {
       console.log("Buscando alunos para o usuário:", userId);
       
-      // Buscar alunos através das salas autorizadas do usuário
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
-          id,
-          name,
-          birth_date,
-          status,
-          email,
-          document,
-          address,
-          custom_fields,
-          company_id,
-          created_at,
-          room_students(room_id)
+          *,
+          room_students!left (
+            room_id
+          )
         `)
         .order('name');
 
@@ -41,13 +33,13 @@ export const useStudentData = (userId: string | undefined) => {
           name: student.name,
           birth_date: student.birth_date,
           status: student.status ?? true,
-          email: student.email,
-          document: student.document,
-          address: student.address,
+          email: student.email || '',
+          document: student.document || '',
+          address: student.address || '',
           custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
           company_id: student.company_id || '',
           created_at: student.created_at,
-          room: student.room_students?.[0]?.room_id
+          room: student.room_students?.[0]?.room_id || null
         }));
 
         console.log("Alunos mapeados:", mappedStudents);
