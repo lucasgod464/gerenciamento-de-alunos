@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Tag as TagIcon } from "lucide-react";
 import { User } from "@/types/user";
 
 interface UserTagsProps {
@@ -11,17 +11,13 @@ export function UserTags({ user }: UserTagsProps) {
   }
 
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex gap-1">
       {user.tags.map((tag) => (
-        <Badge
+        <TagIcon
           key={tag.id}
-          style={{
-            backgroundColor: tag.color,
-            color: '#fff'
-          }}
-        >
-          {tag.name}
-        </Badge>
+          className="h-4 w-4"
+          style={{ color: tag.color }}
+        />
       ))}
     </div>
   );

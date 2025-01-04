@@ -12,6 +12,7 @@ export interface User {
   accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
+  address?: string;
   tags?: { id: string; name: string; color: string; }[];
   authorizedRooms?: { id: string; name: string; }[];
 }
@@ -28,6 +29,7 @@ export interface DatabaseUser {
   access_level: AccessLevel;
   location?: string;
   specialization?: string;
+  address?: string;
   password: string;
 }
 
@@ -43,6 +45,7 @@ export const mapDatabaseUser = (dbUser: any): User => ({
   accessLevel: dbUser.access_level,
   location: dbUser.location,
   specialization: dbUser.specialization,
+  address: dbUser.address,
   tags: dbUser.user_tags?.map((ut: any) => ({
     id: ut.tags.id,
     name: ut.tags.name,

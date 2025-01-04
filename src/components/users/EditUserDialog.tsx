@@ -45,7 +45,8 @@ export function EditUserDialog({
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
         specialization: formData.get('specialization')?.toString() || '',
-        status: formData.get('status')?.toString() || 'active'
+        status: formData.get('status')?.toString() || 'active',
+        address: formData.get('address')?.toString() || ''
       };
 
       const { error: updateError } = await supabase
@@ -62,14 +63,12 @@ export function EditUserDialog({
         .eq('user_id', user.id);
 
       if (selectedTags.length > 0) {
-        const tagInserts = selectedTags.map(tag => ({
-          user_id: user.id,
-          tag_id: tag.id
-        }));
-
         await supabase
           .from('user_tags')
-          .insert(tagInserts);
+          .insert(selectedTags.map(tag => ({
+            user_id: user.id,
+            tag_id: tag.id
+          })));
       }
 
       // Update rooms
@@ -79,15 +78,19 @@ export function EditUserDialog({
         .eq('user_id', user.id);
 
       if (selectedRooms.length > 0) {
-        const roomInserts = selectedRooms.map(roomId => ({
-          user_id: user.id,
-          room_id: roomId
-        }));
-
         await supabase
           .from('user_rooms')
-          .insert(roomInserts);
+          .insert(selectedRooms.map(roomId => ({
+            user_id: user.id,
+            room_id: roomId
+          })));
       }
+
+      // Fetch updated room names
+      const { data: roomsData } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .in('id', selectedRooms);
 
       const updatedUser: User = {
         ...user,
@@ -99,7 +102,11 @@ export function EditUserDialog({
         status: updateData.status,
         tags: selectedTags,
         accessLevel: updateData.access_level,
-        authorizedRooms: selectedRooms.map(roomId => ({ id: roomId, name: '' }))
+        address: updateData.address,
+        authorizedRooms: roomsData?.map(room => ({ 
+          id: room.id, 
+          name: room.name 
+        })) || []
       };
 
       toast({
@@ -142,7 +149,8 @@ export function EditUserDialog({
               status: user.status,
               tags: user.tags,
               accessLevel: user.accessLevel,
-              authorizedRooms: user.authorizedRooms
+              authorizedRooms: user.authorizedRooms,
+              address: user.address || ''
             }}
             onTagsChange={setSelectedTags}
             onRoomsChange={setSelectedRooms}
