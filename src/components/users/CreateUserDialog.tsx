@@ -12,12 +12,14 @@ import { useState } from "react";
 import UserFormFields from "./UserFormFields";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface CreateUserDialogProps {
   onUserCreated?: () => void;
 }
 
 export const CreateUserDialog = ({ onUserCreated }: CreateUserDialogProps) => {
+  const { user: currentUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,9 +35,10 @@ export const CreateUserDialog = ({ onUserCreated }: CreateUserDialogProps) => {
         location: formData.get('location') as string,
         address: formData.get('address') as string,
         specialization: formData.get('specialization') as string,
-        access_level: formData.get('accessLevel') as string,
+        access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum",
         status: formData.get('status') as string,
         password: '123456', // Default password
+        company_id: currentUser?.companyId || '',
       };
 
       const { error } = await supabase

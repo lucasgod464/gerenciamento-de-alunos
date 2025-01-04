@@ -1,92 +1,141 @@
-import { useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { RoomStats } from "@/components/rooms/RoomStats";
-import { RoomFilters } from "@/components/rooms/RoomFilters";
-import { RoomTable } from "@/components/rooms/RoomTable";
-import { useRooms } from "@/hooks/useRooms";
-import { RoomActions } from "@/components/rooms/RoomActions";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Room } from "@/types/room";
+import { RoomTable } from "@/components/admin/rooms/RoomTable";
+import { CreateRoomDialog } from "@/components/admin/rooms/CreateRoomDialog";
+import { useToast } from "@/hooks/use-toast";
 
-export default function AdminRooms() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const { rooms, handleSave, handleDeleteConfirm } = useRooms();
+const RoomsPage = () => {
+  const { user } = useAuth();
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const { toast } = useToast();
 
-  const filteredRooms = rooms.filter((room) => {
-    const matchesSearch = 
-      room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (room.location || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === "all" || 
-                         (filterType === "active" && room.status) ||
-                         (filterType === "inactive" && !room.status);
-    return matchesSearch && matchesFilter;
-  });
+  const loadRooms = async () => {
+    try {
+      const { data: roomsData, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('company_id', user?.companyId)
+        .order('name');
 
-  const handleEdit = (room: Room) => {
-    setEditingRoom(room);
-    setIsDialogOpen(true);
+      if (error) throw error;
+
+      if (roomsData) {
+        const mappedRooms: Room[] = roomsData.map(room => ({
+          id: room.id,
+          name: room.name,
+          schedule: room.schedule,
+          location: room.location,
+          category: room.category,
+          status: room.status,
+          companyId: room.company_id,
+          studyRoom: room.study_room,
+          createdAt: room.created_at
+        }));
+        setRooms(mappedRooms);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar salas:', error);
+      toast({
+        title: "Erro ao carregar salas",
+        description: "Não foi possível carregar a lista de salas.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (room: Room) => {
-    setEditingRoom(room);
-    setDeleteDialogOpen(true);
+  useEffect(() => {
+    if (user?.companyId) {
+      loadRooms();
+    }
+  }, [user?.companyId]);
+
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      const roomToDelete = rooms.find(r => r.id === roomId);
+      if (!roomToDelete) return;
+
+      const { error } = await supabase
+        .from('rooms')
+        .delete()
+        .eq('id', roomId);
+
+      if (error) throw error;
+
+      setRooms(prev => prev.filter(room => room.id !== roomId));
+      toast({
+        title: "Sucesso",
+        description: "Sala excluída com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir sala:', error);
+      toast({
+        title: "Erro ao excluir sala",
+        description: "Não foi possível excluir a sala.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleAddRoom = () => {
-    setEditingRoom(null);
-    setIsDialogOpen(true);
+  const handleUpdateRoom = async (updatedRoom: Room) => {
+    try {
+      const { error } = await supabase
+        .from('rooms')
+        .update({
+          name: updatedRoom.name,
+          schedule: updatedRoom.schedule,
+          location: updatedRoom.location,
+          category: updatedRoom.category,
+          status: updatedRoom.status,
+          study_room: updatedRoom.studyRoom
+        })
+        .eq('id', updatedRoom.id);
+
+      if (error) throw error;
+
+      setRooms(prev =>
+        prev.map(room =>
+          room.id === updatedRoom.id ? updatedRoom : room
+        )
+      );
+
+      toast({
+        title: "Sucesso",
+        description: "Sala atualizada com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar sala:', error);
+      toast({
+        title: "Erro ao atualizar sala",
+        description: "Não foi possível atualizar a sala.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <DashboardLayout role="admin">
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex flex-col items-center mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            Gerenciamento de Salas
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mb-6">
-            Gerencie todas as salas cadastradas no sistema
-          </p>
-        </div>
-
-        <div className="space-y-8">
-          <RoomStats rooms={rooms} />
-          
-          <div className="space-y-6">
-            <RoomFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={filterType}
-              onStatusFilterChange={setFilterType}
-              onAddRoom={handleAddRoom}
-            />
-
-            <RoomTable 
-              rooms={filteredRooms}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Salas</h1>
+            <p className="text-muted-foreground">
+              Gerencie as salas da sua empresa
+            </p>
           </div>
+          <CreateRoomDialog onRoomCreated={loadRooms} />
         </div>
 
-        <RoomActions
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
-          editingRoom={editingRoom}
-          deleteDialogOpen={deleteDialogOpen}
-          setDeleteDialogOpen={setDeleteDialogOpen}
-          onSave={handleSave}
-          onDeleteConfirm={() => {
-            if (editingRoom) {
-              handleDeleteConfirm(editingRoom.id);
-              setDeleteDialogOpen(false);
-            }
-          }}
+        <RoomTable
+          rooms={rooms}
+          onDeleteRoom={handleDeleteRoom}
+          onUpdateRoom={handleUpdateRoom}
         />
       </div>
     </DashboardLayout>
   );
-}
+};
+
+export default RoomsPage;
