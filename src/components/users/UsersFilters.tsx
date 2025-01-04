@@ -26,8 +26,8 @@ export function UsersFilters({
   onUserCreated,
 }: UsersFiltersProps) {
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
+    <Card className="mb-4">
+      <CardContent className="py-4">
         <div className="flex gap-4 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
