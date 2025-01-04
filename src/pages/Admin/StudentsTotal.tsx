@@ -1,19 +1,17 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Student, mapSupabaseStudentToStudent } from "@/types/student";
+import { Student, mapSupabaseStudentToStudent, SupabaseStudent } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
-export function StudentsTotal() {
+const StudentsTotal = () => {
   const { user: currentUser } = useAuth();
-  const { toast } = useToast();
   const [students, setStudents] = useState<Student[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
-  const fetchStudents = async () => {
+  const loadStudents = async () => {
     try {
       console.log("Iniciando busca de alunos...");
       console.log("Company ID do usuário:", currentUser?.companyId);
@@ -22,121 +20,29 @@ export function StudentsTotal() {
         .from('students')
         .select(`
           *,
-          room_students!left (
-            room_id,
-            rooms (
-              id,
-              name
-            )
+          room_students (
+            room_id
           )
         `)
         .eq('company_id', currentUser?.companyId);
 
       if (error) {
-        console.error('Erro ao buscar alunos:', error);
         throw error;
       }
 
       console.log("Dados brutos dos alunos:", studentsData);
 
       const mappedStudents = studentsData.map(student => 
-        mapSupabaseStudentToStudent(student)
+        mapSupabaseStudentToStudent(student as SupabaseStudent)
       );
       
       console.log("Alunos mapeados:", mappedStudents);
       setStudents(mappedStudents);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Erro ao carregar alunos:', error);
       toast({
         title: "Erro ao carregar alunos",
-        description: "Ocorreu um erro ao carregar a lista de alunos.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchRooms = async () => {
-    try {
-      console.log("Iniciando busca de salas...");
-      const { data: roomsData, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', currentUser?.companyId);
-
-      if (error) throw error;
-
-      console.log("Salas encontradas:", roomsData);
-      setRooms(roomsData);
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-    }
-  };
-
-  const handleDeleteStudent = async (studentId: string) => {
-    try {
-      // Primeiro, remover todas as associações com salas
-      await supabase
-        .from('room_students')
-        .delete()
-        .eq('student_id', studentId);
-
-      // Depois, remover o aluno
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', studentId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Aluno excluído",
-        description: "O aluno foi excluído com sucesso.",
-      });
-
-      fetchStudents();
-    } catch (error) {
-      console.error('Error deleting student:', error);
-      toast({
-        title: "Erro ao excluir aluno",
-        description: "Ocorreu um erro ao excluir o aluno.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleTransferStudent = async (studentId: string, newRoomId: string | null) => {
-    try {
-      // Primeiro, remover qualquer associação existente
-      await supabase
-        .from('room_students')
-        .delete()
-        .eq('student_id', studentId);
-
-      // Se um nova sala foi selecionada, criar a associação
-      if (newRoomId) {
-        const { error } = await supabase
-          .from('room_students')
-          .insert({
-            student_id: studentId,
-            room_id: newRoomId
-          });
-
-        if (error) throw error;
-      }
-
-      toast({
-        title: "Aluno transferido",
-        description: "O aluno foi transferido com sucesso.",
-      });
-
-      fetchStudents();
-    } catch (error) {
-      console.error('Error transferring student:', error);
-      toast({
-        title: "Erro ao transferir aluno",
-        description: "Ocorreu um erro ao transferir o aluno.",
+        description: "Não foi possível carregar a lista de alunos.",
         variant: "destructive",
       });
     }
@@ -144,40 +50,89 @@ export function StudentsTotal() {
 
   useEffect(() => {
     if (currentUser?.companyId) {
-      fetchStudents();
-      fetchRooms();
+      loadStudents();
     }
-  }, [currentUser]);
+  }, [currentUser?.companyId]);
 
-  // Filtragem dos alunos
-  const studentsWithRoom = students.filter(student => student.room !== null);
-  const studentsWithoutRoom = students.filter(student => student.room === null);
+  const handleDeleteStudent = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', id);
 
-  console.log("Alunos com sala:", studentsWithRoom);
-  console.log("Alunos sem sala:", studentsWithoutRoom);
+      if (error) throw error;
+
+      setStudents(prev => prev.filter(student => student.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Aluno excluído com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao excluir aluno:', error);
+      toast({
+        title: "Erro ao excluir aluno",
+        description: "Não foi possível excluir o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
+    try {
+      // Primeiro, remove qualquer vínculo existente
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', studentId);
+
+      // Depois, cria o novo vínculo
+      const { error } = await supabase
+        .from('room_students')
+        .insert({ student_id: studentId, room_id: newRoomId });
+
+      if (error) throw error;
+
+      // Atualiza a lista local
+      setStudents(prev => prev.map(student => 
+        student.id === studentId 
+          ? { ...student, room: newRoomId }
+          : student
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao transferir aluno:', error);
+      toast({
+        title: "Erro ao transferir aluno",
+        description: "Não foi possível transferir o aluno para a nova sala.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Total de Alunos</h1>
-            <p className="text-muted-foreground">
-              Gerencie os alunos do sistema
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Total de Alunos</h1>
+          <p className="text-muted-foreground">
+            Visualize e gerencie todos os alunos cadastrados
+          </p>
         </div>
-
         <StudentColumns
-          studentsWithoutRoom={studentsWithoutRoom}
-          studentsWithRoom={studentsWithRoom}
-          rooms={rooms}
+          studentsWithoutRoom={students.filter(s => !s.room)}
+          studentsWithRoom={students.filter(s => s.room)}
+          rooms={[]} // Será preenchido com as salas disponíveis
           onDeleteStudent={handleDeleteStudent}
           onTransferStudent={handleTransferStudent}
         />
       </div>
     </DashboardLayout>
   );
-}
+};
 
 export default StudentsTotal;

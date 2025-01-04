@@ -10,6 +10,7 @@ import { CustomTextField } from "./student/form-fields/CustomTextField";
 import { CustomPhoneField } from "./student/form-fields/CustomPhoneField";
 import { CustomSelectField } from "./student/form-fields/CustomSelectField";
 import { CustomMultipleField } from "./student/form-fields/CustomMultipleField";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -67,10 +68,20 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     loadRooms();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (onSubmit && formData.name && formData.birthDate) {
-      onSubmit(formData as Student);
+      try {
+        await onSubmit(formData as Student);
+        setFormData({}); // Limpa o formulário após sucesso
+      } catch (error) {
+        console.error('Erro ao salvar aluno:', error);
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar as alterações do aluno.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
