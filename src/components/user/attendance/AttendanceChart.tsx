@@ -48,7 +48,7 @@ const CustomLegend = (props: any) => {
   if (!payload) return null;
   
   return (
-    <div className="flex flex-wrap justify-center gap-4 mt-4">
+    <div className="flex flex-wrap justify-center gap-4">
       {payload.map((entry: any, index: number) => {
         if (!entry || !entry.payload) return null;
         
@@ -149,39 +149,41 @@ export const AttendanceChart = ({ date, companyId }: AttendanceChartProps) => {
 
   if (data.length === 0) {
     return (
-      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+      <div className="h-[300px] flex items-center justify-center text-muted-foreground">
         Nenhum dado disponível
       </div>
     );
   }
 
   return (
-    <div className="h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="45%"
-            innerRadius={60}
-            outerRadius={80}
-            paddingAngle={5}
-            dataKey="value"
-          >
-            {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={COLORS[entry.name.toLowerCase().replace('presente', 'present')
-                  .replace('ausente', 'absent')
-                  .replace('atrasado', 'late')
-                  .replace('justificado', 'justified') as keyof typeof COLORS]} 
-              />
-            ))}
-          </Pie>
-          <Tooltip content={<CustomTooltip />} />
-          <Legend content={<CustomLegend />} />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="h-[300px] w-full flex flex-col items-center justify-center">
+      <div className="w-full h-[220px]">
+        <ResponsiveContainer>
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={50}
+              outerRadius={70}
+              paddingAngle={5}
+              dataKey="value"
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={COLORS[entry.name.toLowerCase().replace('presente', 'present')
+                    .replace('ausente', 'absent')
+                    .replace('atrasado', 'late')
+                    .replace('justificado', 'justified') as keyof typeof COLORS]} 
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <Legend content={<CustomLegend />} />
     </div>
   );
 };
