@@ -105,7 +105,10 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                 onClick={() => setColor(c)}
               />
             ))}
-            <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
+            <Popover 
+              open={showColorPicker} 
+              onOpenChange={setShowColorPicker}
+            >
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -130,28 +133,18 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                 side="right"
                 align="start"
                 sideOffset={5}
-                onInteractOutside={(e) => {
-                  e.preventDefault();
-                }}
+                onPointerDownOutside={(e) => e.preventDefault()}
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="custom-picker-container">
-                      <HexColorPicker 
-                        color={color} 
-                        onChange={handleColorChange}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Input
-                        type="text"
-                        value={color}
-                        onChange={handleCustomColorInputChange}
-                        className="w-24"
-                        placeholder="#000000"
-                      />
-                    </div>
-                  </div>
+                  <HexColorPicker color={color} onChange={handleColorChange} />
+                  <Input
+                    type="text"
+                    value={color}
+                    onChange={handleCustomColorInputChange}
+                    className="mt-2"
+                    placeholder="#000000"
+                  />
                 </div>
               </PopoverContent>
             </Popover>
