@@ -5,7 +5,6 @@ import {
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
 import { RoomTableHeader } from "./table/RoomTableHeader";
@@ -22,7 +21,6 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
   const [selectedRoomStudents, setSelectedRoomStudents] = useState<Student[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string>("");
   const [isStudentsDialogOpen, setIsStudentsDialogOpen] = useState(false);
-  const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
   const handleShowStudents = async (room: Room) => {
@@ -35,12 +33,12 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
             name,
             birth_date,
             status,
-            created_at,
             email,
             document,
             address,
             custom_fields,
-            company_id
+            company_id,
+            created_at
           )
         `)
         .eq('room_id', room.id);

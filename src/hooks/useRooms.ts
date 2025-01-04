@@ -12,7 +12,6 @@ export function useRooms() {
 
   const fetchRooms = async () => {
     try {
-      console.log("Fetching rooms for company:", user?.companyId);
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
@@ -36,11 +35,9 @@ export function useRooms() {
 
       if (error) throw error;
 
-      console.log("Rooms data:", roomsData);
       const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
-      console.log("Transformed rooms:", formattedRooms);
 
       setRooms(formattedRooms);
     } catch (error) {
@@ -64,7 +61,6 @@ export function useRooms() {
   const handleSave = async (room: Partial<Room>) => {
     try {
       if (room.id) {
-        // Update existing room
         const { error: updateError } = await supabase
           .from('rooms')
           .update({
@@ -76,9 +72,7 @@ export function useRooms() {
             study_room: room.studyRoom || '',
             company_id: user?.companyId
           })
-          .eq('id', room.id)
-          .select()
-          .single();
+          .eq('id', room.id);
 
         if (updateError) throw updateError;
 
@@ -87,7 +81,6 @@ export function useRooms() {
           description: "A sala foi atualizada com sucesso!",
         });
       } else {
-        // Create new room
         const { error: createError } = await supabase
           .from('rooms')
           .insert({
@@ -98,9 +91,7 @@ export function useRooms() {
             status: room.status,
             study_room: room.studyRoom || '',
             company_id: user?.companyId,
-          })
-          .select()
-          .single();
+          });
 
         if (createError) throw createError;
 
@@ -128,9 +119,7 @@ export function useRooms() {
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId)
-        .select()
-        .single();
+        .eq('id', roomId);
 
       if (deleteError) throw deleteError;
 
