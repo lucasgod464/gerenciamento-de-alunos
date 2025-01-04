@@ -4,16 +4,65 @@ import { Room } from "@/types/room";
 import { RoomStats } from "@/components/superadmin/rooms/RoomStats";
 import { RoomFilters } from "@/components/superadmin/rooms/RoomFilters";
 import { RoomsTable } from "@/components/superadmin/rooms/RoomsTable";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { mapSupabaseRoomToRoom } from "@/types/room";
 
 export default function SuperAdminRooms() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [rooms, setRooms] = useState<Room[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
-    setRooms(allRooms);
-  }, []);
+    const fetchRooms = async () => {
+      try {
+        const { data: roomsData, error } = await supabase
+          .from('rooms')
+          .select(`
+            *,
+            room_students (
+              student:students (
+                id,
+                name,
+                birth_date,
+                status,
+                email,
+                document,
+                address,
+                custom_fields,
+                company_id,
+                created_at
+              )
+            )
+          `);
+
+        if (error) {
+          console.error('Error fetching rooms:', error);
+          toast({
+            title: "Erro",
+            description: "Erro ao carregar salas",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (roomsData) {
+          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
+          setRooms(transformedRooms);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar salas",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchRooms();
+  }, [toast]);
 
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = 
