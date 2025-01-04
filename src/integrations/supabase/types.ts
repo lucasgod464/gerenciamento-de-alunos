@@ -121,6 +121,7 @@ export type Database = {
       emails: {
         Row: {
           access_level: Database["public"]["Enums"]["email_access_level"]
+          address: string | null
           company_id: string
           created_at: string
           email: string
@@ -134,6 +135,7 @@ export type Database = {
         }
         Insert: {
           access_level?: Database["public"]["Enums"]["email_access_level"]
+          address?: string | null
           company_id: string
           created_at?: string
           email: string
@@ -147,6 +149,7 @@ export type Database = {
         }
         Update: {
           access_level?: Database["public"]["Enums"]["email_access_level"]
+          address?: string | null
           company_id?: string
           created_at?: string
           email?: string

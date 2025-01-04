@@ -7,7 +7,7 @@ interface UserTagsProps {
 
 export function UserTags({ user }: UserTagsProps) {
   if (!user.tags || user.tags.length === 0) {
-    return <span className="text-sm text-muted-foreground">Sem etiquetas</span>;
+    return null;
   }
 
   return (

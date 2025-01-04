@@ -15,6 +15,7 @@ interface UserFormFieldsProps {
     specialization?: string;
     status?: string;
     location?: string;
+    address?: string;
     tags?: { id: string; name: string; color: string; }[];
     accessLevel?: "Admin" | "Usuário Comum";
     authorizedRooms?: { id: string; name: string; }[];
@@ -80,7 +81,8 @@ export const UserFormFields = ({
           defaultValues={{
             name: defaultValues?.name,
             email: defaultValues?.email,
-            access_level: defaultValues?.accessLevel
+            access_level: defaultValues?.accessLevel,
+            address: defaultValues?.address
           }} 
           isEditing={isEditing}
           generateStrongPassword={generateStrongPassword}

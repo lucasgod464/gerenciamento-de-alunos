@@ -59,7 +59,7 @@ export function UserTableRow({
       </TableCell>
       <TableCell className="text-center">
         <Switch
-          checked={user.status}
+          checked={user.status === 'active'}
           onCheckedChange={(checked) => onStatusChange(user.id, checked)}
         />
       </TableCell>
