@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/utils/dateUtils";
-import { AttendanceStudent } from "./types";
+import { AttendanceStudent, AttendanceStatus } from "./types";
 
 export const attendanceDataService = {
   async getAttendanceDays(companyId: string): Promise<Date[]> {
@@ -43,7 +43,7 @@ export const attendanceDataService = {
       name: record.students.name,
       room: record.students.room_students?.[0]?.room_id || '',
       roomName: record.students.room_students?.[0]?.rooms?.name || '',
-      status: record.status || "",
+      status: (record.status || "") as AttendanceStatus,
       companyId
     }));
   },
@@ -84,7 +84,7 @@ export const attendanceDataService = {
       name: rs.students.name,
       room: rs.room_id,
       roomName: rs.rooms?.name || '',
-      status: "",
+      status: "" as AttendanceStatus,
       companyId: rs.students.company_id
     }));
   },
