@@ -15,11 +15,7 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
           {role === "admin" ? <AdminNav /> : <SidebarNav role={role} />}
         </div>
       </div>
-      <main className="flex-1 p-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          {children}
-        </div>
-      </main>
+      <main className="flex-1 p-8 bg-gray-50">{children}</main>
     </div>
   );
 };
