@@ -20,7 +20,9 @@ interface RoomSelectionFieldsProps {
   rooms?: Room[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
-  defaultValues?: any;
+  defaultValues?: {
+    authorizedRooms?: { id: string; name: string; }[];
+  };
 }
 
 export function RoomSelectionFields({
@@ -33,6 +35,7 @@ export function RoomSelectionFields({
 }: RoomSelectionFieldsProps) {
   const [localRooms, setLocalRooms] = useState<Room[]>(rooms);
   const { user: currentUser } = useAuth();
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
   useEffect(() => {
     const fetchRooms = async () => {
@@ -51,18 +54,31 @@ export function RoomSelectionFields({
         }
 
         setLocalRooms(roomsData || []);
+
+        // Se existem salas autorizadas nos defaultValues, selecione-as
+        if (defaultValues?.authorizedRooms?.length) {
+          const authorizedRoomIds = defaultValues.authorizedRooms.map(room => room.id);
+          authorizedRoomIds.forEach(roomId => {
+            if (!selectedRooms.includes(roomId)) {
+              onRoomToggle(roomId);
+            }
+          });
+        }
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
     };
 
-    if (rooms.length === 0) {
-      fetchRooms();
-    }
-  }, [currentUser, rooms]);
+    fetchRooms();
+  }, [currentUser, defaultValues]);
+
+  const handleSearchChange = (value: string) => {
+    setLocalSearchQuery(value);
+    onSearchChange(value);
+  };
 
   const filteredRooms = localRooms.filter((room) =>
-    room.name.toLowerCase().includes(searchQuery.toLowerCase())
+    room.name.toLowerCase().includes(localSearchQuery.toLowerCase())
   );
 
   return (
@@ -74,8 +90,8 @@ export function RoomSelectionFields({
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar salas..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-8 bg-background"
             />
           </div>
