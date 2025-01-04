@@ -48,20 +48,90 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
         status: 'present'
       }));
 
+      // Buscar status de presença existente para a data
+      const formattedDate = formatDate(date);
+      const { data: attendanceData, error: attendanceError } = await supabase
+        .from('daily_attendance')
+        .select('student_id, status')
+        .eq('date', formattedDate)
+        .eq('room_id', roomId);
+
+      if (!attendanceError && attendanceData) {
+        const attendanceMap = new Map(attendanceData.map(a => [a.student_id, a.status]));
+        formattedStudents.forEach(student => {
+          if (attendanceMap.has(student.id)) {
+            student.status = attendanceMap.get(student.id);
+          }
+        });
+      }
+
       setStudents(formattedStudents);
     };
 
     if (roomId) {
       fetchStudents();
     }
-  }, [roomId]);
 
-  const handleStatusChange = (studentId: string, status: string) => {
-    setStudents(prev =>
-      prev.map(student =>
-        student.id === studentId ? { ...student, status } : student
+    // Inscrever-se para atualizações em tempo real
+    const channel = supabase
+      .channel('attendance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_attendance',
+          filter: `room_id=eq.${roomId}`,
+        },
+        (payload) => {
+          console.log('Mudança detectada:', payload);
+          if (payload.new) {
+            setStudents(currentStudents => 
+              currentStudents.map(student => 
+                student.id === payload.new.student_id 
+                  ? { ...student, status: payload.new.status }
+                  : student
+              )
+            );
+          }
+        }
       )
-    );
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, date]);
+
+  const handleStatusChange = async (studentId: string, status: string) => {
+    try {
+      const formattedDate = formatDate(date);
+      
+      const { error } = await supabase
+        .from('daily_attendance')
+        .upsert({
+          date: formattedDate,
+          student_id: studentId,
+          status: status,
+          company_id: companyId,
+          room_id: roomId
+        });
+
+      if (error) throw error;
+      
+      setStudents(prev =>
+        prev.map(student =>
+          student.id === studentId ? { ...student, status } : student
+        )
+      );
+    } catch (error) {
+      console.error('Erro ao salvar presença:', error);
+      toast({
+        title: "Erro ao salvar presença",
+        description: "Não foi possível salvar o status de presença.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleObservationChange = (studentId: string, text: string) => {
