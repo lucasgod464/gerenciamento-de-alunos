@@ -142,5 +142,6 @@ export const useStudentManagement = () => {
     handleAddStudent,
     handleDeleteStudent,
     handleUpdateStudent,
+    loadStudents,
   };
 };
