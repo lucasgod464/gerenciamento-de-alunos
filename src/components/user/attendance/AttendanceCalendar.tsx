@@ -21,15 +21,8 @@ export const AttendanceCalendar = ({
   onCancelAttendance,
 }: AttendanceCalendarProps) => {
   const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      onSelectDate(date);
-    } else {
-      onSelectDate(undefined);
-    }
+    onSelectDate(date);
   };
-
-  // Normaliza todas as datas de presença para comparação
-  const normalizedAttendanceDays = attendanceDays.map(date => normalizeDate(date));
 
   return (
     <Card>
@@ -44,7 +37,7 @@ export const AttendanceCalendar = ({
             onSelect={handleDateSelect}
             className="rounded-md border"
             modifiers={{
-              attendance: normalizedAttendanceDays
+              attendance: attendanceDays
             }}
             modifiersStyles={{
               attendance: {

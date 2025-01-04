@@ -15,7 +15,9 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
 
     try {
       const days = await attendanceDataService.getAttendanceDays(currentUser.companyId);
-      setAttendanceDays(days.map(day => normalizeDate(day)));
+      // Normaliza as datas ao recebê-las do servidor
+      const normalizedDays = days.map(day => normalizeDate(new Date(day)));
+      setAttendanceDays(normalizedDays);
     } catch (error) {
       console.error('Error fetching attendance days:', error);
       toast({
