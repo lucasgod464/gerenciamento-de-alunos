@@ -9,36 +9,15 @@ export const useEnrollmentFields = () => {
 
   const loadFields = async () => {
     try {
-      console.log("Loading custom fields...");
       const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
         .order('order');
 
-      if (error) {
-        console.error("Error loading custom fields:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Raw custom fields:", customFields);
-
-      // Map custom fields to FormField type
-      const mappedCustomFields = customFields?.map(field => ({
-        id: field.id,
-        name: field.name,
-        label: field.label,
-        type: field.type as FormField['type'],
-        description: field.description || undefined,
-        required: field.required || false,
-        order: field.order,
-        options: field.options as string[] | undefined,
-      })) || [];
-
-      console.log("Mapped custom fields:", mappedCustomFields);
-
-      // Combine default and custom fields
+      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
       const mergedFields = [...defaultFields, ...mappedCustomFields];
-      console.log("All fields combined:", mergedFields);
       
       setFields(mergedFields);
     } catch (error) {

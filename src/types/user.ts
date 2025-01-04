@@ -8,7 +8,7 @@ export interface User {
   companyId: string | null;
   createdAt: string | null;
   lastAccess: string | null;
-  status: boolean;
+  status: string;
   accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
@@ -22,10 +22,10 @@ export interface DatabaseUser {
   name: string;
   email: string;
   role: string;
-  company_id: string | null;
-  created_at: string | null;
+  company_id: string;
+  created_at: string;
   last_access: string | null;
-  status: boolean;
+  status: string;
   access_level: AccessLevel;
   location?: string;
   specialization?: string;
@@ -33,11 +33,11 @@ export interface DatabaseUser {
   password: string;
 }
 
-export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
+export const mapDatabaseUser = (dbUser: any): User => ({
   id: dbUser.id,
   name: dbUser.name,
   email: dbUser.email,
-  role: dbUser.role,
+  role: dbUser.access_level,
   companyId: dbUser.company_id,
   createdAt: dbUser.created_at,
   lastAccess: dbUser.last_access,
@@ -45,17 +45,14 @@ export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
   accessLevel: dbUser.access_level,
   location: dbUser.location,
   specialization: dbUser.specialization,
-  address: dbUser.address
-});
-
-export const mapUserToDatabase = (user: User): Partial<DatabaseUser> => ({
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  company_id: user.companyId,
-  status: user.status,
-  access_level: user.accessLevel,
-  location: user.location,
-  specialization: user.specialization,
-  address: user.address
+  address: dbUser.address,
+  tags: dbUser.user_tags?.map((ut: any) => ({
+    id: ut.tags.id,
+    name: ut.tags.name,
+    color: ut.tags.color
+  })) || [],
+  authorizedRooms: dbUser.user_rooms?.map((ur: any) => ({
+    id: ur.room_id,
+    name: ur.rooms?.name || ''
+  })) || []
 });
