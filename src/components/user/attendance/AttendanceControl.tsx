@@ -65,11 +65,13 @@ export function AttendanceControl() {
         .select('id')
         .eq('date', selectedDate.toISOString().split('T')[0])
         .eq('company_id', user.companyId)
-        .maybeSingle(); // Alterado de .single() para .maybeSingle()
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
-      setHasAttendance(!!data);
-      setIsStarted(false);
+      
+      const attendanceExists = !!data;
+      setHasAttendance(attendanceExists);
+      setIsStarted(attendanceExists);
     } catch (error) {
       console.error('Erro ao verificar chamada:', error);
     }
@@ -85,7 +87,6 @@ export function AttendanceControl() {
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
-    setIsStarted(false);
   };
 
   const handleDeleteAttendance = async () => {
@@ -119,7 +120,7 @@ export function AttendanceControl() {
 
   const handleAttendanceSaved = () => {
     setHasAttendance(true);
-    setIsStarted(false);
+    setIsStarted(true);
     checkAttendance();
   };
 
