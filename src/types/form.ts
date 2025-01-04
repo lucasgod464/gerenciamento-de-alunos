@@ -21,7 +21,7 @@ export interface SupabaseFormField {
   description: string | null;
   required: boolean;
   order: number;
-  options: Json[] | null;
+  options: Json | null;
   company_id: string | null;
   created_at: string;
 }
@@ -35,6 +35,6 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => {
     description: field.description || undefined,
     required: field.required,
     order: field.order,
-    options: field.options ? field.options.map(opt => String(opt)) : undefined,
+    options: field.options ? (field.options as string[]) : undefined,
   };
 };

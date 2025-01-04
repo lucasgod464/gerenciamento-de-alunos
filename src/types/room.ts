@@ -60,7 +60,7 @@ export function mapSupabaseRoomToRoom(room: SupabaseRoom): Room {
       document: rs.student.document,
       address: rs.student.address,
       customFields: rs.student.custom_fields as Record<string, any>,
-      companyId: rs.student.company_id,
+      companyId: rs.student.company_id || '',
       createdAt: rs.student.created_at
     })) || []
   };
