@@ -20,19 +20,20 @@ export function UserRooms() {
       }
 
       try {
-        console.log("Buscando salas para o usuário:", user.id);
+        console.log("Iniciando busca de salas para o usuário:", user.id);
         
-        // Primeiro, buscar os IDs das salas do usuário
-        const { data: userRooms, error: userRoomsError } = await supabase
+        // Primeiro, buscar os IDs das salas do usuário em uma única query
+        const userRoomsQuery = await supabase
           .from('user_rooms')
           .select('room_id')
           .eq('user_id', user.id);
 
-        if (userRoomsError) {
-          console.error('Erro ao buscar user_rooms:', userRoomsError);
-          throw userRoomsError;
+        if (userRoomsQuery.error) {
+          console.error('Erro ao buscar user_rooms:', userRoomsQuery.error);
+          throw userRoomsQuery.error;
         }
 
+        const userRooms = userRoomsQuery.data;
         console.log('User rooms encontradas:', userRooms);
 
         if (!userRooms?.length) {
@@ -42,9 +43,10 @@ export function UserRooms() {
         }
 
         const roomIds = userRooms.map(ur => ur.room_id);
+        console.log('IDs das salas para buscar:', roomIds);
         
-        // Agora buscar os detalhes das salas
-        const { data: roomsData, error: roomsError } = await supabase
+        // Agora buscar os detalhes das salas em uma única query
+        const roomsQuery = await supabase
           .from('rooms')
           .select(`
             id,
@@ -62,14 +64,15 @@ export function UserRooms() {
           `)
           .in('id', roomIds);
 
-        if (roomsError) {
-          console.error('Erro ao buscar salas:', roomsError);
-          throw roomsError;
+        if (roomsQuery.error) {
+          console.error('Erro ao buscar salas:', roomsQuery.error);
+          throw roomsQuery.error;
         }
 
+        const roomsData = roomsQuery.data;
+        console.log('Dados brutos das salas:', roomsData);
+        
         if (roomsData) {
-          console.log('Dados brutos das salas:', roomsData);
-          
           const transformedRooms = roomsData.map(room => ({
             id: room.id,
             name: room.name,
