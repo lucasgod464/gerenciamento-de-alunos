@@ -7,12 +7,15 @@ import { Label } from "@/components/ui/label";
 import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function PublicEnrollment() {
   const { toast } = useToast();
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
 
   useEffect(() => {
     loadFields();
@@ -28,8 +31,7 @@ export default function PublicEnrollment() {
       if (error) throw error;
 
       const validatedFields = (formFields || [])
-        .map((field: SupabaseFormField) => mapSupabaseFormField(field))
-        .filter(field => field.name !== 'nome_completo' && field.name !== 'data_nascimento');
+        .map((field: SupabaseFormField) => mapSupabaseFormField(field));
 
       setFields(validatedFields);
     } catch (error) {
@@ -45,20 +47,24 @@ export default function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Validate required fields
-      if (!data.nome_completo || !data.data_nascimento) {
-        throw new Error("Nome completo e data de nascimento são obrigatórios");
-      }
+      const customFields: Record<string, any> = {};
+      fields.forEach(field => {
+        customFields[field.id] = {
+          fieldId: field.id,
+          fieldName: field.name,
+          label: field.label,
+          value: data[field.name],
+          type: field.type
+        };
+      });
 
-      // Create the student
       const { data: newStudent, error: studentError } = await supabase
         .from('students')
         .insert({
           name: data.nome_completo,
           birth_date: data.data_nascimento,
           status: true,
-          custom_fields: data,
-          company_id: null // This will be assigned when an admin processes the enrollment
+          custom_fields: customFields,
         })
         .select()
         .single();
@@ -78,11 +84,65 @@ export default function PublicEnrollment() {
       console.error("Error submitting enrollment:", error);
       toast({
         title: "Erro ao enviar inscrição",
-        description: error instanceof Error ? error.message : "Não foi possível enviar sua inscrição. Por favor, tente novamente.",
+        description: "Não foi possível enviar sua inscrição. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const renderField = (field: FormField) => {
+    const commonProps = {
+      ...register(field.name, { required: field.required }),
+      id: field.name,
+      className: errors[field.name] ? "border-red-500" : ""
+    };
+
+    switch (field.type) {
+      case "textarea":
+        return <Textarea {...commonProps} />;
+      case "select":
+        return (
+          <Select
+            onValueChange={(value) => setValue(field.name, value)}
+            value={watch(field.name)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma opção" />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "multiple":
+        return (
+          <div className="space-y-2">
+            {field.options?.map((option) => (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${field.name}-${option}`}
+                  checked={watch(field.name)?.includes(option)}
+                  onCheckedChange={(checked) => {
+                    const current = watch(field.name) || [];
+                    const updated = checked
+                      ? [...current, option]
+                      : current.filter((value: string) => value !== option);
+                    setValue(field.name, updated);
+                  }}
+                />
+                <label htmlFor={`${field.name}-${option}`}>{option}</label>
+              </div>
+            ))}
+          </div>
+        );
+      default:
+        return <Input {...commonProps} type={field.type} />;
     }
   };
 
@@ -130,17 +190,14 @@ export default function PublicEnrollment() {
 
               {fields.map((field) => (
                 <div key={field.id} className="space-y-2">
-                  <Label>
+                  <Label htmlFor={field.name}>
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
                   {field.description && (
                     <p className="text-sm text-muted-foreground">{field.description}</p>
                   )}
-                  <Input
-                    {...register(field.name, { required: field.required })}
-                    type={field.type === "date" ? "date" : "text"}
-                  />
+                  {renderField(field)}
                   {errors[field.name] && (
                     <p className="text-sm text-red-500">
                       Este campo é obrigatório
@@ -148,6 +205,7 @@ export default function PublicEnrollment() {
                   )}
                 </div>
               ))}
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Enviando..." : "Enviar Inscrição"}
               </Button>
