@@ -28,7 +28,7 @@ export const useFormFields = () => {
     }
   };
 
-  const handleAddField = async (field: FormField) => {
+  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
       const newField = mapFormFieldToSupabase(field);
 

@@ -26,6 +26,22 @@ export interface SupabaseStudent {
   room_students?: { room_id: string }[];
 }
 
+export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
+  return {
+    id: student.id,
+    name: student.name,
+    birthDate: student.birth_date,
+    status: student.status ?? true,
+    email: student.email || '',
+    document: student.document || '',
+    address: student.address || '',
+    customFields: student.custom_fields || {},
+    companyId: student.company_id,
+    createdAt: student.created_at,
+    room: student.room_students?.[0]?.room_id || null
+  };
+};
+
 export type FieldType = 
   | "text" 
   | "email" 
@@ -45,19 +61,3 @@ export interface FormField {
   order: number;
   options?: string[];
 }
-
-export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
-  return {
-    id: student.id,
-    name: student.name,
-    birthDate: student.birth_date,
-    status: student.status ?? true,
-    email: student.email || '',
-    document: student.document || '',
-    address: student.address || '',
-    customFields: student.custom_fields || {},
-    companyId: student.company_id,
-    createdAt: student.created_at,
-    room: student.room_students?.[0]?.room_id || null
-  };
-};

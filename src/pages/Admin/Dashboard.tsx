@@ -1,132 +1,73 @@
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { Student, mapSupabaseStudentToStudent, SupabaseStudent } from "@/types/student";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
+import { UserStats } from "@/components/users/UserStats";
+import { RoomStats } from "@/components/rooms/RoomStats";
+import { StudyStats } from "@/components/studies/StudyStats";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { Room } from "@/types/room";
 
-const Dashboard = () => {
+const AdminDashboard = () => {
   const { user: currentUser } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const { toast } = useToast();
-
-  const loadStudents = async () => {
-    try {
-      console.log("Iniciando busca de alunos...");
-      console.log("Company ID do usuário:", currentUser?.companyId);
-      
-      const { data: studentsData, error } = await supabase
-        .from('students')
-        .select(`
-          *,
-          room_students (
-            room_id
-          )
-        `)
-        .eq('company_id', currentUser?.companyId);
-
-      if (error) {
-        throw error;
-      }
-
-      console.log("Dados brutos dos alunos:", studentsData);
-
-      const mappedStudents = studentsData.map(student => 
-        mapSupabaseStudentToStudent(student as SupabaseStudent)
-      );
-      
-      console.log("Alunos mapeados:", mappedStudents);
-      setStudents(mappedStudents);
-    } catch (error) {
-      console.error('Erro ao carregar alunos:', error);
-      toast({
-        title: "Erro ao carregar alunos",
-        description: "Não foi possível carregar a lista de alunos.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const { data: usersData, error } = await supabase
-        .from('emails')
-        .select('*');
-
-      if (error) throw error;
-
-      setUsers(usersData);
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      toast({
-        title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadRooms = async () => {
-    try {
-      const { data: roomsData, error } = await supabase
-        .from('rooms')
-        .select('*');
-
-      if (error) throw error;
-
-      setRooms(roomsData);
-    } catch (error) {
-      console.error('Erro ao carregar salas:', error);
-      toast({
-        title: "Erro ao carregar salas",
-        description: "Não foi possível carregar a lista de salas.",
-        variant: "destructive",
-      });
-    }
-  };
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalRooms: 0,
+    activeRooms: 0,
+    totalStudies: 0,
+    activeStudies: 0,
+  });
+  const [rooms, setRooms] = useState<Room[]>([]);
 
   useEffect(() => {
-    if (currentUser?.companyId) {
-      loadStudents();
-      loadUsers();
-      loadRooms();
-    }
-  }, [currentUser?.companyId]);
+    if (!currentUser?.companyId) return;
 
-  const userStats = {
-    totalUsers: users.length,
-    activeUsers: users.filter(user => user.status === 'active').length,
-    inactiveUsers: users.filter(user => user.status !== 'active').length
-  };
+    // Load users stats
+    const allUsers = JSON.parse(localStorage.getItem("users") || "[]");
+    const companyUsers = allUsers.filter((user: any) => user.companyId === currentUser.companyId);
+    const activeUsers = companyUsers.filter((user: any) => user.status === "active");
 
-  const roomStats = {
-    rooms,
-    activeRooms: rooms.filter(room => room.status).length,
-    inactiveRooms: rooms.filter(room => !room.status).length,
-    totalRooms: rooms.length
-  };
+    // Load rooms stats
+    const allRooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+    const companyRooms = allRooms.filter((room: any) => room.companyId === currentUser.companyId);
+    const activeRooms = companyRooms.filter((room: any) => room.status);
+    setRooms(companyRooms);
+
+    // Load studies stats
+    const allStudies = JSON.parse(localStorage.getItem("studies") || "[]");
+    const companyStudies = allStudies.filter((study: any) => study.companyId === currentUser.companyId);
+    const activeStudies = companyStudies.filter((study: any) => study.status);
+
+    setStats({
+      totalUsers: companyUsers.length,
+      activeUsers: activeUsers.length,
+      totalRooms: companyRooms.length,
+      activeRooms: activeRooms.length,
+      totalStudies: companyStudies.length,
+      activeStudies: activeStudies.length,
+    });
+  }, [currentUser]);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout role="admin">
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
         <div>
-          <h2 className="text-xl">Estatísticas de Usuários</h2>
-          <p>Total de Usuários: {userStats.totalUsers}</p>
-          <p>Usuários Ativos: {userStats.activeUsers}</p>
-          <p>Usuários Inativos: {userStats.inactiveUsers}</p>
+          <h1 className="text-2xl font-bold mb-2">Dashboard do Administrador</h1>
+          <p className="text-muted-foreground">
+            Bem-vindo ao painel de controle administrativo
+          </p>
         </div>
-        <div>
-          <h2 className="text-xl">Estatísticas de Salas</h2>
-          <p>Total de Salas: {roomStats.totalRooms}</p>
-          <p>Salas Ativas: {roomStats.activeRooms}</p>
-          <p>Salas Inativas: {roomStats.inactiveRooms}</p>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <UserStats totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
+          <RoomStats rooms={rooms} totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
+          <StudyStats totalStudies={stats.totalStudies} activeStudies={stats.activeStudies} />
         </div>
+
+        <DashboardTabs />
       </div>
     </DashboardLayout>
   );
 };
 
-export default Dashboard;
+export default AdminDashboard;
