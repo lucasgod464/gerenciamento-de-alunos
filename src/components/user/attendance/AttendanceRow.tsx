@@ -50,21 +50,29 @@ export const AttendanceRow = ({
             <SelectValue placeholder="Selecione o status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="present" className="flex items-center gap-2">
-              <CircleCheck className="h-4 w-4 text-green-500" />
-              <span className="text-green-600">Presente</span>
+            <SelectItem value="present">
+              <div className="flex items-center gap-2">
+                <CircleCheck className="h-4 w-4 text-green-500 shrink-0" />
+                <span className="text-green-600">Presente</span>
+              </div>
             </SelectItem>
-            <SelectItem value="absent" className="flex items-center gap-2">
-              <CircleX className="h-4 w-4 text-red-500" />
-              <span className="text-red-600">Ausente</span>
+            <SelectItem value="absent">
+              <div className="flex items-center gap-2">
+                <CircleX className="h-4 w-4 text-red-500 shrink-0" />
+                <span className="text-red-600">Ausente</span>
+              </div>
             </SelectItem>
-            <SelectItem value="late" className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-yellow-500" />
-              <span className="text-yellow-600">Atrasado</span>
+            <SelectItem value="late">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-yellow-500 shrink-0" />
+                <span className="text-yellow-600">Atrasado</span>
+              </div>
             </SelectItem>
-            <SelectItem value="justified" className="flex items-center gap-2">
-              <FileQuestion className="h-4 w-4 text-blue-500" />
-              <span className="text-blue-600">Justificado</span>
+            <SelectItem value="justified">
+              <div className="flex items-center gap-2">
+                <FileQuestion className="h-4 w-4 text-blue-500 shrink-0" />
+                <span className="text-blue-600">Justificado</span>
+              </div>
             </SelectItem>
           </SelectContent>
         </Select>
