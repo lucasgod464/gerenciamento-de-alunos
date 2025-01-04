@@ -45,29 +45,31 @@ export const useStudentTableState = (initialStudents: Student[]) => {
 
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      const { data, error } = await supabase
+      // Atualizar os dados básicos do aluno
+      const { error: studentError } = await supabase
         .from('students')
         .update({
           name: updatedStudent.name,
-          birth_date: updatedStudent.birth_date,
+          birth_date: updatedStudent.birthDate,
           status: updatedStudent.status,
           email: updatedStudent.email,
           document: updatedStudent.document,
           address: updatedStudent.address,
-          custom_fields: updatedStudent.custom_fields
+          custom_fields: updatedStudent.customFields
         })
-        .eq('id', updatedStudent.id)
-        .select()
-        .single();
+        .eq('id', updatedStudent.id);
 
-      if (error) throw error;
+      if (studentError) throw studentError;
 
+      // Atualizar a relação com a sala
       if (updatedStudent.room) {
+        // Primeiro, remover qualquer relação existente
         await supabase
           .from('room_students')
           .delete()
           .eq('student_id', updatedStudent.id);
 
+        // Depois, criar a nova relação
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
@@ -78,25 +80,9 @@ export const useStudentTableState = (initialStudents: Student[]) => {
         if (roomError) throw roomError;
       }
 
-      setLocalStudents(prev => 
-        prev.map(student => 
-          student.id === updatedStudent.id ? updatedStudent : student
-        )
-      );
-
-      toast({
-        title: "Sucesso",
-        description: "Dados do aluno atualizados com sucesso!",
-      });
-
-      return data;
+      return true;
     } catch (error) {
       console.error("Erro ao atualizar aluno:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao atualizar dados do aluno",
-        variant: "destructive",
-      });
       throw error;
     }
   };

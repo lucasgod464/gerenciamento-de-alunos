@@ -14,6 +14,7 @@ import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
 import { useStudentTableState } from "./student/useStudentTableState";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentTableProps {
   students: Student[];
@@ -36,8 +37,9 @@ export function StudentTable({
 }: StudentTableProps) {
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
-  const { localStudents, handleUpdateStudent } = useStudentTableState(students);
+  const { localStudents, setLocalStudents, handleUpdateStudent } = useStudentTableState(students);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>(initialRooms);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadRooms = async () => {
@@ -68,12 +70,32 @@ export function StudentTable({
   const handleSubmit = async (student: Student) => {
     try {
       await handleUpdateStudent(student);
+      
+      // Atualizar a lista local de estudantes
+      setLocalStudents(prev => 
+        prev.map(s => s.id === student.id ? student : s)
+      );
+
+      // Chamar o callback de atualização se existir
       if (onUpdateStudent) {
         await onUpdateStudent(student);
       }
+
+      // Fechar o modal de edição
       setEditingStudent(null);
+
+      // Mostrar mensagem de sucesso
+      toast({
+        title: "Sucesso",
+        description: "Aluno atualizado com sucesso!",
+      });
     } catch (error) {
       console.error("Erro ao atualizar aluno:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar aluno. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
