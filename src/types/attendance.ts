@@ -5,9 +5,15 @@ export type AttendanceStatus = "present" | "absent" | "late" | "justified";
 export interface Student {
   id: string;
   name: string;
-  room: string;
+  room?: string;
   status: AttendanceStatus;
-  companyId: string | null;
+  birth_date?: string;
+  email?: string | null;
+  document?: string | null;
+  address?: string | null;
+  custom_fields?: Json;
+  company_id?: string;
+  created_at?: string;
 }
 
 export interface DailyAttendance {
@@ -18,18 +24,7 @@ export interface DailyAttendance {
   company_id: string | null;
   created_at: string;
   room_id: string | null;
-  students?: {
-    id: string;
-    name: string;
-    birth_date: string;
-    status: boolean;
-    email: string | null;
-    document: string | null;
-    address: string | null;
-    custom_fields: Json;
-    company_id: string;
-    created_at: string;
-  };
+  students?: Student;
 }
 
 export interface DailyObservation {

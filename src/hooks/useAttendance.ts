@@ -35,7 +35,7 @@ export function useAttendance() {
       ]);
 
       if (attendanceData) {
-        setDailyAttendances(attendanceData);
+        setDailyAttendances(attendanceData as DailyAttendance[]);
       }
 
       if (observationData) {
