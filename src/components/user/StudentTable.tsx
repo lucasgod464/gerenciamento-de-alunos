@@ -99,7 +99,7 @@ export function StudentTable({
           {students.map((student) => (
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
-              <TableCell>{student.birthDate}</TableCell>
+              <TableCell>{student.birth_date}</TableCell>
               <TableCell>{getRoomName(student.room || '')}</TableCell>
               <TableCell>
                 <span
@@ -141,7 +141,6 @@ export function StudentTable({
           {editingStudent && (
             <StudentForm
               initialData={editingStudent}
-              customFields={[]}
               onSubmit={handleSubmit}
             />
           )}
