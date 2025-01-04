@@ -6,18 +6,30 @@ export function useAuth() {
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      
       try {
-        const parsedSession = JSON.parse(storedSession);
-        if (!parsedSession?.user?.id || !parsedSession?.token) {
-          localStorage.removeItem("session");
-          return null;
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .single();
+
+        if (userData) {
+          return {
+            user: {
+              id: userData.id,
+              name: userData.name || '',
+              email: userData.email,
+              role: userData.role as UserRole,
+              companyId: userData.company_id || null,
+              createdAt: userData.created_at,
+              lastAccess: new Date().toISOString(),
+              status: userData.status ? 'active' : 'inactive',
+            },
+            token: `${userData.role.toLowerCase()}-token`,
+          };
         }
-        return parsedSession;
+        return null;
       } catch (error) {
-        localStorage.removeItem("session");
+        console.error('Error fetching session:', error);
         return null;
       }
     },
@@ -25,15 +37,6 @@ export function useAuth() {
     gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: true,
-    initialData: () => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      try {
-        return JSON.parse(storedSession);
-      } catch {
-        return null;
-      }
-    },
   });
 
   const login = async (email: string, password: string) => {
@@ -64,7 +67,6 @@ export function useAuth() {
           token: `${userData.role.toLowerCase()}-token`,
         };
 
-        localStorage.setItem("session", JSON.stringify(response));
         await refetch();
         return response;
       }
@@ -99,7 +101,6 @@ export function useAuth() {
           token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
         };
 
-        localStorage.setItem("session", JSON.stringify(response));
         await refetch();
         return response;
       }
@@ -114,9 +115,8 @@ export function useAuth() {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("session");
-    refetch();
+  const logout = async () => {
+    await refetch();
   };
 
   const isAuthenticated = !!session?.user?.id && !!session?.token;
