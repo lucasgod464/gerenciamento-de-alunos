@@ -85,7 +85,7 @@ export const updateDailyObservation = async (
 };
 
 export const startNewAttendance = async (
-  students: { id: string }[],
+  students: any[],
   dateStr: string,
   companyId: string
 ) => {

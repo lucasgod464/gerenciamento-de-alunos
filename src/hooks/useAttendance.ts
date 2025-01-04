@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Student, DailyAttendance, DailyObservation, AttendanceStatus } from "@/types/attendance";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   fetchDailyAttendance,
   fetchDailyObservation,
@@ -34,12 +35,12 @@ export function useAttendance() {
       ]);
 
       if (attendanceData) {
-        setDailyAttendances(attendanceData as DailyAttendance[]);
+        setDailyAttendances(attendanceData);
       }
 
       if (observationData) {
         setObservation(observationData.text);
-        setObservations([observationData as DailyObservation]);
+        setObservations([observationData]);
       } else {
         setObservation("");
       }
@@ -103,12 +104,12 @@ export function useAttendance() {
     if (!selectedDate || !currentUser?.companyId) return;
 
     try {
-      const { data: studentsData, error: studentsError } = await supabase
+      const { data: studentsData, error } = await supabase
         .from('students')
         .select('*')
         .eq('company_id', currentUser.companyId);
 
-      if (studentsError) throw studentsError;
+      if (error) throw error;
 
       const dateStr = selectedDate.toISOString().split('T')[0];
       await startNewAttendance(studentsData, dateStr, currentUser.companyId);
