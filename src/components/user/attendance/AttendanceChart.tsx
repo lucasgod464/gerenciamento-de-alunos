@@ -30,44 +30,45 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
   const [data, setData] = useState<AttendanceCount[]>([]);
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchAttendanceData = async () => {
-      if (!user?.companyId) return;
+  const fetchAttendanceData = async () => {
+    if (!user?.companyId) return;
 
-      try {
-        const { data: attendance, error } = await supabase
-          .from('daily_attendance')
-          .select('status')
-          .eq('date', date.toISOString().split('T')[0])
-          .eq('company_id', user.companyId);
+    try {
+      const { data: attendance, error } = await supabase
+        .from('daily_attendance')
+        .select('status')
+        .eq('date', date.toISOString().split('T')[0])
+        .eq('company_id', user.companyId);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        const counts = {
-          present: 0,
-          absent: 0,
-          late: 0,
-          justified: 0
-        };
+      const counts = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        justified: 0
+      };
 
-        attendance?.forEach(record => {
-          if (record.status in counts) {
-            counts[record.status as keyof typeof counts]++;
-          }
-        });
+      attendance?.forEach(record => {
+        if (record.status in counts) {
+          counts[record.status as keyof typeof counts]++;
+        }
+      });
 
-        const chartData = Object.entries(counts).map(([name, value]) => ({
+      const chartData = Object.entries(counts)
+        .filter(([_, value]) => value > 0) // Só inclui status que têm pelo menos um aluno
+        .map(([name, value]) => ({
           name,
           value
         }));
 
-        setData(chartData);
-      } catch (error) {
-        console.error('Erro ao buscar dados de presença:', error);
-      }
-    };
+      setData(chartData);
+    } catch (error) {
+      console.error('Erro ao buscar dados de presença:', error);
+    }
+  };
 
-    // Busca inicial dos dados
+  useEffect(() => {
     fetchAttendanceData();
 
     // Inscreve no canal de realtime para atualizações
@@ -82,7 +83,6 @@ export function AttendanceChart({ date }: AttendanceChartProps) {
           filter: `date=eq.${date.toISOString().split('T')[0]}`
         },
         () => {
-          // Atualiza os dados quando houver mudanças
           fetchAttendanceData();
         }
       )
