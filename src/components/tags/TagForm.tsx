@@ -113,14 +113,14 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                     showColorPicker ? "border-primary" : ""
                   }`}
                   style={{ 
-                    backgroundColor: color !== colors.find(c => c === color) ? color : 'transparent'
+                    backgroundColor: !colors.includes(color) ? color : 'transparent'
                   }}
                 >
                   <Palette 
                     size={16} 
-                    className={`${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
+                    className={`${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
                   />
-                  <span className={`text-[10px] ${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                  <span className={`text-[10px] ${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
                     Custom
                   </span>
                 </button>
@@ -130,6 +130,9 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                 side="right"
                 align="start"
                 sideOffset={5}
+                onInteractOutside={(e) => {
+                  e.preventDefault();
+                }}
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
