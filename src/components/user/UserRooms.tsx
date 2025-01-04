@@ -13,38 +13,43 @@ export function UserRooms() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchRooms = async () => {
-      if (!user?.id || !user?.companyId) {
-        console.log("No user ID or companyId found");
+    const fetchUserRooms = async () => {
+      if (!user?.id) {
+        console.log("No user ID found");
         return;
       }
 
       try {
-        const { data: roomsData, error } = await supabase
-          .from('rooms')
+        // First get the rooms the user has access to through user_rooms table
+        const { data: userRooms, error: userRoomsError } = await supabase
+          .from('user_rooms')
           .select(`
-            *,
-            room_students (
-              student:students (
-                id,
-                name,
-                birth_date,
-                status,
-                email,
-                document,
-                address,
-                custom_fields,
-                company_id,
-                created_at
+            room:room_id (
+              *,
+              room_students (
+                student:students (
+                  id,
+                  name,
+                  birth_date,
+                  status,
+                  email,
+                  document,
+                  address,
+                  custom_fields,
+                  company_id,
+                  created_at
+                )
               )
             )
           `)
-          .eq('company_id', user.companyId);
+          .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (userRoomsError) throw userRoomsError;
 
-        if (roomsData) {
-          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
+        if (userRooms) {
+          const transformedRooms = userRooms
+            .filter(ur => ur.room) // Filter out any null rooms
+            .map(ur => mapSupabaseRoomToRoom(ur.room));
           setRooms(transformedRooms);
         }
 
@@ -58,7 +63,7 @@ export function UserRooms() {
       }
     };
 
-    fetchRooms();
+    fetchUserRooms();
   }, [user, toast]);
 
   const getStudentCount = (room: Room) => {
@@ -148,4 +153,4 @@ export function UserRooms() {
       ))}
     </div>
   );
-};
+}
