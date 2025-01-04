@@ -13,56 +13,42 @@ export const useStudentData = (userId: string | undefined) => {
     try {
       console.log("Buscando alunos para o usuário:", userId);
       
-      // Primeiro, buscar as salas do usuário
-      const { data: userRooms, error: roomsError } = await supabase
-        .from('user_rooms')
-        .select('room_id')
-        .eq('user_id', userId);
-
-      if (roomsError) throw roomsError;
-      
-      console.log("Salas do usuário:", userRooms);
-
-      if (!userRooms?.length) {
-        console.log("Usuário não tem salas associadas");
-        return;
-      }
-
-      const roomIds = userRooms.map(ur => ur.room_id);
-
-      // Buscar alunos das salas do usuário usando LEFT JOIN para pegar todos os dados
-      const { data: studentsData, error: studentsError } = await supabase
-        .from('room_students')
+      // Buscar alunos através das salas autorizadas do usuário
+      const { data: studentsData, error } = await supabase
+        .from('students')
         .select(`
-          student:students (
-            id,
-            name,
-            birth_date,
-            status,
-            email,
-            document,
-            address,
-            custom_fields,
-            company_id,
-            created_at
-          ),
-          room_id
+          id,
+          name,
+          birth_date,
+          status,
+          email,
+          document,
+          address,
+          custom_fields,
+          company_id,
+          created_at,
+          room_students(room_id)
         `)
-        .in('room_id', roomIds);
+        .order('name');
 
-      if (studentsError) throw studentsError;
+      if (error) throw error;
       
       console.log("Dados dos alunos encontrados:", studentsData);
 
       if (studentsData) {
-        const mappedStudents = studentsData
-          .map(rs => rs.student)
-          .filter((student): student is Student => student !== null)
-          .map(student => ({
-            ...student,
-            custom_fields: student.custom_fields as Record<string, any>,
-            room: studentsData.find(rs => rs.student?.id === student.id)?.room_id
-          }));
+        const mappedStudents: Student[] = studentsData.map(student => ({
+          id: student.id,
+          name: student.name,
+          birth_date: student.birth_date,
+          status: student.status ?? true,
+          email: student.email,
+          document: student.document,
+          address: student.address,
+          custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
+          company_id: student.company_id || '',
+          created_at: student.created_at,
+          room: student.room_students?.[0]?.room_id
+        }));
 
         console.log("Alunos mapeados:", mappedStudents);
         setStudents(mappedStudents);
@@ -71,7 +57,7 @@ export const useStudentData = (userId: string | undefined) => {
       console.error('Erro ao carregar alunos:', error);
       toast({
         title: "Erro ao carregar alunos",
-        description: "Não foi possível carregar a lista de alunos.",
+        description: "Ocorreu um erro ao carregar a lista de alunos.",
         variant: "destructive",
       });
     }

@@ -2,8 +2,11 @@ import { AddStudentDialog } from "./AddStudentDialog";
 import { StudentTable } from "./StudentTable";
 import { StudentFilters } from "./student/StudentFilters";
 import { useStudentManagement } from "./student/useStudentManagement";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export const StudentRegistration = () => {
+  const { user } = useAuth();
   const {
     students,
     rooms,
@@ -14,7 +17,14 @@ export const StudentRegistration = () => {
     handleAddStudent,
     handleDeleteStudent,
     handleUpdateStudent,
+    loadStudents,
   } = useStudentManagement();
+
+  useEffect(() => {
+    if (user?.id) {
+      loadStudents();
+    }
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
