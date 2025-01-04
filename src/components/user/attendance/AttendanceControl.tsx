@@ -65,7 +65,7 @@ export function AttendanceControl() {
         .select('id')
         .eq('date', selectedDate.toISOString().split('T')[0])
         .eq('company_id', user.companyId)
-        .single();
+        .maybeSingle(); // Alterado de .single() para .maybeSingle()
 
       if (error && error.code !== 'PGRST116') throw error;
       setHasAttendance(!!data);
