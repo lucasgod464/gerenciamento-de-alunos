@@ -1,109 +1,102 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { UserFormFields } from "./UserFormFields";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { User } from "@/types/user";
 import { useState } from "react";
-import { userService } from "@/services/userService";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { UserFormFields } from "./UserFormFields";
+import { generateStrongPassword } from "@/utils/passwordUtils";
 
 interface CreateUserDialogProps {
-  onUserCreated: (user: User) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUserCreated: () => void;
+  companyId: string;
 }
 
-export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
+export function CreateUserDialog({
+  open,
+  onOpenChange,
+  onUserCreated,
+  companyId,
+}: CreateUserDialogProps) {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const { user: currentUser } = useAuth();
-  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
-  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState(generateStrongPassword());
 
-  const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
-    setSelectedTags(tags);
-  };
-
-  const generateStrongPassword = () => {
-    const length = 12;
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
-      password += charset[randomIndex];
-    }
-    
-    const passwordInput = document.querySelector('input[name="password"]') as HTMLInputElement;
-    if (passwordInput) {
-      passwordInput.value = password;
-    }
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email") as string;
-    const name = formData.get("name") as string;
-    const password = formData.get("password") as string;
-    const accessLevel = formData.get("access_level") as "Admin" | "Usuário Comum" || "Usuário Comum";
-    const location = formData.get("address") as string;
-    const specialization = formData.get("specialization") as string;
-    
-    if (!email || !name || !password || !currentUser?.companyId) {
-      toast({
-        title: "Erro ao criar usuário",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleCreateUser = async (formData: FormData) => {
     try {
-      const user = await userService.createUser({
-        email,
-        name,
-        password,
-        accessLevel,
-        companyId: currentUser.companyId,
-        location,
-        specialization,
-        status: 'active',
-        role: 'USER',
-        selectedTags
-      });
+      setLoading(true);
 
-      onUserCreated(user);
+      const { data: emailData, error: emailError } = await supabase
+        .from('emails')
+        .insert({
+          name: formData.get('name'),
+          email: formData.get('email'),
+          password: formData.get('password'),
+          access_level: formData.get('accessLevel'),
+          company_id: companyId,
+          location: formData.get('location'),
+          specialization: formData.get('specialization'),
+        })
+        .select()
+        .single();
+
+      if (emailError) throw emailError;
+
+      const selectedTags = JSON.parse(formData.get('tags') as string || '[]');
       
+      if (selectedTags.length > 0) {
+        const userTagsToInsert = selectedTags.map((tag: { id: string }) => ({
+          user_id: emailData.id,
+          tag_id: tag.id,
+        }));
+
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(userTagsToInsert);
+
+        if (tagsError) throw tagsError;
+      }
+
       toast({
         title: "Usuário criado",
         description: "O usuário foi criado com sucesso.",
       });
 
-      setOpen(false);
-    } catch (error: any) {
-      console.error('Error in handleSubmit:', error);
+      onUserCreated();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
       toast({
         title: "Erro ao criar usuário",
-        description: error.message || "Ocorreu um erro ao criar o usuário. Por favor, tente novamente.",
+        description: "Ocorreu um erro ao criar o usuário.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Criar Usuário</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Criar Usuário</DialogTitle>
+          <DialogTitle>Criar Novo Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <UserFormFields 
-            onTagsChange={handleTagsChange}
-            generateStrongPassword={generateStrongPassword}
+        <form action={handleCreateUser} className="space-y-4">
+          <UserFormFields
+            generateStrongPassword={() => {
+              const newPassword = generateStrongPassword();
+              setPassword(newPassword);
+              return newPassword;
+            }}
+            defaultValues={{
+              password,
+            }}
           />
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="submit">Criar</Button>
-          </div>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Criando..." : "Criar Usuário"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

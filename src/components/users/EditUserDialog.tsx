@@ -1,198 +1,145 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, UserStatus } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { UserBasicInfo } from "./dialog/UserBasicInfo";
-import { UserAccessLevel } from "./dialog/UserAccessLevel";
-import { TagSelectionFields } from "./fields/TagSelectionFields";
+import { UserFormFields } from "./UserFormFields";
+import { User } from "@/types/user";
 
 interface EditUserDialogProps {
-  user: User | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUserUpdated: (user: User) => void;
+  onUserUpdated: () => void;
+  user: User | null;
 }
 
-export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: EditUserDialogProps) {
+export function EditUserDialog({
+  open,
+  onOpenChange,
+  onUserUpdated,
+  user
+}: EditUserDialogProps) {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const [formData, setFormData] = useState<User | null>(null);
-  const [newPassword, setNewPassword] = useState("");
-  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentTags, setCurrentTags] = useState<Array<{ id: string; name: string; color: string }>>([]);
 
   useEffect(() => {
-    const loadUserData = async () => {
-      if (user?.id) {
-        try {
-          console.log('Loading user data for ID:', user.id);
-          
-          // Load user tags
-          const { data: tagData, error: tagError } = await supabase
-            .from('user_tags')
-            .select(`
-              tag_id,
-              tags:tag_id (
-                id,
-                name,
-                color
-              )
-            `)
-            .eq('user_id', user.id);
+    const fetchUserTags = async () => {
+      if (!user?.id) return;
 
-          if (tagError) {
-            console.error('Error loading user tags:', tagError);
-            throw tagError;
-          }
+      try {
+        const { data: userTags, error } = await supabase
+          .from('user_tags')
+          .select(`
+            tags (
+              id,
+              name,
+              color
+            )
+          `)
+          .eq('user_id', user.id);
 
-          const userTags = tagData?.map(t => ({
-            id: t.tags.id,
-            name: t.tags.name,
-            color: t.tags.color
-          })) || [];
-          
-          setFormData(user);
-          setNewPassword("");
-          setSelectedTags(userTags);
-        } catch (error) {
-          console.error('Error loading user data:', error);
-          toast({
-            title: "Erro ao carregar dados",
-            description: "Não foi possível carregar os dados do usuário.",
-            variant: "destructive",
-          });
+        if (error) throw error;
+
+        if (userTags) {
+          setCurrentTags(userTags.map(ut => ut.tags).filter(Boolean));
         }
+      } catch (error) {
+        console.error('Error fetching user tags:', error);
       }
     };
 
-    if (user && open) {
-      loadUserData();
-    }
-  }, [user, open, toast]);
+    fetchUserTags();
+  }, [user]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!formData) return;
+  const handleUpdateUser = async (formData: FormData) => {
+    if (!user) return;
 
     try {
-      setIsSubmitting(true);
+      setLoading(true);
 
-      const updateData: any = {
-        name: formData.name,
-        email: formData.email,
-        access_level: formData.accessLevel,
-        location: formData.location || null,
-        specialization: formData.specialization || null,
-        status: formData.status as UserStatus,
-      };
-
-      if (newPassword) {
-        updateData.password = newPassword;
-      }
-
-      // Update user data
-      const { data: updatedUser, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('emails')
-        .update(updateData)
-        .eq('id', formData.id)
-        .select('*')
-        .single();
+        .update({
+          name: formData.get('name'),
+          email: formData.get('email'),
+          access_level: formData.get('accessLevel'),
+          location: formData.get('location'),
+          specialization: formData.get('specialization'),
+          status: formData.get('status'),
+        })
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
       // Update tags
-      const { error: deleteTagError } = await supabase
+      const selectedTags = JSON.parse(formData.get('tags') as string || '[]');
+      
+      // Remove existing tags
+      const { error: deleteTagsError } = await supabase
         .from('user_tags')
         .delete()
-        .eq('user_id', formData.id);
+        .eq('user_id', user.id);
 
-      if (deleteTagError) throw deleteTagError;
+      if (deleteTagsError) throw deleteTagsError;
 
+      // Add new tags
       if (selectedTags.length > 0) {
-        const tagsData = selectedTags.map(tag => ({
-          user_id: formData.id,
+        const userTagsToInsert = selectedTags.map((tag: { id: string }) => ({
+          user_id: user.id,
           tag_id: tag.id,
         }));
 
-        const { error: tagError } = await supabase
+        const { error: insertTagsError } = await supabase
           .from('user_tags')
-          .insert(tagsData);
+          .insert(userTagsToInsert);
 
-        if (tagError) throw tagError;
+        if (insertTagsError) throw insertTagsError;
       }
 
-      const finalUser: User = {
-        ...formData,
-        ...updatedUser,
-        tags: selectedTags,
-        status: formData.status as UserStatus,
-      };
-
-      onUserUpdated(finalUser);
-      onOpenChange(false);
       toast({
         title: "Usuário atualizado",
-        description: "As informações do usuário foram atualizadas com sucesso.",
+        description: "O usuário foi atualizado com sucesso.",
       });
+
+      onUserUpdated();
+      onOpenChange(false);
     } catch (error) {
-      console.error("Error updating user:", error);
+      console.error('Error updating user:', error);
       toast({
-        title: "Erro ao atualizar",
+        title: "Erro ao atualizar usuário",
         description: "Ocorreu um erro ao atualizar o usuário.",
         variant: "destructive",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (!formData) return null;
+  if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-          <UserBasicInfo
-            formData={formData}
-            setFormData={setFormData}
-            newPassword={newPassword}
-            setNewPassword={setNewPassword}
-          />
-          
-          <UserAccessLevel
-            accessLevel={formData.accessLevel}
-            onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
-          />
-
-          <TagSelectionFields
-            selectedTags={selectedTags}
-            onTagToggle={(tag) => {
-              setSelectedTags(prev => 
-                prev.some(t => t.id === tag.id)
-                  ? prev.filter(t => t.id !== tag.id)
-                  : [...prev, tag]
-              );
+        <form action={handleUpdateUser} className="space-y-4">
+          <UserFormFields
+            defaultValues={{
+              name: user.name,
+              email: user.email,
+              accessLevel: user.accessLevel,
+              location: user.location,
+              specialization: user.specialization,
+              status: user.status,
+              tags: currentTags,
             }}
+            isEditing
           />
-
-          <div className="sticky bottom-0 bg-white pt-4 pb-2">
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Salvando..." : "Salvar Alterações"}
-            </Button>
-          </div>
+          <Button type="submit" disabled={loading}>
+            {loading ? "Atualizando..." : "Atualizar Usuário"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

@@ -5,7 +5,7 @@ import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Room } from "@/types/room";
+import { Room, mapSupabaseRoomToRoom } from "@/types/room";
 
 export function UserRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -25,9 +25,17 @@ export function UserRooms() {
           .select(`
             *,
             room_students (
-              student:student_id (
+              student:students (
                 id,
-                name
+                name,
+                birth_date,
+                status,
+                email,
+                document,
+                address,
+                custom_fields,
+                company_id,
+                created_at
               )
             )
           `)
@@ -36,19 +44,7 @@ export function UserRooms() {
         if (error) throw error;
 
         if (roomsData) {
-          const transformedRooms = roomsData.map(room => ({
-            id: room.id,
-            name: room.name,
-            schedule: room.schedule,
-            location: room.location,
-            category: room.category,
-            status: room.status,
-            companyId: room.company_id,
-            studyRoom: room.study_room,
-            createdAt: room.created_at,
-            students: room.room_students?.map(rs => rs.student) || []
-          }));
-
+          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
           setRooms(transformedRooms);
         }
 
@@ -73,11 +69,6 @@ export function UserRooms() {
     const studentCount = getStudentCount(room);
     const estimatedCapacity = 30;
     return Math.min((studentCount / estimatedCapacity) * 100, 100);
-  };
-
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category ? category.name : "Sem categoria";
   };
 
   if (!user) {
@@ -115,11 +106,6 @@ export function UserRooms() {
               </div>
               <div>
                 <CardTitle className="text-lg font-semibold">{room.name}</CardTitle>
-                {room.category && (
-                  <p className="text-sm text-muted-foreground">
-                    Categoria: {getCategoryName(room.category)}
-                  </p>
-                )}
               </div>
             </div>
           </CardHeader>
