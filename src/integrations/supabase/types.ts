@@ -165,6 +165,90 @@ export type Database = {
           },
         ]
       }
+      daily_attendance: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          date: string
+          id: string
+          room_id: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          room_id?: string | null
+          status: string
+          student_id: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          room_id?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_attendance_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_attendance_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_observations: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          date: string
+          id: string
+          text: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          text: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_observations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emails: {
         Row: {
           access_level: Database["public"]["Enums"]["email_access_level"]
