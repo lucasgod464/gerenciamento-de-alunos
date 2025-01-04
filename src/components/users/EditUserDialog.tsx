@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/user";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UserFormFields from "./UserFormFields";
 
 interface EditUserDialogProps {
@@ -26,12 +26,16 @@ export function EditUserDialog({
 }: EditUserDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
-    user?.tags || []
-  );
-  const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    user?.authorizedRooms?.map(room => room.id) || []
-  );
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+
+  // Atualiza os estados quando o usuário ou o diálogo mudam
+  useEffect(() => {
+    if (user && open) {
+      setSelectedTags(user.tags || []);
+      setSelectedRooms(user.authorizedRooms?.map(room => room.id) || []);
+    }
+  }, [user, open]);
 
   const handleUpdateUser = async (formData: FormData) => {
     if (!user) return;
