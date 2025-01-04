@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttendanceStats } from "./AttendanceStats";
 import { AttendanceList } from "./AttendanceList";
@@ -7,7 +7,10 @@ import { DailyObservations } from "./attendance/DailyObservations";
 import { useAttendance } from "@/hooks/useAttendance";
 
 export const AttendanceControl = () => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(() => {
+    const savedDate = localStorage.getItem('selectedAttendanceDate');
+    return savedDate ? new Date(savedDate) : new Date();
+  });
   
   const {
     observation,
@@ -19,6 +22,12 @@ export const AttendanceControl = () => {
     isAttendanceDay,
     getCurrentDayStudents
   } = useAttendance(selectedDate);
+
+  useEffect(() => {
+    if (selectedDate) {
+      localStorage.setItem('selectedAttendanceDate', selectedDate.toISOString());
+    }
+  }, [selectedDate]);
 
   return (
     <div className="space-y-6">
