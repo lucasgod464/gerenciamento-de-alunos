@@ -8,12 +8,14 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
+import { CreateUserDialog } from "./CreateUserDialog";
 
 interface UsersFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
+  onUserCreated: () => void;
 }
 
 export function UsersFilters({
@@ -21,6 +23,7 @@ export function UsersFilters({
   onSearchChange,
   statusFilter,
   onStatusFilterChange,
+  onUserCreated,
 }: UsersFiltersProps) {
   return (
     <Card className="mb-6">
@@ -35,16 +38,19 @@ export function UsersFilters({
               className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
             />
           </div>
-          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Status</SelectItem>
-              <SelectItem value="active">Ativo</SelectItem>
-              <SelectItem value="inactive">Inativo</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="active">Ativo</SelectItem>
+                <SelectItem value="inactive">Inativo</SelectItem>
+              </SelectContent>
+            </Select>
+            <CreateUserDialog onUserCreated={onUserCreated} />
+          </div>
         </div>
       </CardContent>
     </Card>

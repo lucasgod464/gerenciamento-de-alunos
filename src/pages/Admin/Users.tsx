@@ -1,11 +1,9 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { UsersHeader } from "@/components/users/UsersHeader";
 import { UserList } from "@/components/users/UserList";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { mapDatabaseUser } from "@/types/user";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { UserStats } from "@/components/users/UserStats";
 
@@ -155,7 +153,12 @@ const Users = () => {
   return (
     <DashboardLayout role="admin">
       <div className="max-w-7xl mx-auto space-y-6">
-        <UsersHeader onUserCreated={loadUsers} />
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
+          <p className="text-muted-foreground">
+            Gerencie os usuários do sistema
+          </p>
+        </div>
         <UserStats 
           totalUsers={totalUsers}
           activeUsers={activeUsers}
@@ -166,6 +169,7 @@ const Users = () => {
           onSearchChange={setSearch}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          onUserCreated={loadUsers}
         />
         <UserList 
           users={filteredUsers}
