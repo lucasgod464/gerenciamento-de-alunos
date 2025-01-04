@@ -12,6 +12,7 @@ export function useRooms() {
 
   const fetchRooms = async () => {
     try {
+      console.log("Fetching rooms for company:", user?.companyId);
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
@@ -31,12 +32,13 @@ export function useRooms() {
 
       if (error) throw error;
 
+      console.log("Rooms data:", roomsData);
       const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
+      console.log("Transformed rooms:", formattedRooms);
 
       setRooms(formattedRooms);
-      console.log("Salas carregadas:", formattedRooms);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       toast({
@@ -68,8 +70,11 @@ export function useRooms() {
             category: room.category,
             status: room.status,
             study_room: room.studyRoom || '',
+            company_id: user?.companyId
           })
-          .eq('id', room.id);
+          .eq('id', room.id)
+          .select()
+          .single();
 
         if (updateError) throw updateError;
 
@@ -89,7 +94,9 @@ export function useRooms() {
             status: room.status,
             study_room: room.studyRoom || '',
             company_id: user?.companyId,
-          });
+          })
+          .select()
+          .single();
 
         if (createError) throw createError;
 
@@ -117,7 +124,9 @@ export function useRooms() {
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId);
+        .eq('id', roomId)
+        .select()
+        .single();
 
       if (deleteError) throw deleteError;
 
