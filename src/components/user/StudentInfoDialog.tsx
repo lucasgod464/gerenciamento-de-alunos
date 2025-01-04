@@ -6,8 +6,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Student } from "@/types/student";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 interface StudentInfoDialogProps {
   student: Student | null;
@@ -24,61 +22,55 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
       return !['nome', 'nomecompleto', 'datanascimento', 'datadenanscimento'].includes(normalizedKey);
     }) : [];
 
-  const InfoField = ({ label, value }: { label: string; value: string | null | undefined }) => {
-    if (!value) return null;
-    return (
-      <div className="space-y-1">
-        <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-        <dd className="text-sm text-foreground">{value}</dd>
-      </div>
-    );
-  };
-
   return (
     <Dialog open={!!student} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Informações do Aluno</DialogTitle>
+          <DialogTitle>Informações do Aluno</DialogTitle>
           <DialogDescription>
             Dados fornecidos durante a inscrição
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="mt-4">
-          <Card className="p-6">
-            <div className="space-y-6">
-              {/* Informações básicas */}
-              <div>
-                <h3 className="text-lg font-medium mb-4">Informações Básicas</h3>
-                <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoField label="Nome" value={student.name} />
-                  <InfoField label="Data de Nascimento" value={student.birth_date} />
-                  <InfoField label="Email" value={student.email} />
-                  <InfoField label="Documento" value={student.document} />
-                  <InfoField label="Endereço" value={student.address} />
-                </dl>
-              </div>
-
-              {/* Campos personalizados */}
-              {filteredCustomFields.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="text-lg font-medium mb-4">Informações Adicionais</h3>
-                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {filteredCustomFields.map(([key, value]) => (
-                        <InfoField 
-                          key={key}
-                          label={key.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}
-                          value={Array.isArray(value) ? value.join(", ") : String(value)}
-                        />
-                      ))}
-                    </dl>
-                  </div>
-                </>
-              )}
+        <div className="space-y-4">
+          {/* Campos básicos */}
+          <div className="flex flex-col space-y-1.5">
+            <label className="font-semibold">Nome</label>
+            <p className="text-sm text-muted-foreground">{student.name}</p>
+          </div>
+          <div className="flex flex-col space-y-1.5">
+            <label className="font-semibold">Data de Nascimento</label>
+            <p className="text-sm text-muted-foreground">{student.birth_date}</p>
+          </div>
+          {student.email && (
+            <div className="flex flex-col space-y-1.5">
+              <label className="font-semibold">Email</label>
+              <p className="text-sm text-muted-foreground">{student.email}</p>
             </div>
-          </Card>
+          )}
+          {student.document && (
+            <div className="flex flex-col space-y-1.5">
+              <label className="font-semibold">Documento</label>
+              <p className="text-sm text-muted-foreground">{student.document}</p>
+            </div>
+          )}
+          {student.address && (
+            <div className="flex flex-col space-y-1.5">
+              <label className="font-semibold">Endereço</label>
+              <p className="text-sm text-muted-foreground">{student.address}</p>
+            </div>
+          )}
+          
+          {/* Campos personalizados (excluindo duplicatas) */}
+          {filteredCustomFields.map(([key, value]) => (
+            <div key={key} className="flex flex-col space-y-1.5">
+              <label className="font-semibold capitalize">
+                {key.replace(/_/g, " ")}
+              </label>
+              <p className="text-sm text-muted-foreground">
+                {Array.isArray(value) ? value.join(", ") : String(value)}
+              </p>
+            </div>
+          ))}
         </div>
       </DialogContent>
     </Dialog>
