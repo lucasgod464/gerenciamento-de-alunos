@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormField, mapSupabaseFormField, defaultFields } from "@/types/form";
+import { FormField, defaultFields } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -34,9 +34,8 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      console.log("Iniciando carregamento de campos para company_id:", companyId);
+      console.log("Loading fields for company:", companyId);
 
-      // Primeiro, carregamos os campos personalizados
       const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
@@ -44,14 +43,14 @@ export function PublicEnrollment() {
         .order('order');
 
       if (error) {
-        console.error("Erro ao carregar campos personalizados:", error);
+        console.error("Error loading custom fields:", error);
         throw error;
       }
 
-      console.log("Campos personalizados brutos:", customFields);
+      console.log("Raw custom fields from DB:", customFields);
 
-      // Mapeamos os campos personalizados
-      const mappedCustomFields = customFields ? customFields.map(field => ({
+      // Map custom fields
+      const mappedCustomFields = customFields?.map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -60,24 +59,24 @@ export function PublicEnrollment() {
         required: field.required || false,
         order: field.order,
         options: field.options as string[] | undefined,
-      })) : [];
+      })) || [];
 
-      console.log("Campos personalizados mapeados:", mappedCustomFields);
+      console.log("Mapped custom fields:", mappedCustomFields);
 
-      // Filtramos os campos padrão que não queremos mostrar
+      // Filter default fields
       const filteredDefaultFields = defaultFields.filter(
         field => field.name !== "sala" && field.name !== "status"
       );
 
-      console.log("Campos padrão filtrados:", filteredDefaultFields);
+      console.log("Filtered default fields:", filteredDefaultFields);
 
-      // Combinamos os campos
-      const allFields = [...filteredDefaultFields, ...mappedCustomFields];
-      console.log("Todos os campos combinados:", allFields);
+      // Combine fields
+      const allFields = [...filteredDefaultFields, ...mappedCustomFields].sort((a, b) => a.order - b.order);
+      console.log("All fields combined and sorted:", allFields);
       
       setFields(allFields);
     } catch (error) {
-      console.error("Erro ao carregar campos do formulário:", error);
+      console.error("Error loading form fields:", error);
       toast({
         title: "Erro ao carregar formulário",
         description: "Não foi possível carregar os campos do formulário.",
