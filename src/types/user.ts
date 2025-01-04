@@ -32,3 +32,20 @@ export interface DatabaseUser {
   specialization?: string;
   address?: string;
 }
+
+export const mapDatabaseUser = (user: DatabaseUser): User => {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    company_id: user.company_id,
+    created_at: user.created_at,
+    last_access: user.last_access,
+    status: user.status,
+    access_level: user.access_level,
+    location: user.location,
+    specialization: user.specialization,
+    address: user.address
+  };
+};

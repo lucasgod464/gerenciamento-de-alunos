@@ -11,7 +11,7 @@ export interface Room {
   study_room: string;
   created_at: string;
   room_students?: RoomStudent[];
-  students?: Student[]; // Campo virtual para compatibilidade
+  students?: Student[];
 }
 
 export interface RoomStudent {
@@ -45,6 +45,6 @@ export const mapSupabaseRoomToRoom = (room: SupabaseRoom): Room => {
     study_room: room.study_room,
     created_at: room.created_at,
     room_students: room.room_students,
-    students // Campo virtual para manter compatibilidade
+    students
   };
 };
