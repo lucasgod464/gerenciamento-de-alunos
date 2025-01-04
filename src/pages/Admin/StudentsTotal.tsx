@@ -42,14 +42,14 @@ export function StudentsTotal() {
       const mappedStudents: Student[] = studentsData.map(student => ({
         id: student.id,
         name: student.name,
-        birth_date: student.birth_date,
+        birthDate: student.birth_date,
         status: student.status ?? true,
         email: student.email || '',
         document: student.document || '',
         address: student.address || '',
-        custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
-        company_id: student.company_id || '',
-        created_at: student.created_at,
+        customFields: student.custom_fields || {},
+        companyId: student.company_id,
+        createdAt: student.created_at,
         room: student.room_students?.[0]?.room_id || null
       }));
       
