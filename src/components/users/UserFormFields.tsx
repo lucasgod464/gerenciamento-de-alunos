@@ -49,6 +49,16 @@ const UserFormFields = ({
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
 
+  // Update selected rooms and tags when defaultValues change
+  useEffect(() => {
+    if (defaultValues.tags) {
+      setSelectedTags(defaultValues.tags);
+    }
+    if (defaultValues.authorizedRooms) {
+      setSelectedRooms(defaultValues.authorizedRooms.map(room => room.id));
+    }
+  }, [defaultValues]);
+
   const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
     const newSelectedTags = selectedTags.some(t => t.id === tag.id)
       ? selectedTags.filter(t => t.id !== tag.id)
