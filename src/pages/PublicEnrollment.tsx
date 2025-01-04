@@ -63,6 +63,8 @@ export function PublicEnrollment() {
 
       if (error) throw error;
 
+      console.log("Campos personalizados carregados:", customFields); // Debug
+
       const mappedCustomFields = (customFields || []).map(field => ({
         id: field.id,
         name: field.name,
@@ -75,7 +77,9 @@ export function PublicEnrollment() {
       }));
 
       // Combinamos os campos padrão com os personalizados
-      setFields([...defaultFields, ...mappedCustomFields]);
+      const allFields = [...defaultFields, ...mappedCustomFields];
+      console.log("Todos os campos:", allFields); // Debug
+      setFields(allFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
       toast({
@@ -204,6 +208,6 @@ export function PublicEnrollment() {
       </Card>
     </div>
   );
-};
+}
 
 export default PublicEnrollment;
