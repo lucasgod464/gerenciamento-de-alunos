@@ -117,10 +117,20 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                   </span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-3" onClick={(e) => e.stopPropagation()}>
+              <PopoverContent 
+                className="w-auto p-3" 
+                onInteractOutside={(e) => {
+                  // Prevent closing when clicking inside the color picker
+                  e.preventDefault();
+                }}
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <HexColorPicker color={color} onChange={handleColorChange} />
+                    <HexColorPicker 
+                      color={color} 
+                      onChange={handleColorChange}
+                      onClick={(e) => e.stopPropagation()} 
+                    />
                     <div className="flex flex-col gap-2">
                       <Input
                         type="text"
@@ -128,6 +138,7 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                         onChange={(e) => handleColorChange(e.target.value)}
                         className="w-24"
                         placeholder="#000000"
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   </div>
