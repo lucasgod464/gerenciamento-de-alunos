@@ -22,18 +22,13 @@ export interface FormField {
   isDefault?: boolean;
 }
 
-export interface FormFieldInput extends Omit<FormField, "id" | "order"> {
-  id?: string;
-  order?: number;
-}
-
 export interface SupabaseFormField {
   id: string;
   name: string;
   label: string;
   type: string;
   description: string | null;
-  required: boolean | null;
+  required: boolean;
   order: number;
   options: Json | null;
   company_id: string | null;
@@ -46,18 +41,19 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   label: field.label,
   type: field.type as FieldType,
   description: field.description || undefined,
-  required: field.required ?? false,
+  required: field.required,
   order: field.order,
-  options: field.options ? (field.options as string[]) : undefined,
+  options: field.options as string[] | undefined,
 });
 
-export const mapFormFieldToSupabase = (field: FormFieldInput): Partial<SupabaseFormField> => ({
+export const mapFormFieldToSupabase = (field: Partial<FormField>): Partial<SupabaseFormField> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description || null,
   required: field.required || false,
   options: field.options || null,
+  order: field.order,
 });
 
 export const defaultFields: FormField[] = [

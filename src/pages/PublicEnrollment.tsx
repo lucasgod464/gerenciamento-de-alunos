@@ -58,17 +58,14 @@ export default function PublicEnrollment() {
         };
       });
 
-      const { data: newStudent, error: studentError } = await supabase
+      const { error: studentError } = await supabase
         .from('students')
         .insert({
           name: data.nome_completo,
           birth_date: data.data_nascimento,
           status: true,
-          custom_fields: customFields,
-          company_id: null // This will be assigned by RLS policy
-        })
-        .select()
-        .single();
+          custom_fields: customFields
+        });
 
       if (studentError) throw studentError;
 
