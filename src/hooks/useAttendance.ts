@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Student, DailyAttendance, DailyObservation, AttendanceStatus } from "@/types/attendance";
+import { Student, DailyAttendance, AttendanceStatus } from "@/types/attendance";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,6 @@ export function useAttendance() {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Função para normalizar a data (remover horário)
   const normalizeDate = (date: Date): Date => {
     return new Date(
       date.getFullYear(),
@@ -21,13 +20,11 @@ export function useAttendance() {
     );
   };
 
-  // Função para converter data para string no formato ISO
   const formatDateToString = (date: Date): string => {
     const normalized = normalizeDate(date);
     return normalized.toISOString().split('T')[0];
   };
 
-  // Função para verificar se duas datas são iguais (ignorando horário)
   const areDatesEqual = (date1: Date, date2: Date): boolean => {
     return formatDateToString(date1) === formatDateToString(date2);
   };
@@ -73,12 +70,11 @@ export function useAttendance() {
         throw observationError;
       }
 
-      // Buscar todos os dias com chamada
+      // Buscar todos os dias com chamada - Corrigido para não usar distinct
       const { data: daysData, error: daysError } = await supabase
         .from('daily_attendance')
         .select('date')
-        .eq('company_id', currentUser.companyId)
-        .distinct();
+        .eq('company_id', currentUser.companyId);
 
       if (daysError) throw daysError;
 
@@ -94,7 +90,9 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        const formattedDays = [...new Set(daysData.map(day => new Date(day.date)))];
+        // Usar Set para remover datas duplicadas
+        const uniqueDates = [...new Set(daysData.map(day => day.date))];
+        const formattedDays = uniqueDates.map(date => new Date(date));
         setAttendanceDays(formattedDays.map(normalizeDate));
       }
     } catch (error) {
@@ -254,7 +252,6 @@ export function useAttendance() {
     }
   };
 
-  // Atualiza os dados quando a data selecionada muda
   useEffect(() => {
     if (selectedDate) {
       fetchAttendanceData(selectedDate);
