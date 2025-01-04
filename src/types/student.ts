@@ -33,17 +33,7 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   let customFields: Record<string, CustomField> = {};
   
   if (student.custom_fields && typeof student.custom_fields === 'object') {
-    Object.entries(student.custom_fields as Record<string, any>).forEach(([key, value]) => {
-      if (value && typeof value === 'object') {
-        customFields[key] = {
-          fieldId: value.fieldId || key,
-          fieldName: value.fieldName || key,
-          label: value.label || key,
-          value: value.value,
-          type: value.type || 'text'
-        };
-      }
-    });
+    customFields = student.custom_fields as Record<string, CustomField>;
   }
 
   return {
@@ -65,6 +55,6 @@ export const mapStudentToSupabase = (student: Partial<Student>): Partial<Supabas
   const { room, ...rest } = student;
   return {
     ...rest,
-    custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : null,
+    custom_fields: student.custom_fields as Json,
   };
 };

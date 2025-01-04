@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
+import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,24 +30,21 @@ export const useEnrollmentFields = () => {
 
   const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
+      const newField = {
+        ...field,
+        order: fields.length,
+      };
+
       const { data, error } = await supabase
         .from('enrollment_form_fields')
-        .insert([{
-          name: field.name,
-          label: field.label,
-          type: field.type,
-          description: field.description || null,
-          required: field.required || false,
-          options: field.options || null,
-          order: fields.length
-        }])
+        .insert(mapFormFieldToSupabase(newField as FormField))
         .select()
         .single();
 
       if (error) throw error;
 
-      const newField = mapSupabaseFormField(data as SupabaseFormField);
-      setFields(prev => [...prev, newField]);
+      const mappedField = mapSupabaseFormField(data as SupabaseFormField);
+      setFields(prev => [...prev, mappedField]);
       
       toast({
         title: "Campo adicionado",
@@ -91,14 +88,7 @@ export const useEnrollmentFields = () => {
     try {
       const { error } = await supabase
         .from('enrollment_form_fields')
-        .update({
-          name: updatedField.name,
-          label: updatedField.label,
-          type: updatedField.type,
-          description: updatedField.description,
-          required: updatedField.required,
-          options: updatedField.options
-        })
+        .update(mapFormFieldToSupabase(updatedField))
         .eq('id', updatedField.id);
 
       if (error) throw error;
@@ -124,6 +114,7 @@ export const useEnrollmentFields = () => {
   const handleReorderFields = async (reorderedFields: FormField[]) => {
     try {
       const updates = reorderedFields.map((field, index) => ({
+        ...mapFormFieldToSupabase(field),
         id: field.id,
         order: index
       }));
