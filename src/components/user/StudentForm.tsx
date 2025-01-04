@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormEvent } from "react";
 
 export interface StudentFormProps {
   fields: FormField[];
@@ -11,15 +12,17 @@ export interface StudentFormProps {
   initialData?: any;
 }
 
-export const StudentForm = ({ fields, onSubmit, submitButtonText, initialData }: StudentFormProps) => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+const StudentForm = ({ fields, onSubmit, submitButtonText, initialData }: StudentFormProps) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData: any = {};
-    const formElement = event.currentTarget as HTMLFormElement;
+    const formElement = event.currentTarget;
     
     fields.forEach(field => {
       const input = formElement.querySelector(`[name="${field.name}"]`) as HTMLInputElement | HTMLSelectElement;
-      formData[field.name] = input.value;
+      if (input) {
+        formData[field.name] = input.value;
+      }
     });
     
     onSubmit(formData);

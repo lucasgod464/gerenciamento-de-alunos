@@ -15,6 +15,8 @@ export interface User {
   status: UserStatus;
   address?: string;
   role: string;
+  tags?: { id: string; name: string; color: string; }[];
+  authorizedRooms?: { id: string; name: string; }[];
 }
 
 export interface DatabaseUser {
@@ -46,6 +48,21 @@ export const mapDatabaseUser = (user: DatabaseUser): User => ({
   location: user.location,
   specialization: user.specialization,
   status: user.status as UserStatus,
+  address: user.address,
+  role: user.role
+});
+
+export const mapUserToDatabase = (user: User): Omit<DatabaseUser, 'id' | 'created_at'> => ({
+  name: user.name,
+  email: user.email,
+  password: '', // This should be handled separately
+  company_id: user.companyId,
+  updated_at: user.updatedAt,
+  last_access: user.lastAccess,
+  access_level: user.accessLevel,
+  location: user.location,
+  specialization: user.specialization,
+  status: user.status,
   address: user.address,
   role: user.role
 });
