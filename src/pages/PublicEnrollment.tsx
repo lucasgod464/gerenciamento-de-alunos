@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,18 +14,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { companyId } = useParams();
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
-    loadFields();
-  }, []);
+    if (companyId) {
+      loadFields();
+    }
+  }, [companyId]);
 
   const loadFields = async () => {
     try {
       const { data: formFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
+        .eq('company_id', companyId)
         .order('order');
 
       if (error) throw error;
@@ -52,17 +57,10 @@ export function PublicEnrollment() {
   };
 
   const onSubmit = async (data: any) => {
+    if (!companyId) return;
+    
     setIsSubmitting(true);
     try {
-      const { data: companies, error: companiesError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('status', 'Ativa')
-        .limit(1)
-        .single();
-
-      if (companiesError) throw companiesError;
-
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
@@ -83,7 +81,7 @@ export function PublicEnrollment() {
           birth_date: data.data_nascimento,
           status: true,
           custom_fields: customFields,
-          company_id: companies.id
+          company_id: companyId
         });
 
       if (studentError) throw studentError;
