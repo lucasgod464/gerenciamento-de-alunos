@@ -46,7 +46,7 @@ export function StudentTableActions({
   onEditClick,
   onDeleteClick,
   onTransferStudent,
-  rooms,
+  rooms = [],
 }: StudentTableActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showTransferDialog, setShowTransferDialog] = useState(false);
