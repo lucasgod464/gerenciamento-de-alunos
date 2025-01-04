@@ -39,8 +39,9 @@ export function StudentTable({
 
   const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";
-    const room = rooms.find(room => room.id === roomId);
-    return room?.name || "Sem sala";
+    const foundRoom = rooms.find(room => room.id === roomId);
+    console.log("Procurando sala:", roomId, "Sala encontrada:", foundRoom);
+    return foundRoom?.name || "Sem sala";
   };
 
   const handleSubmit = async (student: Student) => {
