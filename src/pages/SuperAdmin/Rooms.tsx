@@ -6,7 +6,6 @@ import { RoomFilters } from "@/components/superadmin/rooms/RoomFilters";
 import { RoomsTable } from "@/components/superadmin/rooms/RoomsTable";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { mapSupabaseRoomToRoom } from "@/types/room";
 
 export default function SuperAdminRooms() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,17 +16,21 @@ export default function SuperAdminRooms() {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
+        console.log("Buscando salas...");
         const { data: roomsData, error } = await supabase
           .from('rooms')
           .select(`
             *,
-            room_students (
-              student:students (*)
+            companies (
+              name
+            ),
+            categories (
+              name
             )
           `);
 
         if (error) {
-          console.error('Error fetching rooms:', error);
+          console.error('Erro ao buscar salas:', error);
           toast({
             title: "Erro",
             description: "Erro ao carregar salas",
@@ -37,11 +40,24 @@ export default function SuperAdminRooms() {
         }
 
         if (roomsData) {
-          const transformedRooms = roomsData.map(room => mapSupabaseRoomToRoom(room));
+          console.log("Salas encontradas:", roomsData);
+          const transformedRooms: Room[] = roomsData.map(room => ({
+            id: room.id,
+            name: room.name,
+            schedule: room.schedule,
+            location: room.location,
+            category: room.categories?.name || '',
+            status: room.status,
+            companyId: room.company_id,
+            companyName: room.companies?.name || 'Sem empresa',
+            studyRoom: room.study_room || '',
+            createdAt: room.created_at,
+            students: []
+          }));
           setRooms(transformedRooms);
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Erro:', error);
         toast({
           title: "Erro",
           description: "Erro ao carregar salas",
@@ -56,7 +72,7 @@ export default function SuperAdminRooms() {
   const filteredRooms = rooms.filter((room) => {
     const matchesSearch = 
       room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (room.companyId || "").toLowerCase().includes(searchTerm.toLowerCase());
+      (room.companyName || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || 
                          (filterType === "active" && room.status) ||
                          (filterType === "inactive" && !room.status);
