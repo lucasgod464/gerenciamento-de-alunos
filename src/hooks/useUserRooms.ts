@@ -13,7 +13,6 @@ export function useUserRooms() {
   useEffect(() => {
     const fetchUserRooms = async () => {
       if (!user?.id) {
-        console.log("No user ID found");
         setIsLoading(false);
         return;
       }
@@ -27,10 +26,7 @@ export function useUserRooms() {
           .select('room_id')
           .eq('user_id', user.id);
 
-        if (userRoomsError) {
-          console.error('Erro ao buscar user_rooms:', userRoomsError);
-          throw userRoomsError;
-        }
+        if (userRoomsError) throw userRoomsError;
 
         if (!userRooms?.length) {
           console.log('Nenhuma sala encontrada para o usuário');
@@ -41,41 +37,19 @@ export function useUserRooms() {
 
         const roomIds = userRooms.map(ur => ur.room_id);
         console.log('IDs das salas para buscar:', roomIds);
-        
-        // Agora buscar os detalhes das salas
+
+        // Buscar detalhes das salas
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
-            id,
-            name,
-            schedule,
-            location,
-            category,
-            status,
-            company_id,
-            study_room,
-            created_at,
+            *,
             room_students (
-              student:students (
-                id,
-                name,
-                birth_date,
-                status,
-                email,
-                document,
-                address,
-                custom_fields,
-                company_id,
-                created_at
-              )
+              student:students (*)
             )
           `)
           .in('id', roomIds);
 
-        if (roomsError) {
-          console.error('Erro ao buscar salas:', roomsError);
-          throw roomsError;
-        }
+        if (roomsError) throw roomsError;
 
         if (roomsData) {
           const transformedRooms: Room[] = roomsData.map(room => ({
@@ -101,7 +75,7 @@ export function useUserRooms() {
               createdAt: rs.student.created_at
             })) || []
           }));
-          
+
           console.log('Salas transformadas:', transformedRooms);
           setRooms(transformedRooms);
         }

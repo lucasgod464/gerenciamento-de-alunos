@@ -1,6 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { useUserRooms } from "@/hooks/useUserRooms";
 import { RoomCard } from "./RoomCard";
 
