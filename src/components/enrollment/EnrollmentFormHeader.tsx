@@ -1,44 +1,43 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { Copy } from "lucide-react";
 
 export const EnrollmentFormHeader = () => {
-  const enrollmentUrl = `${window.location.origin}/enrollment`;
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const baseUrl = window.location.origin;
+  const enrollmentUrl = `${baseUrl}/enrollment?company=${user?.companyId}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(enrollmentUrl);
-    toast.success("Link copiado para a área de transferência!");
+    toast({
+      title: "Link copiado!",
+      description: "O link do formulário foi copiado para a área de transferência.",
+    });
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Link do Formulário</CardTitle>
-            <CardDescription>
-              Compartilhe este link para receber inscrições
-            </CardDescription>
-          </div>
-          <Button asChild>
-            <Link to="/enrollment" target="_blank">
-              <ExternalLink className="mr-2 h-4 w-4" />
-              Visualizar Formulário
-            </Link>
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-          <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <code className="text-sm flex-1 break-all">{enrollmentUrl}</code>
-          <Button variant="secondary" onClick={copyLink}>
-            Copiar Link
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Link do Formulário</h2>
+        <p className="text-muted-foreground">
+          Compartilhe este link para que os alunos possam se inscrever
+        </p>
+      </div>
+      
+      <div className="flex gap-2">
+        <Input 
+          value={enrollmentUrl}
+          readOnly
+          className="flex-1"
+        />
+        <Button onClick={copyLink} variant="outline">
+          <Copy className="h-4 w-4 mr-2" />
+          Copiar Link
+        </Button>
+      </div>
+    </div>
   );
 };

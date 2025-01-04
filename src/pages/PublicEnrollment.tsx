@@ -9,27 +9,65 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSearchParams } from "react-router-dom";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const [searchParams] = useSearchParams();
+  const companyId = searchParams.get('company');
 
   useEffect(() => {
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não fornecido na URL",
+        variant: "destructive",
+      });
+      return;
+    }
     loadFields();
-  }, []);
+  }, [companyId]);
 
   const loadFields = async () => {
     try {
-      const { data: formFields, error } = await supabase
+      console.log("Loading fields for company:", companyId);
+      
+      // Carrega campos personalizados da empresa
+      const { data: customFields, error: customError } = await supabase
         .from('enrollment_form_fields')
         .select('*')
+        .eq('company_id', companyId)
         .order('order');
 
-      if (error) throw error;
+      if (customError) throw customError;
 
-      const validatedFields = (formFields || []).map(field => ({
+      console.log("Custom fields loaded:", customFields);
+
+      // Campos padrão do sistema
+      const defaultFields: FormField[] = [
+        {
+          id: "nome_completo",
+          name: "nome_completo",
+          label: "Nome Completo",
+          type: "text",
+          required: true,
+          order: 0,
+        },
+        {
+          id: "data_nascimento",
+          name: "data_nascimento",
+          label: "Data de Nascimento",
+          type: "date",
+          required: true,
+          order: 1,
+        }
+      ];
+
+      // Combina campos padrão com campos personalizados
+      const validatedFields = [...defaultFields, ...(customFields || []).map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -38,8 +76,9 @@ export function PublicEnrollment() {
         required: field.required || false,
         order: field.order,
         options: field.options as string[] | undefined,
-      }));
+      }))];
 
+      console.log("All fields combined:", validatedFields);
       setFields(validatedFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
@@ -52,17 +91,17 @@ export function PublicEnrollment() {
   };
 
   const onSubmit = async (data: any) => {
+    if (!companyId) {
+      toast({
+        title: "Erro",
+        description: "ID da empresa não fornecido",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const { data: companies, error: companiesError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('status', 'Ativa')
-        .limit(1)
-        .single();
-
-      if (companiesError) throw companiesError;
-
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
@@ -83,7 +122,7 @@ export function PublicEnrollment() {
           birth_date: data.data_nascimento,
           status: true,
           custom_fields: customFields,
-          company_id: companies.id
+          company_id: companyId
         });
 
       if (studentError) throw studentError;
@@ -109,6 +148,25 @@ export function PublicEnrollment() {
     }
   };
 
+  if (!companyId) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <Card className="max-w-2xl mx-auto">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl font-bold text-red-600">
+              Erro: Link Inválido
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center">
+              Este link de formulário é inválido. Por favor, solicite um novo link.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="max-w-2xl mx-auto">
@@ -117,46 +175,8 @@ export function PublicEnrollment() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Campos obrigatórios */}
-            <div className="space-y-2">
-              <Label htmlFor="nome_completo">
-                Nome Completo
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                id="nome_completo"
-                {...register("nome_completo", { required: true })}
-                placeholder="Digite seu nome completo"
-                className="w-full"
-              />
-              {errors.nome_completo && (
-                <p className="text-sm text-red-500">Este campo é obrigatório</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="data_nascimento">
-                Data de Nascimento
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                id="data_nascimento"
-                type="date"
-                {...register("data_nascimento", { required: true })}
-                className="w-full"
-              />
-              {errors.data_nascimento && (
-                <p className="text-sm text-red-500">Este campo é obrigatório</p>
-              )}
-            </div>
-
-            {/* Campos customizados */}
-            {fields.map(field => {
+            {fields.map((field) => {
               if (field.name === "sala" || field.name === "status") {
-                return null;
-              }
-
-              if (field.name === "nome_completo" || field.name === "data_nascimento") {
                 return null;
               }
 
