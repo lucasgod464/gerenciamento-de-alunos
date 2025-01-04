@@ -12,51 +12,13 @@ import {
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
   onSubmit: (student: Student) => void;
 }
-
-const defaultFields: FormField[] = [
-  {
-    id: "nome_completo",
-    name: "nome_completo",
-    label: "Nome Completo",
-    type: "text",
-    required: true,
-    order: 0,
-    isDefault: true,
-  },
-  {
-    id: "data_nascimento",
-    name: "data_nascimento",
-    label: "Data de Nascimento",
-    type: "date",
-    required: true,
-    order: 1,
-    isDefault: true,
-  },
-  {
-    id: "sala",
-    name: "sala",
-    label: "Sala",
-    type: "select",
-    required: true,
-    order: 2,
-    isDefault: true,
-  },
-  {
-    id: "status",
-    name: "status",
-    label: "Status",
-    type: "select",
-    required: true,
-    order: 3,
-    isDefault: true,
-    options: ["Ativo", "Inativo"]
-  }
-];
 
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(initialData || {});
@@ -183,6 +145,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             {field.label}
             {field.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
+          
           {field.type === "text" && (
             <Input
               id={field.name}
@@ -191,6 +154,26 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
               required={field.required}
             />
           )}
+          
+          {field.type === "textarea" && (
+            <Textarea
+              id={field.name}
+              value={formData.custom_fields?.[field.name] || ""}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              required={field.required}
+            />
+          )}
+          
+          {field.type === "date" && (
+            <Input
+              id={field.name}
+              type="date"
+              value={formData.custom_fields?.[field.name] || ""}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              required={field.required}
+            />
+          )}
+          
           {field.type === "select" && field.options && (
             <Select
               value={formData.custom_fields?.[field.name] || ""}
@@ -208,6 +191,32 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
                 ))}
               </SelectContent>
             </Select>
+          )}
+          
+          {field.type === "multiple" && field.options && (
+            <div className="space-y-2">
+              {field.options.map((option) => (
+                <div key={option} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`${field.name}-${option}`}
+                    checked={formData.custom_fields?.[field.name]?.includes(option)}
+                    onCheckedChange={(checked) => {
+                      const currentValues = formData.custom_fields?.[field.name] || [];
+                      const newValues = checked
+                        ? [...currentValues, option]
+                        : currentValues.filter((value: string) => value !== option);
+                      handleCustomFieldChange(field.name, newValues);
+                    }}
+                  />
+                  <label
+                    htmlFor={`${field.name}-${option}`}
+                    className="text-sm font-medium leading-none"
+                  >
+                    {option}
+                  </label>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       ))}
