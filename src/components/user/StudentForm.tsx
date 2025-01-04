@@ -18,10 +18,10 @@ interface StudentFormProps {
 
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(() => {
-    if (initialData?.custom_fields) {
+    if (initialData?.customFields) {
       return {
         ...initialData,
-        custom_fields: { ...initialData.custom_fields }
+        customFields: { ...initialData.customFields }
       };
     }
     return initialData || {};
@@ -69,7 +69,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onSubmit && formData.name && formData.birth_date) {
+    if (onSubmit && formData.name && formData.birthDate) {
       onSubmit(formData as Student);
     }
   };
@@ -79,8 +79,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     
     setFormData(prev => ({
       ...prev,
-      custom_fields: {
-        ...(prev.custom_fields || {}),
+      customFields: {
+        ...(prev.customFields || {}),
         [field.id]: {
           fieldId: field.id,
           fieldName: field.name,
@@ -93,7 +93,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const renderCustomField = (field: FormField) => {
-    const currentValue = formData.custom_fields?.[field.id]?.value || "";
+    const currentValue = formData.customFields?.[field.id]?.value || "";
 
     const commonProps = {
       key: field.id,
@@ -130,12 +130,12 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="birth_date">Data de Nascimento</Label>
+        <Label htmlFor="birthDate">Data de Nascimento</Label>
         <Input
-          id="birth_date"
+          id="birthDate"
           type="date"
-          value={formData.birth_date || ""}
-          onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+          value={formData.birthDate || ""}
+          onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
           required
         />
       </div>

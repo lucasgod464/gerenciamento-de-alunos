@@ -9,6 +9,7 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
+  room?: string | null;
 }
 
 export interface SupabaseStudent {
@@ -22,6 +23,7 @@ export interface SupabaseStudent {
   custom_fields: Record<string, any>;
   company_id: string;
   created_at: string;
+  room_students?: { room_id: string }[];
 }
 
 export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
@@ -29,12 +31,33 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
     id: student.id,
     name: student.name,
     birthDate: student.birth_date,
-    status: student.status,
+    status: student.status ?? true,
     email: student.email || '',
     document: student.document || '',
     address: student.address || '',
-    customFields: student.custom_fields,
+    customFields: student.custom_fields || {},
     companyId: student.company_id,
-    createdAt: student.created_at
+    createdAt: student.created_at,
+    room: student.room_students?.[0]?.room_id || null
   };
 };
+
+export interface FormField {
+  id: string;
+  name: string;
+  label: string;
+  type: FieldType;
+  description?: string;
+  required: boolean;
+  order: number;
+  options?: string[];
+}
+
+export type FieldType = 
+  | "text" 
+  | "email" 
+  | "tel" 
+  | "textarea" 
+  | "date" 
+  | "select" 
+  | "multiple";
