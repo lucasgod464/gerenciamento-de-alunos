@@ -148,4 +148,4 @@ export function UserRooms() {
       ))}
     </div>
   );
-}
+};

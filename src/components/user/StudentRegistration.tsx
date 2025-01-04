@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { AddStudentDialog } from "./AddStudentDialog";
 import { StudentTable } from "./StudentTable";
-import { Student } from "@/types/student";
+import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -48,20 +48,7 @@ export const StudentRegistration = () => {
 
       if (studentsError) throw studentsError;
 
-      const mappedStudents = (studentsData || []).map(student => ({
-        id: student.id,
-        name: student.name,
-        birthDate: student.birth_date,
-        status: student.status,
-        email: student.email,
-        document: student.document,
-        address: student.address,
-        customFields: student.custom_fields,
-        companyId: student.company_id,
-        createdAt: student.created_at,
-        room: student.room_students?.[0]?.room_id
-      }));
-
+      const mappedStudents = (studentsData || []).map(mapSupabaseStudentToStudent);
       setStudents(mappedStudents);
     } catch (error) {
       console.error('Error loading data:', error);

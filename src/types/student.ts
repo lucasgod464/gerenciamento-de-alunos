@@ -9,6 +9,7 @@ export interface Student {
   customFields: Record<string, any> | null;
   companyId: string | null;
   createdAt: string;
+  room?: string | null;
 }
 
 export interface SupabaseStudent {
@@ -22,6 +23,7 @@ export interface SupabaseStudent {
   custom_fields: Record<string, any> | null;
   company_id: string | null;
   created_at: string;
+  room_students?: { room_id: string }[];
 }
 
 export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
@@ -35,6 +37,7 @@ export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
     address: student.address,
     customFields: student.custom_fields,
     companyId: student.company_id,
-    createdAt: student.created_at
+    createdAt: student.created_at,
+    room: student.room_students?.[0]?.room_id || null
   };
 }
