@@ -27,7 +27,7 @@ export interface SupabaseRoom {
   company_id: string;
   study_room: string;
   created_at: string;
-  room_students: RoomStudent[];
+  room_students?: RoomStudent[];
 }
 
 export const mapSupabaseRoom = (room: SupabaseRoom): Room => ({
@@ -42,3 +42,6 @@ export const mapSupabaseRoom = (room: SupabaseRoom): Room => ({
   created_at: room.created_at,
   room_students: room.room_students
 });
+
+// Mantendo a compatibilidade com o código existente
+export const mapSupabaseRoomToRoom = mapSupabaseRoom;

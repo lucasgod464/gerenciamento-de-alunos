@@ -1,4 +1,4 @@
-export type FieldType = 'text' | 'email' | 'tel' | 'select' | 'multiple' | 'textarea';
+export type FieldType = 'text' | 'email' | 'tel' | 'select' | 'multiple' | 'textarea' | 'date';
 
 export interface FormField {
   id: string;
@@ -32,3 +32,23 @@ export interface CustomField {
   value: any;
   type: FieldType;
 }
+
+export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+  id: field.id,
+  name: field.name,
+  label: field.label,
+  type: field.type as FieldType,
+  description: field.description,
+  required: field.required,
+  order: field.order,
+  options: field.options
+});
+
+export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'order'> => ({
+  name: field.name,
+  label: field.label,
+  type: field.type,
+  description: field.description || '',
+  required: field.required,
+  options: field.options || []
+});
