@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export interface Student {
   id: string;
   name: string;
@@ -20,7 +22,7 @@ export interface SupabaseStudent {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Record<string, any> | null;
+  custom_fields: Json;
   company_id: string | null;
   created_at: string;
 }
@@ -34,7 +36,9 @@ export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
     email: student.email,
     document: student.document,
     address: student.address,
-    customFields: student.custom_fields,
+    customFields: typeof student.custom_fields === 'string' 
+      ? JSON.parse(student.custom_fields) 
+      : student.custom_fields,
     companyId: student.company_id,
     createdAt: student.created_at
   };

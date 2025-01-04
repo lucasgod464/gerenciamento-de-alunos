@@ -17,14 +17,18 @@ export function useRooms() {
         .from("rooms")
         .select(`
           *,
-          room_authorized_users (
-            id,
-            user_id,
-            is_main_teacher,
-            user:users (
+          room_students (
+            student:students (
               id,
               name,
-              email
+              birth_date,
+              status,
+              email,
+              document,
+              address,
+              custom_fields,
+              company_id,
+              created_at
             )
           )
         `)

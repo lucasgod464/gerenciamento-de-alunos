@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { UserFormFields } from "./UserFormFields";
 import { User } from "@/types/user";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -19,45 +18,15 @@ export function EditUserDialog({
   onUserUpdated,
   user
 }: EditUserDialogProps) {
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
-  const [currentTags, setCurrentTags] = useState<Array<{ id: string; name: string; color: string }>>([]);
-
-  useEffect(() => {
-    const fetchUserTags = async () => {
-      if (!user?.id) return;
-
-      try {
-        const { data: userTags, error } = await supabase
-          .from('user_tags')
-          .select(`
-            tags (
-              id,
-              name,
-              color
-            )
-          `)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        if (userTags) {
-          setCurrentTags(userTags.map(ut => ut.tags).filter(Boolean));
-        }
-      } catch (error) {
-        console.error('Error fetching user tags:', error);
-      }
-    };
-
-    fetchUserTags();
-  }, [user]);
+  const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
+    user?.tags || []
+  );
 
   const handleUpdateUser = async (formData: FormData) => {
     if (!user) return;
 
     try {
-      setLoading(true);
-
       const updateData = {
         name: formData.get('name')?.toString() || '',
         email: formData.get('email')?.toString() || '',
@@ -75,9 +44,6 @@ export function EditUserDialog({
       if (updateError) throw updateError;
 
       // Update tags
-      const selectedTags = JSON.parse(formData.get('tags')?.toString() || '[]');
-      
-      // Remove existing tags
       const { error: deleteTagsError } = await supabase
         .from('user_tags')
         .delete()
@@ -85,16 +51,15 @@ export function EditUserDialog({
 
       if (deleteTagsError) throw deleteTagsError;
 
-      // Add new tags
       if (selectedTags.length > 0) {
-        const userTagsToInsert = selectedTags.map((tag: { id: string }) => ({
+        const tagInserts = selectedTags.map(tag => ({
           user_id: user.id,
-          tag_id: tag.id,
+          tag_id: tag.id
         }));
 
         const { error: insertTagsError } = await supabase
           .from('user_tags')
-          .insert(userTagsToInsert);
+          .insert(tagInserts);
 
         if (insertTagsError) throw insertTagsError;
       }
@@ -103,7 +68,7 @@ export function EditUserDialog({
         ...user,
         name: updateData.name,
         email: updateData.email,
-        accessLevel: updateData.access_level,
+        role: updateData.access_level,
         location: updateData.location,
         specialization: updateData.specialization,
         status: updateData.status as "active" | "inactive",
@@ -124,8 +89,6 @@ export function EditUserDialog({
         description: "Ocorreu um erro ao atualizar o usuário.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -133,7 +96,7 @@ export function EditUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
@@ -145,17 +108,19 @@ export function EditUserDialog({
             defaultValues={{
               name: user.name,
               email: user.email,
-              accessLevel: user.accessLevel,
-              location: user.location,
-              specialization: user.specialization,
+              specialization: user.specialization || '',
+              location: user.location || '',
               status: user.status,
-              tags: currentTags,
+              tags: user.tags
             }}
+            onTagsChange={setSelectedTags}
             isEditing
           />
-          <Button type="submit" disabled={loading}>
-            {loading ? "Atualizando..." : "Atualizar Usuário"}
-          </Button>
+          <div className="flex justify-end">
+            <button type="submit" className="btn-primary">
+              Salvar Alterações
+            </button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
