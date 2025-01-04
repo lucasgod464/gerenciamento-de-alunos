@@ -1,9 +1,11 @@
+export type AttendanceStatus = "present" | "absent" | "late" | "justified" | "";
+
 export interface Student {
   id: string;
   name: string;
   room: string;
   roomName?: string;
-  status: "present" | "absent" | "late" | "justified";
+  status: AttendanceStatus;
   companyId: string | null;
 }
 

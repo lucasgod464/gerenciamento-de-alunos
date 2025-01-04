@@ -43,7 +43,7 @@ export const attendanceDataService = {
       name: record.students.name,
       room: record.students.room_students?.[0]?.room_id || '',
       roomName: record.students.room_students?.[0]?.rooms?.name || '',
-      status: record.status as AttendanceStudent["status"],
+      status: record.status || "",
       companyId
     }));
   },
@@ -54,7 +54,7 @@ export const attendanceDataService = {
       .select('text')
       .eq('date', date)
       .eq('company_id', companyId)
-      .maybeSingle();  // Alterado de .single() para .maybeSingle()
+      .maybeSingle();
 
     if (error) throw error;
     return data;
