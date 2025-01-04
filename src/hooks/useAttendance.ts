@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
-import { supabase } from "@/integrations/supabase/client";
+import { AttendanceStudent, DailyAttendance, DailyObservation } from "@/services/attendance/types";
+import { attendanceService } from "@/services/attendance/attendanceService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -12,49 +12,19 @@ export function useAttendance(selectedDate: Date | undefined) {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
 
-  const getCompanyStudents = async () => {
-    if (!currentUser?.companyId) return [];
-    
-    try {
-      const { data: roomStudents, error } = await supabase
-        .from('room_students')
-        .select(`
-          student:students (
-            id,
-            name,
-            room:room_id
-          )
-        `)
-        .eq('students.company_id', currentUser.companyId);
-
-      if (error) throw error;
-
-      return roomStudents.map(rs => ({
-        ...rs.student,
-        status: "present" as const
-      }));
-    } catch (error) {
-      console.error('Error fetching students:', error);
-      return [];
-    }
-  };
-
   const fetchAttendanceDays = async () => {
     if (!currentUser?.companyId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('daily_attendance')
-        .select('date')
-        .eq('company_id', currentUser.companyId)
-        .distinct();
-
-      if (error) throw error;
-
-      const days = data.map(d => new Date(d.date));
+      const days = await attendanceService.getAttendanceDays(currentUser.companyId);
       setAttendanceDays(days);
     } catch (error) {
       console.error('Error fetching attendance days:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar dias de presença",
+        variant: "destructive",
+      });
     }
   };
 
@@ -64,51 +34,29 @@ export function useAttendance(selectedDate: Date | undefined) {
     const dateStr = selectedDate.toISOString().split('T')[0];
     
     try {
-      const { data: attendanceData, error } = await supabase
-        .from('daily_attendance')
-        .select(`
-          student_id,
-          status,
-          students (
-            id,
-            name,
-            room_students (
-              room_id
-            )
-          )
-        `)
-        .eq('date', dateStr)
-        .eq('company_id', currentUser.companyId);
-
-      if (error) throw error;
+      const attendanceData = await attendanceService.getDailyAttendance(dateStr, currentUser.companyId);
 
       if (attendanceData.length === 0) {
-        const students = await getCompanyStudents();
+        const students = await attendanceService.getCompanyStudents(currentUser.companyId);
         setDailyAttendances([{ date: dateStr, students }]);
       } else {
         const students = attendanceData.map(record => ({
           id: record.students.id,
           name: record.students.name,
           room: record.students.room_students?.[0]?.room_id || '',
-          status: record.status as "present" | "absent" | "late" | "justified"
+          status: record.status as AttendanceStudent["status"],
+          companyId: currentUser.companyId
         }));
 
         setDailyAttendances([{ date: dateStr, students }]);
       }
-
-      // Fetch observation for the day
-      const { data: obsData, error: obsError } = await supabase
-        .from('daily_observations')
-        .select('text')
-        .eq('date', dateStr)
-        .eq('company_id', currentUser.companyId)
-        .maybeSingle();
-
-      if (obsError) throw obsError;
-
-      setObservation(obsData?.text || '');
     } catch (error) {
       console.error('Error fetching daily attendance:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar presenças",
+        variant: "destructive",
+      });
     }
   };
 
@@ -122,22 +70,18 @@ export function useAttendance(selectedDate: Date | undefined) {
     }
   }, [selectedDate, currentUser]);
 
-  const handleStatusChange = async (studentId: string, status: Student["status"]) => {
+  const handleStatusChange = async (studentId: string, status: AttendanceStudent["status"]) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
     const dateStr = selectedDate.toISOString().split('T')[0];
 
     try {
-      const { error } = await supabase
-        .from('daily_attendance')
-        .upsert({
-          date: dateStr,
-          student_id: studentId,
-          status,
-          company_id: currentUser.companyId
-        });
-
-      if (error) throw error;
+      await attendanceService.saveAttendance({
+        date: dateStr,
+        studentId,
+        status,
+        companyId: currentUser.companyId
+      });
 
       await fetchDailyAttendance();
 
@@ -161,15 +105,11 @@ export function useAttendance(selectedDate: Date | undefined) {
     const dateStr = selectedDate.toISOString().split('T')[0];
 
     try {
-      const { error } = await supabase
-        .from('daily_observations')
-        .upsert({
-          date: dateStr,
-          text,
-          company_id: currentUser.companyId
-        });
-
-      if (error) throw error;
+      await attendanceService.saveObservation({
+        date: dateStr,
+        text,
+        companyId: currentUser.companyId
+      });
 
       setObservation(text);
     } catch (error) {
@@ -186,21 +126,17 @@ export function useAttendance(selectedDate: Date | undefined) {
     if (!selectedDate || !currentUser?.companyId) return;
 
     try {
-      const students = await getCompanyStudents();
+      const students = await attendanceService.getCompanyStudents(currentUser.companyId);
       const dateStr = selectedDate.toISOString().split('T')[0];
 
-      const attendanceRecords = students.map(student => ({
-        date: dateStr,
-        student_id: student.id,
-        status: 'present',
-        company_id: currentUser.companyId
-      }));
-
-      const { error } = await supabase
-        .from('daily_attendance')
-        .upsert(attendanceRecords);
-
-      if (error) throw error;
+      for (const student of students) {
+        await attendanceService.saveAttendance({
+          date: dateStr,
+          studentId: student.id,
+          status: 'present',
+          companyId: currentUser.companyId
+        });
+      }
 
       await fetchAttendanceDays();
       await fetchDailyAttendance();
