@@ -26,8 +26,6 @@ export function UserRooms() {
           .select('room_id')
           .eq('user_id', user.id);
 
-        console.log('Salas do usuário:', userRooms);
-
         if (userRoomsError) {
           console.error('Error fetching user rooms:', userRoomsError);
           throw userRoomsError;
@@ -38,7 +36,7 @@ export function UserRooms() {
           return;
         }
 
-        // Depois, buscar os detalhes das salas
+        // Depois, buscar os detalhes das salas em uma única query
         const roomIds = userRooms.map(ur => ur.room_id);
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
@@ -52,7 +50,7 @@ export function UserRooms() {
             company_id,
             study_room,
             created_at,
-            room_students (
+            room_students!inner (
               student:students (*)
             )
           `)
@@ -76,10 +74,8 @@ export function UserRooms() {
             createdAt: room.created_at,
             students: room.room_students?.map(rs => rs.student) || []
           }));
-          console.log('Salas transformadas:', transformedRooms);
           setRooms(transformedRooms);
         }
-
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
