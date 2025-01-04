@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,6 +75,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const handleCustomFieldChange = (field: FormField, value: any) => {
+    console.log('Updating field:', field.name, 'with value:', value);
+    
     setFormData(prev => ({
       ...prev,
       custom_fields: {
