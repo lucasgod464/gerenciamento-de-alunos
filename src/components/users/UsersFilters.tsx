@@ -28,8 +28,8 @@ export function UsersFilters({
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="relative">
+        <div className="flex gap-4 items-center">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar por nome, email, localização ou especialização..."
