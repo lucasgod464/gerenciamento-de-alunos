@@ -31,7 +31,8 @@ export const attendanceService = {
     const { data, error } = await supabase
       .from('daily_attendance')
       .select('date')
-      .eq('company_id', companyId);
+      .eq('company_id', companyId)
+      .order('date', { ascending: true });
 
     if (error) throw error;
 
@@ -93,5 +94,23 @@ export const attendanceService = {
       });
 
     if (error) throw error;
+  },
+
+  async cancelAttendance(date: string, companyId: string) {
+    const { error: attendanceError } = await supabase
+      .from('daily_attendance')
+      .delete()
+      .eq('date', date)
+      .eq('company_id', companyId);
+
+    if (attendanceError) throw attendanceError;
+
+    const { error: observationError } = await supabase
+      .from('daily_observations')
+      .delete()
+      .eq('date', date)
+      .eq('company_id', companyId);
+
+    if (observationError) throw observationError;
   }
 };

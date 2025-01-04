@@ -3,7 +3,7 @@ import { AttendanceStudent, DailyAttendance, DailyObservation } from "@/services
 import { attendanceService } from "@/services/attendance/attendanceService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 
 export function useAttendance(selectedDate: Date | undefined) {
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
@@ -12,6 +12,10 @@ export function useAttendance(selectedDate: Date | undefined) {
   const [attendanceDays, setAttendanceDays] = useState<Date[]>([]);
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+
+  const formatDate = (date: Date) => {
+    return format(date, 'yyyy-MM-dd');
+  };
 
   const fetchAttendanceDays = async () => {
     if (!currentUser?.companyId) return;
@@ -32,7 +36,7 @@ export function useAttendance(selectedDate: Date | undefined) {
   const fetchDailyAttendance = async () => {
     if (!selectedDate || !currentUser?.companyId) return;
 
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDate(selectedDate);
     
     try {
       const attendanceData = await attendanceService.getDailyAttendance(dateStr, currentUser.companyId);
@@ -74,7 +78,7 @@ export function useAttendance(selectedDate: Date | undefined) {
   const handleStatusChange = async (studentId: string, status: AttendanceStudent["status"]) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDate(selectedDate);
 
     try {
       await attendanceService.saveAttendance({
@@ -98,7 +102,7 @@ export function useAttendance(selectedDate: Date | undefined) {
   const handleObservationChange = async (text: string) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
-    const dateStr = selectedDate.toISOString().split('T')[0];
+    const dateStr = formatDate(selectedDate);
 
     try {
       await attendanceService.saveObservation({
@@ -123,7 +127,7 @@ export function useAttendance(selectedDate: Date | undefined) {
 
     try {
       const students = await attendanceService.getCompanyStudents(currentUser.companyId);
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDate(selectedDate);
 
       for (const student of students) {
         await attendanceService.saveAttendance({
@@ -155,19 +159,8 @@ export function useAttendance(selectedDate: Date | undefined) {
     if (!selectedDate || !currentUser?.companyId) return;
 
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
-      
-      await supabase
-        .from('daily_attendance')
-        .delete()
-        .eq('date', dateStr)
-        .eq('company_id', currentUser.companyId);
-
-      await supabase
-        .from('daily_observations')
-        .delete()
-        .eq('date', dateStr)
-        .eq('company_id', currentUser.companyId);
+      const dateStr = formatDate(selectedDate);
+      await attendanceService.cancelAttendance(dateStr, currentUser.companyId);
 
       await fetchAttendanceDays();
       setDailyAttendances([]);
@@ -189,7 +182,7 @@ export function useAttendance(selectedDate: Date | undefined) {
 
   const isAttendanceDay = (date: Date) => {
     return attendanceDays.some(attendanceDate => 
-      attendanceDate.toISOString().split('T')[0] === date.toISOString().split('T')[0]
+      formatDate(attendanceDate) === formatDate(date)
     );
   };
 
@@ -204,7 +197,7 @@ export function useAttendance(selectedDate: Date | undefined) {
     isAttendanceDay,
     getCurrentDayStudents: () => {
       if (!selectedDate) return [];
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = formatDate(selectedDate);
       const attendance = dailyAttendances.find(da => da.date === dateStr);
       return attendance?.students || [];
     }
