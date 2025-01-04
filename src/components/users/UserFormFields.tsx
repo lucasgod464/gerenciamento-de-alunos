@@ -49,16 +49,6 @@ const UserFormFields = ({
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
 
-  // Initialize selected rooms and tags when defaultValues change
-  useEffect(() => {
-    if (defaultValues.tags) {
-      setSelectedTags(defaultValues.tags);
-    }
-    if (defaultValues.authorizedRooms) {
-      setSelectedRooms(defaultValues.authorizedRooms.map(room => room.id));
-    }
-  }, [defaultValues]);
-
   const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
     const newSelectedTags = selectedTags.some(t => t.id === tag.id)
       ? selectedTags.filter(t => t.id !== tag.id)
@@ -69,14 +59,10 @@ const UserFormFields = ({
   };
 
   const handleRoomToggle = (roomId: string) => {
-    console.log('Toggling room:', roomId);
-    console.log('Current selected rooms:', selectedRooms);
-    
     const newSelectedRooms = selectedRooms.includes(roomId)
       ? selectedRooms.filter(id => id !== roomId)
       : [...selectedRooms, roomId];
     
-    console.log('New selected rooms:', newSelectedRooms);
     setSelectedRooms(newSelectedRooms);
     onRoomsChange?.(newSelectedRooms);
   };
