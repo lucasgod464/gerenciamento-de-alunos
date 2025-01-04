@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/utils/dateUtils";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CircleCheck, CircleX, Clock, FileQuestion } from "lucide-react";
+import { AttendanceHeader } from "./AttendanceHeader";
+import { AttendanceRow } from "./AttendanceRow";
 
 interface Student {
   id: string;
   name: string;
   status?: string;
-  observation?: string;
 }
 
 interface AttendanceListProps {
@@ -75,21 +71,6 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
     }));
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'present':
-        return <CircleCheck className="h-4 w-4 text-green-500" />;
-      case 'absent':
-        return <CircleX className="h-4 w-4 text-red-500" />;
-      case 'late':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'justified':
-        return <FileQuestion className="h-4 w-4 text-blue-500" />;
-      default:
-        return null;
-    }
-  };
-
   const handleSave = async () => {
     try {
       const formattedDate = formatDate(date);
@@ -143,64 +124,17 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Lista de Alunos</h3>
-            <Button onClick={handleSave}>Salvar Chamada</Button>
-          </div>
-          
-          <div className="space-y-4">
-            {students.map((student) => (
-              <div key={student.id} className="p-4 border rounded-lg bg-white shadow-sm">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium text-lg">{student.name}</h4>
-                    <div className="w-[200px]">
-                      <Select
-                        value={student.status}
-                        onValueChange={(value) => handleStatusChange(student.id, value)}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione o status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="present" className="flex items-center gap-2">
-                            <CircleCheck className="h-4 w-4 text-green-500" />
-                            <span className="text-green-600">Presente</span>
-                          </SelectItem>
-                          <SelectItem value="absent" className="flex items-center gap-2">
-                            <CircleX className="h-4 w-4 text-red-500" />
-                            <span className="text-red-600">Ausente</span>
-                          </SelectItem>
-                          <SelectItem value="late" className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-yellow-500" />
-                            <span className="text-yellow-600">Atrasado</span>
-                          </SelectItem>
-                          <SelectItem value="justified" className="flex items-center gap-2">
-                            <FileQuestion className="h-4 w-4 text-blue-500" />
-                            <span className="text-blue-600">Justificado</span>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor={`obs-${student.id}`} className="text-sm text-gray-600">
-                      Observações
-                    </Label>
-                    <Textarea
-                      id={`obs-${student.id}`}
-                      placeholder="Adicione observações (opcional)"
-                      value={observations[student.id] || ''}
-                      onChange={(e) => handleObservationChange(student.id, e.target.value)}
-                      className="mt-1"
-                      maxLength={500}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+        <AttendanceHeader onSave={handleSave} />
+        <div className="space-y-2">
+          {students.map((student) => (
+            <AttendanceRow
+              key={student.id}
+              student={student}
+              observation={observations[student.id] || ''}
+              onStatusChange={handleStatusChange}
+              onObservationChange={handleObservationChange}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>
