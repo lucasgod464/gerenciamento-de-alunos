@@ -30,9 +30,13 @@ export function useAttendance() {
   };
 
   const fetchAttendanceData = async (date: Date) => {
-    if (!currentUser?.companyId) return;
+    if (!currentUser?.companyId) {
+      console.log("No company ID found:", currentUser);
+      return;
+    }
 
     const dateStr = formatDateToString(date);
+    console.log("Fetching attendance for date:", dateStr);
     
     try {
       // Buscar presenças do dia
@@ -56,6 +60,9 @@ export function useAttendance() {
         .eq('date', dateStr)
         .eq('company_id', currentUser.companyId);
 
+      console.log("Attendance data:", attendanceData);
+      console.log("Attendance error:", attendanceError);
+
       if (attendanceError) throw attendanceError;
 
       // Buscar observação do dia
@@ -65,6 +72,9 @@ export function useAttendance() {
         .eq('date', dateStr)
         .eq('company_id', currentUser.companyId)
         .maybeSingle();
+
+      console.log("Observation data:", observationData);
+      console.log("Observation error:", observationError);
 
       if (observationError && observationError.code !== 'PGRST116') {
         throw observationError;
@@ -76,6 +86,9 @@ export function useAttendance() {
         .select('date')
         .eq('company_id', currentUser.companyId)
         .order('date');
+
+      console.log("Days data:", daysData);
+      console.log("Days error:", daysError);
 
       if (daysError) throw daysError;
 
@@ -255,6 +268,7 @@ export function useAttendance() {
 
   useEffect(() => {
     if (selectedDate) {
+      console.log("Selected date changed:", selectedDate);
       fetchAttendanceData(selectedDate);
     }
   }, [selectedDate, currentUser?.companyId]);
