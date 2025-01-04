@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
+import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,9 +30,7 @@ export default function PublicEnrollment() {
 
       if (error) throw error;
 
-      const validatedFields = (formFields || [])
-        .map((field: SupabaseFormField) => mapSupabaseFormField(field));
-
+      const validatedFields = formFields || [];
       setFields(validatedFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
@@ -47,6 +45,16 @@ export default function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      // Primeiro, buscar a primeira empresa ativa
+      const { data: companies, error: companiesError } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('status', 'Ativa')
+        .limit(1)
+        .single();
+
+      if (companiesError) throw companiesError;
+
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         customFields[field.id] = {
@@ -64,7 +72,8 @@ export default function PublicEnrollment() {
           name: data.nome_completo,
           birth_date: data.data_nascimento,
           status: true,
-          custom_fields: customFields
+          custom_fields: customFields,
+          company_id: companies.id // Usar o ID da primeira empresa ativa
         });
 
       if (studentError) throw studentError;
