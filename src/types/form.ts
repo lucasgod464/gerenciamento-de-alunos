@@ -2,6 +2,14 @@ import { Json } from "@/integrations/supabase/types";
 
 export type FieldType = "text" | "email" | "tel" | "date" | "textarea" | "select" | "multiple";
 
+export interface CustomField {
+  fieldId: string;
+  fieldName: string;
+  label: string;
+  value: any;
+  type: string;
+}
+
 export interface FormField {
   id: string;
   name: string;
@@ -26,36 +34,6 @@ export interface SupabaseFormField {
   company_id: string | null;
   created_at: string;
 }
-
-export interface CustomField {
-  fieldId: string;
-  fieldName: string;
-  label: string;
-  value: any;
-  type: string;
-}
-
-export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
-  id: field.id,
-  name: field.name,
-  label: field.label,
-  type: field.type as FieldType,
-  description: field.description || undefined,
-  required: field.required,
-  order: field.order,
-  options: field.options as string[] | undefined,
-});
-
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
-  name: field.name,
-  label: field.label,
-  type: field.type,
-  description: field.description || null,
-  required: field.required,
-  options: field.options || null,
-  order: field.order,
-  company_id: null
-});
 
 export const defaultFields: FormField[] = [
   {
@@ -96,3 +74,24 @@ export const defaultFields: FormField[] = [
     isDefault: true
   }
 ];
+
+export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+  id: field.id,
+  name: field.name,
+  label: field.label,
+  type: field.type as FieldType,
+  description: field.description || undefined,
+  required: field.required,
+  order: field.order,
+  options: field.options as string[] | undefined,
+});
+
+export const mapFormFieldToSupabase = (field: Partial<FormField>): Partial<SupabaseFormField> => ({
+  name: field.name,
+  label: field.label,
+  type: field.type,
+  description: field.description || null,
+  required: field.required || false,
+  options: field.options || null,
+  order: field.order,
+});

@@ -9,15 +9,24 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import UserFormFields from "./UserFormFields";
-import { User } from "@/types/user";
 
-export interface CreateUserDialogProps {
-  onUserCreated?: (user: User) => void;
+interface CreateUserDialogProps {
+  onUserCreated?: () => void;
 }
 
 export const CreateUserDialog = ({ onUserCreated }: CreateUserDialogProps) => {
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+
+  const generateStrongPassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    return password;
+  };
 
   return (
     <Dialog>

@@ -109,9 +109,10 @@ export function EditUserDialog({
         ...user,
         ...updateData,
         tags: selectedTags,
-        authorizedRooms: roomsData?.map(room => { 
-          return { id: room.id, name: room.name }; 
-        }) || []
+        authorizedRooms: roomsData?.map(room => ({ 
+          id: room.id, 
+          name: room.name 
+        })) || []
       };
 
       console.log('Updated user with rooms:', updatedUser);
