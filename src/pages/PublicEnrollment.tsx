@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -43,7 +44,6 @@ export function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      // Primeiro, buscar a primeira empresa ativa
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
         .select('id')
@@ -98,46 +98,64 @@ export function PublicEnrollment() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {fields.map(field => (
-        <div key={field.id}>
-          <Label htmlFor={field.name}>{field.label}</Label>
-          {field.type === "textarea" ? (
-            <Textarea
-              id={field.name}
-              {...register(field.name, { required: field.required })}
-              placeholder={`Digite ${field.label}`}
-            />
-          ) : field.type === "select" ? (
-            <Select
-              id={field.name}
-              {...register(field.name, { required: field.required })}
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-center text-2xl font-bold">Formulário de Inscrição</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {fields.map(field => (
+              <div key={field.id} className="space-y-2">
+                <Label htmlFor={field.name} className="font-medium">
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                {field.type === "textarea" ? (
+                  <Textarea
+                    id={field.name}
+                    {...register(field.name, { required: field.required })}
+                    placeholder={`Digite ${field.label.toLowerCase()}`}
+                    className="w-full"
+                  />
+                ) : field.type === "select" ? (
+                  <Select onValueChange={(value) => setValue(field.name, value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id={field.name}
+                    type={field.type}
+                    {...register(field.name, { required: field.required })}
+                    placeholder={`Digite ${field.label.toLowerCase()}`}
+                    className="w-full"
+                  />
+                )}
+                {errors[field.name] && (
+                  <p className="text-sm text-red-500">Este campo é obrigatório</p>
+                )}
+              </div>
+            ))}
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isSubmitting}
             >
-              <SelectTrigger>
-                <SelectValue placeholder={`Selecione ${field.label}`} />
-              </SelectTrigger>
-              <SelectContent>
-                {field.options?.map(option => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Input
-              id={field.name}
-              {...register(field.name, { required: field.required })}
-              placeholder={`Digite ${field.label}`}
-            />
-          )}
-          {errors[field.name] && <p className="text-red-500">Este campo é obrigatório</p>}
-        </div>
-      ))}
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Enviando..." : "Enviar"}
-      </Button>
-    </form>
+              {isSubmitting ? "Enviando..." : "Enviar"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
