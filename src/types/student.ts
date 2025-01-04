@@ -34,12 +34,15 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   
   if (student.custom_fields && typeof student.custom_fields === 'object') {
     Object.entries(student.custom_fields as Record<string, any>).forEach(([key, value]) => {
-      customFields[key] = {
-        fieldName: key,
-        label: value.label || key,
-        value: value.value,
-        type: value.type || 'text'
-      };
+      if (value && typeof value === 'object') {
+        customFields[key] = {
+          fieldId: value.fieldId || key,
+          fieldName: value.fieldName || key,
+          label: value.label || key,
+          value: value.value,
+          type: value.type || 'text'
+        };
+      }
     });
   }
 
@@ -55,5 +58,13 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
     company_id: student.company_id,
     created_at: student.created_at,
     room: student.room_students?.[0]?.room_id,
+  };
+};
+
+export const mapStudentToSupabase = (student: Partial<Student>): Partial<SupabaseStudent> => {
+  const { room, ...rest } = student;
+  return {
+    ...rest,
+    custom_fields: student.custom_fields as Json,
   };
 };
