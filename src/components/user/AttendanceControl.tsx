@@ -4,6 +4,7 @@ import { AttendanceList } from "./AttendanceList";
 import { AttendanceCalendar } from "./attendance/AttendanceCalendar";
 import { DailyObservations } from "./attendance/DailyObservations";
 import { useAttendance } from "@/hooks/useAttendance";
+import { Student } from "@/types/attendance";
 
 export const AttendanceControl = () => {
   const {
@@ -18,11 +19,11 @@ export const AttendanceControl = () => {
     cancelAttendance,
   } = useAttendance();
 
-  const getCurrentDayStudents = () => {
+  const getCurrentDayStudents = (): Student[] => {
     if (!selectedDate || !dailyAttendances) return [];
     const dateStr = selectedDate.toISOString().split('T')[0];
     const attendance = dailyAttendances.find(da => da.date === dateStr);
-    return attendance?.students || [];
+    return attendance ? [attendance.students].filter(Boolean) : [];
   };
 
   const isAttendanceDay = (date: Date) => {

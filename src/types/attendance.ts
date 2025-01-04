@@ -24,7 +24,7 @@ export interface DailyAttendance {
   company_id: string | null;
   created_at: string;
   room_id: string | null;
-  students?: Student;
+  students: Student;
 }
 
 export interface DailyObservation {
