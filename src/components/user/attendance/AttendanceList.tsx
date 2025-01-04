@@ -1,29 +1,27 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AttendanceRow } from "./AttendanceRow";
 import { useAuth } from "@/hooks/useAuth";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface AttendanceListProps {
-  selectedDate: Date;
   roomId: string;
+  companyId: string;
+  onAttendanceSaved: () => void;
 }
 
-export const AttendanceList = ({ selectedDate, roomId }: AttendanceListProps) => {
+export function AttendanceList({ roomId, companyId, onAttendanceSaved }: AttendanceListProps) {
   const [students, setStudents] = useState<Student[]>([]);
-  const [attendanceData, setAttendanceData] = useState<Record<string, any>>({});
+  const [attendanceStatus, setAttendanceStatus] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
 
   const fetchStudents = async () => {
     try {
-      if (!roomId || !user?.company_id) return;
+      if (!roomId || !user?.companyId) return;
 
-      console.log('Buscando dados para a data:', selectedDate.toISOString().split('T')[0]);
-
-      // Primeiro, buscar os alunos da sala
       const { data: roomStudents, error: roomError } = await supabase
         .from('room_students')
         .select(`
@@ -44,50 +42,38 @@ export const AttendanceList = ({ selectedDate, roomId }: AttendanceListProps) =>
 
       if (roomError) throw roomError;
 
-      if (roomStudents) {
-        const validStudents = roomStudents
-          .filter(rs => rs.student)
-          .map(rs => rs.student as Student);
-        
-        setStudents(validStudents);
+      const mappedStudents = roomStudents
+        .map(rs => rs.student)
+        .filter(student => student !== null) as Student[];
 
-        // Agora, buscar os dados de presença para a data selecionada
-        const { data: attendanceRecords, error: attendanceError } = await supabase
-          .from('daily_attendance')
-          .select('*')
-          .eq('date', selectedDate.toISOString().split('T')[0])
-          .eq('room_id', roomId);
+      console.log("Alunos encontrados:", mappedStudents);
+      setStudents(mappedStudents);
 
-        if (attendanceError) throw attendanceError;
-
-        if (attendanceRecords) {
-          const attendanceMap: Record<string, any> = {};
-          attendanceRecords.forEach(record => {
-            attendanceMap[record.student_id] = record;
-          });
-          setAttendanceData(attendanceMap);
-        }
-      }
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error("Erro ao buscar alunos:", error);
       toast({
         title: "Erro ao carregar alunos",
-        description: "Ocorreu um erro ao carregar a lista de alunos.",
+        description: "Não foi possível carregar a lista de alunos.",
         variant: "destructive",
       });
     }
   };
 
-  useEffect(() => {
-    fetchStudents();
-  }, [roomId, selectedDate]);
-
-  const handleAttendanceChange = async (studentId: string, status: string) => {
+  const handleStatusChange = async (studentId: string, status: string) => {
     try {
-      const existingRecord = attendanceData[studentId];
-      
+      const today = new Date().toISOString().split('T')[0];
+
+      // Primeiro, verifica se já existe um registro para hoje
+      const { data: existingRecord } = await supabase
+        .from('daily_attendance')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('date', today)
+        .eq('room_id', roomId)
+        .single();
+
       if (existingRecord) {
-        // Atualizar registro existente
+        // Atualiza o registro existente
         const { error: updateError } = await supabase
           .from('daily_attendance')
           .update({ status })
@@ -95,65 +81,111 @@ export const AttendanceList = ({ selectedDate, roomId }: AttendanceListProps) =>
 
         if (updateError) throw updateError;
       } else {
-        // Criar novo registro
+        // Cria um novo registro
         const { error: insertError } = await supabase
           .from('daily_attendance')
           .insert({
-            date: selectedDate.toISOString().split('T')[0],
             student_id: studentId,
+            date: today,
             status,
             room_id: roomId,
-            company_id: user?.company_id
+            company_id: companyId
           });
 
         if (insertError) throw insertError;
       }
 
-      // Atualizar dados locais
-      setAttendanceData(prev => ({
+      setAttendanceStatus(prev => ({
         ...prev,
-        [studentId]: {
-          ...prev[studentId],
-          status,
-          student_id: studentId,
-          date: selectedDate.toISOString().split('T')[0]
-        }
+        [studentId]: status
       }));
+
+      onAttendanceSaved();
 
       toast({
         title: "Presença registrada",
-        description: "O registro de presença foi atualizado com sucesso.",
+        description: "O status de presença foi atualizado com sucesso.",
       });
     } catch (error) {
-      console.error('Error updating attendance:', error);
+      console.error("Erro ao atualizar presença:", error);
       toast({
         title: "Erro ao registrar presença",
-        description: "Ocorreu um erro ao atualizar o registro de presença.",
+        description: "Não foi possível atualizar o status de presença.",
         variant: "destructive",
       });
     }
   };
 
+  useEffect(() => {
+    if (roomId) {
+      fetchStudents();
+    }
+  }, [roomId]);
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        {students.length > 0 ? (
-          <div className="space-y-4">
-            {students.map((student) => (
-              <AttendanceRow
-                key={student.id}
-                student={student}
-                attendance={attendanceData[student.id]}
-                onAttendanceChange={handleAttendanceChange}
-              />
-            ))}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground">
-            Nenhum aluno encontrado para esta sala.
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Nome</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {students.map((student) => (
+            <TableRow key={student.id}>
+              <TableCell>{student.name}</TableCell>
+              <TableCell>
+                {attendanceStatus[student.id] ? (
+                  <Badge variant={
+                    attendanceStatus[student.id] === 'present' ? 'success' :
+                    attendanceStatus[student.id] === 'absent' ? 'destructive' :
+                    attendanceStatus[student.id] === 'late' ? 'warning' : 
+                    'secondary'
+                  }>
+                    {attendanceStatus[student.id] === 'present' ? 'Presente' :
+                     attendanceStatus[student.id] === 'absent' ? 'Ausente' :
+                     attendanceStatus[student.id] === 'late' ? 'Atrasado' :
+                     attendanceStatus[student.id] === 'justified' ? 'Justificado' : 
+                     'Não registrado'}
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Não registrado</Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleStatusChange(student.id, 'present')}
+                    className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded hover:bg-green-200"
+                  >
+                    Presente
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(student.id, 'absent')}
+                    className="px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200"
+                  >
+                    Ausente
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(student.id, 'late')}
+                    className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                  >
+                    Atrasado
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(student.id, 'justified')}
+                    className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+                  >
+                    Justificado
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
-};
+}
