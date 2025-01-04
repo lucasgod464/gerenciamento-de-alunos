@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Student, DailyAttendance, DailyObservation } from "@/types/attendance";
+import { Student, DailyAttendance, DailyObservation, AttendanceStatus } from "@/types/attendance";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +34,7 @@ export function useAttendance() {
         .select('*')
         .eq('date', dateStr)
         .eq('company_id', currentUser.companyId)
-        .single();
+        .maybeSingle();
 
       if (observationError && observationError.code !== 'PGRST116') {
         throw observationError;
@@ -51,22 +51,28 @@ export function useAttendance() {
 
       // Atualizar estados
       if (attendanceData) {
-        const formattedAttendance: DailyAttendance = {
-          date: dateStr,
-          students: attendanceData.map(record => ({
-            id: record.student_id,
-            name: record.students.name,
-            room: record.room_id,
-            status: record.status,
-            companyId: record.company_id
-          }))
-        };
-        setDailyAttendances([formattedAttendance]);
+        const formattedAttendance: DailyAttendance[] = attendanceData.map(record => ({
+          id: record.id,
+          date: record.date,
+          student_id: record.student_id,
+          status: record.status as AttendanceStatus,
+          company_id: record.company_id,
+          created_at: record.created_at,
+          room_id: record.room_id,
+          students: record.students
+        }));
+        setDailyAttendances(formattedAttendance);
       }
 
       if (observationData) {
         setObservation(observationData.text);
-        setObservations([{ date: dateStr, text: observationData.text }]);
+        setObservations([{ 
+          id: observationData.id,
+          date: dateStr, 
+          text: observationData.text,
+          company_id: observationData.company_id,
+          created_at: observationData.created_at
+        }]);
       } else {
         setObservation("");
       }
@@ -84,7 +90,7 @@ export function useAttendance() {
     }
   };
 
-  const handleStatusChange = async (studentId: string, status: Student["status"]) => {
+  const handleStatusChange = async (studentId: string, status: AttendanceStatus) => {
     if (!selectedDate || !currentUser?.companyId) return;
     
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -136,7 +142,13 @@ export function useAttendance() {
       setObservation(text);
       setObservations(prev => {
         const filtered = prev.filter(obs => obs.date !== dateStr);
-        return [...filtered, { date: dateStr, text }];
+        return [...filtered, { 
+          id: '', // será atualizado no próximo fetch
+          date: dateStr, 
+          text,
+          company_id: currentUser.companyId || null,
+          created_at: new Date().toISOString()
+        }];
       });
     } catch (error) {
       console.error('Error updating observation:', error);
@@ -164,7 +176,7 @@ export function useAttendance() {
       const attendanceRecords = studentsData.map(student => ({
         student_id: student.id,
         date: dateStr,
-        status: 'present',
+        status: 'present' as AttendanceStatus,
         company_id: currentUser.companyId
       }));
 
