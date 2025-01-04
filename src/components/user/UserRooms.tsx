@@ -5,7 +5,7 @@ import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Room, mapSupabaseRoomToRoom } from "@/types/room";
+import { Room } from "@/types/room";
 
 export function UserRooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -20,24 +20,7 @@ export function UserRooms() {
       }
 
       try {
-        // Primeiro, buscar as salas autorizadas para o usuário
-        const { data: userRooms, error: userRoomsError } = await supabase
-          .from('user_rooms')
-          .select('room_id')
-          .eq('user_id', user.id);
-
-        if (userRoomsError) {
-          console.error('Error fetching user rooms:', userRoomsError);
-          throw userRoomsError;
-        }
-
-        if (!userRooms?.length) {
-          setRooms([]);
-          return;
-        }
-
-        // Depois, buscar os detalhes das salas em uma única query
-        const roomIds = userRooms.map(ur => ur.room_id);
+        // Buscar todas as salas em uma única query
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
@@ -50,11 +33,10 @@ export function UserRooms() {
             company_id,
             study_room,
             created_at,
-            room_students!inner (
+            room_students (
               student:students (*)
             )
-          `)
-          .in('id', roomIds);
+          `);
 
         if (roomsError) {
           console.error('Error fetching rooms:', roomsError);
@@ -74,6 +56,8 @@ export function UserRooms() {
             createdAt: room.created_at,
             students: room.room_students?.map(rs => rs.student) || []
           }));
+          
+          console.log('Salas carregadas:', transformedRooms);
           setRooms(transformedRooms);
         }
       } catch (error) {
