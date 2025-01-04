@@ -58,22 +58,24 @@ export function EditUserDialog({
     try {
       setLoading(true);
 
+      const updateData = {
+        name: formData.get('name')?.toString() || '',
+        email: formData.get('email')?.toString() || '',
+        access_level: formData.get('accessLevel')?.toString() || 'Usuário Comum',
+        location: formData.get('location')?.toString() || '',
+        specialization: formData.get('specialization')?.toString() || '',
+        status: formData.get('status')?.toString() || 'active',
+      };
+
       const { error: updateError } = await supabase
         .from('emails')
-        .update({
-          name: formData.get('name'),
-          email: formData.get('email'),
-          access_level: formData.get('accessLevel'),
-          location: formData.get('location'),
-          specialization: formData.get('specialization'),
-          status: formData.get('status'),
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (updateError) throw updateError;
 
       // Update tags
-      const selectedTags = JSON.parse(formData.get('tags') as string || '[]');
+      const selectedTags = JSON.parse(formData.get('tags')?.toString() || '[]');
       
       // Remove existing tags
       const { error: deleteTagsError } = await supabase
