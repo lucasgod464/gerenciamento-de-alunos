@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { FormField } from "@/types/form";
+import { CustomFieldWrapper } from "./CustomFieldWrapper";
 
 interface CustomTextFieldProps {
   field: FormField;
@@ -10,17 +10,14 @@ interface CustomTextFieldProps {
 
 export const CustomTextField = ({ field, value, onChange }: CustomTextFieldProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={field.name}>
-        {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
+    <CustomFieldWrapper field={field}>
       <Input
-        id={field.name}
-        value={value || ""}
+        type={field.type}
+        value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={`Digite ${field.label.toLowerCase()}`}
         required={field.required}
       />
-    </div>
+    </CustomFieldWrapper>
   );
 };

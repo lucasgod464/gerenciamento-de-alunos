@@ -1,12 +1,6 @@
-import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField } from "@/types/form";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { CustomFieldWrapper } from "./CustomFieldWrapper";
 
 interface CustomSelectFieldProps {
   field: FormField;
@@ -16,18 +10,10 @@ interface CustomSelectFieldProps {
 
 export const CustomSelectField = ({ field, value, onChange }: CustomSelectFieldProps) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={field.name}>
-        {field.label}
-        {field.required && <span className="text-red-500 ml-1">*</span>}
-      </Label>
-      <Select
-        value={value || ""}
-        onValueChange={onChange}
-        required={field.required}
-      >
+    <CustomFieldWrapper field={field}>
+      <Select value={value} onValueChange={onChange}>
         <SelectTrigger>
-          <SelectValue placeholder="Selecione uma opção" />
+          <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
         </SelectTrigger>
         <SelectContent>
           {field.options?.map((option) => (
@@ -37,6 +23,6 @@ export const CustomSelectField = ({ field, value, onChange }: CustomSelectFieldP
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </CustomFieldWrapper>
   );
 };

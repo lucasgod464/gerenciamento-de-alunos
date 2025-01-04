@@ -2,13 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,7 +81,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const renderCustomField = (field: FormField) => {
-    const value = formData.custom_fields?.[field.name]?.value;
+    const value = formData.custom_fields?.[field.name]?.value || "";
 
     switch (field.type) {
       case "text":
@@ -95,7 +89,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         return (
           <CustomTextField
             field={field}
-            value={value || ""}
+            value={value}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
@@ -103,7 +97,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         return (
           <CustomPhoneField
             field={field}
-            value={value || ""}
+            value={value}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
@@ -111,7 +105,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         return (
           <CustomSelectField
             field={field}
-            value={value || ""}
+            value={value}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
@@ -119,7 +113,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         return (
           <CustomMultipleField
             field={field}
-            value={value || []}
+            value={value}
             onChange={(newValue) => handleCustomFieldChange(field, newValue)}
           />
         );
