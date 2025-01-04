@@ -49,8 +49,6 @@ export function EditUserDialog({
         address: formData.get('address')?.toString() || ''
       };
 
-      console.log('Update data:', updateData);
-
       const { error: updateError } = await supabase
         .from('emails')
         .update(updateData)
@@ -73,7 +71,7 @@ export function EditUserDialog({
           })));
       }
 
-      // Update rooms - primeiro deletamos todas as salas existentes
+      // Update rooms
       const { error: deleteRoomsError } = await supabase
         .from('user_rooms')
         .delete()
@@ -81,7 +79,6 @@ export function EditUserDialog({
 
       if (deleteRoomsError) throw deleteRoomsError;
 
-      // Depois inserimos as novas salas selecionadas
       if (selectedRooms.length > 0) {
         const { error: insertRoomsError } = await supabase
           .from('user_rooms')
@@ -141,7 +138,7 @@ export function EditUserDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Usuário</DialogTitle>
         </DialogHeader>
@@ -165,7 +162,10 @@ export function EditUserDialog({
             onRoomsChange={setSelectedRooms}
             isEditing
           />
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 sticky bottom-0 bg-white p-4 border-t">
+            <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={loading}>
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
