@@ -39,7 +39,7 @@ export function StudentsTotal() {
         custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
         company_id: student.company_id || '',
         created_at: student.created_at,
-        room: student.room_students?.[0]?.room_id
+        room: student.room_students?.[0]?.room_id || null
       }));
       
       console.log("Alunos mapeados:", mappedStudents);
@@ -141,8 +141,9 @@ export function StudentsTotal() {
     }
   }, [currentUser]);
 
-  const studentsWithRoom = students.filter(student => student.room);
-  const studentsWithoutRoom = students.filter(student => !student.room);
+  // Corrigindo a filtragem dos alunos
+  const studentsWithRoom = students.filter(student => student.room !== null);
+  const studentsWithoutRoom = students.filter(student => student.room === null);
 
   console.log("Alunos com sala:", studentsWithRoom);
   console.log("Alunos sem sala:", studentsWithoutRoom);
