@@ -1,6 +1,7 @@
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ptBR } from "date-fns/locale";
 
 interface AttendanceCalendarProps {
   selectedDate: Date | undefined;
@@ -53,6 +54,7 @@ export const AttendanceCalendar = ({
             modifiers={modifiers}
             modifiersStyles={modifiersStyles}
             disabled={{ before: new Date(2000, 0) }}
+            locale={ptBR}
           />
         </div>
         <div className="flex gap-2">

@@ -25,7 +25,9 @@ export function useAttendance() {
   const fetchAttendanceData = async (date: Date) => {
     if (!currentUser?.companyId) return;
 
-    const dateStr = date.toISOString().split('T')[0];
+    // Ajusta a data para o fuso horário de Brasília
+    const brasiliaDate = new Date(date.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const dateStr = brasiliaDate.toISOString().split('T')[0];
     
     try {
       const [attendanceData, observationData, daysData] = await Promise.all([
@@ -46,10 +48,15 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        // Convert dates to Date objects and ensure they're at midnight UTC
+        // Converte as datas para o fuso horário de Brasília
         const formattedDays = daysData.map(day => {
           const date = new Date(day);
-          return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+          const brasiliaDate = new Date(date.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+          return new Date(Date.UTC(
+            brasiliaDate.getFullYear(),
+            brasiliaDate.getMonth(),
+            brasiliaDate.getDate()
+          ));
         });
         setAttendanceDays(formattedDays);
       }
