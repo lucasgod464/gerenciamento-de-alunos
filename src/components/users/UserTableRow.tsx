@@ -1,104 +1,95 @@
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
+import { useState, useEffect } from "react";
 import { User } from "@/types/user";
-import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { UserActions } from "./table/UserActions";
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 import { UserTags } from "./table/UserTags";
-import { UserInfoDialog } from "./UserInfoDialog";
+import { UserActions } from "./table/UserActions";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserTableRowProps {
   user: User;
   onEdit: (user: User) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, checked: boolean) => void;
+  onDelete: (user: User) => void;
+  onViewDetails: (user: User) => void;
 }
 
-export function UserTableRow({ user, onEdit, onDelete, onStatusChange }: UserTableRowProps) {
-  const [authorizedRoomNames, setAuthorizedRoomNames] = useState<string[]>([]);
-  const [showingInfo, setShowingInfo] = useState<User | null>(null);
-  const { toast } = useToast();
+export const UserTableRow = ({ user, onEdit, onDelete, onViewDetails }: UserTableRowProps) => {
+  const [authorizedRooms, setAuthorizedRooms] = useState<string[]>([]);
 
   useEffect(() => {
-    const fetchRooms = async () => {
+    const fetchUserRooms = async () => {
       try {
-        const { data: userRooms, error } = await supabase
+        const { data: userRooms, error: userRoomsError } = await supabase
           .from('user_rooms')
           .select('room_id')
           .eq('user_id', user.id);
 
-        if (error) throw error;
+        if (userRoomsError) throw userRoomsError;
 
-        if (userRooms?.length) {
+        if (userRooms) {
           const roomIds = userRooms.map(ur => ur.room_id);
-          const { data: rooms } = await supabase
+          const { data: rooms, error: roomsError } = await supabase
             .from('rooms')
             .select('name')
             .in('id', roomIds);
 
+          if (roomsError) throw roomsError;
+          
           if (rooms) {
-            setAuthorizedRoomNames(rooms.map(room => room.name));
+            setAuthorizedRooms(rooms.map(room => room.name));
           }
         }
       } catch (error) {
-        console.error('Error fetching rooms:', error);
+        console.error('Error fetching user rooms:', error);
       }
     };
 
-    fetchRooms();
+    fetchUserRooms();
   }, [user.id]);
 
-  const handleStatusChange = (checked: boolean) => {
-    onStatusChange(user.id, checked);
-    toast({
-      title: "Status atualizado",
-      description: `O usuário foi ${checked ? 'ativado' : 'desativado'} com sucesso.`,
-    });
-  };
-
   return (
-    <>
-      <TableRow>
-        <TableCell className="font-medium">{user.name}</TableCell>
-        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-        <TableCell>{user.specialization || "Não definida"}</TableCell>
-        <TableCell>
-          <div className="max-w-[200px] overflow-hidden text-sm">
-            {authorizedRoomNames.length > 0 
-              ? authorizedRoomNames.join(", ")
-              : "Nenhuma sala autorizada"}
-          </div>
-        </TableCell>
-        <TableCell>
-          <UserTags tags={user.tags} />
-        </TableCell>
-        <TableCell className="text-center">
-          <Switch
-            checked={user.status === "active"}
-            onCheckedChange={handleStatusChange}
-          />
-        </TableCell>
-        <TableCell className="text-sm text-muted-foreground">
-          {user.createdAt}
-        </TableCell>
-        <TableCell className="text-sm text-muted-foreground">
-          {user.lastAccess}
-        </TableCell>
-        <TableCell>
-          <UserActions 
-            user={user}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onView={setShowingInfo}
-          />
-        </TableCell>
-      </TableRow>
-
-      <UserInfoDialog 
-        user={showingInfo} 
-        onClose={() => setShowingInfo(null)} 
-      />
-    </>
+    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+      <td className="p-4">
+        <div className="font-medium">{user.name}</div>
+        <div className="text-sm text-muted-foreground">{user.email}</div>
+      </td>
+      <td className="p-4">
+        <Badge variant={user.accessLevel === "Admin" ? "default" : "secondary"}>
+          {user.accessLevel}
+        </Badge>
+      </td>
+      <td className="p-4">
+        <div className="flex flex-wrap gap-1">
+          {authorizedRooms.map((room, index) => (
+            <Badge key={index} variant="outline">
+              {room}
+            </Badge>
+          ))}
+        </div>
+      </td>
+      <td className="p-4">
+        <UserTags userId={user.id} />
+      </td>
+      <td className="p-4">
+        {user.lastAccess && (
+          <span className="text-sm text-muted-foreground">
+            {format(new Date(user.lastAccess), "dd/MM/yyyy HH:mm")}
+          </span>
+        )}
+      </td>
+      <td className="p-4">
+        <Badge variant={user.status ? "success" : "secondary"}>
+          {user.status ? "Ativo" : "Inativo"}
+        </Badge>
+      </td>
+      <td className="p-4">
+        <UserActions
+          user={user}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onViewDetails={onViewDetails}
+        />
+      </td>
+    </tr>
   );
-}
+};
