@@ -8,7 +8,7 @@ export const attendanceDataService = {
       .from('daily_attendance')
       .select('date')
       .eq('company_id', companyId)
-      .order('date', { ascending: true });
+      .order('date');
 
     if (error) throw error;
 
@@ -54,9 +54,9 @@ export const attendanceDataService = {
       .select('text')
       .eq('date', date)
       .eq('company_id', companyId)
-      .single();
+      .maybeSingle();  // Alterado de .single() para .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
     return data;
   },
 
@@ -124,7 +124,6 @@ export const attendanceDataService = {
   },
 
   async cancelAttendance(date: string, companyId: string) {
-    // Primeiro deleta as observações
     const { error: observationError } = await supabase
       .from('daily_observations')
       .delete()
@@ -133,7 +132,6 @@ export const attendanceDataService = {
 
     if (observationError) throw observationError;
 
-    // Depois deleta as presenças
     const { error: attendanceError } = await supabase
       .from('daily_attendance')
       .delete()
