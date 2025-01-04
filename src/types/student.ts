@@ -8,7 +8,12 @@ export interface Student {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Record<string, any>;
+  custom_fields: Record<string, {
+    fieldName: string;
+    label: string;
+    value: any;
+    type: string;
+  }>;
   company_id: string;
   created_at: string;
   room?: string;
@@ -35,7 +40,12 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   email: student.email,
   document: student.document,
   address: student.address,
-  custom_fields: student.custom_fields as Record<string, any> || {},
+  custom_fields: student.custom_fields as Record<string, {
+    fieldName: string;
+    label: string;
+    value: any;
+    type: string;
+  }> || {},
   company_id: student.company_id,
   created_at: student.created_at,
 });
