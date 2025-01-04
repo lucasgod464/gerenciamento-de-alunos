@@ -48,6 +48,18 @@ export const attendanceDataService = {
     }));
   },
 
+  async getDailyObservation(date: string, companyId: string) {
+    const { data, error } = await supabase
+      .from('daily_observations')
+      .select('text')
+      .eq('date', date)
+      .eq('company_id', companyId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  },
+
   async getCompanyStudents(companyId: string): Promise<AttendanceStudent[]> {
     const { data: roomStudents, error } = await supabase
       .from('room_students')

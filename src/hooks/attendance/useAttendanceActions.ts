@@ -113,10 +113,8 @@ export function useAttendanceActions(
     try {
       const dateStr = formatDate(selectedDate);
       
-      // Primeiro deleta do banco de dados
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
       
-      // Depois atualiza o estado local
       const normalizedSelectedDate = normalizeDate(selectedDate);
       setAttendanceDays(attendanceDays.filter(date => 
         !areDatesEqual(normalizeDate(date), normalizedSelectedDate)

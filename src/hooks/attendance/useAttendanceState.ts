@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DailyAttendance, AttendanceStudent } from "@/services/attendance/types";
+import { DailyAttendance } from "@/services/attendance/types";
 import { formatDate, normalizeDate } from "@/utils/dateUtils";
 import { attendanceDataService } from "@/services/attendance/attendanceDataService";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +15,6 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
 
     try {
       const days = await attendanceDataService.getAttendanceDays(currentUser.companyId);
-      // Normaliza as datas ao recebê-las do servidor
       const normalizedDays = days.map(day => normalizeDate(new Date(day)));
       setAttendanceDays(normalizedDays);
     } catch (error) {
@@ -36,6 +35,10 @@ export function useAttendanceState(selectedDate: Date | undefined, currentUser: 
     try {
       const attendanceData = await attendanceDataService.getDailyAttendance(dateStr, currentUser.companyId);
       setDailyAttendances([{ date: dateStr, students: attendanceData }]);
+
+      // Buscar observações do dia
+      const observationData = await attendanceDataService.getDailyObservation(dateStr, currentUser.companyId);
+      setObservation(observationData?.text || "");
     } catch (error) {
       console.error('Error fetching daily attendance:', error);
       toast({
