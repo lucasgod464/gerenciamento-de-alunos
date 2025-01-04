@@ -27,8 +27,9 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      console.log("Carregando campos para empresa:", companyId);
+      console.log("Iniciando carregamento dos campos para empresa:", companyId);
       
+      // Carrega campos personalizados da empresa
       const { data: customFields, error: customError } = await supabase
         .from('enrollment_form_fields')
         .select('*')
@@ -40,7 +41,7 @@ export function PublicEnrollment() {
         throw customError;
       }
 
-      console.log("Campos personalizados carregados:", customFields);
+      console.log("Campos personalizados brutos:", customFields);
 
       // Campos padrão do sistema
       const defaultFields: FormField[] = [
@@ -81,7 +82,7 @@ export function PublicEnrollment() {
 
       // Combina e ordena todos os campos
       const allFields = [...defaultFields, ...mappedCustomFields].sort((a, b) => a.order - b.order);
-      console.log("Todos os campos combinados:", allFields);
+      console.log("Todos os campos combinados e ordenados:", allFields);
       
       setFields(allFields);
     } catch (error) {
@@ -104,11 +105,20 @@ export function PublicEnrollment() {
       return;
     }
 
+    console.log("Dados do formulário recebidos:", data);
+    console.log("Campos disponíveis:", fields);
+
     setIsSubmitting(true);
     try {
+      // Prepara os campos personalizados
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (!field.isDefault) {
+          console.log(`Processando campo personalizado: ${field.name}`, {
+            valor: data[field.name],
+            campo: field
+          });
+          
           customFields[field.name] = {
             fieldId: field.id,
             fieldName: field.name,
@@ -118,6 +128,8 @@ export function PublicEnrollment() {
           };
         }
       });
+
+      console.log("Campos personalizados preparados:", customFields);
 
       const { error: studentError } = await supabase
         .from('students')
@@ -129,7 +141,10 @@ export function PublicEnrollment() {
           company_id: companyId
         });
 
-      if (studentError) throw studentError;
+      if (studentError) {
+        console.error("Erro ao inserir estudante:", studentError);
+        throw studentError;
+      }
 
       toast({
         title: "Sucesso!",
