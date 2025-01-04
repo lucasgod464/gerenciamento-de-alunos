@@ -22,27 +22,39 @@ export function RoleGuard({
     return <Navigate to="/login" replace />;
   }
 
-  // Check role access
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Redirect to appropriate dashboard based on user's role
-    switch (user.role) {
-      case "SUPER_ADMIN":
+  // Verificação rigorosa de roles
+  if (allowedRoles) {
+    const hasAllowedRole = allowedRoles.some(role => {
+      if (role === "SUPER_ADMIN") {
+        return user.role === "SUPER_ADMIN";
+      }
+      if (role === "ADMIN") {
+        return user.role === "ADMIN" || user.accessLevel === "Admin";
+      }
+      if (role === "USER") {
+        return user.role === "USER" || user.accessLevel === "Usuário Comum";
+      }
+      return false;
+    });
+
+    if (!hasAllowedRole) {
+      // Redireciona para o dashboard apropriado baseado no papel do usuário
+      if (user.role === "SUPER_ADMIN") {
         return <Navigate to="/super-admin" replace />;
-      case "ADMIN":
+      } else if (user.role === "ADMIN" || user.accessLevel === "Admin") {
         return <Navigate to="/admin" replace />;
-      case "USER":
+      } else {
         return <Navigate to="/user" replace />;
-      default:
-        return <Navigate to="/login" replace />;
+      }
     }
   }
 
-  // Check company access
+  // Verificação de acesso à empresa
   if (companyId && !isCompanyMember(companyId)) {
     return <Navigate to="/login" replace />;
   }
 
-  // Check permissions
+  // Verificação de permissões
   const hasAllPermissions = requiredPermissions.every((permission) => can(permission));
   if (!hasAllPermissions) {
     return <Navigate to="/login" replace />;

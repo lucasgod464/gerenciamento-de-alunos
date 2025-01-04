@@ -42,21 +42,13 @@ const Login = () => {
       
       toast.success("Login realizado com sucesso!");
       
-      // Redirect based on access level from the response
-      switch (response.user.role) {
-        case "SUPER_ADMIN":
-          navigate("/super-admin", { replace: true });
-          break;
-        case "ADMIN":
-          navigate("/admin", { replace: true });
-          break;
-        case "USER":
-          navigate("/user", { replace: true });
-          break;
-        default:
-          console.error("Unknown role:", response.user.role);
-          setError("Erro de configuração de acesso");
-          break;
+      // Atualizado para verificar corretamente o nível de acesso
+      if (response.user.role === "SUPER_ADMIN") {
+        navigate("/super-admin", { replace: true });
+      } else if (response.user.role === "ADMIN" || response.user.accessLevel === "Admin") {
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/user", { replace: true });
       }
     } catch (error) {
       console.error("Login error:", error);
