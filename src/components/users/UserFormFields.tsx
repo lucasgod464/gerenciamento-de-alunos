@@ -158,3 +158,5 @@ export function RoomFormFields({ onChange, editingRoom }: RoomFormFieldsProps) {
     </div>
   );
 }
+
+export default RoomFormFields;

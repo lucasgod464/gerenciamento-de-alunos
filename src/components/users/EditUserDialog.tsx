@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/user";
 import { useState } from "react";
-import { UserFormFields } from "./UserFormFields";
+import UserFormFields from "./UserFormFields";
 
 interface EditUserDialogProps {
   open: boolean;

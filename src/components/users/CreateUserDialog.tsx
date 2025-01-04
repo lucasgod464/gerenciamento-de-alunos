@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { UserFormFields } from "./UserFormFields";
+import UserFormFields from "./UserFormFields";
 import { generateStrongPassword } from "@/utils/passwordUtils";
 import { User } from "@/types/user";
 import { useAuth } from "@/hooks/useAuth";
