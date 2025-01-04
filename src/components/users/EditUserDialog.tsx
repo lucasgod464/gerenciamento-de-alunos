@@ -9,10 +9,9 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { User, UserStatus } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { RoomSelectionFields } from "./fields/RoomSelectionFields";
-import { TagSelectionFields } from "./fields/TagSelectionFields";
 import { UserBasicInfo } from "./dialog/UserBasicInfo";
 import { UserAccessLevel } from "./dialog/UserAccessLevel";
+import { TagSelectionFields } from "./fields/TagSelectionFields";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -25,38 +24,15 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
   const { toast } = useToast();
   const [formData, setFormData] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState("");
-  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load user data including authorized rooms when dialog opens
   useEffect(() => {
     const loadUserData = async () => {
       if (user?.id) {
         try {
           console.log('Loading user data for ID:', user.id);
           
-          // Load authorized rooms with room details
-          const { data: roomData, error: roomError } = await supabase
-            .from('user_authorized_rooms')
-            .select(`
-              room_id,
-              rooms:room_id (
-                id,
-                name
-              )
-            `)
-            .eq('user_id', user.id);
-
-          if (roomError) {
-            console.error('Error loading authorized rooms:', roomError);
-            throw roomError;
-          }
-
-          console.log('Loaded room data:', roomData);
-          const authorizedRooms = roomData?.map(r => r.room_id) || [];
-          console.log('Authorized rooms:', authorizedRooms);
-
           // Load user tags
           const { data: tagData, error: tagError } = await supabase
             .from('user_tags')
@@ -83,7 +59,6 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           
           setFormData(user);
           setNewPassword("");
-          setSelectedRooms(authorizedRooms);
           setSelectedTags(userTags);
         } catch (error) {
           console.error('Error loading user data:', error);
@@ -107,7 +82,6 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
     try {
       setIsSubmitting(true);
-      console.log('Submitting form with selected rooms:', selectedRooms);
 
       const updateData: any = {
         name: formData.name,
@@ -132,35 +106,6 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
 
       if (updateError) throw updateError;
 
-      // Delete existing room authorizations
-      const { error: deleteRoomError } = await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('user_id', formData.id);
-
-      if (deleteRoomError) {
-        console.error('Error deleting room authorizations:', deleteRoomError);
-        throw deleteRoomError;
-      }
-
-      // Insert new room authorizations
-      if (selectedRooms.length > 0) {
-        console.log('Inserting new room authorizations:', selectedRooms);
-        const roomsData = selectedRooms.map(roomId => ({
-          user_id: formData.id,
-          room_id: roomId,
-        }));
-
-        const { error: roomError } = await supabase
-          .from('user_authorized_rooms')
-          .insert(roomsData);
-
-        if (roomError) {
-          console.error('Error inserting room authorizations:', roomError);
-          throw roomError;
-        }
-      }
-
       // Update tags
       const { error: deleteTagError } = await supabase
         .from('user_tags')
@@ -182,18 +127,9 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
         if (tagError) throw tagError;
       }
 
-      // Fetch the updated room data to include in the response
-      const { data: updatedRoomData, error: roomFetchError } = await supabase
-        .from('user_authorized_rooms')
-        .select('room_id')
-        .eq('user_id', formData.id);
-
-      if (roomFetchError) throw roomFetchError;
-
       const finalUser: User = {
         ...formData,
         ...updatedUser,
-        authorizedRooms: updatedRoomData?.map(r => r.room_id) || [],
         tags: selectedTags,
         status: formData.status as UserStatus,
       };
@@ -235,17 +171,6 @@ export function EditUserDialog({ user, open, onOpenChange, onUserUpdated }: Edit
           <UserAccessLevel
             accessLevel={formData.accessLevel}
             onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
-          />
-
-          <RoomSelectionFields
-            selectedRooms={selectedRooms}
-            onRoomToggle={(roomId) => {
-              setSelectedRooms(prev => 
-                prev.includes(roomId) 
-                  ? prev.filter(id => id !== roomId)
-                  : [...prev, roomId]
-              );
-            }}
           />
 
           <TagSelectionFields

@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { User } from "@/types/user";
 import { useState } from "react";
 import { userService } from "@/services/userService";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CreateUserDialogProps {
   onUserCreated: (user: User) => void;
@@ -15,14 +14,8 @@ interface CreateUserDialogProps {
 export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
-  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [open, setOpen] = useState(false);
-
-  const handleAuthorizedRoomsChange = (roomIds: string[]) => {
-    console.log('Selected rooms:', roomIds);
-    setSelectedRooms(roomIds);
-  };
 
   const handleTagsChange = (tags: { id: string; name: string; color: string; }[]) => {
     setSelectedTags(tags);
@@ -63,7 +56,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     }
 
     try {
-      // Create the user first
       const user = await userService.createUser({
         email,
         name,
@@ -74,27 +66,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         specialization,
         status: 'active',
         role: 'USER',
-        selectedRooms,
         selectedTags
       });
-
-      // Save authorized rooms
-      if (selectedRooms.length > 0) {
-        console.log('Saving authorized rooms:', selectedRooms);
-        const { error: roomsError } = await supabase
-          .from('user_authorized_rooms')
-          .insert(
-            selectedRooms.map(roomId => ({
-              user_id: user.id,
-              room_id: roomId
-            }))
-          );
-
-        if (roomsError) {
-          console.error('Error saving authorized rooms:', roomsError);
-          throw roomsError;
-        }
-      }
 
       onUserCreated(user);
       
@@ -125,7 +98,6 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <UserFormFields 
-            onAuthorizedRoomsChange={handleAuthorizedRoomsChange}
             onTagsChange={handleTagsChange}
             generateStrongPassword={generateStrongPassword}
           />

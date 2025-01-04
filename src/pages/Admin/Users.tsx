@@ -24,9 +24,6 @@ export default function Users() {
             name,
             status
           ),
-          user_authorized_rooms (
-            room_id
-          ),
           user_tags (
             tags (
               id,
@@ -44,9 +41,6 @@ export default function Users() {
 
       if (usersData) {
         const mappedUsers = usersData.map(user => {
-          // Map authorized rooms
-          const authorizedRooms = user.user_authorized_rooms?.map(ar => ar.room_id) || [];
-          
           // Map tags
           const tags = user.user_tags?.map(ut => ({
             id: ut.tags.id,
@@ -56,7 +50,6 @@ export default function Users() {
 
           return {
             ...mapDatabaseUser(user),
-            authorizedRooms,
             tags
           };
         });
