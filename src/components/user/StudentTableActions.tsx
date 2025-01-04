@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Student } from "@/types/student";
-import { Eye, UserCog, Trash2, ArrowRightFromLine, Pencil } from "lucide-react";
+import { Eye, UserCog, Trash2, ArrowRightFromLine } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -68,7 +68,7 @@ export function StudentTableActions({
                 className="hover:bg-green-50 hover:text-green-600"
                 onClick={() => onEditClick(student)}
               >
-                <Pencil className="h-4 w-4" />
+                <UserCog className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
