@@ -1,190 +1,134 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/utils/dateUtils";
-import { AttendanceHeader } from "./AttendanceHeader";
+import { useToast } from "@/hooks/use-toast";
 import { AttendanceRow } from "./AttendanceRow";
-
-interface Student {
-  id: string;
-  name: string;
-  status?: string;
-}
+import { useAuth } from "@/hooks/useAuth";
 
 interface AttendanceListProps {
-  date: Date;
+  selectedDate: Date;
   roomId: string;
-  companyId: string;
-  onAttendanceSaved: () => void;
 }
 
-export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: AttendanceListProps) => {
+export const AttendanceList = ({ selectedDate, roomId }: AttendanceListProps) => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [observations, setObservations] = useState<Record<string, string>>({});
+  const [attendanceData, setAttendanceData] = useState<Record<string, any>>({});
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchStudents = async () => {
-      const { data, error } = await supabase
+  const fetchStudents = async () => {
+    try {
+      if (!roomId || !user?.company_id) return;
+
+      console.log('Buscando dados para a data:', selectedDate.toISOString().split('T')[0]);
+
+      // Primeiro, buscar os alunos da sala
+      const { data: roomStudents, error: roomError } = await supabase
         .from('room_students')
         .select(`
           student:students (
             id,
-            name
+            name,
+            birth_date,
+            status,
+            email,
+            document,
+            address,
+            custom_fields,
+            company_id,
+            created_at
           )
         `)
         .eq('room_id', roomId);
 
-      if (error) {
-        console.error('Erro ao buscar alunos:', error);
-        return;
-      }
+      if (roomError) throw roomError;
 
-      const formattedStudents = data.map(item => ({
-        id: item.students.id,
-        name: item.students.name,
-        status: 'present'
-      }));
+      if (roomStudents) {
+        const validStudents = roomStudents
+          .filter(rs => rs.student)
+          .map(rs => rs.student as Student);
+        
+        setStudents(validStudents);
 
-      // Buscar status de presença existente para a data
-      const formattedDate = formatDate(date);
-      const { data: attendanceData, error: attendanceError } = await supabase
-        .from('daily_attendance')
-        .select('student_id, status')
-        .eq('date', formattedDate)
-        .eq('room_id', roomId);
+        // Agora, buscar os dados de presença para a data selecionada
+        const { data: attendanceRecords, error: attendanceError } = await supabase
+          .from('daily_attendance')
+          .select('*')
+          .eq('date', selectedDate.toISOString().split('T')[0])
+          .eq('room_id', roomId);
 
-      if (!attendanceError && attendanceData) {
-        const attendanceMap = new Map(attendanceData.map(a => [a.student_id, a.status]));
-        formattedStudents.forEach(student => {
-          if (attendanceMap.has(student.id)) {
-            student.status = attendanceMap.get(student.id);
-          }
-        });
-      }
+        if (attendanceError) throw attendanceError;
 
-      setStudents(formattedStudents);
-    };
-
-    if (roomId) {
-      fetchStudents();
-    }
-
-    // Inscrever-se para atualizações em tempo real
-    const channel = supabase
-      .channel('attendance-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'daily_attendance',
-          filter: `room_id=eq.${roomId}`,
-        },
-        (payload) => {
-          console.log('Mudança detectada:', payload);
-          if (payload.new) {
-            setStudents(currentStudents => 
-              currentStudents.map(student => 
-                student.id === payload.new.student_id 
-                  ? { ...student, status: payload.new.status }
-                  : student
-              )
-            );
-          }
+        if (attendanceRecords) {
+          const attendanceMap: Record<string, any> = {};
+          attendanceRecords.forEach(record => {
+            attendanceMap[record.student_id] = record;
+          });
+          setAttendanceData(attendanceMap);
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [roomId, date]);
-
-  const handleStatusChange = async (studentId: string, status: string) => {
-    try {
-      const formattedDate = formatDate(date);
-      
-      const { error } = await supabase
-        .from('daily_attendance')
-        .upsert({
-          date: formattedDate,
-          student_id: studentId,
-          status: status,
-          company_id: companyId,
-          room_id: roomId
-        });
-
-      if (error) throw error;
-      
-      setStudents(prev =>
-        prev.map(student =>
-          student.id === studentId ? { ...student, status } : student
-        )
-      );
+      }
     } catch (error) {
-      console.error('Erro ao salvar presença:', error);
+      console.error('Error fetching students:', error);
       toast({
-        title: "Erro ao salvar presença",
-        description: "Não foi possível salvar o status de presença.",
+        title: "Erro ao carregar alunos",
+        description: "Ocorreu um erro ao carregar a lista de alunos.",
         variant: "destructive",
       });
     }
   };
 
-  const handleObservationChange = (studentId: string, text: string) => {
-    setObservations(prev => ({
-      ...prev,
-      [studentId]: text
-    }));
-  };
+  useEffect(() => {
+    fetchStudents();
+  }, [roomId, selectedDate]);
 
-  const handleSave = async () => {
+  const handleAttendanceChange = async (studentId: string, status: string) => {
     try {
-      const formattedDate = formatDate(date);
+      const existingRecord = attendanceData[studentId];
       
-      const attendancePromises = students.map(student => 
-        supabase
+      if (existingRecord) {
+        // Atualizar registro existente
+        const { error: updateError } = await supabase
           .from('daily_attendance')
-          .upsert({
-            date: formattedDate,
-            student_id: student.id,
-            status: student.status,
-            company_id: companyId,
-            room_id: roomId
-          })
-      );
+          .update({ status })
+          .eq('id', existingRecord.id);
 
-      await Promise.all(attendancePromises);
-      
-      const observationEntries = Object.entries(observations);
-      if (observationEntries.length > 0) {
-        const { error: obsError } = await supabase
-          .from('daily_observations')
-          .upsert(
-            observationEntries.map(([studentId, text]) => ({
-              date: formattedDate,
-              text,
-              company_id: companyId,
-              student_id: studentId
-            }))
-          );
+        if (updateError) throw updateError;
+      } else {
+        // Criar novo registro
+        const { error: insertError } = await supabase
+          .from('daily_attendance')
+          .insert({
+            date: selectedDate.toISOString().split('T')[0],
+            student_id: studentId,
+            status,
+            room_id: roomId,
+            company_id: user?.company_id
+          });
 
-        if (obsError) throw obsError;
+        if (insertError) throw insertError;
       }
 
-      onAttendanceSaved();
-      
+      // Atualizar dados locais
+      setAttendanceData(prev => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          status,
+          student_id: studentId,
+          date: selectedDate.toISOString().split('T')[0]
+        }
+      }));
+
       toast({
         title: "Presença registrada",
-        description: "Os dados foram salvos com sucesso.",
+        description: "O registro de presença foi atualizado com sucesso.",
       });
     } catch (error) {
-      console.error('Erro ao salvar dados:', error);
+      console.error('Error updating attendance:', error);
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar os dados de presença.",
+        title: "Erro ao registrar presença",
+        description: "Ocorreu um erro ao atualizar o registro de presença.",
         variant: "destructive",
       });
     }
@@ -192,19 +136,23 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   return (
     <Card>
-      <CardContent className="pt-6">
-        <AttendanceHeader onSave={handleSave} />
-        <div className="space-y-2">
-          {students.map((student) => (
-            <AttendanceRow
-              key={student.id}
-              student={student}
-              observation={observations[student.id] || ''}
-              onStatusChange={handleStatusChange}
-              onObservationChange={handleObservationChange}
-            />
-          ))}
-        </div>
+      <CardContent className="p-6">
+        {students.length > 0 ? (
+          <div className="space-y-4">
+            {students.map((student) => (
+              <AttendanceRow
+                key={student.id}
+                student={student}
+                attendance={attendanceData[student.id]}
+                onAttendanceChange={handleAttendanceChange}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground">
+            Nenhum aluno encontrado para esta sala.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
