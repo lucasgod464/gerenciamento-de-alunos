@@ -37,16 +37,15 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     }
   }, [editingTag]);
 
-  // Paleta de cores refinada
   const colors = [
-    "#8E9196", // Neutral Gray
-    "#9b87f5", // Primary Purple
-    "#7E69AB", // Secondary Purple
-    "#D6BCFA", // Light Purple
-    "#FFDEE2", // Soft Pink
-    "#FDE1D3", // Soft Peach
-    "#D3E4FD", // Soft Blue
-    "#F1F0FB"  // Soft Gray
+    "#8E9196",
+    "#9b87f5",
+    "#7E69AB",
+    "#D6BCFA",
+    "#FFDEE2",
+    "#FDE1D3",
+    "#D3E4FD",
+    "#F1F0FB"
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -120,17 +119,21 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverContent 
                 className="w-auto p-3" 
                 onInteractOutside={(e) => {
-                  // Prevent closing when clicking inside the color picker
                   e.preventDefault();
                 }}
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <HexColorPicker 
-                      color={color} 
-                      onChange={handleColorChange}
-                      onClick={(e) => e.stopPropagation()} 
-                    />
+                    <div 
+                      onClick={(e) => e.stopPropagation()}
+                      className="custom-picker-container"
+                    >
+                      <HexColorPicker 
+                        color={color} 
+                        onChange={handleColorChange}
+                      />
+                    </div>
                     <div className="flex flex-col gap-2">
                       <Input
                         type="text"
