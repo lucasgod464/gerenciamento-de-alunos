@@ -1,15 +1,16 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, UserCog, User } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { User } from "@/types/user";
+import { User as UserType } from "@/types/user";
 import { UserTags } from "./table/UserTags";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface UserTableRowProps {
-  user: User;
-  onEdit: (user: User) => void;
+  user: UserType;
+  onEdit: (user: UserType) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, checked: boolean) => void;
 }
@@ -44,9 +45,28 @@ export function UserTableRow({
     fetchAuthorizedRooms();
   }, [user.id]);
 
+  const isAdmin = user.accessLevel === "Admin";
+
   return (
     <TableRow>
-      <TableCell>{user.name}</TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {isAdmin ? (
+            <div className="flex items-center gap-2">
+              <UserCog className="h-4 w-4 text-blue-600" />
+              <span>{user.name}</span>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                Admin
+              </Badge>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-gray-500" />
+              <span>{user.name}</span>
+            </div>
+          )}
+        </div>
+      </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>{user.specialization || "Não definido"}</TableCell>
       <TableCell>
