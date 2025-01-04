@@ -64,7 +64,7 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
 
   const handleCustomColorInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newColor = e.target.value;
-    if (/^#[0-9A-Fa-f]{0,6}$/.test(newColor)) {
+    if (newColor.startsWith('#') && /^#[0-9A-Fa-f]{0,6}$/.test(newColor)) {
       setColor(newColor);
     }
   };
@@ -128,11 +128,12 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverContent 
                 className="w-auto p-3"
                 side="right"
-                onPointerDownOutside={(e) => e.preventDefault()}
+                align="start"
+                sideOffset={5}
               >
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="custom-picker-container" onClick={(e) => e.stopPropagation()}>
+                    <div className="custom-picker-container">
                       <HexColorPicker 
                         color={color} 
                         onChange={handleColorChange}
@@ -145,7 +146,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                         onChange={handleCustomColorInputChange}
                         className="w-24"
                         placeholder="#000000"
-                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   </div>
