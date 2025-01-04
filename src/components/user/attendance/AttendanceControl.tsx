@@ -8,12 +8,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AttendanceChart } from "./AttendanceChart";
-import { Trash2 } from "lucide-react";
+import { Trash2, Play } from "lucide-react";
 
 export function AttendanceControl() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<Student[]>([]);
   const [hasAttendance, setHasAttendance] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -68,6 +69,7 @@ export function AttendanceControl() {
 
       if (error && error.code !== 'PGRST116') throw error;
       setHasAttendance(!!data);
+      setIsStarted(false);
     } catch (error) {
       console.error('Erro ao verificar chamada:', error);
     }
@@ -83,6 +85,7 @@ export function AttendanceControl() {
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
+    setIsStarted(false);
   };
 
   const handleDeleteAttendance = async () => {
@@ -103,6 +106,7 @@ export function AttendanceControl() {
       });
       
       setHasAttendance(false);
+      setIsStarted(false);
     } catch (error) {
       console.error('Erro ao deletar chamada:', error);
       toast({
@@ -115,7 +119,12 @@ export function AttendanceControl() {
 
   const handleAttendanceSaved = () => {
     setHasAttendance(true);
+    setIsStarted(false);
     checkAttendance();
+  };
+
+  const handleStartAttendance = () => {
+    setIsStarted(true);
   };
 
   return (
@@ -127,7 +136,7 @@ export function AttendanceControl() {
             Gerencie a presença dos seus alunos
           </p>
         </div>
-        {hasAttendance && (
+        {hasAttendance ? (
           <Button
             variant="destructive"
             onClick={handleDeleteAttendance}
@@ -135,6 +144,15 @@ export function AttendanceControl() {
           >
             <Trash2 className="h-4 w-4" />
             Deletar Chamada
+          </Button>
+        ) : (
+          <Button
+            onClick={handleStartAttendance}
+            className="flex items-center gap-2"
+            disabled={isStarted}
+          >
+            <Play className="h-4 w-4" />
+            Iniciar Chamada
           </Button>
         )}
       </div>
@@ -155,6 +173,7 @@ export function AttendanceControl() {
             date={selectedDate}
             onSave={handleAttendanceSaved}
             disabled={hasAttendance}
+            isStarted={isStarted}
           />
         </Card>
       )}

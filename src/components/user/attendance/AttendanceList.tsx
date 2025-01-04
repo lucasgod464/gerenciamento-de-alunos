@@ -14,6 +14,7 @@ interface AttendanceListProps {
   date: Date;
   onSave: () => void;
   disabled?: boolean;
+  isStarted: boolean;
 }
 
 type AttendanceStatus = "present" | "absent" | "late" | "justified";
@@ -24,7 +25,7 @@ interface StudentAttendance {
   observation: string;
 }
 
-export function AttendanceList({ students, date, onSave, disabled }: AttendanceListProps) {
+export function AttendanceList({ students, date, onSave, disabled, isStarted }: AttendanceListProps) {
   const [attendanceData, setAttendanceData] = useState<StudentAttendance[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -92,12 +93,16 @@ export function AttendanceList({ students, date, onSave, disabled }: AttendanceL
     );
   }
 
+  if (!isStarted) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Lista de Presença</h3>
         <Button onClick={handleSaveAttendance} disabled={attendanceData.length === 0}>
-          Iniciar Chamada
+          Salvar Chamada
         </Button>
       </div>
 
