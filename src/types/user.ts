@@ -39,18 +39,3 @@ export interface AuthUser {
   access_level: AccessLevel;
   company_id: string;
 }
-
-export const mapDatabaseUser = (user: DatabaseUser): User => ({
-  id: user.id,
-  email: user.email,
-  name: user.name,
-  role: user.role,
-  companyId: user.company_id,
-  createdAt: user.created_at,
-  lastAccess: user.last_access,
-  status: user.status ? 'active' : 'inactive',
-  accessLevel: user.access_level,
-  location: user.location,
-  specialization: user.specialization,
-  address: user.address
-});

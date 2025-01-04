@@ -42,7 +42,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
           id: field.id,
           name: field.name,
           label: field.label,
-          type: field.type as FieldType,
+          type: field.type as FormField['type'],
           description: field.description || undefined,
           required: field.required || false,
           order: field.order,
