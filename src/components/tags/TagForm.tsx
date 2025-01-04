@@ -27,7 +27,6 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("#8E9196");
   const [status, setStatus] = useState(true);
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     if (editingTag) {
@@ -60,6 +59,7 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
   };
 
   const handleColorChange = (newColor: string) => {
+    console.log("Nova cor selecionada:", newColor);
     setColor(newColor);
   };
 
@@ -96,25 +96,23 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
                   color === c ? "ring-2 ring-offset-2 ring-black scale-110" : ""
                 }`}
                 style={{ backgroundColor: c }}
-                onClick={() => setColor(c)}
+                onClick={() => handleColorChange(c)}
               />
             ))}
             <Popover>
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors gap-1 group ${
-                    showColorPicker ? "border-primary" : ""
-                  }`}
+                  className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors gap-1 group`}
                   style={{ 
-                    backgroundColor: color !== colors.find(c => c === color) ? color : 'transparent'
+                    backgroundColor: !colors.includes(color) ? color : 'transparent'
                   }}
                 >
                   <Palette 
                     size={16} 
-                    className={`${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
+                    className={`${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}
                   />
-                  <span className={`text-[10px] ${color !== colors.find(c => c === color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
+                  <span className={`text-[10px] ${!colors.includes(color) ? 'text-white' : 'text-gray-500 group-hover:text-gray-700'}`}>
                     Custom
                   </span>
                 </button>
