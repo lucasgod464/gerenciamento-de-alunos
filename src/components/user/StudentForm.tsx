@@ -155,6 +155,26 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             />
           )}
           
+          {field.type === "email" && (
+            <Input
+              id={field.name}
+              type="email"
+              value={formData.custom_fields?.[field.name] || ""}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              required={field.required}
+            />
+          )}
+
+          {field.type === "tel" && (
+            <Input
+              id={field.name}
+              type="tel"
+              value={formData.custom_fields?.[field.name] || ""}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              required={field.required}
+            />
+          )}
+          
           {field.type === "textarea" && (
             <Textarea
               id={field.name}
@@ -199,9 +219,12 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
                 <div key={option} className="flex items-center space-x-2">
                   <Checkbox
                     id={`${field.name}-${option}`}
-                    checked={formData.custom_fields?.[field.name]?.includes(option)}
+                    checked={Array.isArray(formData.custom_fields?.[field.name]) && 
+                      formData.custom_fields?.[field.name]?.includes(option)}
                     onCheckedChange={(checked) => {
-                      const currentValues = formData.custom_fields?.[field.name] || [];
+                      const currentValues = Array.isArray(formData.custom_fields?.[field.name]) 
+                        ? formData.custom_fields?.[field.name] 
+                        : [];
                       const newValues = checked
                         ? [...currentValues, option]
                         : currentValues.filter((value: string) => value !== option);
