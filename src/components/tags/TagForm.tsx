@@ -59,6 +59,10 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
     setStatus(true);
   };
 
+  const handleColorChange = (newColor: string) => {
+    setColor(newColor);
+  };
+
   const handleColorPickerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
   };
@@ -122,12 +126,12 @@ export const TagForm = ({ editingTag, onSubmit, onCancel }: TagFormProps) => {
               <PopoverContent className="w-auto p-3" onClick={handleColorPickerClick}>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <HexColorPicker color={color} onChange={setColor} />
+                    <HexColorPicker color={color} onChange={handleColorChange} />
                     <div className="flex flex-col gap-2">
                       <Input
                         type="text"
                         value={color}
-                        onChange={(e) => setColor(e.target.value)}
+                        onChange={(e) => handleColorChange(e.target.value)}
                         className="w-24"
                         placeholder="#000000"
                       />
