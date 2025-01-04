@@ -33,7 +33,7 @@ export const AttendanceList = ({ students, onStatusChange, date }: AttendanceLis
         {students.map((student) => (
           <TableRow key={student.id}>
             <TableCell>{student.name}</TableCell>
-            <TableCell>{student.room}</TableCell>
+            <TableCell>{student.roomName || student.room}</TableCell>
             <TableCell>
               <Select
                 value={student.status || ""}
