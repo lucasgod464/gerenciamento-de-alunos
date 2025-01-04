@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { 
   Select,
   SelectContent,
@@ -10,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,9 +18,50 @@ interface StudentFormProps {
   onSubmit: (student: Student) => void;
 }
 
+const defaultFields: FormField[] = [
+  {
+    id: "nome_completo",
+    name: "nome_completo",
+    label: "Nome Completo",
+    type: "text",
+    required: true,
+    order: 0,
+    isDefault: true,
+  },
+  {
+    id: "data_nascimento",
+    name: "data_nascimento",
+    label: "Data de Nascimento",
+    type: "date",
+    required: true,
+    order: 1,
+    isDefault: true,
+  },
+  {
+    id: "sala",
+    name: "sala",
+    label: "Sala",
+    type: "select",
+    required: true,
+    order: 2,
+    isDefault: true,
+  },
+  {
+    id: "status",
+    name: "status",
+    label: "Status",
+    type: "select",
+    required: true,
+    order: 3,
+    isDefault: true,
+    options: ["Ativo", "Inativo"]
+  }
+];
+
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(initialData || {});
   const [customFields, setCustomFields] = useState<FormField[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const loadCustomFields = async () => {
@@ -32,11 +71,33 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         .order('order');
       
       if (fields) {
-        setCustomFields(fields);
+        const mappedFields = fields.map(field => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type as FormField['type'],
+          description: field.description || undefined,
+          required: field.required || false,
+          order: field.order,
+          options: field.options as string[] | undefined,
+        }));
+        setCustomFields(mappedFields);
+      }
+    };
+
+    const loadRooms = async () => {
+      const { data: roomsData } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .eq('status', true);
+      
+      if (roomsData) {
+        setRooms(roomsData);
       }
     };
 
     loadCustomFields();
+    loadRooms();
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,88 +115,6 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         [name]: value
       }
     }));
-  };
-
-  const renderCustomField = (field: FormField) => {
-    const value = formData.custom_fields?.[field.name] || "";
-
-    switch (field.type) {
-      case "text":
-      case "email":
-      case "tel":
-        return (
-          <Input
-            type={field.type}
-            value={value}
-            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
-            required={field.required}
-          />
-        );
-      
-      case "textarea":
-        return (
-          <Textarea
-            value={value}
-            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
-            required={field.required}
-          />
-        );
-      
-      case "date":
-        return (
-          <Input
-            type="date"
-            value={value}
-            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
-            required={field.required}
-          />
-        );
-      
-      case "select":
-        return (
-          <Select
-            value={value}
-            onValueChange={(value) => handleCustomFieldChange(field.name, value)}
-            required={field.required}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma opção" />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-      
-      case "multiple":
-        return (
-          <div className="space-y-2">
-            {field.options?.map((option) => (
-              <div key={option} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${field.name}-${option}`}
-                  checked={Array.isArray(value) && value.includes(option)}
-                  onCheckedChange={(checked) => {
-                    const currentValue = Array.isArray(value) ? value : [];
-                    const newValue = checked
-                      ? [...currentValue, option]
-                      : currentValue.filter(v => v !== option);
-                    handleCustomFieldChange(field.name, newValue);
-                  }}
-                />
-                <Label htmlFor={`${field.name}-${option}`}>{option}</Label>
-              </div>
-            ))}
-          </div>
-        );
-
-      default:
-        return null;
-    }
   };
 
   return (
@@ -162,31 +141,40 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email || ""}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
+        <Label>Sala</Label>
+        <Select
+          value={formData.room || ""}
+          onValueChange={(value) => setFormData({ ...formData, room: value })}
+          required
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma sala" />
+          </SelectTrigger>
+          <SelectContent>
+            {rooms.map((room) => (
+              <SelectItem key={room.id} value={room.id}>
+                {room.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="document">Documento</Label>
-        <Input
-          id="document"
-          value={formData.document || ""}
-          onChange={(e) => setFormData({ ...formData, document: e.target.value })}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Endereço</Label>
-        <Input
-          id="address"
-          value={formData.address || ""}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-        />
+        <Label>Status</Label>
+        <Select
+          value={formData.status ? "true" : "false"}
+          onValueChange={(value) => setFormData({ ...formData, status: value === "true" })}
+          required
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="true">Ativo</SelectItem>
+            <SelectItem value="false">Inativo</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {customFields.map((field) => (
@@ -195,10 +183,32 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             {field.label}
             {field.required && <span className="text-red-500 ml-1">*</span>}
           </Label>
-          {field.description && (
-            <p className="text-sm text-muted-foreground">{field.description}</p>
+          {field.type === "text" && (
+            <Input
+              id={field.name}
+              value={formData.custom_fields?.[field.name] || ""}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              required={field.required}
+            />
           )}
-          {renderCustomField(field)}
+          {field.type === "select" && field.options && (
+            <Select
+              value={formData.custom_fields?.[field.name] || ""}
+              onValueChange={(value) => handleCustomFieldChange(field.name, value)}
+              required={field.required}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma opção" />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       ))}
 

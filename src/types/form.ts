@@ -11,6 +11,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
+  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
