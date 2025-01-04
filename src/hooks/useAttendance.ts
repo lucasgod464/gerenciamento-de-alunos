@@ -46,7 +46,10 @@ export function useAttendance() {
       }
 
       if (daysData) {
-        const formattedDays = daysData.map(day => new Date(day));
+        const formattedDays = daysData.map(day => {
+          const date = new Date(day);
+          return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        });
         setAttendanceDays(formattedDays);
       }
     } catch (error) {
@@ -114,6 +117,13 @@ export function useAttendance() {
 
       const dateStr = selectedDate.toISOString().split('T')[0];
       await startNewAttendance(studentsData, dateStr, currentUser.companyId);
+      
+      // Atualiza a lista de dias com chamada após iniciar uma nova
+      const updatedAttendanceDays = [...attendanceDays];
+      const newAttendanceDate = new Date(dateStr);
+      updatedAttendanceDays.push(newAttendanceDate);
+      setAttendanceDays(updatedAttendanceDays);
+      
       await fetchAttendanceData(selectedDate);
 
       toast({
@@ -136,6 +146,13 @@ export function useAttendance() {
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
       await cancelDailyAttendance(dateStr, currentUser.companyId);
+      
+      // Remove o dia cancelado da lista de dias com chamada
+      const updatedAttendanceDays = attendanceDays.filter(date => 
+        date.toISOString().split('T')[0] !== dateStr
+      );
+      setAttendanceDays(updatedAttendanceDays);
+      
       await fetchAttendanceData(selectedDate);
 
       toast({
