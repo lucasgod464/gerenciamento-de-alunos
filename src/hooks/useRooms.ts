@@ -11,8 +11,14 @@ export function useRooms() {
   const { user } = useAuth();
 
   const fetchRooms = async () => {
+    if (!user?.companyId) {
+      console.log("No company ID found");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      console.log("Fetching rooms for company:", user?.companyId);
+      console.log("Fetching rooms for company:", user.companyId);
       const { data: roomsData, error } = await supabase
         .from("rooms")
         .select(`
@@ -28,9 +34,12 @@ export function useRooms() {
             )
           )
         `)
-        .eq('company_id', user?.companyId);
+        .eq('company_id', user.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching rooms:", error);
+        throw error;
+      }
 
       console.log("Rooms data:", roomsData);
       const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
@@ -58,23 +67,32 @@ export function useRooms() {
   }, [user?.companyId]);
 
   const handleSave = async (room: Partial<Room>) => {
+    if (!user?.companyId) {
+      toast({
+        title: "Erro ao salvar sala",
+        description: "Você precisa estar vinculado a uma empresa para criar salas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      const roomData = {
+        name: room.name,
+        schedule: room.schedule,
+        location: room.location,
+        category: room.category,
+        status: room.status,
+        study_room: room.studyRoom || '',
+        company_id: user.companyId
+      };
+
       if (room.id) {
         // Update existing room
         const { error: updateError } = await supabase
           .from('rooms')
-          .update({
-            name: room.name,
-            schedule: room.schedule,
-            location: room.location,
-            category: room.category,
-            status: room.status,
-            study_room: room.studyRoom || '',
-            company_id: user?.companyId
-          })
-          .eq('id', room.id)
-          .select()
-          .single();
+          .update(roomData)
+          .eq('id', room.id);
 
         if (updateError) throw updateError;
 
@@ -86,17 +104,7 @@ export function useRooms() {
         // Create new room
         const { error: createError } = await supabase
           .from('rooms')
-          .insert({
-            name: room.name,
-            schedule: room.schedule,
-            location: room.location,
-            category: room.category,
-            status: room.status,
-            study_room: room.studyRoom || '',
-            company_id: user?.companyId,
-          })
-          .select()
-          .single();
+          .insert(roomData);
 
         if (createError) throw createError;
 
@@ -107,11 +115,11 @@ export function useRooms() {
       }
 
       fetchRooms();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving room:", error);
       toast({
         title: "Erro ao salvar sala",
-        description: "Ocorreu um erro ao salvar a sala. Tente novamente.",
+        description: error.message || "Ocorreu um erro ao salvar a sala. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -124,9 +132,7 @@ export function useRooms() {
       const { error: deleteError } = await supabase
         .from('rooms')
         .delete()
-        .eq('id', roomId)
-        .select()
-        .single();
+        .eq('id', roomId);
 
       if (deleteError) throw deleteError;
 
@@ -136,11 +142,11 @@ export function useRooms() {
       });
 
       fetchRooms();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting room:", error);
       toast({
         title: "Erro ao excluir sala",
-        description: "Ocorreu um erro ao excluir a sala. Tente novamente.",
+        description: error.message || "Ocorreu um erro ao excluir a sala. Tente novamente.",
         variant: "destructive",
       });
     }
