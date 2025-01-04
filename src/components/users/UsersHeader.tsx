@@ -1,10 +1,11 @@
 import { CreateUserDialog } from "./CreateUserDialog";
+import { User } from "@/types/user";
 
-export const UsersHeader = () => {
-  const handleUserAdded = () => {
-    // Handle user added
-  };
+interface UsersHeaderProps {
+  onUserCreated?: (user: User) => void;
+}
 
+export const UsersHeader = ({ onUserCreated }: UsersHeaderProps) => {
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -13,7 +14,7 @@ export const UsersHeader = () => {
           Gerencie os usuários do sistema
         </p>
       </div>
-      <CreateUserDialog onUserAdded={handleUserAdded} />
+      <CreateUserDialog onUserCreated={onUserCreated} />
     </div>
   );
 };

@@ -46,7 +46,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   options: field.options as string[] | undefined,
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Partial<SupabaseFormField> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
@@ -54,6 +54,7 @@ export const mapFormFieldToSupabase = (field: FormField): Partial<SupabaseFormFi
   required: field.required,
   options: field.options || null,
   order: field.order,
+  company_id: null
 });
 
 export const defaultFields: FormField[] = [

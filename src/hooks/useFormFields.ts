@@ -28,13 +28,16 @@ export const useFormFields = () => {
     }
   };
 
-  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
+  const handleAddField = async (field: FormField) => {
     try {
-      const newField = mapFormFieldToSupabase(field);
+      const newField = {
+        ...mapFormFieldToSupabase(field),
+        order: fields.length
+      };
 
       const { data, error } = await supabase
         .from('admin_form_fields')
-        .insert([{ ...newField, order: fields.length }])
+        .insert([newField])
         .select()
         .single();
 
