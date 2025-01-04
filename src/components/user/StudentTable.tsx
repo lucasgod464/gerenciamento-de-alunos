@@ -7,12 +7,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StudentForm } from "./StudentForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
 import { useStudentTableState } from "./student/useStudentTableState";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudentTableProps {
   students: Student[];
@@ -26,7 +27,7 @@ interface StudentTableProps {
 
 export function StudentTable({
   students,
-  rooms,
+  rooms: initialRooms,
   onDeleteStudent,
   onUpdateStudent,
   onTransferStudent,
@@ -36,6 +37,27 @@ export function StudentTable({
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { localStudents, handleUpdateStudent } = useStudentTableState(students);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>(initialRooms);
+
+  useEffect(() => {
+    const loadRooms = async () => {
+      const { data: roomsData, error } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .eq('status', true);
+
+      if (error) {
+        console.error('Erro ao carregar salas:', error);
+        return;
+      }
+
+      if (roomsData) {
+        setRooms(roomsData);
+      }
+    };
+
+    loadRooms();
+  }, []);
 
   const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";
