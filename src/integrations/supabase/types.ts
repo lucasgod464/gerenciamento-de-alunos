@@ -215,45 +215,6 @@ export type Database = {
           },
         ]
       }
-      room_authorized_users: {
-        Row: {
-          created_at: string
-          id: string
-          is_main_teacher: boolean | null
-          room_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_main_teacher?: boolean | null
-          room_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_main_teacher?: boolean | null
-          room_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "room_authorized_users_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "room_authorized_users_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       room_students: {
         Row: {
           created_at: string
@@ -495,42 +456,6 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_authorized_rooms: {
-        Row: {
-          created_at: string
-          id: string
-          room_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          room_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          room_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_authorized_rooms_room_id_fkey"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "rooms"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_authorized_rooms_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "emails"
             referencedColumns: ["id"]
           },
         ]

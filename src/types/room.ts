@@ -10,7 +10,6 @@ export interface Room {
   companyId: string | null;
   studyRoom: string;
   createdAt: string;
-  authorizedUsers?: string[];
   students: Student[];
 }
 

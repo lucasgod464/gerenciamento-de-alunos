@@ -25,36 +25,23 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     try {
       console.log('Fetching authorized users for room:', roomId);
       
-      // Busca os usuários autorizados com join na tabela users
-      const { data: authorizedData, error: authorizedError } = await supabase
-        .from('user_authorized_rooms')
-        .select(`
-          user_id,
-          emails!inner (
-            id,
-            name,
-            email
-          )
-        `)
-        .eq('room_id', roomId);
+      const { data: emailsData, error: emailsError } = await supabase
+        .from('emails')
+        .select('id, name, email')
+        .eq('company_id', companyId);
 
-      if (authorizedError) {
-        console.error('Error fetching authorized users:', authorizedError);
-        throw authorizedError;
+      if (emailsError) {
+        console.error('Error fetching emails:', emailsError);
+        throw emailsError;
       }
 
-      // Adiciona logs para debug
-      console.log('Raw authorized users data:', authorizedData);
-
-      if (authorizedData) {
-        const users = authorizedData
-          .filter(item => item.emails) // Remove any null users
-          .map(item => ({
-            id: item.emails.id,
-            name: item.emails.name,
-            email: item.emails.email,
-            is_main_teacher: false // Por enquanto, deixamos como false
-          }));
+      if (emailsData) {
+        const users = emailsData.map(email => ({
+          id: email.id,
+          name: email.name,
+          email: email.email,
+          is_main_teacher: false
+        }));
         
         console.log('Processed authorized users:', users);
         setAuthorizedUsers(users);
@@ -75,32 +62,6 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     }
   }, [roomId]);
 
-  const handleRemoveAuthorization = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_authorized_rooms')
-        .delete()
-        .eq('room_id', roomId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Autorização removida",
-        description: "O usuário foi desvinculado da sala com sucesso.",
-      });
-
-      fetchAuthorizedUsers();
-    } catch (error) {
-      console.error('Error removing authorization:', error);
-      toast({
-        title: "Erro ao remover autorização",
-        description: "Ocorreu um erro ao desvincular o usuário da sala.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="pl-6 space-y-1">
       {authorizedUsers.length > 0 ? (
@@ -117,17 +78,6 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
                 </span>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleRemoveAuthorization(user.id);
-              }}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         ))
       ) : (

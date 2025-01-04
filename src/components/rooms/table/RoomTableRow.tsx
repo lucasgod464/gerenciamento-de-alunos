@@ -21,7 +21,7 @@ export const RoomTableRow = ({
   onShowStudents,
 }: RoomTableRowProps) => {
   const [categoryName, setCategoryName] = useState("");
-  const [authorizedTeachers, setAuthorizedTeachers] = useState<{ name: string; id: string }[]>([]);
+  const [teachers, setTeachers] = useState<{ name: string; id: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,27 +39,16 @@ export const RoomTableRow = ({
           if (categoryData) setCategoryName(categoryData.name);
         }
 
-        // Fetch authorized teachers for this room
-        const { data: authorizedUsers, error: authError } = await supabase
-          .from('user_authorized_rooms')
-          .select(`
-            user:user_id (
-              name,
-              id
-            )
-          `)
-          .eq('room_id', room.id);
+        // Fetch teachers for this room's company
+        const { data: teachersData, error: teachersError } = await supabase
+          .from('emails')
+          .select('id, name')
+          .eq('company_id', room.companyId);
 
-        if (authError) throw authError;
+        if (teachersError) throw teachersError;
         
-        if (authorizedUsers) {
-          const teachers = authorizedUsers
-            .filter(au => au.user)
-            .map(au => ({
-              name: au.user.name,
-              id: au.user.id
-            }));
-          setAuthorizedTeachers(teachers);
+        if (teachersData) {
+          setTeachers(teachersData);
         }
 
       } catch (error) {
@@ -83,8 +72,8 @@ export const RoomTableRow = ({
       <TableCell>{categoryName}</TableCell>
       <TableCell>
         <div className="flex flex-col gap-1">
-          {authorizedTeachers.length > 0 ? (
-            authorizedTeachers.map(teacher => (
+          {teachers.length > 0 ? (
+            teachers.map(teacher => (
               <UserWithTags 
                 key={teacher.id}
                 userName={teacher.name}
