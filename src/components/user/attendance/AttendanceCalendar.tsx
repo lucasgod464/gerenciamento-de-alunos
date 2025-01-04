@@ -22,14 +22,17 @@ export const AttendanceCalendar = ({
 }: AttendanceCalendarProps) => {
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      onSelectDate(normalizeDate(date));
+      const normalizedDate = normalizeDate(date);
+      console.log('Data selecionada:', normalizedDate);
+      onSelectDate(normalizedDate);
     } else {
       onSelectDate(undefined);
     }
   };
 
-  const modifiedAttendanceDays = attendanceDays.filter(
-    date => !selectedDate || date.getTime() !== selectedDate.getTime()
+  const normalizedAttendanceDays = attendanceDays.map(date => normalizeDate(date));
+  const modifiedAttendanceDays = normalizedAttendanceDays.filter(
+    date => !selectedDate || date.getTime() !== normalizeDate(selectedDate).getTime()
   );
 
   return (
@@ -41,7 +44,7 @@ export const AttendanceCalendar = ({
         <div className="flex justify-center">
           <Calendar
             mode="single"
-            selected={selectedDate}
+            selected={selectedDate ? normalizeDate(selectedDate) : undefined}
             onSelect={handleDateSelect}
             className="rounded-md border"
             modifiers={{
