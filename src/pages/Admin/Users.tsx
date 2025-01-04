@@ -13,14 +13,53 @@ const Users = () => {
 
   const loadUsers = async () => {
     try {
+      console.log('Fetching users from database...');
       const { data, error } = await supabase
-        .from('users')
-        .select('*');
+        .from('emails')
+        .select(`
+          *,
+          user_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          ),
+          user_rooms (
+            rooms (
+              id,
+              name
+            )
+          )
+        `);
 
       if (error) throw error;
       
-      // Map database users to User type
-      const mappedUsers = data.map(mapDatabaseUser);
+      console.log('Users data received:', data);
+      const mappedUsers = data.map(dbUser => ({
+        id: dbUser.id,
+        name: dbUser.name,
+        email: dbUser.email,
+        role: dbUser.access_level,
+        companyId: dbUser.company_id,
+        createdAt: dbUser.created_at,
+        lastAccess: dbUser.updated_at,
+        status: dbUser.status,
+        accessLevel: dbUser.access_level,
+        location: dbUser.location,
+        specialization: dbUser.specialization,
+        address: dbUser.address,
+        tags: dbUser.user_tags?.map(ut => ({
+          id: ut.tags.id,
+          name: ut.tags.name,
+          color: ut.tags.color
+        })) || [],
+        authorizedRooms: dbUser.user_rooms?.map(ur => ({
+          id: ur.rooms.id,
+          name: ur.rooms.name
+        })) || []
+      }));
+
       setUsers(mappedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
@@ -35,13 +74,16 @@ const Users = () => {
   const handleUpdateUser = async (updatedUser: User) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('emails')
         .update({
           name: updatedUser.name,
           email: updatedUser.email,
-          role: updatedUser.role,
+          access_level: updatedUser.accessLevel,
           company_id: updatedUser.companyId,
-          status: updatedUser.status === 'active'
+          status: updatedUser.status,
+          location: updatedUser.location,
+          specialization: updatedUser.specialization,
+          address: updatedUser.address
         })
         .eq('id', updatedUser.id);
 
@@ -68,7 +110,7 @@ const Users = () => {
   const handleDeleteUser = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('emails')
         .delete()
         .eq('id', userId);
 
