@@ -22,6 +22,28 @@ export function UserRooms() {
       try {
         console.log("Buscando salas para o usuário:", user.id);
         
+        // Primeiro, buscar os IDs das salas do usuário
+        const { data: userRooms, error: userRoomsError } = await supabase
+          .from('user_rooms')
+          .select('room_id')
+          .eq('user_id', user.id);
+
+        if (userRoomsError) {
+          console.error('Erro ao buscar user_rooms:', userRoomsError);
+          throw userRoomsError;
+        }
+
+        console.log('User rooms encontradas:', userRooms);
+
+        if (!userRooms?.length) {
+          console.log('Nenhuma sala encontrada para o usuário');
+          setRooms([]);
+          return;
+        }
+
+        const roomIds = userRooms.map(ur => ur.room_id);
+        
+        // Agora buscar os detalhes das salas
         const { data: roomsData, error: roomsError } = await supabase
           .from('rooms')
           .select(`
@@ -37,7 +59,8 @@ export function UserRooms() {
             room_students (
               student:students (*)
             )
-          `);
+          `)
+          .in('id', roomIds);
 
         if (roomsError) {
           console.error('Erro ao buscar salas:', roomsError);
