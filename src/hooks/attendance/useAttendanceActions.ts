@@ -86,7 +86,8 @@ export function useAttendanceActions(
 
       // Depois atualiza o estado local
       const normalizedDate = normalizeDate(selectedDate);
-      setAttendanceDays([...attendanceDays, normalizedDate]);
+      const updatedDays = [...attendanceDays, normalizedDate];
+      setAttendanceDays(updatedDays);
       setDailyAttendances([{ 
         date: dateStr, 
         students
@@ -116,8 +117,9 @@ export function useAttendanceActions(
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
       
       // Depois atualiza o estado local
+      const normalizedSelectedDate = normalizeDate(selectedDate);
       setAttendanceDays(attendanceDays.filter(date => 
-        !areDatesEqual(normalizeDate(date), normalizeDate(selectedDate))
+        !areDatesEqual(normalizeDate(date), normalizedSelectedDate)
       ));
       setDailyAttendances([]);
       setObservation('');
