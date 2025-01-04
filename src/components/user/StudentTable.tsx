@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StudentForm } from "./StudentForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,7 @@ import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudentTableProps {
   students: Student[];
@@ -39,7 +40,12 @@ export function StudentTable({
   const [transferringStudent, setTransferringStudent] = useState<Student | null>(null);
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
+  const [localStudents, setLocalStudents] = useState<Student[]>(students);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setLocalStudents(students);
+  }, [students]);
 
   const getRoomName = (roomId: string | undefined) => {
     if (!roomId) return "Sem sala";
@@ -70,6 +76,7 @@ export function StudentTable({
   const handleDelete = (studentId: string) => {
     try {
       onDeleteStudent(studentId);
+      setLocalStudents(prev => prev.filter(student => student.id !== studentId));
       toast({
         title: "Sucesso",
         description: "Aluno excluído com sucesso!",
@@ -83,16 +90,58 @@ export function StudentTable({
     }
   };
 
-  const handleSubmit = (student: Student) => {
+  const handleSubmit = async (student: Student) => {
     if (onUpdateStudent) {
-      onUpdateStudent(student);
-      setEditingStudent(null);
-      toast({
-        title: "Sucesso",
-        description: "Dados do aluno atualizados com sucesso!",
-      });
+      try {
+        await onUpdateStudent(student);
+        setLocalStudents(prev => 
+          prev.map(s => s.id === student.id ? student : s)
+        );
+        setEditingStudent(null);
+        toast({
+          title: "Sucesso",
+          description: "Dados do aluno atualizados com sucesso!",
+        });
+      } catch (error) {
+        console.error("Erro ao atualizar aluno:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao atualizar dados do aluno",
+          variant: "destructive",
+        });
+      }
     }
   };
+
+  // Configurar canal de tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('students_updates')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'students' 
+        }, 
+        (payload) => {
+          // Atualizar a lista local quando houver mudanças
+          if (payload.eventType === 'UPDATE') {
+            setLocalStudents(prev => 
+              prev.map(student => 
+                student.id === payload.new.id 
+                  ? { ...student, ...payload.new }
+                  : student
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <>
@@ -107,7 +156,7 @@ export function StudentTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {students.map((student) => (
+          {localStudents.map((student) => (
             <TableRow key={student.id}>
               <TableCell>{student.name}</TableCell>
               <TableCell>{student.birth_date}</TableCell>
