@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { mapDatabaseUser } from "@/types/user";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -17,7 +18,10 @@ const Users = () => {
         .select('*');
 
       if (error) throw error;
-      setUsers(data);
+      
+      // Map database users to User type
+      const mappedUsers = data.map(mapDatabaseUser);
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -32,7 +36,13 @@ const Users = () => {
     try {
       const { error } = await supabase
         .from('users')
-        .update(updatedUser)
+        .update({
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+          company_id: updatedUser.companyId,
+          status: updatedUser.status === 'active'
+        })
         .eq('id', updatedUser.id);
 
       if (error) throw error;
@@ -86,7 +96,7 @@ const Users = () => {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
-        <UsersHeader onUserCreated={(user) => setUsers(prev => [...prev, user])} />
+        <UsersHeader onUserCreated={loadUsers} />
         <UserList 
           users={users}
           onUpdateUser={handleUpdateUser}
