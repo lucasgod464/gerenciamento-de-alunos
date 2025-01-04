@@ -1,3 +1,5 @@
+export type AccessLevel = "Admin" | "Usuário Comum";
+
 export interface User {
   id: string;
   name: string;
@@ -7,7 +9,7 @@ export interface User {
   createdAt: string | null;
   lastAccess: string | null;
   status: boolean;
-  accessLevel: "Admin" | "Usuário Comum";
+  accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
   tags?: { id: string; name: string; color: string; }[];
@@ -22,7 +24,7 @@ export interface DatabaseUser {
   created_at: string;
   last_access: string | null;
   status: boolean;
-  access_level: "Admin" | "Usuário Comum";
+  access_level: AccessLevel;
   location?: string;
   specialization?: string;
   password: string;
@@ -40,5 +42,9 @@ export const mapDatabaseUser = (dbUser: any): User => ({
   accessLevel: dbUser.access_level,
   location: dbUser.location,
   specialization: dbUser.specialization,
-  tags: dbUser.user_tags?.map((ut: any) => ut.tag) || [],
+  tags: dbUser.user_tags?.map((ut: any) => ({
+    id: ut.tags.id,
+    name: ut.tags.name,
+    color: ut.tags.color
+  })) || [],
 });

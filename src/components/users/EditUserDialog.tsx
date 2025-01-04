@@ -1,9 +1,15 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserFormFields } from "./UserFormFields";
-import { User } from "@/types/user";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/types/user";
 import { useState } from "react";
+import { UserFormFields } from "./UserFormFields";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -19,6 +25,7 @@ export function EditUserDialog({
   user
 }: EditUserDialogProps) {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     user?.tags || []
   );
@@ -27,13 +34,15 @@ export function EditUserDialog({
     if (!user) return;
 
     try {
+      setLoading(true);
+
       const updateData = {
         name: formData.get('name')?.toString() || '',
         email: formData.get('email')?.toString() || '',
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
         specialization: formData.get('specialization')?.toString() || '',
-        status: formData.get('status')?.toString() || 'active'
+        status: formData.get('status') === 'active'
       };
 
       const { error: updateError } = await supabase
@@ -71,8 +80,9 @@ export function EditUserDialog({
         role: updateData.access_level,
         location: updateData.location,
         specialization: updateData.specialization,
-        status: updateData.status as "active" | "inactive",
-        tags: selectedTags
+        status: updateData.status,
+        tags: selectedTags,
+        accessLevel: updateData.access_level
       };
 
       toast({
@@ -89,6 +99,8 @@ export function EditUserDialog({
         description: "Ocorreu um erro ao atualizar o usuário.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -110,16 +122,17 @@ export function EditUserDialog({
               email: user.email,
               specialization: user.specialization || '',
               location: user.location || '',
-              status: user.status,
-              tags: user.tags
+              status: user.status ? 'active' : 'inactive',
+              tags: user.tags,
+              accessLevel: user.accessLevel
             }}
             onTagsChange={setSelectedTags}
             isEditing
           />
           <div className="flex justify-end">
-            <button type="submit" className="btn-primary">
-              Salvar Alterações
-            </button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Salvando..." : "Salvar Alterações"}
+            </Button>
           </div>
         </form>
       </DialogContent>
