@@ -73,26 +73,33 @@ export function EditUserDialog({
           })));
       }
 
-      // Update rooms
-      await supabase
+      // Update rooms - primeiro deletamos todas as salas existentes
+      const { error: deleteRoomsError } = await supabase
         .from('user_rooms')
         .delete()
         .eq('user_id', user.id);
 
+      if (deleteRoomsError) throw deleteRoomsError;
+
+      // Depois inserimos as novas salas selecionadas
       if (selectedRooms.length > 0) {
-        await supabase
+        const { error: insertRoomsError } = await supabase
           .from('user_rooms')
           .insert(selectedRooms.map(roomId => ({
             user_id: user.id,
             room_id: roomId
           })));
+
+        if (insertRoomsError) throw insertRoomsError;
       }
 
       // Fetch updated room names
-      const { data: roomsData } = await supabase
+      const { data: roomsData, error: roomsError } = await supabase
         .from('rooms')
         .select('id, name')
         .in('id', selectedRooms);
+
+      if (roomsError) throw roomsError;
 
       const updatedUser: User = {
         ...user,
