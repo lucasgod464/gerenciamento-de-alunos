@@ -3,6 +3,7 @@ import { AttendanceStudent, DailyAttendance, DailyObservation } from "@/services
 import { attendanceService } from "@/services/attendance/attendanceService";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useAttendance(selectedDate: Date | undefined) {
   const [dailyAttendances, setDailyAttendances] = useState<DailyAttendance[]>([]);
@@ -156,21 +157,17 @@ export function useAttendance(selectedDate: Date | undefined) {
     try {
       const dateStr = selectedDate.toISOString().split('T')[0];
       
-      const { error: attendanceError } = await supabase
+      await supabase
         .from('daily_attendance')
         .delete()
         .eq('date', dateStr)
         .eq('company_id', currentUser.companyId);
 
-      if (attendanceError) throw attendanceError;
-
-      const { error: observationError } = await supabase
+      await supabase
         .from('daily_observations')
         .delete()
         .eq('date', dateStr)
         .eq('company_id', currentUser.companyId);
-
-      if (observationError) throw observationError;
 
       await fetchAttendanceDays();
       setDailyAttendances([]);
