@@ -32,7 +32,7 @@ export function UsersFilters({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou email..."
+              placeholder="Buscar por nome, email, localização ou especialização..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-9 transition-all duration-200 hover:border-primary focus:border-primary"
@@ -44,7 +44,7 @@ export function UsersFilters({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos os Status</SelectItem>
+                <SelectItem value="all">Status</SelectItem>
                 <SelectItem value="active">Ativo</SelectItem>
                 <SelectItem value="inactive">Inativo</SelectItem>
               </SelectContent>
