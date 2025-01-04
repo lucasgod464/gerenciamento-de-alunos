@@ -1,15 +1,15 @@
-export type AccessLevel = "Admin" | "Usuário Comum" | "Inativo";
+export type AccessLevel = "Admin" | "Usuário Comum";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: AccessLevel;
-  company_id: string;
-  created_at: string;
-  last_access: string;
-  status: "active" | "inactive";
-  access_level: AccessLevel;
+  role: string;
+  companyId: string | null;
+  createdAt: string | null;
+  lastAccess: string | null;
+  status: string;
+  accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
@@ -21,31 +21,32 @@ export interface DatabaseUser {
   id: string;
   name: string;
   email: string;
-  password: string;
-  role: AccessLevel;
-  company_id: string;
-  created_at: string;
-  last_access: string;
-  status: "active" | "inactive";
+  role: string;
+  company_id: string | null;
+  created_at: string | null;
+  last_access: string | null;
+  status: string;
   access_level: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
+  password: string;
+  updated_at?: string;
 }
 
-export const mapDatabaseUser = (user: DatabaseUser): User => {
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    company_id: user.company_id,
-    created_at: user.created_at,
-    last_access: user.last_access,
-    status: user.status,
-    access_level: user.access_level,
-    location: user.location,
-    specialization: user.specialization,
-    address: user.address
-  };
-};
+export const mapDatabaseUser = (dbUser: DatabaseUser): User => ({
+  id: dbUser.id,
+  name: dbUser.name,
+  email: dbUser.email,
+  role: dbUser.role,
+  companyId: dbUser.company_id,
+  createdAt: dbUser.created_at,
+  lastAccess: dbUser.last_access,
+  status: dbUser.status,
+  accessLevel: dbUser.access_level,
+  location: dbUser.location,
+  specialization: dbUser.specialization,
+  address: dbUser.address,
+  tags: [],
+  authorizedRooms: []
+});

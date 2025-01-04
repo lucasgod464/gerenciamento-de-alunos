@@ -1,141 +1,69 @@
 import { useState, useEffect } from "react";
-import { Student } from "@/types/student";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { CustomField } from "@/types/form";
 
 export const useStudentManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const [selectedRoom, setSelectedRoom] = useState("all");
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
-  const { user } = useAuth();
 
-  const fetchStudents = async () => {
+  const loadStudents = async () => {
+    if (!currentUser?.companyId) return;
+    
     try {
-      const { data: studentsData, error } = await supabase
+      const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select(`
           *,
           room_students(room_id)
         `)
-        .eq('company_id', user?.companyId);
+        .eq('company_id', currentUser.companyId);
 
-      if (error) throw error;
+      if (studentsError) throw studentsError;
 
-      const mappedStudents: Student[] = studentsData.map(student => ({
-        id: student.id,
-        name: student.name,
-        birth_date: student.birth_date,
-        status: student.status ?? true,
-        email: student.email,
-        document: student.document,
-        address: student.address,
-        custom_fields: student.custom_fields ? JSON.parse(JSON.stringify(student.custom_fields)) : {},
-        company_id: student.company_id || '',
-        created_at: student.created_at,
-        room: student.room_students?.[0]?.room_id
-      }));
-      
+      const mappedStudents = (studentsData || []).map(mapSupabaseStudentToStudent);
       setStudents(mappedStudents);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error('Error loading students:', error);
       toast({
         title: "Erro ao carregar alunos",
-        description: "Ocorreu um erro ao carregar a lista de alunos.",
+        description: "Não foi possível carregar a lista de alunos.",
         variant: "destructive",
       });
     }
   };
 
-  const fetchRooms = async () => {
+  const handleAddStudent = async (newStudent: Student) => {
     try {
-      const { data: roomsData, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user?.companyId);
-
-      if (error) throw error;
-      setRooms(roomsData);
-    } catch (error) {
-      console.error('Error fetching rooms:', error);
-    }
-  };
-
-  // Configuração do real-time subscription
-  useEffect(() => {
-    if (!user?.companyId) return;
-
-    const channel = supabase
-      .channel('students_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'students',
-          filter: `company_id=eq.${user.companyId}`
-        },
-        (payload) => {
-          if (payload.eventType === 'UPDATE') {
-            setStudents(prev => 
-              prev.map(student => 
-                student.id === payload.new.id 
-                  ? {
-                      ...student,
-                      ...payload.new,
-                      custom_fields: payload.new.custom_fields 
-                        ? JSON.parse(JSON.stringify(payload.new.custom_fields))
-                        : {}
-                    }
-                  : student
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setStudents(prev => prev.filter(student => student.id !== payload.old.id));
-          } else if (payload.eventType === 'INSERT') {
-            setStudents(prev => [...prev, {
-              ...payload.new,
-              custom_fields: payload.new.custom_fields 
-                ? JSON.parse(JSON.stringify(payload.new.custom_fields))
-                : {}
-            }]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.companyId]);
-
-  const handleAddStudent = async (student: Omit<Student, "id" | "created_at">) => {
-    try {
-      const { data, error } = await supabase
+      const { data: studentData, error: studentError } = await supabase
         .from('students')
-        .insert([{ 
-          name: student.name,
-          birth_date: student.birth_date,
-          status: student.status,
-          email: student.email,
-          document: student.document,
-          address: student.address,
-          custom_fields: student.custom_fields,
-          company_id: user?.companyId 
-        }])
+        .insert({
+          name: newStudent.name,
+          birth_date: newStudent.birth_date,
+          status: newStudent.status,
+          email: newStudent.email,
+          document: newStudent.document,
+          address: newStudent.address,
+          custom_fields: newStudent.custom_fields as any,
+          company_id: currentUser?.companyId
+        })
         .select()
         .single();
 
-      if (error) throw error;
+      if (studentError) throw studentError;
 
-      if (student.room) {
+      if (newStudent.room) {
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
-            student_id: data.id,
-            room_id: student.room
+            student_id: studentData.id,
+            room_id: newStudent.room
           });
 
         if (roomError) throw roomError;
@@ -143,13 +71,15 @@ export const useStudentManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Aluno adicionado com sucesso!",
+        description: "Aluno cadastrado com sucesso!",
       });
+
+      loadStudents();
     } catch (error) {
       console.error('Error adding student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao adicionar aluno",
+        title: "Erro ao cadastrar aluno",
+        description: "Não foi possível cadastrar o aluno.",
         variant: "destructive",
       });
     }
@@ -164,6 +94,7 @@ export const useStudentManagement = () => {
 
       if (error) throw error;
 
+      setStudents(prev => prev.filter(student => student.id !== id));
       toast({
         title: "Sucesso",
         description: "Aluno excluído com sucesso!",
@@ -171,41 +102,41 @@ export const useStudentManagement = () => {
     } catch (error) {
       console.error('Error deleting student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao excluir aluno",
+        title: "Erro ao excluir aluno",
+        description: "Não foi possível excluir o aluno.",
         variant: "destructive",
       });
     }
   };
 
-  const handleUpdateStudent = async (student: Student) => {
+  const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      const { error } = await supabase
+      const { error: studentError } = await supabase
         .from('students')
         .update({
-          name: student.name,
-          birth_date: student.birth_date,
-          status: student.status,
-          email: student.email,
-          document: student.document,
-          address: student.address,
-          custom_fields: student.custom_fields
+          name: updatedStudent.name,
+          birth_date: updatedStudent.birth_date,
+          status: updatedStudent.status,
+          email: updatedStudent.email,
+          document: updatedStudent.document,
+          address: updatedStudent.address,
+          custom_fields: updatedStudent.custom_fields
         })
-        .eq('id', student.id);
+        .eq('id', updatedStudent.id);
 
-      if (error) throw error;
+      if (studentError) throw studentError;
 
-      if (student.room) {
+      if (updatedStudent.room) {
         await supabase
           .from('room_students')
           .delete()
-          .eq('student_id', student.id);
+          .eq('student_id', updatedStudent.id);
 
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
-            student_id: student.id,
-            room_id: student.room
+            student_id: updatedStudent.id,
+            room_id: updatedStudent.room
           });
 
         if (roomError) throw roomError;
@@ -213,32 +144,31 @@ export const useStudentManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Dados do aluno atualizados com sucesso!",
+        description: "Aluno atualizado com sucesso!",
       });
+
+      loadStudents();
     } catch (error) {
       console.error('Error updating student:', error);
       toast({
-        title: "Erro",
-        description: "Erro ao atualizar dados do aluno",
+        title: "Erro ao atualizar aluno",
+        description: "Não foi possível atualizar o aluno.",
         variant: "destructive",
       });
     }
   };
 
   useEffect(() => {
-    if (user?.companyId) {
-      fetchStudents();
-      fetchRooms();
+    if (currentUser?.companyId) {
+      loadStudents();
     }
-  }, [user?.companyId]);
+  }, [currentUser]);
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.document?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesRoom = !selectedRoom || student.room === selectedRoom;
-    
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch = student.name
+      ? student.name.toLowerCase().includes(searchTerm.toLowerCase())
+      : false;
+    const matchesRoom = selectedRoom === "all" || student.room === selectedRoom;
     return matchesSearch && matchesRoom;
   });
 
