@@ -6,9 +6,13 @@ import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { mapDatabaseUser } from "@/types/user";
+import { UsersFilters } from "@/components/users/UsersFilters";
+import { UserStats } from "@/components/users/UserStats";
 
 const Users = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
   const loadUsers = async () => {
@@ -135,12 +139,36 @@ const Users = () => {
     loadUsers();
   }, []);
 
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
+                         user.email.toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && user.status === 'active') ||
+                         (statusFilter === 'inactive' && user.status === 'inactive');
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalUsers = users.length;
+  const activeUsers = users.filter(user => user.status === 'active').length;
+  const inactiveUsers = users.filter(user => user.status === 'inactive').length;
+
   return (
     <DashboardLayout role="admin">
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <UsersHeader onUserCreated={loadUsers} />
+        <UserStats 
+          totalUsers={totalUsers}
+          activeUsers={activeUsers}
+          inactiveUsers={inactiveUsers}
+        />
+        <UsersFilters
+          search={search}
+          onSearchChange={setSearch}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
         <UserList 
-          users={users}
+          users={filteredUsers}
           onUpdateUser={handleUpdateUser}
           onDeleteUser={handleDeleteUser}
         />

@@ -23,7 +23,7 @@ export function UsersFilters({
   onStatusFilterChange,
 }: UsersFiltersProps) {
   return (
-    <Card>
+    <Card className="mb-6">
       <CardContent className="pt-6">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="relative">
