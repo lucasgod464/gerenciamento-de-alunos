@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
-import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase } from "@/types/form";
+import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase, defaultFields } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const useEnrollmentFields = () => {
-  const [fields, setFields] = useState<FormField[]>([]);
+  const [fields, setFields] = useState<FormField[]>(defaultFields);
   const { toast } = useToast();
 
   const loadFields = async () => {
     try {
-      const { data: formFields, error } = await supabase
+      const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
         .order('order');
 
       if (error) throw error;
 
-      const mappedFields = (formFields || []).map((field: SupabaseFormField) => mapSupabaseFormField(field));
-      setFields(mappedFields);
+      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
+      const mergedFields = [...defaultFields, ...mappedCustomFields];
+      
+      setFields(mergedFields);
     } catch (error) {
       console.error("Error loading enrollment fields:", error);
       toast({
@@ -28,7 +30,7 @@ export const useEnrollmentFields = () => {
     }
   };
 
-  const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
+  const addField = async (field: Omit<FormField, "id" | "order">) => {
     try {
       const newField = {
         ...field,
@@ -37,13 +39,13 @@ export const useEnrollmentFields = () => {
 
       const { data, error } = await supabase
         .from('enrollment_form_fields')
-        .insert(mapFormFieldToSupabase(newField as FormField))
+        .insert([mapFormFieldToSupabase(newField as FormField)])
         .select()
         .single();
 
       if (error) throw error;
 
-      const mappedField = mapSupabaseFormField(data as SupabaseFormField);
+      const mappedField = mapSupabaseFormField(data);
       setFields(prev => [...prev, mappedField]);
       
       toast({
@@ -60,7 +62,17 @@ export const useEnrollmentFields = () => {
     }
   };
 
-  const handleDeleteField = async (id: string) => {
+  const deleteField = async (id: string) => {
+    const isDefaultField = defaultFields.some(field => field.id === id);
+    if (isDefaultField) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível excluir campos padrão do formulário.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('enrollment_form_fields')
@@ -84,7 +96,17 @@ export const useEnrollmentFields = () => {
     }
   };
 
-  const handleUpdateField = async (updatedField: FormField) => {
+  const updateField = async (updatedField: FormField) => {
+    const isDefaultField = defaultFields.some(field => field.id === updatedField.id);
+    if (isDefaultField) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar campos padrão do formulário.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('enrollment_form_fields')
@@ -111,12 +133,14 @@ export const useEnrollmentFields = () => {
     }
   };
 
-  const handleReorderFields = async (reorderedFields: FormField[]) => {
+  const reorderFields = async (reorderedFields: FormField[]) => {
+    const customFields = reorderedFields.filter(field => !defaultFields.some(df => df.id === field.id));
+    
     try {
-      const updates = reorderedFields.map((field, index) => ({
+      const updates = customFields.map((field, index) => ({
         ...mapFormFieldToSupabase(field),
         id: field.id,
-        order: index
+        order: defaultFields.length + index
       }));
 
       const { error } = await supabase
@@ -142,9 +166,9 @@ export const useEnrollmentFields = () => {
 
   return {
     fields,
-    addField: handleAddField,
-    deleteField: handleDeleteField,
-    updateField: handleUpdateField,
-    reorderFields: handleReorderFields,
+    addField,
+    deleteField,
+    updateField,
+    reorderFields,
   };
 };

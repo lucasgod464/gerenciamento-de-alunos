@@ -9,10 +9,9 @@ interface FieldCardProps {
   field: FormField;
   onDelete: (id: string) => void;
   onEdit: (field: FormField) => void;
-  isSystemField: boolean;
 }
 
-export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: FieldCardProps) => {
+export const EnrollmentFieldCard = ({ field, onDelete, onEdit }: FieldCardProps) => {
   const {
     attributes,
     listeners,
@@ -33,7 +32,7 @@ export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: 
       <Card className="p-4 mb-2 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {!isSystemField && (
+            {!field.isDefault && (
               <button
                 className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
                 {...attributes}
@@ -55,7 +54,7 @@ export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: 
             </div>
           </div>
           <div className="flex space-x-2">
-            {isSystemField ? (
+            {field.isDefault ? (
               <Lock className="h-4 w-4 text-gray-400" />
             ) : (
               <>
