@@ -20,13 +20,12 @@ export function UserRooms() {
       }
 
       try {
-        // First get the rooms the user has access to through user_rooms table
         const { data: userRooms, error: userRoomsError } = await supabase
           .from('user_rooms')
           .select(`
             room:room_id (
               *,
-              room_students (
+              room_students!inner (
                 student:students (
                   id,
                   name,

@@ -3,6 +3,7 @@ import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { CustomField } from "@/types/form";
 
 export const useStudentManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -26,7 +27,7 @@ export const useStudentManagement = () => {
 
       if (studentsError) throw studentsError;
 
-      const mappedStudents: Student[] = (studentsData || []).map(mapSupabaseStudentToStudent);
+      const mappedStudents = (studentsData || []).map(mapSupabaseStudentToStudent);
       setStudents(mappedStudents);
     } catch (error) {
       console.error('Error loading students:', error);
@@ -49,7 +50,7 @@ export const useStudentManagement = () => {
           email: newStudent.email,
           document: newStudent.document,
           address: newStudent.address,
-          custom_fields: newStudent.custom_fields,
+          custom_fields: newStudent.custom_fields as any,
           company_id: currentUser?.companyId
         })
         .select()

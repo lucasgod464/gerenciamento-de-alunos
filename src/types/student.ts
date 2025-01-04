@@ -30,9 +30,16 @@ export interface SupabaseStudent {
 }
 
 export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
-  const customFields = typeof student.custom_fields === 'object' && student.custom_fields
-    ? student.custom_fields as Record<string, CustomField>
-    : {};
+  let customFields: Record<string, CustomField> = {};
+  
+  if (student.custom_fields && typeof student.custom_fields === 'object') {
+    customFields = Object.entries(student.custom_fields).reduce((acc, [key, value]) => {
+      if (value && typeof value === 'object' && 'fieldName' in value) {
+        acc[key] = value as CustomField;
+      }
+      return acc;
+    }, {} as Record<string, CustomField>);
+  }
 
   return {
     id: student.id,
