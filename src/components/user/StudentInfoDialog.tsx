@@ -15,9 +15,9 @@ interface StudentInfoDialogProps {
 export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) {
   if (!student) return null;
 
-  // Filter out duplicate fields from custom_fields that are already shown in basic fields
-  const filteredCustomFields = student.custom_fields ? 
-    Object.entries(student.custom_fields).filter(([key]) => {
+  // Filter out duplicate fields from customFields that are already shown in basic fields
+  const filteredCustomFields = student.customFields ? 
+    Object.entries(student.customFields).filter(([key]) => {
       const normalizedKey = key.toLowerCase().replace(/_/g, '');
       return !['nome', 'nomecompleto', 'datanascimento', 'datadenanscimento'].includes(normalizedKey);
     }) : [];
@@ -39,7 +39,7 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
           </div>
           <div className="flex flex-col space-y-1.5">
             <label className="font-semibold">Data de Nascimento</label>
-            <p className="text-sm text-muted-foreground">{student.birth_date}</p>
+            <p className="text-sm text-muted-foreground">{student.birthDate}</p>
           </div>
           {student.email && (
             <div className="flex flex-col space-y-1.5">

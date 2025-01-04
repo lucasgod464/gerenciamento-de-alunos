@@ -42,6 +42,15 @@ export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student =
   };
 };
 
+export type FieldType = 
+  | "text" 
+  | "email" 
+  | "tel" 
+  | "textarea" 
+  | "date" 
+  | "select" 
+  | "multiple";
+
 export interface FormField {
   id: string;
   name: string;
@@ -52,12 +61,3 @@ export interface FormField {
   order: number;
   options?: string[];
 }
-
-export type FieldType = 
-  | "text" 
-  | "email" 
-  | "tel" 
-  | "textarea" 
-  | "date" 
-  | "select" 
-  | "multiple";

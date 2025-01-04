@@ -1,7 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Student } from "@/types/student";
+import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
@@ -18,7 +18,6 @@ export function StudentsTotal() {
       console.log("Iniciando busca de alunos...");
       console.log("Company ID do usuário:", currentUser?.companyId);
       
-      // Query para buscar alunos da tabela students
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
@@ -40,19 +39,9 @@ export function StudentsTotal() {
 
       console.log("Dados brutos dos alunos:", studentsData);
 
-      const mappedStudents: Student[] = studentsData.map(student => ({
-        id: student.id,
-        name: student.name,
-        birthDate: student.birth_date,
-        status: student.status ?? true,
-        email: student.email || '',
-        document: student.document || '',
-        address: student.address || '',
-        customFields: student.custom_fields || {},
-        companyId: student.company_id,
-        createdAt: student.created_at,
-        room: student.room_students?.[0]?.room_id || null
-      }));
+      const mappedStudents = studentsData.map(student => 
+        mapSupabaseStudentToStudent(student)
+      );
       
       console.log("Alunos mapeados:", mappedStudents);
       setStudents(mappedStudents);
