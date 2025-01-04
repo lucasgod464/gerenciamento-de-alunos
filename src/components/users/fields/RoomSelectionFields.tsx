@@ -54,23 +54,21 @@ export function RoomSelectionFields({
         }
 
         setLocalRooms(roomsData || []);
-
-        // Se existem salas autorizadas nos defaultValues, selecione-as
-        if (defaultValues?.authorizedRooms?.length) {
-          const authorizedRoomIds = defaultValues.authorizedRooms.map(room => room.id);
-          authorizedRoomIds.forEach(roomId => {
-            if (!selectedRooms.includes(roomId)) {
-              onRoomToggle(roomId);
-            }
-          });
-        }
       } catch (error) {
         console.error('Error fetching rooms:', error);
       }
     };
 
     fetchRooms();
-  }, [currentUser, defaultValues]);
+  }, [currentUser?.companyId]);
+
+  // Update local state when defaultValues change
+  useEffect(() => {
+    if (defaultValues?.authorizedRooms?.length) {
+      const authorizedRoomIds = defaultValues.authorizedRooms.map(room => room.id);
+      console.log('Setting authorized rooms:', authorizedRoomIds);
+    }
+  }, [defaultValues]);
 
   const handleSearchChange = (value: string) => {
     setLocalSearchQuery(value);
@@ -106,7 +104,11 @@ export function RoomSelectionFields({
                   <Checkbox
                     id={`room-${room.id}`}
                     checked={selectedRooms.includes(room.id)}
-                    onCheckedChange={() => onRoomToggle(room.id)}
+                    onCheckedChange={() => {
+                      console.log('Room toggle clicked:', room.id);
+                      console.log('Current selectedRooms:', selectedRooms);
+                      onRoomToggle(room.id);
+                    }}
                   />
                   <span className="truncate">{room.name}</span>
                 </label>

@@ -8,11 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { useAuth } from "@/hooks/useAuth";
 import { MapPin } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
@@ -32,15 +28,13 @@ interface UserFormFieldsProps {
   onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
   onRoomsChange?: (rooms: string[]) => void;
   isEditing?: boolean;
-  generateStrongPassword?: () => string;
 }
 
 const UserFormFields = ({ 
   defaultValues = {}, 
   onTagsChange,
   onRoomsChange,
-  isEditing,
-  generateStrongPassword
+  isEditing
 }: UserFormFieldsProps) => {
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     defaultValues.tags || []
@@ -48,6 +42,15 @@ const UserFormFields = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
+
+  // Initialize selected rooms when defaultValues change
+  useEffect(() => {
+    if (defaultValues.authorizedRooms) {
+      const roomIds = defaultValues.authorizedRooms.map(room => room.id);
+      setSelectedRooms(roomIds);
+      onRoomsChange?.(roomIds);
+    }
+  }, [defaultValues.authorizedRooms]);
 
   const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
     const newSelectedTags = selectedTags.some(t => t.id === tag.id)
@@ -59,10 +62,14 @@ const UserFormFields = ({
   };
 
   const handleRoomToggle = (roomId: string) => {
+    console.log('Room toggle called with:', roomId);
+    console.log('Current selectedRooms:', selectedRooms);
+    
     const newSelectedRooms = selectedRooms.includes(roomId)
       ? selectedRooms.filter(id => id !== roomId)
       : [...selectedRooms, roomId];
     
+    console.log('New selectedRooms:', newSelectedRooms);
     setSelectedRooms(newSelectedRooms);
     onRoomsChange?.(newSelectedRooms);
   };
