@@ -9,7 +9,7 @@ export interface Student {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Record<string, CustomField>;
+  custom_fields: Record<string, any>;
   company_id: string;
   created_at: string;
   room?: string;
@@ -30,10 +30,10 @@ export interface SupabaseStudent {
 }
 
 export const mapSupabaseStudentToStudent = (student: SupabaseStudent): Student => {
-  let customFields: Record<string, CustomField> = {};
+  let customFields: Record<string, any> = {};
   
   if (student.custom_fields && typeof student.custom_fields === 'object') {
-    customFields = student.custom_fields as Record<string, CustomField>;
+    customFields = student.custom_fields as Record<string, any>;
   }
 
   return {
@@ -55,6 +55,6 @@ export const mapStudentToSupabase = (student: Partial<Student>): Partial<Supabas
   const { room, ...rest } = student;
   return {
     ...rest,
-    custom_fields: student.custom_fields as unknown as Json,
+    custom_fields: student.custom_fields as Json,
   };
 };

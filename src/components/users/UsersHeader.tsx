@@ -12,20 +12,21 @@ export const UsersHeader = ({ onUserCreated }: UsersHeaderProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex justify-between items-center">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
+        <h1 className="text-2xl font-bold">Usuários</h1>
         <p className="text-muted-foreground">
           Gerencie os usuários do sistema
         </p>
       </div>
       <Button onClick={() => setShowCreateDialog(true)}>
-        <Plus className="mr-2 h-4 w-4" /> Adicionar Usuário
+        <Plus className="mr-2 h-4 w-4" />
+        Novo Usuário
       </Button>
 
       <CreateUserDialog
         open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
+        onOpenChange={setShowCreateDialog}
         onUserCreated={onUserCreated}
       />
     </div>
