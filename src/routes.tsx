@@ -1,231 +1,125 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { RoleGuard } from "./components/auth/RoleGuard";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import PublicEnrollment from "./pages/PublicEnrollment";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { lazy } from "react";
+import { PrivateRoute } from "@/components/PrivateRoute";
+import { AdminRoute } from "@/components/AdminRoute";
+import { TeacherRoute } from "@/components/TeacherRoute";
+import { Loader } from "@/components/Loader";
 
-// Super Admin
-import SuperAdminDashboard from "./pages/SuperAdmin/Dashboard";
-import SuperAdminCompanies from "./pages/SuperAdmin/Companies";
-import SuperAdminEmails from "./pages/SuperAdmin/Emails";
-import SuperAdminProfile from "./pages/SuperAdmin/Profile";
-import SuperAdminRooms from "./pages/SuperAdmin/Rooms";
+const Login = lazy(() => import("@/pages/Login"));
+const Register = lazy(() => import("@/pages/Register"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const Students = lazy(() => import("@/pages/Students"));
+const StudentDetails = lazy(() => import("@/pages/StudentDetails"));
+const Classes = lazy(() => import("@/pages/Classes"));
+const ClassDetails = lazy(() => import("@/pages/ClassDetails"));
+const Teachers = lazy(() => import("@/pages/Teachers"));
+const TeacherDetails = lazy(() => import("@/pages/TeacherDetails"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const AdminEnrollment = lazy(() => import("@/pages/Admin/Enrollment"));
+const PublicEnrollment = lazy(() => import("@/pages/PublicEnrollment"));
 
-// Admin
-import AdminDashboard from "./pages/Admin/Dashboard";
-import AdminProfile from "./pages/Admin/Profile";
-import AdminUsers from "./pages/Admin/Users";
-import AdminRooms from "./pages/Admin/Rooms";
-import AdminCategories from "./pages/Admin/Categories";
-import AdminTags from "./pages/Admin/Tags";
-import AdminSpecializations from "./pages/Admin/Specializations";
-import AdminFormBuilder from "./pages/Admin/FormBuilder";
-import AdminEnrollment from "./pages/Admin/Enrollment";
-import AdminStudentsTotal from "./pages/Admin/StudentsTotal";
-import AdminNotifications from "./pages/Admin/Notifications";
-
-// User
-import UserDashboard from "./pages/User/Dashboard";
-import UserProfile from "./pages/User/Profile";
-import StudentsPage from "./pages/User/Students";
-import AttendancePage from "./pages/User/Attendance";
-import ReportsPage from "./pages/User/Reports";
-import MyRooms from "./pages/User/MyRooms";
-
-export const routes = createBrowserRouter([
+export const routes = [
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
-  },
-  {
-    path: "/login",
     element: <Login />,
   },
   {
-    path: "/enrollment",
-    element: <PublicEnrollment />,
+    path: "/register",
+    element: <Register />,
   },
-  // Super Admin Routes
   {
-    path: "/super-admin",
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPassword />,
+  },
+  {
+    path: "/dashboard",
     element: (
-      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
-        <SuperAdminDashboard />
-      </RoleGuard>
+      <PrivateRoute>
+        <Dashboard />
+      </PrivateRoute>
     ),
   },
   {
-    path: "/super-admin/companies",
+    path: "/students",
     element: (
-      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
-        <SuperAdminCompanies />
-      </RoleGuard>
+      <PrivateRoute>
+        <Students />
+      </PrivateRoute>
     ),
   },
   {
-    path: "/super-admin/rooms",
+    path: "/students/:id",
     element: (
-      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
-        <SuperAdminRooms />
-      </RoleGuard>
+      <PrivateRoute>
+        <StudentDetails />
+      </PrivateRoute>
     ),
   },
   {
-    path: "/super-admin/emails",
+    path: "/classes",
     element: (
-      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
-        <SuperAdminEmails />
-      </RoleGuard>
+      <TeacherRoute>
+        <Classes />
+      </TeacherRoute>
     ),
   },
   {
-    path: "/super-admin/profile",
+    path: "/classes/:id",
     element: (
-      <RoleGuard allowedRoles={["SUPER_ADMIN"]}>
-        <SuperAdminProfile />
-      </RoleGuard>
+      <TeacherRoute>
+        <ClassDetails />
+      </TeacherRoute>
     ),
   },
-  // Admin Routes
   {
-    path: "/admin",
+    path: "/teachers",
     element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminDashboard />
-      </RoleGuard>
+      <AdminRoute>
+        <Teachers />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: "/teachers/:id",
+    element: (
+      <AdminRoute>
+        <TeacherDetails />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: "/profile",
+    element: (
+      <PrivateRoute>
+        <Profile />
+      </PrivateRoute>
     ),
   },
   {
     path: "/admin/enrollment",
     element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
+      <AdminRoute>
         <AdminEnrollment />
-      </RoleGuard>
+      </AdminRoute>
     ),
   },
   {
-    path: "/admin/students-total",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminStudentsTotal />
-      </RoleGuard>
-    ),
+    path: "/enrollment/:companyId",
+    element: <PublicEnrollment />,
   },
-  {
-    path: "/admin/notifications",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminNotifications />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/users",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminUsers />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/rooms",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminRooms />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/categories",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminCategories />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/tags",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminTags />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/specializations",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminSpecializations />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/profile",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminProfile />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/admin/form-builder",
-    element: (
-      <RoleGuard allowedRoles={["ADMIN"]}>
-        <AdminFormBuilder />
-      </RoleGuard>
-    ),
-  },
-  // User Routes
-  {
-    path: "/user",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <UserDashboard />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/user/students",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <StudentsPage />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/user/attendance",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <AttendancePage />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/user/my-rooms",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <MyRooms />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/user/reports",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <ReportsPage />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "/user/profile",
-    element: (
-      <RoleGuard allowedRoles={["USER"]}>
-        <UserProfile />
-      </RoleGuard>
-    ),
-  },
-  {
-    path: "*",
-    element: <Navigate to="/login" replace />,
-  },
-]);
+];
+
+export const Router = () => {
+  return (
+    <RouterProvider
+      router={createBrowserRouter(routes)}
+      fallbackElement={<Loader />}
+    />
+  );
+};
