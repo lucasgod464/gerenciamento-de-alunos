@@ -36,9 +36,9 @@ export function mapSupabaseStudentToStudent(student: SupabaseStudent): Student {
     email: student.email,
     document: student.document,
     address: student.address,
-    customFields: typeof student.custom_fields === 'string' 
-      ? JSON.parse(student.custom_fields) 
-      : student.custom_fields,
+    customFields: typeof student.custom_fields === 'object' 
+      ? student.custom_fields as Record<string, any>
+      : null,
     companyId: student.company_id,
     createdAt: student.created_at
   };

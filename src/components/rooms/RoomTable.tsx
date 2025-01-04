@@ -62,7 +62,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       const studentsList: Student[] = roomStudents
         .filter(rs => rs.student && typeof rs.student === 'object')
-        .map(rs => mapSupabaseStudentToStudent(rs.student));
+        .map(rs => mapSupabaseStudentToStudent(rs.student as any));
     
       setSelectedRoomStudents(studentsList);
       setSelectedRoomId(room.id);
