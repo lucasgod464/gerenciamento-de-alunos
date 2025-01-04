@@ -13,6 +13,21 @@ interface AttendanceRowProps {
   onObservationChange: (id: string, text: string) => void;
 }
 
+const getStatusIcon = (status?: string) => {
+  switch (status) {
+    case "present":
+      return <CircleCheck className="h-4 w-4 text-green-500" />;
+    case "absent":
+      return <CircleX className="h-4 w-4 text-red-500" />;
+    case "late":
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+    case "justified":
+      return <FileQuestion className="h-4 w-4 text-blue-500" />;
+    default:
+      return null;
+  }
+};
+
 export const AttendanceRow = ({
   student,
   observation,
@@ -21,7 +36,8 @@ export const AttendanceRow = ({
 }: AttendanceRowProps) => {
   return (
     <div className="grid grid-cols-12 gap-4 items-center p-4 border rounded-lg bg-white">
-      <div className="col-span-3">
+      <div className="col-span-3 flex items-center gap-2">
+        {getStatusIcon(student.status)}
         <span className="font-medium">{student.name}</span>
       </div>
       
