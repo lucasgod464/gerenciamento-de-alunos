@@ -8,11 +8,12 @@ export interface User {
   companyId: string | null;
   createdAt: string | null;
   lastAccess: string | null;
-  status: boolean;
+  status: string;
   accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
   tags?: { id: string; name: string; color: string; }[];
+  authorizedRooms?: { id: string; name: string; }[];
 }
 
 export interface DatabaseUser {
@@ -23,7 +24,7 @@ export interface DatabaseUser {
   company_id: string;
   created_at: string;
   last_access: string | null;
-  status: boolean;
+  status: string;
   access_level: AccessLevel;
   location?: string;
   specialization?: string;
@@ -38,7 +39,7 @@ export const mapDatabaseUser = (dbUser: any): User => ({
   companyId: dbUser.company_id,
   createdAt: dbUser.created_at,
   lastAccess: dbUser.last_access,
-  status: dbUser.status === 'active',
+  status: dbUser.status,
   accessLevel: dbUser.access_level,
   location: dbUser.location,
   specialization: dbUser.specialization,
@@ -47,4 +48,8 @@ export const mapDatabaseUser = (dbUser: any): User => ({
     name: ut.tags.name,
     color: ut.tags.color
   })) || [],
+  authorizedRooms: dbUser.user_rooms?.map((ur: any) => ({
+    id: ur.room_id,
+    name: ur.rooms?.name || ''
+  })) || []
 });

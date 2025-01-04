@@ -45,7 +45,7 @@ export function EditUserDialog({
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
         specialization: formData.get('specialization')?.toString() || '',
-        status: formData.get('status') === 'active'
+        status: formData.get('status')?.toString() || 'active'
       };
 
       const { error: updateError } = await supabase
@@ -56,12 +56,10 @@ export function EditUserDialog({
       if (updateError) throw updateError;
 
       // Update tags
-      const { error: deleteTagsError } = await supabase
+      await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', user.id);
-
-      if (deleteTagsError) throw deleteTagsError;
 
       if (selectedTags.length > 0) {
         const tagInserts = selectedTags.map(tag => ({
@@ -69,20 +67,16 @@ export function EditUserDialog({
           tag_id: tag.id
         }));
 
-        const { error: insertTagsError } = await supabase
+        await supabase
           .from('user_tags')
           .insert(tagInserts);
-
-        if (insertTagsError) throw insertTagsError;
       }
 
       // Update rooms
-      const { error: deleteRoomsError } = await supabase
+      await supabase
         .from('user_rooms')
         .delete()
         .eq('user_id', user.id);
-
-      if (deleteRoomsError) throw deleteRoomsError;
 
       if (selectedRooms.length > 0) {
         const roomInserts = selectedRooms.map(roomId => ({
@@ -90,11 +84,9 @@ export function EditUserDialog({
           room_id: roomId
         }));
 
-        const { error: insertRoomsError } = await supabase
+        await supabase
           .from('user_rooms')
           .insert(roomInserts);
-
-        if (insertRoomsError) throw insertRoomsError;
       }
 
       const updatedUser: User = {
@@ -104,7 +96,7 @@ export function EditUserDialog({
         role: updateData.access_level,
         location: updateData.location,
         specialization: updateData.specialization,
-        status: updateData.status ? 'active' : 'inactive',
+        status: updateData.status,
         tags: selectedTags,
         accessLevel: updateData.access_level,
         authorizedRooms: selectedRooms.map(roomId => ({ id: roomId, name: '' }))
@@ -147,7 +139,7 @@ export function EditUserDialog({
               email: user.email,
               specialization: user.specialization || '',
               location: user.location || '',
-              status: user.status === 'active' ? 'active' : 'inactive',
+              status: user.status,
               tags: user.tags,
               accessLevel: user.accessLevel,
               authorizedRooms: user.authorizedRooms
