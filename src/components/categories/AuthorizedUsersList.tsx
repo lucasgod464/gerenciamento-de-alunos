@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserWithTags } from "./UserWithTags";
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthorizedUsersListProps {
@@ -25,21 +23,28 @@ export const AuthorizedUsersList = ({ roomId, companyId }: AuthorizedUsersListPr
     try {
       console.log('Fetching authorized users for room:', roomId);
       
-      const { data: emailsData, error: emailsError } = await supabase
-        .from('emails')
-        .select('id, name, email')
-        .eq('company_id', companyId);
+      const { data: userData, error: userError } = await supabase
+        .from('user_rooms')
+        .select(`
+          user_id,
+          emails:user_id (
+            id,
+            name,
+            email
+          )
+        `)
+        .eq('room_id', roomId);
 
-      if (emailsError) {
-        console.error('Error fetching emails:', emailsError);
-        throw emailsError;
+      if (userError) {
+        console.error('Error fetching user rooms:', userError);
+        throw userError;
       }
 
-      if (emailsData) {
-        const users = emailsData.map(email => ({
-          id: email.id,
-          name: email.name,
-          email: email.email,
+      if (userData) {
+        const users = userData.map(ur => ({
+          id: ur.emails.id,
+          name: ur.emails.name,
+          email: ur.emails.email,
           is_main_teacher: false
         }));
         
