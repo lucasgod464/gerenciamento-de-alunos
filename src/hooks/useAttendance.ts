@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useAttendanceState } from "./attendance/useAttendanceState";
 import { useAttendanceActions } from "./attendance/useAttendanceActions";
-import { formatDate } from "@/utils/dateUtils";
+import { formatDate, normalizeDate } from "@/utils/dateUtils";
 
 export function useAttendance(selectedDate: Date | undefined) {
   const { user: currentUser } = useAuth();
@@ -13,6 +13,8 @@ export function useAttendance(selectedDate: Date | undefined) {
     setObservation,
     attendanceDays,
     setAttendanceDays,
+    fetchAttendanceDays,
+    fetchDailyAttendance
   } = useAttendanceState(selectedDate, currentUser);
 
   const {
@@ -27,7 +29,9 @@ export function useAttendance(selectedDate: Date | undefined) {
     attendanceDays,
     setAttendanceDays,
     setDailyAttendances,
-    setObservation
+    setObservation,
+    fetchAttendanceDays,
+    fetchDailyAttendance
   );
 
   return {

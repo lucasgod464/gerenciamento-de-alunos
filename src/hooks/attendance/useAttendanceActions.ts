@@ -9,7 +9,9 @@ export function useAttendanceActions(
   attendanceDays: Date[],
   setAttendanceDays: (days: Date[]) => void,
   setDailyAttendances: (attendance: any[]) => void,
-  setObservation: (text: string) => void
+  setObservation: (text: string) => void,
+  fetchAttendanceDays: () => Promise<void>,
+  fetchDailyAttendance: () => Promise<void>
 ) {
   const { toast } = useToast();
 
@@ -26,16 +28,7 @@ export function useAttendanceActions(
         companyId: currentUser.companyId
       });
 
-      setDailyAttendances(prev => {
-        const updatedAttendances = [...prev];
-        const attendance = updatedAttendances[0];
-        if (attendance) {
-          attendance.students = attendance.students.map(student => 
-            student.id === studentId ? { ...student, status } : student
-          );
-        }
-        return updatedAttendances;
-      });
+      await fetchDailyAttendance();
 
     } catch (error) {
       console.error('Error updating attendance:', error);
@@ -74,7 +67,6 @@ export function useAttendanceActions(
       const students = await attendanceDataService.getCompanyStudents(currentUser.companyId);
       const dateStr = formatDate(selectedDate);
 
-      // Primeiro salva no banco de dados
       for (const student of students) {
         await attendanceDataService.saveAttendance({
           date: dateStr,
@@ -84,14 +76,8 @@ export function useAttendanceActions(
         });
       }
 
-      // Depois atualiza o estado local
-      const normalizedDate = normalizeDate(selectedDate);
-      const updatedDays = [...attendanceDays, normalizedDate];
-      setAttendanceDays(updatedDays);
-      setDailyAttendances([{ 
-        date: dateStr, 
-        students
-      }]);
+      await fetchAttendanceDays();
+      await fetchDailyAttendance();
 
       toast({
         title: "Chamada iniciada",
@@ -115,12 +101,8 @@ export function useAttendanceActions(
       
       await attendanceDataService.cancelAttendance(dateStr, currentUser.companyId);
       
-      const normalizedSelectedDate = normalizeDate(selectedDate);
-      setAttendanceDays(attendanceDays.filter(date => 
-        !areDatesEqual(normalizeDate(date), normalizedSelectedDate)
-      ));
-      setDailyAttendances([]);
-      setObservation('');
+      await fetchAttendanceDays();
+      await fetchDailyAttendance();
 
       toast({
         title: "Chamada cancelada",
