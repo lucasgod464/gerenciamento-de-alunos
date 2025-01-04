@@ -34,7 +34,28 @@ export function PublicEnrollment() {
 
   const loadFields = async () => {
     try {
-      const { data: formFields, error } = await supabase
+      // Primeiro, carregamos os campos padrão
+      const defaultFields: FormField[] = [
+        {
+          id: "nome_completo",
+          name: "nome_completo",
+          label: "Nome Completo",
+          type: "text",
+          required: true,
+          order: 0,
+        },
+        {
+          id: "data_nascimento",
+          name: "data_nascimento",
+          label: "Data de Nascimento",
+          type: "date",
+          required: true,
+          order: 1,
+        }
+      ];
+
+      // Depois, carregamos os campos personalizados do banco
+      const { data: customFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
         .eq('company_id', companyId)
@@ -42,7 +63,7 @@ export function PublicEnrollment() {
 
       if (error) throw error;
 
-      const validatedFields = (formFields || []).map(field => ({
+      const mappedCustomFields = (customFields || []).map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -53,7 +74,8 @@ export function PublicEnrollment() {
         options: field.options as string[] | undefined,
       }));
 
-      setFields(validatedFields);
+      // Combinamos os campos padrão com os personalizados
+      setFields([...defaultFields, ...mappedCustomFields]);
     } catch (error) {
       console.error("Error loading form fields:", error);
       toast({
@@ -130,90 +152,46 @@ export function PublicEnrollment() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Campos obrigatórios */}
-            <div className="space-y-2">
-              <Label htmlFor="nome_completo">
-                Nome Completo
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                id="nome_completo"
-                {...register("nome_completo", { required: true })}
-                placeholder="Digite seu nome completo"
-                className="w-full"
-              />
-              {errors.nome_completo && (
-                <p className="text-sm text-red-500">Este campo é obrigatório</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="data_nascimento">
-                Data de Nascimento
-                <span className="text-red-500 ml-1">*</span>
-              </Label>
-              <Input
-                id="data_nascimento"
-                type="date"
-                {...register("data_nascimento", { required: true })}
-                className="w-full"
-              />
-              {errors.data_nascimento && (
-                <p className="text-sm text-red-500">Este campo é obrigatório</p>
-              )}
-            </div>
-
-            {/* Campos customizados */}
-            {fields.map(field => {
-              if (field.name === "sala" || field.name === "status") {
-                return null;
-              }
-
-              if (field.name === "nome_completo" || field.name === "data_nascimento") {
-                return null;
-              }
-
-              return (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.name}>
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </Label>
-                  {field.type === "textarea" ? (
-                    <Textarea
-                      id={field.name}
-                      {...register(field.name, { required: field.required })}
-                      placeholder={`Digite ${field.label.toLowerCase()}`}
-                      className="w-full"
-                    />
-                  ) : field.type === "select" ? (
-                    <Select onValueChange={(value) => setValue(field.name, value)}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map(option => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input
-                      id={field.name}
-                      type={field.type}
-                      {...register(field.name, { required: field.required })}
-                      placeholder={`Digite ${field.label.toLowerCase()}`}
-                      className="w-full"
-                    />
-                  )}
-                  {errors[field.name] && (
-                    <p className="text-sm text-red-500">Este campo é obrigatório</p>
-                  )}
-                </div>
-              );
-            })}
+            {fields.map(field => (
+              <div key={field.id} className="space-y-2">
+                <Label htmlFor={field.name}>
+                  {field.label}
+                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                </Label>
+                {field.type === "textarea" ? (
+                  <Textarea
+                    id={field.name}
+                    {...register(field.name, { required: field.required })}
+                    placeholder={`Digite ${field.label.toLowerCase()}`}
+                    className="w-full"
+                  />
+                ) : field.type === "select" ? (
+                  <Select onValueChange={(value) => setValue(field.name, value)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map(option => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id={field.name}
+                    type={field.type}
+                    {...register(field.name, { required: field.required })}
+                    placeholder={`Digite ${field.label.toLowerCase()}`}
+                    className="w-full"
+                  />
+                )}
+                {errors[field.name] && (
+                  <p className="text-sm text-red-500">Este campo é obrigatório</p>
+                )}
+              </div>
+            ))}
             <Button 
               type="submit" 
               className="w-full"
