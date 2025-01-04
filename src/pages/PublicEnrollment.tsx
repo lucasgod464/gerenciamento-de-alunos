@@ -42,7 +42,10 @@ export function PublicEnrollment() {
         .eq('company_id', companyId)
         .order('order');
 
-      if (customError) throw customError;
+      if (customError) {
+        console.error("Error loading custom fields:", customError);
+        throw customError;
+      }
 
       console.log("Custom fields loaded:", customFields);
 
@@ -55,6 +58,7 @@ export function PublicEnrollment() {
           type: "text",
           required: true,
           order: 0,
+          isDefault: true
         },
         {
           id: "data_nascimento",
@@ -63,11 +67,12 @@ export function PublicEnrollment() {
           type: "date",
           required: true,
           order: 1,
+          isDefault: true
         }
       ];
 
-      // Combina campos padrão com campos personalizados
-      const validatedFields = [...defaultFields, ...(customFields || []).map(field => ({
+      // Mapeia os campos personalizados para o formato correto
+      const mappedCustomFields = (customFields || []).map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -76,10 +81,16 @@ export function PublicEnrollment() {
         required: field.required || false,
         order: field.order,
         options: field.options as string[] | undefined,
-      }))];
+        isDefault: false
+      }));
 
-      console.log("All fields combined:", validatedFields);
-      setFields(validatedFields);
+      console.log("Mapped custom fields:", mappedCustomFields);
+
+      // Combina e ordena todos os campos
+      const allFields = [...defaultFields, ...mappedCustomFields].sort((a, b) => a.order - b.order);
+      console.log("All fields combined:", allFields);
+      
+      setFields(allFields);
     } catch (error) {
       console.error("Error loading form fields:", error);
       toast({
@@ -104,7 +115,7 @@ export function PublicEnrollment() {
     try {
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
-        if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
+        if (!field.isDefault) {
           customFields[field.id] = {
             fieldId: field.id,
             fieldName: field.name,
