@@ -36,7 +36,7 @@ export const AttendanceCalendar = ({
 
   // Create modifiers object for the calendar
   const modifiers = {
-    attendance: attendanceDays.map(date => new Date(date))
+    attendance: attendanceDays
   };
 
   return (

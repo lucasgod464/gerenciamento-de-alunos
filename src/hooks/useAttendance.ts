@@ -52,11 +52,7 @@ export function useAttendance() {
         const formattedDays = daysData.map(day => {
           const date = new Date(day);
           const brasiliaDate = new Date(date.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-          return new Date(Date.UTC(
-            brasiliaDate.getFullYear(),
-            brasiliaDate.getMonth(),
-            brasiliaDate.getDate()
-          ));
+          return brasiliaDate;
         });
         setAttendanceDays(formattedDays);
       }
