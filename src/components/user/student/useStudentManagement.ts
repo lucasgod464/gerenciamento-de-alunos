@@ -15,8 +15,7 @@ export const useStudentManagement = () => {
 
   const handleAddStudent = async (newStudent: Student) => {
     try {
-      // Primeiro, insere o estudante
-      const { data: studentData, error: studentError } = await supabase
+      const { error: studentError } = await supabase
         .from('students')
         .insert({
           name: newStudent.name,
@@ -27,21 +26,31 @@ export const useStudentManagement = () => {
           address: newStudent.address,
           custom_fields: newStudent.customFields,
           company_id: user?.companyId
-        })
-        .select()
-        .single();
+        });
 
       if (studentError) {
         console.error('Erro ao inserir estudante:', studentError);
         throw studentError;
       }
 
-      // Se um room foi selecionado, cria a relação room_students
-      if (newStudent.room && studentData) {
+      // Busca o ID do estudante recém inserido
+      const { data: insertedStudent, error: fetchError } = await supabase
+        .from('students')
+        .select('id')
+        .eq('name', newStudent.name)
+        .eq('birth_date', newStudent.birthDate)
+        .single();
+
+      if (fetchError) {
+        console.error('Erro ao buscar estudante inserido:', fetchError);
+        throw fetchError;
+      }
+
+      if (newStudent.room && insertedStudent) {
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
-            student_id: studentData.id,
+            student_id: insertedStudent.id,
             room_id: newStudent.room
           });
 
@@ -93,7 +102,6 @@ export const useStudentManagement = () => {
 
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
-      // Atualiza os dados do estudante
       const { error: studentError } = await supabase
         .from('students')
         .update({
@@ -109,15 +117,12 @@ export const useStudentManagement = () => {
 
       if (studentError) throw studentError;
 
-      // Atualiza a relação com a sala
       if (updatedStudent.room) {
-        // Remove relações antigas
         await supabase
           .from('room_students')
           .delete()
           .eq('student_id', updatedStudent.id);
 
-        // Adiciona nova relação
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
