@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import Login from "@/pages/Login";
-import Index from "@/pages/Index";
+import { Login } from "@/pages/Login";
+import { Index } from "@/pages/Index";
 import PublicEnrollment from "@/pages/PublicEnrollment";
 
 export const router = createBrowserRouter([
