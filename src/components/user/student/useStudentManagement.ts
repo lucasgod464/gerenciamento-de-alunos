@@ -3,34 +3,63 @@ import { Student, mapSupabaseStudentToStudent } from "@/types/student";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomField } from "@/types/form";
 
 export const useStudentManagement = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
-  const { user: currentUser } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const loadStudents = async () => {
-    if (!currentUser?.companyId) return;
+    if (!user?.id) return;
     
     try {
+      console.log("Buscando alunos para o usuário:", user.id);
+      
+      // Primeiro, buscar as salas do usuário
+      const { data: userRooms, error: roomsError } = await supabase
+        .from('user_rooms')
+        .select('room_id')
+        .eq('user_id', user.id);
+
+      if (roomsError) throw roomsError;
+      
+      console.log("Salas do usuário:", userRooms);
+
+      if (!userRooms?.length) {
+        console.log("Usuário não tem salas associadas");
+        return;
+      }
+
+      const roomIds = userRooms.map(ur => ur.room_id);
+
+      // Buscar alunos das salas do usuário
       const { data: studentsData, error: studentsError } = await supabase
         .from('students')
         .select(`
           *,
-          room_students(room_id)
+          room_students!inner(
+            room_id,
+            student_id
+          )
         `)
-        .eq('company_id', currentUser.companyId);
+        .in('room_students.room_id', roomIds);
 
       if (studentsError) throw studentsError;
+      
+      console.log("Alunos encontrados:", studentsData);
 
-      const mappedStudents = (studentsData || []).map(mapSupabaseStudentToStudent);
-      setStudents(mappedStudents);
+      if (studentsData) {
+        const mappedStudents = studentsData.map(student => ({
+          ...mapSupabaseStudentToStudent(student),
+          room: student.room_students[0]?.room_id
+        }));
+        setStudents(mappedStudents);
+      }
     } catch (error) {
-      console.error('Error loading students:', error);
+      console.error('Erro ao carregar alunos:', error);
       toast({
         title: "Erro ao carregar alunos",
         description: "Não foi possível carregar a lista de alunos.",
@@ -38,6 +67,43 @@ export const useStudentManagement = () => {
       });
     }
   };
+
+  const loadRooms = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data: userRooms, error: roomsError } = await supabase
+        .from('user_rooms')
+        .select(`
+          room:room_id (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (roomsError) throw roomsError;
+
+      if (userRooms) {
+        const formattedRooms = userRooms
+          .map(ur => ur.room)
+          .filter(room => room !== null);
+        setRooms(formattedRooms);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar salas:', error);
+      toast({
+        title: "Erro ao carregar salas",
+        description: "Não foi possível carregar a lista de salas.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadStudents();
+    loadRooms();
+  }, [user]);
 
   const handleAddStudent = async (newStudent: Student) => {
     try {
@@ -50,8 +116,8 @@ export const useStudentManagement = () => {
           email: newStudent.email,
           document: newStudent.document,
           address: newStudent.address,
-          custom_fields: newStudent.custom_fields as any,
-          company_id: currentUser?.companyId
+          custom_fields: newStudent.custom_fields,
+          company_id: user?.companyId
         })
         .select()
         .single();
@@ -76,7 +142,7 @@ export const useStudentManagement = () => {
 
       loadStudents();
     } catch (error) {
-      console.error('Error adding student:', error);
+      console.error('Erro ao adicionar aluno:', error);
       toast({
         title: "Erro ao cadastrar aluno",
         description: "Não foi possível cadastrar o aluno.",
@@ -100,7 +166,7 @@ export const useStudentManagement = () => {
         description: "Aluno excluído com sucesso!",
       });
     } catch (error) {
-      console.error('Error deleting student:', error);
+      console.error('Erro ao excluir aluno:', error);
       toast({
         title: "Erro ao excluir aluno",
         description: "Não foi possível excluir o aluno.",
@@ -149,7 +215,7 @@ export const useStudentManagement = () => {
 
       loadStudents();
     } catch (error) {
-      console.error('Error updating student:', error);
+      console.error('Erro ao atualizar aluno:', error);
       toast({
         title: "Erro ao atualizar aluno",
         description: "Não foi possível atualizar o aluno.",
@@ -157,12 +223,6 @@ export const useStudentManagement = () => {
       });
     }
   };
-
-  useEffect(() => {
-    if (currentUser?.companyId) {
-      loadStudents();
-    }
-  }, [currentUser]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch = student.name
