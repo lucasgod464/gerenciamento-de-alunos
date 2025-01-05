@@ -48,6 +48,6 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
     description: field.description,
     required: field.required,
     order: field.order,
-    options: field.options || null,
+    options: field.options ? field.options.map(String) : null,
   };
 };

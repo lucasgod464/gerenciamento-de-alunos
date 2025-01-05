@@ -35,7 +35,7 @@ export function useRooms() {
 
       if (error) throw error;
 
-      const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
+      const formattedRooms = (roomsData as unknown as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
 
