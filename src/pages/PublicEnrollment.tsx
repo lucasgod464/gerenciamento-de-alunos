@@ -32,18 +32,29 @@ export function PublicEnrollment() {
       setError(null);
 
       if (!formUrl) {
+        console.error("URL do formulário não encontrada");
         throw new Error("URL do formulário não encontrada");
       }
 
+      console.log("Buscando empresa com URL:", formUrl);
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .select('id')
         .eq('enrollment_form_url', formUrl)
-        .single();
+        .maybeSingle();
 
-      if (companyError || !company) {
+      if (companyError) {
+        console.error("Erro ao buscar empresa:", companyError);
+        throw companyError;
+      }
+
+      if (!company) {
+        console.error("Empresa não encontrada para a URL:", formUrl);
         throw new Error("Formulário não encontrado ou inválido");
       }
+
+      console.log("Empresa encontrada:", company);
+      console.log("Buscando campos do formulário para a empresa:", company.id);
 
       const { data: formFields, error: fieldsError } = await supabase
         .from('enrollment_form_fields')
@@ -51,7 +62,12 @@ export function PublicEnrollment() {
         .eq('company_id', company.id)
         .order('order');
 
-      if (fieldsError) throw fieldsError;
+      if (fieldsError) {
+        console.error("Erro ao buscar campos do formulário:", fieldsError);
+        throw fieldsError;
+      }
+
+      console.log("Campos do formulário encontrados:", formFields);
 
       const validatedFields = (formFields || []).map(field => ({
         id: field.id,
@@ -66,7 +82,7 @@ export function PublicEnrollment() {
 
       setFields(validatedFields);
     } catch (error) {
-      console.error("Error loading form:", error);
+      console.error("Erro ao carregar formulário:", error);
       setError(error instanceof Error ? error.message : "Erro ao carregar formulário");
     } finally {
       setIsLoading(false);
@@ -79,11 +95,11 @@ export function PublicEnrollment() {
       const { data: companies, error: companiesError } = await supabase
         .from('companies')
         .select('id')
-        .eq('status', 'Ativa')
-        .limit(1)
-        .single();
+        .eq('enrollment_form_url', formUrl)
+        .maybeSingle();
 
       if (companiesError) throw companiesError;
+      if (!companies) throw new Error("Empresa não encontrada");
 
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
