@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Student } from "@/types/student";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StudentTableActions } from "./StudentTableActions";
 import { StudentInfoDialog } from "./StudentInfoDialog";
 import { useStudentTableState } from "./student/useStudentTableState";
@@ -35,6 +35,11 @@ export function StudentTable({
   const [showingInfo, setShowingInfo] = useState<Student | null>(null);
   const { localStudents, setLocalStudents } = useStudentTableState(students);
   const { toast } = useToast();
+
+  // Atualizar localStudents quando students mudar
+  useEffect(() => {
+    setLocalStudents(students);
+  }, [students, setLocalStudents]);
 
   const getRoomName = (roomId: string | undefined | null) => {
     if (!roomId) return "Sem sala";

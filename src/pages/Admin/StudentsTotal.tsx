@@ -4,8 +4,7 @@ import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { StudentTable } from "@/components/user/StudentTable";
+import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -31,7 +30,7 @@ const StudentsTotal = () => {
           id: student.id,
           name: student.name,
           birthDate: student.birth_date,
-          status: student.status,
+          status: student.status ?? true,
           email: student.email || '',
           document: student.document || '',
           address: student.address || '',
@@ -138,6 +137,13 @@ const StudentsTotal = () => {
   const studentsWithRoom = students.filter(student => student.room !== null);
   const studentsWithoutRoom = students.filter(student => student.room === null);
 
+  // Função para atualizar o estado local após edição
+  const handleStudentUpdate = (updatedStudent: Student) => {
+    setStudents(prev => prev.map(student => 
+      student.id === updatedStudent.id ? updatedStudent : student
+    ));
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -155,41 +161,23 @@ const StudentsTotal = () => {
           </TabsList>
           
           <TabsContent value="without-room">
-            <Card>
-              <CardContent className="pt-6">
-                <StudentTable 
-                  students={studentsWithoutRoom}
-                  rooms={rooms}
-                  onDeleteStudent={handleDeleteStudent}
-                  onTransferStudent={handleTransferStudent}
-                  showTransferOption={true}
-                />
-                {studentsWithoutRoom.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum aluno sem sala encontrado
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <StudentColumns 
+              studentsWithoutRoom={studentsWithoutRoom}
+              studentsWithRoom={[]}
+              rooms={rooms}
+              onDeleteStudent={handleDeleteStudent}
+              onTransferStudent={handleTransferStudent}
+            />
           </TabsContent>
           
           <TabsContent value="with-room">
-            <Card>
-              <CardContent className="pt-6">
-                <StudentTable 
-                  students={studentsWithRoom}
-                  rooms={rooms}
-                  onDeleteStudent={handleDeleteStudent}
-                  onTransferStudent={handleTransferStudent}
-                  showTransferOption={true}
-                />
-                {studentsWithRoom.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Nenhum aluno com sala encontrado
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+            <StudentColumns 
+              studentsWithoutRoom={[]}
+              studentsWithRoom={studentsWithRoom}
+              rooms={rooms}
+              onDeleteStudent={handleDeleteStudent}
+              onTransferStudent={handleTransferStudent}
+            />
           </TabsContent>
         </Tabs>
       </div>

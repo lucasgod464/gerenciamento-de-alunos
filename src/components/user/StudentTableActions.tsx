@@ -93,8 +93,8 @@ export function StudentTableActions({
         if (roomError) throw roomError;
       }
 
-      // Chamar o callback de atualização
-      await onEditClick(updatedStudent);
+      // Chamar o callback de atualização com o aluno atualizado
+      onEditClick(updatedStudent);
       
       // Fechar o modal
       setShowEditDialog(false);
