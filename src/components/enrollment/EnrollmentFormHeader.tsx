@@ -29,11 +29,7 @@ export const EnrollmentFormHeader = () => {
         }
       } catch (error) {
         console.error("Error loading company URL:", error);
-        toast({
-          title: "Erro ao carregar URL",
-          description: "Não foi possível carregar a URL do formulário.",
-          variant: "destructive",
-        });
+        toast.error("Não foi possível carregar a URL do formulário.");
       }
     };
 
@@ -42,11 +38,7 @@ export const EnrollmentFormHeader = () => {
 
   const copyLink = () => {
     if (!enrollmentUrl) {
-      toast({
-        title: "URL não disponível",
-        description: "A URL do formulário ainda não foi configurada.",
-        variant: "destructive",
-      });
+      toast.error("A URL do formulário ainda não foi configurada.");
       return;
     }
 
