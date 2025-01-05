@@ -91,7 +91,7 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
                     dataKey={status}
                     position="center"
                     fill="#fff"
-                    formatter={(value: number) => `${value} ${value === 1 ? 'aluno' : 'alunos'}`}
+                    formatter={(value: number) => `${value} ${STATUS_LABELS[status as keyof typeof STATUS_LABELS]}`}
                   />
                 </Bar>
               ))}
