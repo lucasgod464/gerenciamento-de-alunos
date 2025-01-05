@@ -73,20 +73,18 @@ export const SystemReport = () => {
       const groupedData = data.reduce((acc, curr) => {
         const date = format(new Date(curr.date), 'dd/MM', { locale: ptBR });
         if (!acc[date]) {
-          acc[date] = { presenca: 0, faltas: 0 };
+          acc[date] = { presente: 0, ausente: 0, atrasado: 0, justificado: 0 };
         }
-        if (curr.status === 'present') {
-          acc[date].presenca++;
-        } else {
-          acc[date].faltas++;
-        }
+        acc[date][curr.status]++;
         return acc;
       }, {});
 
       return Object.entries(groupedData).map(([name, values]) => ({
         name,
-        presenca: values.presenca,
-        faltas: values.faltas,
+        presente: values.presente,
+        ausente: values.ausente,
+        atrasado: values.atrasado,
+        justificado: values.justificado
       }));
     },
   });
@@ -102,7 +100,7 @@ export const SystemReport = () => {
   const totalRooms = filteredRooms.length;
 
   const averageAttendance = attendanceData?.reduce((acc, curr) => 
-    acc + curr.presenca, 0) / (attendanceData?.length || 1);
+    acc + curr.presente, 0) / (attendanceData?.length || 1);
 
   const handleExportReport = () => {
     toast({
