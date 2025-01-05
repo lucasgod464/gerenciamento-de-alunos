@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole, Permission } from "@/types/auth";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 interface RoleGuardProps {
   children: ReactNode;
@@ -17,6 +17,12 @@ export function RoleGuard({
   requiredPermissions = [],
 }: RoleGuardProps) {
   const { user, can, isCompanyMember } = useAuth();
+  const location = useLocation();
+
+  // Permitir acesso público à rota de formulário
+  if (location.pathname.startsWith('/enrollment/')) {
+    return <>{children}</>;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
