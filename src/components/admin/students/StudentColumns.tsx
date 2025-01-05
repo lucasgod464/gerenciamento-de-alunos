@@ -1,4 +1,5 @@
 import { Student } from "@/types/student";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StudentSection } from "./StudentSection";
 
 interface StudentColumnsProps {
@@ -19,23 +20,33 @@ export const StudentColumns = ({
   onUpdateStudent,
 }: StudentColumnsProps) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <StudentSection
-        title="Alunos sem Sala"
-        students={studentsWithoutRoom}
-        rooms={rooms}
-        onDeleteStudent={onDeleteStudent}
-        onTransferStudent={onTransferStudent}
-        onUpdateStudent={onUpdateStudent}
-      />
-      <StudentSection
-        title="Alunos com Sala"
-        students={studentsWithRoom}
-        rooms={rooms}
-        onDeleteStudent={onDeleteStudent}
-        onTransferStudent={onTransferStudent}
-        onUpdateStudent={onUpdateStudent}
-      />
-    </div>
+    <Tabs defaultValue="without-room" className="w-full">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="without-room">Alunos sem Sala</TabsTrigger>
+        <TabsTrigger value="with-room">Alunos com Sala</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="without-room">
+        <StudentSection
+          title="Alunos sem Sala"
+          students={studentsWithoutRoom}
+          rooms={rooms}
+          onDeleteStudent={onDeleteStudent}
+          onTransferStudent={onTransferStudent}
+          onUpdateStudent={onUpdateStudent}
+        />
+      </TabsContent>
+      
+      <TabsContent value="with-room">
+        <StudentSection
+          title="Alunos com Sala"
+          students={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={onDeleteStudent}
+          onTransferStudent={onTransferStudent}
+          onUpdateStudent={onUpdateStudent}
+        />
+      </TabsContent>
+    </Tabs>
   );
 };
