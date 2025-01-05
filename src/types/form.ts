@@ -10,10 +10,9 @@ export interface FormField {
   label: string;
   type: FormFieldType;
   description?: string;
-  required: boolean;
+  required?: boolean;
   order: number;
   options?: string[];
-  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -40,12 +39,12 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   options: field.options?.map(opt => String(opt)) || [],
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id'> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description,
-  required: field.required,
+  required: field.required || false,
   order: field.order,
-  options: field.options?.map(opt => opt as Json) || [],
+  options: field.options as Json[] || [],
 });

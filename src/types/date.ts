@@ -1,9 +1,14 @@
 export interface DateRange {
-  from: Date;
-  to: Date;
+  start: Date;
+  end: Date;
 }
 
-export interface DateRangeWithOptionalTo {
+export interface DateRangeWithOptionalEnd {
+  start: Date;
+  end?: Date;
+}
+
+export interface DateRangeFromTo {
   from: Date;
-  to?: Date;
+  to: Date;
 }
