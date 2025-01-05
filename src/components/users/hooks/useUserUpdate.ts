@@ -18,6 +18,7 @@ export function useUserUpdate() {
 
     try {
       setLoading(true);
+      console.log('Updating user with specializations:', selectedSpecializations);
 
       const updateData = {
         name: formData.get('name')?.toString() || '',
@@ -55,18 +56,30 @@ export function useUserUpdate() {
       }
 
       // Update specializations
-      await supabase
+      console.log('Deleting existing specializations for user:', user.id);
+      const { error: deleteSpecError } = await supabase
         .from('user_specializations')
         .delete()
         .eq('user_id', user.id);
 
+      if (deleteSpecError) {
+        console.error('Error deleting specializations:', deleteSpecError);
+        throw deleteSpecError;
+      }
+
       if (selectedSpecializations.length > 0) {
-        await supabase
+        console.log('Inserting new specializations:', selectedSpecializations);
+        const { error: insertSpecError } = await supabase
           .from('user_specializations')
           .insert(selectedSpecializations.map(specId => ({
             user_id: user.id,
             specialization_id: specId
           })));
+
+        if (insertSpecError) {
+          console.error('Error inserting specializations:', insertSpecError);
+          throw insertSpecError;
+        }
       }
 
       // Update rooms

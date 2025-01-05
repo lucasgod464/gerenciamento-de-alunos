@@ -29,7 +29,7 @@ export function SpecializationSelectionFields({
   const { user: currentUser } = useAuth();
 
   useEffect(() => {
-    const fetchSpecializations = async () => {
+    const loadSpecializations = async () => {
       if (!currentUser?.companyId) return;
 
       const { data: specializationsData, error } = await supabase
@@ -40,15 +40,37 @@ export function SpecializationSelectionFields({
         .order('name');
 
       if (error) {
-        console.error('Error fetching specializations:', error);
+        console.error('Error loading specializations:', error);
         return;
       }
 
       setSpecializations(specializationsData);
     };
 
-    fetchSpecializations();
+    loadSpecializations();
   }, [currentUser?.companyId]);
+
+  // Carregar especializações do usuário quando o componente montar
+  useEffect(() => {
+    const loadUserSpecializations = async () => {
+      if (!defaultValues?.id) return;
+
+      const { data, error } = await supabase
+        .from('user_specializations')
+        .select('specialization_id')
+        .eq('user_id', defaultValues.id);
+
+      if (error) {
+        console.error('Error loading user specializations:', error);
+        return;
+      }
+
+      const specializationIds = data.map(item => item.specialization_id);
+      specializationIds.forEach(id => onSpecializationToggle(id));
+    };
+
+    loadUserSpecializations();
+  }, [defaultValues?.id, onSpecializationToggle]);
 
   const filteredSpecializations = specializations.filter(spec =>
     spec.name.toLowerCase().includes(searchTerm.toLowerCase())
