@@ -47,29 +47,30 @@ export const AttendanceControl = () => {
 
   useEffect(() => {
     const checkAttendance = async () => {
-      if (!user?.companyId || !selectedDate) return;
+      if (!user?.companyId || !selectedDate || !selectedRoom) return;
 
       const formattedDate = formatDate(selectedDate);
       
-      const { data, error } = await supabase
-        .from('daily_attendance')
-        .select('id')
-        .eq('date', formattedDate)
-        .eq('company_id', user.companyId)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase
+          .from('daily_attendance')
+          .select('id')
+          .eq('date', formattedDate)
+          .eq('company_id', user.companyId)
+          .eq('room_id', selectedRoom);
 
-      if (error) {
+        if (error) throw error;
+
+        const hasData = data && data.length > 0;
+        setHasAttendance(hasData);
+        setIsStarted(hasData);
+      } catch (error) {
         console.error('Erro ao verificar chamada:', error);
-        return;
       }
-
-      const hasData = !!data;
-      setHasAttendance(hasData);
-      setIsStarted(hasData);
     };
 
     checkAttendance();
-  }, [selectedDate, user?.companyId]);
+  }, [selectedDate, selectedRoom, user?.companyId]);
 
   const handleStartAttendance = async () => {
     if (!user?.companyId) return;
@@ -82,7 +83,8 @@ export const AttendanceControl = () => {
           .from('daily_attendance')
           .delete()
           .eq('date', formattedDate)
-          .eq('company_id', user.companyId);
+          .eq('company_id', user.companyId)
+          .eq('room_id', selectedRoom);
 
         if (error) throw error;
 
