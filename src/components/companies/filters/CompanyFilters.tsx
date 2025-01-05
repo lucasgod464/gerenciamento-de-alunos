@@ -17,17 +17,17 @@ export function CompanyFilters({
   return (
     <div className="flex gap-4 justify-end mb-4">
       <Input
-        placeholder="Buscar empresa..."
+        placeholder="Buscar empresa por nome, documento ou ID..."
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
         className="max-w-xs"
       />
       <Select value={statusFilter} onValueChange={onStatusFilterChange}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filtrar por status" />
+          <SelectValue placeholder="Todos Status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todas</SelectItem>
+          <SelectItem value="all">Todos Status</SelectItem>
           <SelectItem value="active">Ativas</SelectItem>
           <SelectItem value="inactive">Inativas</SelectItem>
         </SelectContent>
