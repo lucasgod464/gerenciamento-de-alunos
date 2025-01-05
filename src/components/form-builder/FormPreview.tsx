@@ -51,59 +51,80 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
     zIndex: isDragging ? 1 : 0,
   };
 
-  // Se for um campo do sistema, não exibimos o card
-  if (isSystemField) {
-    return null;
-  }
-
   return (
     <div ref={setNodeRef} style={style} className="mb-4">
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button
-              className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
-              {...attributes}
-              {...listeners}
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </button>
+            {!isSystemField && (
+              <button
+                className="cursor-grab touch-none hover:text-primary transition-colors duration-200"
+                {...attributes}
+                {...listeners}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
+                {isSystemField && (
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                )}
                 <h3 className="font-medium">{field.label}</h3>
               </div>
-              {field.description && (
+              {isSystemField ? (
                 <p className="text-sm text-muted-foreground">
-                  {field.description}
+                  Campo padrão do sistema
                 </p>
+              ) : (
+                <>
+                  {field.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {field.description}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Tipo: {field.type}
+                    {(field.type === "select" || field.type === "multiple") && field.options && (
+                      <span className="ml-2">
+                        (Opções: {field.options.join(", ")})
+                      </span>
+                    )}
+                  </p>
+                </>
               )}
-              <p className="text-sm text-muted-foreground">
-                Tipo: {field.type}
-                {(field.type === "select" || field.type === "multiple") && field.options && (
-                  <span className="ml-2">
-                    (Opções: {field.options.join(", ")})
-                  </span>
-                )}
-              </p>
             </div>
           </div>
           <div className="flex space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onEdit(field)}
-              className="hover:bg-blue-50 hover:text-blue-600"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onDelete(field.id)}
-              className="hover:bg-red-50 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isSystemField ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-400 cursor-not-allowed"
+                disabled
+              >
+                <Lock className="h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(field)}
+                  className="hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onDelete(field.id)}
+                  className="hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </Card>
@@ -137,6 +158,15 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
     }
   };
 
+  // Ordenar campos para mostrar campos do sistema primeiro
+  const orderedFields = [...fields].sort((a, b) => {
+    const aIsSystem = systemFields.includes(a.id);
+    const bIsSystem = systemFields.includes(b.id);
+    if (aIsSystem && !bIsSystem) return -1;
+    if (!aIsSystem && bIsSystem) return 1;
+    return 0;
+  });
+
   return (
     <div className="space-y-4">
       <DndContext
@@ -145,10 +175,10 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={fields.map(f => f.id)}
+          items={orderedFields.map(f => f.id)}
           strategy={verticalListSortingStrategy}
         >
-          {fields.map((field) => (
+          {orderedFields.map((field) => (
             <SortableFieldCard
               key={field.id}
               field={field}
