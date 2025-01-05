@@ -58,7 +58,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
         studentId,
         status
       });
-      
+
       // Primeiro deleta qualquer registro existente para esta data/aluno
       await supabase
         .from('daily_attendance')
