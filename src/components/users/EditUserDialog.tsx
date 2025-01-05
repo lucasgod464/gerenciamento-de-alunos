@@ -34,6 +34,7 @@ export function EditUserDialog({
     if (user && open) {
       setSelectedTags(user.tags || []);
       setSelectedRooms(user.authorizedRooms?.map(room => room.id) || []);
+      
       // Carregar especializações do usuário
       const loadUserSpecializations = async () => {
         const { data, error } = await supabase
@@ -94,12 +95,14 @@ export function EditUserDialog({
         .eq('user_id', user.id);
 
       if (selectedSpecializations.length > 0) {
-        await supabase
+        const { error: specError } = await supabase
           .from('user_specializations')
           .insert(selectedSpecializations.map(specId => ({
             user_id: user.id,
             specialization_id: specId
           })));
+          
+        if (specError) throw specError;
       }
 
       // Update rooms
@@ -137,7 +140,7 @@ export function EditUserDialog({
           id: room.id, 
           name: room.name 
         })) || [],
-        specializations: specializationsResponse.data || []
+        specialization: updateData.specialization
       };
 
       toast({
