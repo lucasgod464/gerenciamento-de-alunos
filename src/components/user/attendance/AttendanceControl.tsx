@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AttendanceList } from "./AttendanceList";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateUtils";
+import { CalendarRange, School2 } from "lucide-react";
 
 interface Room {
   id: string;
@@ -122,42 +123,44 @@ export const AttendanceControl = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
+        <Card className="bg-white shadow-sm overflow-hidden">
+          <CardContent className="p-6">
             <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Data</h3>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border bg-white"
-                />
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarRange className="h-5 w-5 text-blue-500" />
+                <h3 className="font-medium text-gray-700">Selecione a Data</h3>
               </div>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md border bg-white"
+              />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
+          <CardContent className="p-6">
             <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
-                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione uma sala" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((room) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 mb-4">
+                <School2 className="h-5 w-5 text-blue-500" />
+                <h3 className="font-medium text-gray-700">Selecione a Sala</h3>
               </div>
+              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Selecione uma sala" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Button 
-                className="w-full"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
                 onClick={handleStartAttendance}
                 disabled={!selectedRoom || !selectedDate}
               >
@@ -169,16 +172,18 @@ export const AttendanceControl = () => {
       </div>
 
       {isStarted && (
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
-            <AttendanceList
-              date={selectedDate}
-              roomId={selectedRoom}
-              companyId={user?.companyId || ''}
-              onAttendanceSaved={() => setHasAttendance(true)}
-            />
-          </CardContent>
-        </Card>
+        <div className="animate-fade-in">
+          <Card className="bg-white shadow-sm">
+            <CardContent className="p-6">
+              <AttendanceList
+                date={selectedDate}
+                roomId={selectedRoom}
+                companyId={user?.companyId || ''}
+                onAttendanceSaved={() => setHasAttendance(true)}
+              />
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
