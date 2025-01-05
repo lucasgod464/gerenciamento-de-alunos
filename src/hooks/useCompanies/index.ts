@@ -1,12 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
 import { fetchCompanies } from "./queries";
 import { createCompany, updateCompany, deleteCompany } from "./mutations";
-import { Company } from "@/components/companies/CompanyList";
+import { toast } from "@/components/ui/use-toast";
 
 export function useCompanies() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const { data: companies = [], isLoading } = useQuery({
     queryKey: ["companies"],
@@ -22,15 +20,6 @@ export function useCompanies() {
         description: "A empresa foi criada com sucesso.",
       });
     },
-    onError: (error: Error) => {
-      if (error.message !== "Empresa já existe") {
-        toast({
-          title: "Erro ao criar empresa",
-          description: "Ocorreu um erro ao criar a empresa.",
-          variant: "destructive",
-        });
-      }
-    }
   });
 
   const updateMutation = useMutation({

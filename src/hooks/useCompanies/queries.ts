@@ -3,7 +3,8 @@ import { Company } from "@/components/companies/CompanyList";
 
 export async function fetchCompanies() {
   console.log("Fetching companies from Supabase");
-  const { data, error } = await supabase
+  
+  const { data: companiesData, error: companiesError } = await supabase
     .from("companies")
     .select(`
       *,
@@ -11,12 +12,12 @@ export async function fetchCompanies() {
       rooms:rooms(count)
     `);
   
-  if (error) {
-    console.error("Error fetching companies:", error);
-    throw error;
+  if (companiesError) {
+    console.error("Error fetching companies:", companiesError);
+    throw companiesError;
   }
 
-  return data.map(company => ({
+  return companiesData.map(company => ({
     id: company.id,
     name: company.name,
     document: company.document,

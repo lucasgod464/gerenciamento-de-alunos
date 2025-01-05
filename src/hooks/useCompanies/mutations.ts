@@ -2,38 +2,44 @@ import { supabase } from "@/integrations/supabase/client";
 import { Company } from "@/components/companies/CompanyList";
 import { toast } from "@/components/ui/use-toast";
 
-export async function updateCompany(company: Company) {
-  console.log("Updating company:", company);
-
-  // Verificar limites antes de atualizar
-  const { data: currentData } = await supabase
+export async function updateCompany(updatedCompany: Company) {
+  console.log("Updating company:", updatedCompany);
+  
+  // Primeiro busca os dados atuais da empresa
+  const { data: currentData, error: countError } = await supabase
     .from("companies")
     .select(`
       *,
       emails:emails(count),
       rooms:rooms(count)
     `)
-    .eq("id", company.id)
+    .eq("id", updatedCompany.id)
     .single();
 
-  if (!currentData) {
-    throw new Error("Empresa não encontrada");
+  if (countError) {
+    console.error("Error getting company counts:", countError);
+    throw countError;
   }
 
   const { data, error } = await supabase
     .from("companies")
     .update({
-      name: company.name,
-      users_limit: company.usersLimit,
-      rooms_limit: company.roomsLimit,
-      status: company.status,
+      name: updatedCompany.name,
+      users_limit: updatedCompany.usersLimit,
+      rooms_limit: updatedCompany.roomsLimit,
+      status: updatedCompany.status,
     })
-    .eq("id", company.id)
+    .eq("id", updatedCompany.id)
     .select()
     .single();
 
   if (error) {
     console.error("Error updating company:", error);
+    toast({
+      title: "Erro ao atualizar empresa",
+      description: "Verifique se você tem permissão para atualizar empresas.",
+      variant: "destructive",
+    });
     throw error;
   }
 
@@ -61,6 +67,11 @@ export async function deleteCompany(id: string) {
 
   if (error) {
     console.error("Error deleting company:", error);
+    toast({
+      title: "Erro ao deletar empresa",
+      description: "Verifique se você tem permissão para deletar empresas.",
+      variant: "destructive",
+    });
     throw error;
   }
 
@@ -68,22 +79,7 @@ export async function deleteCompany(id: string) {
 }
 
 export async function createCompany(newCompany: Omit<Company, "id" | "createdAt">) {
-  // Verificar se a empresa já existe pelo documento
-  const { data: existingCompany } = await supabase
-    .from("companies")
-    .select()
-    .eq("document", newCompany.document)
-    .single();
-
-  if (existingCompany) {
-    toast({
-      title: "Erro ao criar empresa",
-      description: "Já existe uma empresa com este documento.",
-      variant: "destructive",
-    });
-    throw new Error("Empresa já existe");
-  }
-
+  console.log("Creating new company:", newCompany);
   const { data, error } = await supabase
     .from("companies")
     .insert([{
@@ -95,11 +91,20 @@ export async function createCompany(newCompany: Omit<Company, "id" | "createdAt"
       public_folder_path: newCompany.publicFolderPath,
       storage_used: 0,
     }])
-    .select()
+    .select(`
+      *,
+      emails:emails(count),
+      rooms:rooms(count)
+    `)
     .single();
 
   if (error) {
     console.error("Error creating company:", error);
+    toast({
+      title: "Erro ao criar empresa",
+      description: "Verifique se você tem permissão para criar empresas.",
+      variant: "destructive",
+    });
     throw error;
   }
 
@@ -108,9 +113,9 @@ export async function createCompany(newCompany: Omit<Company, "id" | "createdAt"
     name: data.name,
     document: data.document,
     usersLimit: data.users_limit,
-    currentUsers: 0,
+    currentUsers: data.emails?.count || 0,
     roomsLimit: data.rooms_limit,
-    currentRooms: 0,
+    currentRooms: data.rooms?.count || 0,
     status: data.status,
     createdAt: new Date(data.created_at).toLocaleDateString(),
     publicFolderPath: data.public_folder_path,
