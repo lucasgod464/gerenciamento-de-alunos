@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { FormField } from "@/types/form";
-import { useToast } from "@/hooks/use-toast";
+import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
-import { mapSupabaseFormField, mapFormFieldToSupabase } from "@/types/form";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export const defaultFields: FormField[] = [
   {
@@ -12,6 +12,7 @@ export const defaultFields: FormField[] = [
     type: "text",
     required: true,
     order: 0,
+    isDefault: true,
   },
   {
     id: "data_nascimento",
@@ -20,6 +21,7 @@ export const defaultFields: FormField[] = [
     type: "date",
     required: true,
     order: 1,
+    isDefault: true,
   },
   {
     id: "sala",
@@ -28,6 +30,7 @@ export const defaultFields: FormField[] = [
     type: "select",
     required: true,
     order: 2,
+    isDefault: true,
   },
   {
     id: "status",
@@ -36,12 +39,14 @@ export const defaultFields: FormField[] = [
     type: "select",
     required: true,
     order: 3,
-    options: ["Ativo", "Inativo"]
+    options: ["Ativo", "Inativo"],
+    isDefault: true,
   }
 ];
 
 export const useFormBuilder = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [fields, setFields] = useState<FormField[]>(defaultFields);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
@@ -55,10 +60,8 @@ export const useFormBuilder = () => {
 
       if (error) throw error;
 
-      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
-      const mergedFields = [...defaultFields, ...mappedCustomFields];
-      
-      setFields(mergedFields);
+      const mappedFields = (customFields || []).map(mapSupabaseFormField);
+      setFields([...defaultFields, ...mappedFields]);
     } catch (error) {
       console.error("Error loading form fields:", error);
       toast({
@@ -71,28 +74,34 @@ export const useFormBuilder = () => {
 
   const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
+      if (!user?.companyId) {
+        throw new Error("Usuário não está vinculado a uma empresa");
+      }
+
       const supabaseField = mapFormFieldToSupabase(field);
       const newField = {
         ...supabaseField,
+        company_id: user.companyId,
         order: fields.length,
       };
 
       const { data, error } = await supabase
         .from('admin_form_fields')
         .insert([newField])
-        .select()
-        .single();
+        .select();
 
       if (error) throw error;
 
-      const mappedField = mapSupabaseFormField(data);
-      setFields(prev => [...prev, mappedField]);
-      setIsAddingField(false);
-      
-      toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso.",
-      });
+      if (data && data[0]) {
+        const mappedField = mapSupabaseFormField(data[0]);
+        setFields(prev => [...prev, mappedField]);
+        setIsAddingField(false);
+        
+        toast({
+          title: "Campo adicionado",
+          description: "O novo campo foi adicionado com sucesso.",
+        });
+      }
     } catch (error) {
       console.error("Error adding field:", error);
       toast({
@@ -115,7 +124,7 @@ export const useFormBuilder = () => {
           order: editingField.order,
         })
         .eq('id', editingField.id)
-        .select(); // Removido o .single() para evitar o erro de stream
+        .select();
 
       if (error) throw error;
 
