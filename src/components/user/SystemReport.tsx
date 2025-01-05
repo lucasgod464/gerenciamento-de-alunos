@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
   BarChart,
@@ -21,19 +14,21 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { FileSpreadsheet, Download, Users, School, Calendar } from "lucide-react";
+import { FileSpreadsheet, Users, School, Calendar } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { RoomSelector } from "./reports/RoomSelector";
 
 export const SystemReport = () => {
   const [reportType, setReportType] = useState("attendance");
   const [timeFrame, setTimeFrame] = useState("month");
+  const [selectedRoom, setSelectedRoom] = useState("all");
   const { toast } = useToast();
   const { user } = useAuth();
 
   // Buscar salas autorizadas do usuário
-  const { data: authorizedRooms } = useQuery({
+  const { data: authorizedRooms = [] } = useQuery({
     queryKey: ["authorized-rooms", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -60,14 +55,20 @@ export const SystemReport = () => {
 
   // Buscar dados de presença
   const { data: attendanceData } = useQuery({
-    queryKey: ["attendance-data", user?.id, timeFrame],
+    queryKey: ["attendance-data", user?.id, timeFrame, selectedRoom],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from("daily_attendance")
         .select("*")
         .in("room_id", authorizedRooms?.map(room => room.id) || []);
+
+      if (selectedRoom !== "all") {
+        query = query.eq("room_id", selectedRoom);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -95,10 +96,14 @@ export const SystemReport = () => {
   });
 
   // Calcular estatísticas gerais
-  const totalStudents = authorizedRooms?.reduce((acc, room) => 
-    acc + (room.room_students?.length || 0), 0) || 0;
+  const filteredRooms = selectedRoom === "all" 
+    ? authorizedRooms 
+    : authorizedRooms.filter(room => room.id === selectedRoom);
 
-  const totalRooms = authorizedRooms?.length || 0;
+  const totalStudents = filteredRooms.reduce((acc, room) => 
+    acc + (room.room_students?.length || 0), 0);
+
+  const totalRooms = filteredRooms.length;
 
   const averageAttendance = attendanceData?.reduce((acc, curr) => 
     acc + curr.presenca, 0) / (attendanceData?.length || 1);
@@ -116,26 +121,11 @@ export const SystemReport = () => {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex gap-4">
-          <Select value={reportType} onValueChange={setReportType}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Tipo de Relatório" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="attendance">Relatório de Presença</SelectItem>
-              <SelectItem value="students">Relatório de Alunos</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={timeFrame} onValueChange={setTimeFrame}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Período" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Última Semana</SelectItem>
-              <SelectItem value="month">Último Mês</SelectItem>
-              <SelectItem value="quarter">Último Trimestre</SelectItem>
-            </SelectContent>
-          </Select>
+          <RoomSelector
+            rooms={authorizedRooms}
+            selectedRoom={selectedRoom}
+            onRoomChange={setSelectedRoom}
+          />
         </div>
 
         <Button variant="outline" onClick={handleExportReport}>
@@ -180,7 +170,7 @@ export const SystemReport = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={authorizedRooms?.map(room => ({
+                    data={filteredRooms.map(room => ({
                       name: room.name,
                       value: room.room_students?.length || 0
                     }))}
@@ -191,7 +181,7 @@ export const SystemReport = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {authorizedRooms?.map((_, index) => (
+                    {filteredRooms.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
