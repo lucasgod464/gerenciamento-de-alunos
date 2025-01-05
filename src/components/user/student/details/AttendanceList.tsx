@@ -38,18 +38,15 @@ export function AttendanceList({ attendance }: AttendanceListProps) {
   };
 
   return (
-    <div>
-      <h4 className="font-medium mb-2">Registro Detalhado</h4>
-      <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
-        {attendance.map((record) => (
-          <div
-            key={record.id}
-            className={`px-3 py-2 rounded-md ${getStatusColor(record.status)}`}
-          >
-            {new Date(record.date).toLocaleDateString('pt-BR')}: {getStatusText(record.status)}
-          </div>
-        ))}
-      </div>
+    <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
+      {attendance.map((record) => (
+        <div
+          key={record.id}
+          className={`px-3 py-2 rounded-md ${getStatusColor(record.status)}`}
+        >
+          {new Date(record.date).toLocaleDateString('pt-BR')}: {getStatusText(record.status)}
+        </div>
+      ))}
     </div>
   );
 }
