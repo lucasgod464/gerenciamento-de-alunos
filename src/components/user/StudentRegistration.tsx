@@ -67,13 +67,25 @@ export const StudentRegistration = () => {
 
   const handleDeleteStudent = async (id: string) => {
     try {
-      // Primeiro, remover as relações na tabela room_students
+      // Primeiro, remover registros de presença
+      await supabase
+        .from('daily_attendance')
+        .delete()
+        .eq('student_id', id);
+
+      // Depois, remover as relações na tabela room_students
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', id);
 
-      // Depois, remover o aluno
+      // Por fim, remover as observações diárias
+      await supabase
+        .from('daily_observations')
+        .delete()
+        .eq('student_id', id);
+
+      // Finalmente, remover o aluno
       const { error } = await supabase
         .from('students')
         .delete()
@@ -91,7 +103,7 @@ export const StudentRegistration = () => {
       console.error('Erro ao deletar aluno:', error);
       toast({
         title: "Erro ao remover aluno",
-        description: "Não foi possível remover o aluno.",
+        description: error.message || "Não foi possível remover o aluno.",
         variant: "destructive",
       });
     }
