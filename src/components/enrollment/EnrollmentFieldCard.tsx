@@ -13,11 +13,6 @@ interface FieldCardProps {
 }
 
 export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: FieldCardProps) => {
-  // Hide "sala" and "status" fields
-  if (field.name === "sala" || field.name === "status") {
-    return null;
-  }
-
   const {
     attributes,
     listeners,
