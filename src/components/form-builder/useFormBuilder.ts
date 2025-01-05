@@ -122,9 +122,9 @@ export const useFormBuilder = () => {
         .update({
           ...supabaseField,
           order: editingField.order,
+          company_id: user?.companyId,
         })
-        .eq('id', editingField.id)
-        .select();
+        .eq('id', editingField.id);
 
       if (error) throw error;
 
