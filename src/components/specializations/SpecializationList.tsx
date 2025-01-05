@@ -30,16 +30,16 @@ export const SpecializationList = ({
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/50">
-            <TableHead className="w-[400px]">Nome</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="w-[400px] text-left">Nome</TableHead>
+            <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {specializations.map((spec) => (
             <TableRow key={spec.id} className="hover:bg-muted/50">
-              <TableCell className="font-medium">{spec.name}</TableCell>
-              <TableCell>
+              <TableCell className="text-left">{spec.name}</TableCell>
+              <TableCell className="text-left">
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={spec.status}
