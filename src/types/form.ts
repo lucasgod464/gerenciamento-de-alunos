@@ -1,5 +1,3 @@
-import { Json } from "@/types/supabase";
-
 export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
 
 export interface FormField {
@@ -11,6 +9,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
+  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -21,9 +20,9 @@ export interface SupabaseFormField {
   description?: string;
   required: boolean;
   order: number;
-  options: string[] | null;
-  company_id?: string;
-  created_at?: string;
+  options?: string[];
+  company_id: string;
+  created_at: string;
 }
 
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
@@ -34,5 +33,16 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options || undefined,
+  options: field.options,
+});
+
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+  name: field.name,
+  label: field.label,
+  type: field.type,
+  description: field.description,
+  required: field.required,
+  order: field.order,
+  options: field.options,
+  company_id: '', // Será preenchido no hook
 });

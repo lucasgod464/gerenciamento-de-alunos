@@ -9,7 +9,6 @@ import { CustomSelectField } from "./student/form-fields/CustomSelectField";
 import { CustomMultipleField } from "./student/form-fields/CustomMultipleField";
 import { useToast } from "@/hooks/use-toast";
 import { BasicInfoFields } from "./student/form/BasicInfoFields";
-import { useCustomFields } from "@/hooks/useCustomFields";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -27,11 +26,32 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     return initialData || {};
   });
   
-  const { fields: customFields } = useCustomFields();
+  const [customFields, setCustomFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
+    const loadCustomFields = async () => {
+      const { data: fields } = await supabase
+        .from('admin_form_fields')
+        .select('*')
+        .order('order');
+      
+      if (fields) {
+        const mappedFields = fields.map(field => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type as FormField['type'],
+          description: field.description || undefined,
+          required: field.required || false,
+          order: field.order,
+          options: field.options as string[] | undefined,
+        }));
+        setCustomFields(mappedFields);
+      }
+    };
+
     const loadRooms = async () => {
       const { data: roomsData } = await supabase
         .from('rooms')
@@ -43,6 +63,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       }
     };
 
+    loadCustomFields();
     loadRooms();
   }, []);
 
@@ -90,6 +111,31 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     }
   };
 
+  const renderCustomField = (field: FormField) => {
+    const currentValue = formData.customFields?.[field.id]?.value || "";
+
+    const commonProps = {
+      key: field.id,
+      field: field,
+      value: currentValue,
+      onChange: (newValue: any) => handleCustomFieldChange(field, newValue)
+    };
+
+    switch (field.type) {
+      case "text":
+      case "email":
+        return <CustomTextField {...commonProps} />;
+      case "tel":
+        return <CustomPhoneField {...commonProps} />;
+      case "select":
+        return <CustomSelectField {...commonProps} />;
+      case "multiple":
+        return <CustomMultipleField {...commonProps} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <BasicInfoFields 
@@ -100,7 +146,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
 
       {customFields.map((field) => (
         <div key={`field-wrapper-${field.id}`}>
-          {renderCustomField(field, formData.customFields?.[field.id]?.value || "", handleCustomFieldChange)}
+          {renderCustomField(field)}
         </div>
       ))}
 
@@ -109,31 +155,4 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       </Button>
     </form>
   );
-};
-
-const renderCustomField = (
-  field: FormField,
-  value: any,
-  onChange: (field: FormField, value: any) => void
-) => {
-  const commonProps = {
-    key: field.id,
-    field: field,
-    value: value,
-    onChange: (newValue: any) => onChange(field, newValue)
-  };
-
-  switch (field.type) {
-    case "text":
-    case "email":
-      return <CustomTextField {...commonProps} />;
-    case "tel":
-      return <CustomPhoneField {...commonProps} />;
-    case "select":
-      return <CustomSelectField {...commonProps} />;
-    case "multiple":
-      return <CustomMultipleField {...commonProps} />;
-    default:
-      return null;
-  }
 };
