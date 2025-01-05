@@ -63,12 +63,11 @@ export const AttendanceControl = () => {
           .select('id')
           .eq('date', formattedDate)
           .eq('company_id', user.companyId)
-          .eq('room_id', selectedRoom)
-          .single();
+          .eq('room_id', selectedRoom);
 
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error) throw error;
 
-        const hasData = !!data;
+        const hasData = data && data.length > 0;
         setHasAttendance(hasData);
         setIsStarted(hasData);
       } catch (error) {
