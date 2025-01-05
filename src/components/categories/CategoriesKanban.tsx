@@ -31,7 +31,23 @@ export const CategoriesKanban = ({
         
         const { data: roomsData, error } = await supabase
           .from('rooms')
-          .select('*')
+          .select(`
+            *,
+            room_students (
+              student:students (
+                id,
+                name,
+                birth_date,
+                status,
+                email,
+                document,
+                address,
+                custom_fields,
+                company_id,
+                created_at
+              )
+            )
+          `)
           .eq('company_id', companyId);
 
         if (error) {
@@ -56,7 +72,7 @@ export const CategoriesKanban = ({
           companyId: room.company_id,
           studyRoom: room.study_room || '',
           createdAt: room.created_at,
-          students: []
+          students: room.room_students?.map(rs => rs.student) || []
         }));
 
         console.log('Transformed rooms:', transformedRooms);

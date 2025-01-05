@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Category } from "@/types/category";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
   SelectContent,
@@ -41,10 +40,6 @@ export const CategoryColumn = ({
 
   const getTotalStudents = () => {
     return rooms.reduce((total, room) => total + (room.students?.length || 0), 0);
-  };
-
-  const getStudentsCount = (room: Room) => {
-    return room.students?.length || 0;
   };
 
   const handleTransferRooms = (targetCategoryId: string) => {
@@ -167,10 +162,9 @@ export const CategoryColumn = ({
             <RoomCard
               key={room.id}
               room={room}
-              isSelected={selectedRooms.includes(room.id)}
               companyId={currentUser?.companyId || ""}
-              onToggleSelection={toggleRoomSelection}
-              getStudentsCount={getStudentsCount}
+              onSelect={() => toggleRoomSelection(room.id)}
+              selected={selectedRooms.includes(room.id)}
             />
           ))}
         </div>

@@ -21,6 +21,27 @@ const Categories = () => {
   useEffect(() => {
     if (!currentUser?.companyId) return;
     fetchCategories();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel('categories-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'categories',
+          filter: `company_id=eq.${currentUser.companyId}`
+        },
+        () => {
+          fetchCategories();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUser]);
 
   const fetchCategories = async () => {
@@ -32,7 +53,6 @@ const Categories = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our Category type
       const transformedData: Category[] = (data || []).map(item => ({
         id: item.id,
         name: item.name,
@@ -174,7 +194,7 @@ const Categories = () => {
           </div>
 
           <CategoriesKanban 
-            categories={categories}
+            categories={filteredCategories}
             companyId={currentUser?.companyId || null}
             onEditCategory={handleEditCategory}
             onDeleteCategory={handleDeleteCategory}

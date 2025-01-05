@@ -66,7 +66,7 @@ export function CategoryDialog({
   };
 
   const handleColorPickerClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Impede que o clique se propague para elementos pai
+    e.stopPropagation();
   };
 
   return (
@@ -107,7 +107,7 @@ export function CategoryDialog({
               <Popover 
                 open={showColorPicker} 
                 onOpenChange={setShowColorPicker}
-                modal={true} // Força o popover a ser modal
+                modal={true}
               >
                 <PopoverTrigger asChild>
                   <button
@@ -129,7 +129,6 @@ export function CategoryDialog({
                   className="w-auto p-3" 
                   onClick={handleColorPickerClick}
                   onPointerDownOutside={(e) => {
-                    // Previne o fechamento ao clicar dentro do color picker
                     if (e.target instanceof Element && 
                         (e.target.closest('.react-colorful') || 
                          e.target.closest('input'))) {

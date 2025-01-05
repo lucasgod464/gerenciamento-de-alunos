@@ -1,80 +1,39 @@
 import { Room } from "@/types/room";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { School, Users, Clock, MapPin } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { AuthorizedUsersList } from "./AuthorizedUsersList";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface RoomCardProps {
   room: Room;
-  isSelected: boolean;
   companyId: string;
-  onToggleSelection: (roomId: string) => void;
-  getStudentsCount: (room: Room) => number;
+  selected: boolean;
+  onSelect: () => void;
 }
 
 export const RoomCard = ({
   room,
-  isSelected,
-  companyId,
-  onToggleSelection,
-  getStudentsCount,
+  selected,
+  onSelect
 }: RoomCardProps) => {
   return (
-    <Card 
-      className={`bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors cursor-pointer ${
-        isSelected ? 'ring-2 ring-primary' : ''
-      }`}
-      onClick={() => onToggleSelection(room.id)}
+    <Card
+      className={cn(
+        "p-3 cursor-pointer transition-all duration-200",
+        selected ? "ring-2 ring-primary ring-offset-2" : "hover:shadow-md"
+      )}
+      onClick={onSelect}
     >
-      <CardHeader className="p-4">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <School className="h-4 w-4" />
-          {room.name}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-4">
+      <div className="flex justify-between items-start">
         <div>
-          <div className="flex items-center gap-2 text-sm mb-1">
-            <Users className="h-4 w-4" />
-            <span className="font-medium text-xs text-foreground/70">Usuários Vinculados</span>
-          </div>
-          <AuthorizedUsersList roomId={room.id} companyId={companyId} />
+          <h4 className="font-medium text-sm">{room.name}</h4>
+          <p className="text-xs text-muted-foreground">{room.schedule}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {room.students?.length || 0} alunos
+          </p>
         </div>
-        
-        <Separator className="my-2" />
-        
-        <div className="space-y-2">
-          <div>
-            <div className="flex items-center gap-2 text-sm mb-1">
-              <Users className="h-4 w-4" />
-              <span className="font-medium text-xs text-foreground/70">Total de Alunos</span>
-            </div>
-            <div className="pl-6 text-left">
-              <span className="text-sm">{getStudentsCount(room)} alunos</span>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 text-sm mb-1">
-              <Clock className="h-4 w-4" />
-              <span className="font-medium text-xs text-foreground/70">Horário</span>
-            </div>
-            <div className="pl-6 text-left">
-              <span className="text-sm">{room.schedule}</span>
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 text-sm mb-1">
-              <MapPin className="h-4 w-4" />
-              <span className="font-medium text-xs text-foreground/70">Local</span>
-            </div>
-            <div className="pl-6 text-left">
-              <span className="text-sm">{room.location}</span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
+        {room.location && (
+          <span className="text-xs text-muted-foreground">{room.location}</span>
+        )}
+      </div>
     </Card>
   );
 };
