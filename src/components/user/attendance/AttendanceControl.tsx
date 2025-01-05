@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AttendanceList } from "./AttendanceList";
-import { AttendanceChart } from "./AttendanceChart";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateUtils";
 
@@ -110,7 +109,7 @@ export const AttendanceControl = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-white shadow-sm">
           <CardContent className="pt-6">
             <div className="space-y-4">
@@ -153,16 +152,6 @@ export const AttendanceControl = () => {
                 {isStarted ? "Cancelar Chamada" : "Iniciar Chamada"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
-            <AttendanceChart 
-              data={[]} 
-              companyId={user?.companyId || ''} 
-              roomId={selectedRoom}
-            />
           </CardContent>
         </Card>
       </div>
