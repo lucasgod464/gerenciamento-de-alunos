@@ -1,39 +1,62 @@
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 import { Student } from "@/types/student";
 
 interface StudentSearchProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-  students: Student[];
   onSelectStudent: (student: Student) => void;
-  selectedStudent: Student | null;
 }
 
-export function StudentSearch({
-  searchTerm,
-  onSearchChange,
-  students,
-  onSelectStudent,
-  selectedStudent,
-}: StudentSearchProps) {
+export function StudentSearch({ onSelectStudent }: StudentSearchProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [students, setStudents] = useState<Student[]>([]);
+
+  useEffect(() => {
+    const searchStudents = async () => {
+      if (searchTerm.length < 3) {
+        setStudents([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .ilike('name', `%${searchTerm}%`)
+        .limit(5);
+
+      if (error) {
+        console.error('Erro ao buscar alunos:', error);
+        return;
+      }
+
+      setStudents(data || []);
+    };
+
+    searchStudents();
+  }, [searchTerm]);
+
   return (
-    <div>
+    <div className="space-y-2">
       <Input
+        type="text"
         placeholder="Digite o nome do aluno..."
         value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="w-full"
+        onChange={(e) => setSearchTerm(e.target.value)}
       />
-      {searchTerm.length >= 3 && students.length > 0 && !selectedStudent && (
-        <div className="mt-2 border rounded-md divide-y">
+      {students.length > 0 && (
+        <div className="bg-white border rounded-md shadow-sm">
           {students.map((student) => (
-            <div
+            <button
               key={student.id}
-              className="p-2 hover:bg-gray-50 cursor-pointer"
-              onClick={() => onSelectStudent(student)}
+              className="w-full px-4 py-2 text-left hover:bg-gray-100"
+              onClick={() => {
+                onSelectStudent(student);
+                setSearchTerm("");
+                setStudents([]);
+              }}
             >
               {student.name}
-            </div>
+            </button>
           ))}
         </div>
       )}
