@@ -68,7 +68,15 @@ export function UserTableRow({
         </div>
       </TableCell>
       <TableCell>{user.email}</TableCell>
-      <TableCell>{user.specialization || "Não definido"}</TableCell>
+      <TableCell>
+        {user.specialization ? (
+          <Badge variant="outline" className="font-normal">
+            {user.specialization}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground text-sm">Não definido</span>
+        )}
+      </TableCell>
       <TableCell>
         {authorizedRooms.length > 0 
           ? authorizedRooms.join(", ")
