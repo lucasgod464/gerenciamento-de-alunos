@@ -159,14 +159,14 @@ export function PublicEnrollment() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
+          <CardTitle className="text-left text-2xl font-bold">
             Formulário de Inscrição
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="nome_completo">
+              <Label htmlFor="nome_completo" className="text-left block">
                 Nome Completo
                 <span className="text-red-500 ml-1">*</span>
               </Label>
@@ -182,7 +182,7 @@ export function PublicEnrollment() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="data_nascimento">
+              <Label htmlFor="data_nascimento" className="text-left block">
                 Data de Nascimento
                 <span className="text-red-500 ml-1">*</span>
               </Label>
@@ -204,7 +204,7 @@ export function PublicEnrollment() {
 
               return (
                 <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.name}>
+                  <Label htmlFor={field.name} className="text-left block">
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
