@@ -5,9 +5,8 @@ import {
   Bar,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
-  Legend,
+  LabelList,
 } from "recharts";
 
 interface AttendanceData {
@@ -47,7 +46,7 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
-          Nenhum dado disponível para o período selecionado
+          Nenhum dado disponível
         </CardContent>
       </Card>
     );
@@ -76,23 +75,30 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
             <BarChart data={transformedData}>
               <CartesianGrid strokeDasharray="3 3" />
               <YAxis />
-              <Tooltip 
-                formatter={(value: number, name: string) => [
-                  `${value} alunos`,
-                  STATUS_LABELS[name as keyof typeof STATUS_LABELS] || name
-                ]}
-              />
-              <Legend 
-                formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] || value}
-              />
               {Object.entries(STATUS_COLORS).map(([status, color]) => (
                 <Bar
                   key={status}
                   dataKey={status}
                   fill={color}
-                  name={status}
+                  name={STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
                   radius={[4, 4, 0, 0]}
-                />
+                >
+                  <LabelList
+                    dataKey={status}
+                    position="center"
+                    content={({ value }) => (
+                      <text
+                        x={value as number}
+                        y={value as number}
+                        fill="#fff"
+                        textAnchor="middle"
+                        dy={-10}
+                      >
+                        {`${value} ${value === 1 ? 'aluno' : 'alunos'}`}
+                      </text>
+                    )}
+                  />
+                </Bar>
               ))}
             </BarChart>
           </ResponsiveContainer>
