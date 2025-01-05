@@ -2,18 +2,18 @@ import { useState, useEffect } from "react";
 import { FormField, mapSupabaseFormField, mapFormFieldToSupabase } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { defaultFields } from "./defaultFields";
 import { useAuth } from "@/hooks/useAuth";
+import { defaultFields } from "./defaultFields";
 
 export const useEnrollmentFields = () => {
-  const [fields, setFields] = useState<FormField[]>(defaultFields);
+  const [fields, setFields] = useState<FormField[]>([...defaultFields]);
   const { toast } = useToast();
   const { user } = useAuth();
 
   const loadFields = async () => {
     try {
       if (!user?.companyId) {
-        console.error("No company ID found");
+        console.error("Nenhuma empresa encontrada");
         return;
       }
 
@@ -23,18 +23,12 @@ export const useEnrollmentFields = () => {
         .eq('company_id', user.companyId)
         .order('order');
 
-      if (error) {
-        console.error("Error loading fields:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Loaded custom fields:", customFields);
-      const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
-      const mergedFields = [...defaultFields, ...mappedCustomFields];
-      
-      setFields(mergedFields);
+      const mappedFields = (customFields || []).map(mapSupabaseFormField);
+      setFields([...defaultFields, ...mappedFields]);
     } catch (error) {
-      console.error("Error loading enrollment fields:", error);
+      console.error("Erro ao carregar campos:", error);
       toast({
         title: "Erro ao carregar campos",
         description: "Não foi possível carregar os campos do formulário.",
