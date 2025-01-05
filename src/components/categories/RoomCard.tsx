@@ -24,49 +24,6 @@ export const RoomCard = ({
   onSelect
 }: RoomCardProps) => {
   const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
-  const [categoryColor, setCategoryColor] = useState<string>("#6b21a8"); // Cor roxa padrão
-
-  useEffect(() => {
-    const fetchCategoryColor = async () => {
-      try {
-        const { data: categoryData, error } = await supabase
-          .from('categories')
-          .select('color')
-          .eq('id', room.category)
-          .single();
-
-        if (error) throw error;
-        if (categoryData?.color) {
-          setCategoryColor(categoryData.color);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar cor da categoria:', error);
-      }
-    };
-
-    fetchCategoryColor();
-
-    // Inscreve-se para atualizações na categoria
-    const channel = supabase
-      .channel('category-color-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'categories',
-          filter: `id=eq.${room.category}`
-        },
-        () => {
-          fetchCategoryColor();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [room.category]);
 
   useEffect(() => {
     const fetchAuthorizedUsers = async () => {
@@ -111,13 +68,13 @@ export const RoomCard = ({
     >
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4" style={{ color: categoryColor }} />
+          <Building2 className="h-4 w-4 text-purple-600" />
           <h4 className="font-medium text-sm">{room.name}</h4>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4" style={{ color: categoryColor }} />
+            <Users className="h-4 w-4 text-purple-600" />
             <span className="text-sm text-muted-foreground">
               Usuários Vinculados ({authorizedUsers.length})
             </span>
@@ -140,7 +97,7 @@ export const RoomCard = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <GraduationCap className="h-4 w-4" style={{ color: categoryColor }} />
+          <GraduationCap className="h-4 w-4 text-purple-600" />
           <span className="text-sm text-muted-foreground">
             {room.students?.length || 0} alunos
           </span>
@@ -148,14 +105,14 @@ export const RoomCard = ({
 
         {room.schedule && (
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" style={{ color: categoryColor }} />
+            <Clock className="h-4 w-4 text-purple-600" />
             <span className="text-sm text-muted-foreground">{room.schedule}</span>
           </div>
         )}
 
         {room.location && (
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" style={{ color: categoryColor }} />
+            <MapPin className="h-4 w-4 text-purple-600" />
             <span className="text-sm text-muted-foreground">{room.location}</span>
           </div>
         )}
