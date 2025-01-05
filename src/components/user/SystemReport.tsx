@@ -9,11 +9,13 @@ import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
 import { StudentDistributionChart } from "./reports/StudentDistributionChart";
 import { GeneralStats } from "./reports/GeneralStats";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export const SystemReport = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
+  const [currentDate, setCurrentDate] = useState(new Date());
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -43,14 +45,14 @@ export const SystemReport = () => {
     },
   });
 
-  // Buscar dados de presença do mês atual
+  // Buscar dados de presença do mês selecionado
   const { data: attendanceData } = useQuery({
-    queryKey: ["attendance-data", user?.id, selectedRoom],
+    queryKey: ["attendance-data", user?.id, selectedRoom, currentDate],
     queryFn: async () => {
       if (!user?.id) return [];
       
-      const startDate = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-      const endDate = format(endOfMonth(new Date()), 'yyyy-MM-dd');
+      const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+      const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
       
       let query = supabase
         .from("daily_attendance")
@@ -69,23 +71,22 @@ export const SystemReport = () => {
 
       // Agrupar por data
       const groupedData = data.reduce((acc, curr) => {
-        const date = format(new Date(curr.date), 'MMMM', { locale: ptBR });
+        const date = format(new Date(curr.date), 'dd/MM', { locale: ptBR });
         if (!acc[date]) {
-          acc[date] = { presenca: 0, faltas: 0, total: 0 };
+          acc[date] = { presenca: 0, faltas: 0 };
         }
         if (curr.status === 'present') {
           acc[date].presenca++;
         } else {
           acc[date].faltas++;
         }
-        acc[date].total++;
         return acc;
       }, {});
 
       return Object.entries(groupedData).map(([name, values]) => ({
         name,
-        presenca: Math.round((values.presenca / values.total) * 100),
-        faltas: Math.round((values.faltas / values.total) * 100),
+        presenca: values.presenca,
+        faltas: values.faltas,
       }));
     },
   });
@@ -110,15 +111,42 @@ export const SystemReport = () => {
     });
   };
 
+  const handlePreviousMonth = () => {
+    setCurrentDate(prev => subMonths(prev, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(prev => addMonths(prev, 1));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
           <RoomSelector
             rooms={authorizedRooms}
             selectedRoom={selectedRoom}
             onRoomChange={setSelectedRoom}
           />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handlePreviousMonth}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="min-w-[120px] text-center">
+              {format(currentDate, 'MMMM/yyyy', { locale: ptBR })}
+            </span>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={handleNextMonth}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         <Button variant="outline" onClick={handleExportReport}>

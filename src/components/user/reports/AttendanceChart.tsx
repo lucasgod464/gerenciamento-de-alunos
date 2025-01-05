@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 interface AttendanceChartProps {
@@ -34,17 +35,20 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip />
+              <Tooltip 
+                formatter={(value: number) => [`${value} alunos`, '']}
+              />
+              <Legend />
               <Bar 
                 dataKey="presenca" 
                 fill="#22c55e" 
-                name="Presença %" 
+                name="Presenças" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
                 dataKey="faltas" 
                 fill="#ef4444" 
-                name="Faltas %" 
+                name="Faltas" 
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
