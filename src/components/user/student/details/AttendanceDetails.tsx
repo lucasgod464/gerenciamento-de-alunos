@@ -3,8 +3,9 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, subDays, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CircleCheck, CircleX, Clock, FileQuestion } from "lucide-react";
+import { CircleCheck, CircleX, Clock, FileQuestion, ChevronDown, ChevronUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface AttendanceStats {
   present: number;
@@ -71,6 +72,7 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
     justified: 0
   });
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handlePeriodChange = (value: string) => {
     const today = new Date();
@@ -162,23 +164,41 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
       </Card>
 
       <Card className="p-4">
-        <h4 className="font-medium mb-2">Histórico de Presenças</h4>
-        <div className="space-y-2">
-          {attendance.map((record) => (
-            <div
-              key={record.id}
-              className="flex justify-between items-center p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
-            >
-              <span>{format(addDays(new Date(record.date), 1), "dd/MM/yyyy", { locale: ptBR })}</span>
-              <div className="flex items-center space-x-2">
-                {getStatusIcon(record.status)}
-                <span className={`font-medium ${getStatusColor(record.status)}`}>
-                  {getStatusText(record.status)}
-                </span>
-              </div>
-            </div>
-          ))}
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-medium">Histórico de Presenças</h4>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            {showHistory ? (
+              <ChevronUp className="h-4 w-4 mr-1" />
+            ) : (
+              <ChevronDown className="h-4 w-4 mr-1" />
+            )}
+            {showHistory ? "Ocultar" : "Mostrar"}
+          </Button>
         </div>
+        
+        {showHistory && (
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {attendance.map((record) => (
+              <div
+                key={record.id}
+                className="flex justify-between items-center p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <span>{format(addDays(new Date(record.date), 1), "dd/MM/yyyy", { locale: ptBR })}</span>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(record.status)}
+                  <span className={`font-medium ${getStatusColor(record.status)}`}>
+                    {getStatusText(record.status)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
     </div>
   );
