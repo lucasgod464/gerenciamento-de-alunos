@@ -13,6 +13,14 @@ import { startOfMonth, endOfMonth, format, subMonths, addMonths } from "date-fns
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface AttendanceData {
+  name: string;
+  presente: number;
+  ausente: number;
+  atrasado: number;
+  justificado: number;
+}
+
 export const SystemReport = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,6 +40,13 @@ export const SystemReport = () => {
           rooms (
             id,
             name,
+            schedule,
+            location,
+            category,
+            status,
+            company_id,
+            study_room,
+            created_at,
             room_students (
               student_id,
               students (*)
@@ -46,7 +61,7 @@ export const SystemReport = () => {
   });
 
   // Buscar dados de presença do mês selecionado
-  const { data: attendanceData = [] } = useQuery({
+  const { data: attendanceData = [] } = useQuery<AttendanceData[]>({
     queryKey: ["attendance-data", user?.id, selectedRoom, currentDate],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -63,7 +78,10 @@ export const SystemReport = () => {
       if (selectedRoom !== "all") {
         query = query.eq("room_id", selectedRoom);
       } else {
-        query = query.in("room_id", authorizedRooms?.map(room => room.id) || []);
+        const roomIds = authorizedRooms.map(room => room.id);
+        if (roomIds.length > 0) {
+          query = query.in("room_id", roomIds);
+        }
       }
 
       const { data, error } = await query;
@@ -77,7 +95,7 @@ export const SystemReport = () => {
         }
         acc[date][curr.status]++;
         return acc;
-      }, {});
+      }, {} as Record<string, { presente: number; ausente: number; atrasado: number; justificado: number }>);
 
       return Object.entries(groupedData).map(([name, values]) => ({
         name,
@@ -99,8 +117,8 @@ export const SystemReport = () => {
 
   const totalRooms = filteredRooms.length;
 
-  const averageAttendance = attendanceData?.reduce((acc, curr) => 
-    acc + curr.presente, 0) / (attendanceData?.length || 1);
+  const averageAttendance = attendanceData.reduce((acc, curr) => 
+    acc + curr.presente, 0) / (attendanceData.length || 1);
 
   const handleExportReport = () => {
     toast({
@@ -154,12 +172,12 @@ export const SystemReport = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <AttendanceChart data={attendanceData || []} />
+        <AttendanceChart data={attendanceData} />
         <StudentDistributionChart 
           rooms={filteredRooms}
           selectedRoom={selectedRoom}
           currentDate={currentDate}
-          attendanceData={attendanceData || []}
+          attendanceData={attendanceData}
         />
       </div>
 
