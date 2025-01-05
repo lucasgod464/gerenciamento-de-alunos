@@ -23,6 +23,7 @@ export const AttendanceControl = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Busca as salas disponíveis
   useEffect(() => {
     const fetchRooms = async () => {
       if (!user?.companyId) return;
@@ -35,6 +36,11 @@ export const AttendanceControl = () => {
 
       if (error) {
         console.error('Erro ao buscar salas:', error);
+        toast({
+          title: "Erro ao carregar salas",
+          description: "Não foi possível carregar a lista de salas.",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -42,8 +48,9 @@ export const AttendanceControl = () => {
     };
 
     fetchRooms();
-  }, [user?.companyId]);
+  }, [user?.companyId, toast]);
 
+  // Verifica se já existe chamada para a data e sala selecionadas
   useEffect(() => {
     const checkAttendance = async () => {
       if (!user?.companyId || !selectedDate || !selectedRoom) return;
@@ -56,20 +63,26 @@ export const AttendanceControl = () => {
           .select('id')
           .eq('date', formattedDate)
           .eq('company_id', user.companyId)
-          .eq('room_id', selectedRoom);
+          .eq('room_id', selectedRoom)
+          .single();
 
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') throw error;
 
-        const hasData = data && data.length > 0;
+        const hasData = !!data;
         setHasAttendance(hasData);
         setIsStarted(hasData);
       } catch (error) {
         console.error('Erro ao verificar chamada:', error);
+        toast({
+          title: "Erro ao verificar chamada",
+          description: "Não foi possível verificar se já existe chamada para esta data.",
+          variant: "destructive",
+        });
       }
     };
 
     checkAttendance();
-  }, [selectedDate, selectedRoom, user?.companyId]);
+  }, [selectedDate, selectedRoom, user?.companyId, toast]);
 
   const handleStartAttendance = async () => {
     if (!user?.companyId) return;
