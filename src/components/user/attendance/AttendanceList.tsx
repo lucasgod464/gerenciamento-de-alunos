@@ -61,11 +61,10 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
     try {
       const formattedDate = formatDate(date);
       
-      // Salvar apenas os status que foram definidos
+      // Primeiro, salvamos todas as presenças
       const studentsWithStatus = students.filter(student => student.status);
-      
-      const attendancePromises = studentsWithStatus.map(student => 
-        supabase
+      for (const student of studentsWithStatus) {
+        const { error } = await supabase
           .from('daily_attendance')
           .upsert({
             date: formattedDate,
@@ -73,38 +72,41 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
             status: student.status,
             company_id: companyId,
             room_id: roomId
-          })
-      );
-
-      await Promise.all(attendancePromises);
+          });
+          
+        if (error) throw error;
+      }
       
+      // Depois, salvamos as observações
       const observationEntries = Object.entries(observations);
       if (observationEntries.length > 0) {
-        const { error: obsError } = await supabase
-          .from('daily_observations')
-          .upsert(
-            observationEntries.map(([studentId, text]) => ({
+        for (const [studentId, text] of observationEntries) {
+          if (!text) continue; // Pula observações vazias
+          
+          const { error } = await supabase
+            .from('daily_observations')
+            .upsert({
               date: formattedDate,
               text,
               company_id: companyId,
               student_id: studentId
-            }))
-          );
-
-        if (obsError) throw obsError;
+            });
+            
+          if (error) throw error;
+        }
       }
 
       onAttendanceSaved();
       
       toast({
-        title: "Presença registrada",
-        description: "Os dados foram salvos com sucesso.",
+        title: "Dados salvos",
+        description: "Presenças e observações foram salvas com sucesso.",
       });
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar os dados de presença.",
+        description: "Não foi possível salvar os dados. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
