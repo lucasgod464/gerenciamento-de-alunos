@@ -14,8 +14,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Company } from "@/types/company"
 import { useToast } from "@/components/ui/use-toast"
+import { useState } from "react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface CompanyTableRowProps {
   company: Company
@@ -31,6 +40,8 @@ export function CompanyTableRow({
   onUpdateStatus,
 }: CompanyTableRowProps) {
   const { toast } = useToast()
+  const [showEditDialog, setShowEditDialog] = useState(false)
+  const [editingCompany, setEditingCompany] = useState<Company>(company)
 
   const handleStatusChange = () => {
     const updatedCompany: Company = {
@@ -43,6 +54,20 @@ export function CompanyTableRow({
     toast({
       title: "Status atualizado",
       description: `A empresa ${company.name} foi ${updatedCompany.status === "Ativa" ? "ativada" : "desativada"}.`,
+    })
+  }
+
+  const handleEditClick = () => {
+    setEditingCompany(company)
+    setShowEditDialog(true)
+  }
+
+  const handleEditSubmit = () => {
+    onEdit(editingCompany)
+    setShowEditDialog(false)
+    toast({
+      title: "Empresa atualizada",
+      description: "As informações da empresa foram atualizadas com sucesso.",
     })
   }
 
@@ -109,7 +134,7 @@ export function CompanyTableRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onEdit(company)}
+            onClick={handleEditClick}
             className="hover:bg-blue-50 hover:text-blue-600"
           >
             <Pencil className="w-4 h-4" />
@@ -147,6 +172,58 @@ export function CompanyTableRow({
           </AlertDialog>
         </div>
       </td>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Empresa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome da Empresa</Label>
+              <Input
+                id="name"
+                value={editingCompany.name}
+                onChange={(e) => setEditingCompany({ ...editingCompany, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="document">Documento</Label>
+              <Input
+                id="document"
+                value={editingCompany.document}
+                onChange={(e) => setEditingCompany({ ...editingCompany, document: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="usersLimit">Limite de Usuários</Label>
+              <Input
+                id="usersLimit"
+                type="number"
+                value={editingCompany.usersLimit}
+                onChange={(e) => setEditingCompany({ ...editingCompany, usersLimit: parseInt(e.target.value) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="roomsLimit">Limite de Salas</Label>
+              <Input
+                id="roomsLimit"
+                type="number"
+                value={editingCompany.roomsLimit}
+                onChange={(e) => setEditingCompany({ ...editingCompany, roomsLimit: parseInt(e.target.value) })}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleEditSubmit}>
+                Salvar Alterações
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </tr>
   )
 }
