@@ -1,7 +1,8 @@
 import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Lock, GripVertical, Asterisk } from "lucide-react";
+import { Trash2, Pencil, Lock, GripVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
   closestCenter,
@@ -53,7 +54,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   return (
     <div ref={setNodeRef} style={style} className="mb-4">
-      <Card className={`p-4 ${isSystemField ? 'bg-gray-50 border-dashed border-2' : ''}`}>
+      <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isSystemField && (
@@ -67,36 +68,24 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             )}
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                {isSystemField && (
-                  <Lock className="h-4 w-4 text-muted-foreground" />
+                <h3 className="font-medium">{field.label}</h3>
+                {field.required && (
+                  <Badge variant="secondary">Obrigatório</Badge>
                 )}
-                <h3 className="font-medium">
-                  {field.label}
-                  {field.required && (
-                    <Asterisk className="inline-block h-3 w-3 text-red-500 ml-1" />
-                  )}
-                </h3>
               </div>
-              {isSystemField && (
-                <p className="text-sm text-muted-foreground">
-                  Campo padrão do sistema
-                </p>
-              )}
               {field.description && (
                 <p className="text-sm text-muted-foreground">
                   {field.description}
                 </p>
               )}
-              {!isSystemField && (
-                <p className="text-sm text-muted-foreground">
-                  Tipo: {field.type}
-                  {(field.type === "select" || field.type === "multiple") && field.options && (
-                    <span className="ml-2">
-                      (Opções: {field.options.join(", ")})
-                    </span>
-                  )}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                Tipo: {field.type}
+                {(field.type === "select" || field.type === "multiple") && field.options && (
+                  <span className="ml-2">
+                    (Opções: {field.options.join(", ")})
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">

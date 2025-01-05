@@ -104,10 +104,7 @@ export const useFormBuilder = () => {
   };
 
   const handleUpdateField = async (field: FormField) => {
-    if (!editingField?.id) {
-      console.error("No editing field ID provided");
-      return;
-    }
+    if (!editingField) return;
 
     try {
       const supabaseField = mapFormFieldToSupabase(field);
@@ -143,74 +140,6 @@ export const useFormBuilder = () => {
     }
   };
 
-  const handleDeleteField = async (id: string) => {
-    if (!id) {
-      console.error("No field ID provided for deletion");
-      return;
-    }
-
-    const defaultFieldIds = defaultFields.map(field => field.id);
-    if (defaultFieldIds.includes(id)) {
-      toast({
-        title: "Operação não permitida",
-        description: "Não é possível excluir campos padrão do formulário.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('admin_form_fields')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      setFields(prev => prev.filter(field => field.id !== id));
-      toast({
-        title: "Campo removido",
-        description: "O campo foi removido com sucesso.",
-      });
-    } catch (error) {
-      console.error("Error deleting field:", error);
-      toast({
-        title: "Erro ao remover campo",
-        description: "Não foi possível remover o campo.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleReorderFields = async (reorderedFields: FormField[]) => {
-    try {
-      const customFields = reorderedFields.filter(field => !defaultFields.map(f => f.id).includes(field.id));
-      
-      const updates = customFields.map((field, index) => ({
-        id: field.id,
-        name: field.name,
-        label: field.label,
-        type: field.type,
-        order: defaultFields.length + index,
-      }));
-
-      const { error } = await supabase
-        .from('admin_form_fields')
-        .upsert(updates);
-
-      if (error) throw error;
-
-      setFields(reorderedFields);
-    } catch (error) {
-      console.error("Error reordering fields:", error);
-      toast({
-        title: "Erro ao reordenar campos",
-        description: "Não foi possível reordenar os campos.",
-        variant: "destructive",
-      });
-    }
-  };
-
   useEffect(() => {
     loadFields();
   }, []);
@@ -236,7 +165,66 @@ export const useFormBuilder = () => {
       setIsAddingField(true);
     },
     handleUpdateField,
-    handleDeleteField,
-    handleReorderFields,
+    handleDeleteField: async (id: string) => {
+      const defaultFieldIds = defaultFields.map(field => field.id);
+      if (defaultFieldIds.includes(id)) {
+        toast({
+          title: "Operação não permitida",
+          description: "Não é possível excluir campos padrão do formulário.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('admin_form_fields')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+
+        setFields(prev => prev.filter(field => field.id !== id));
+        toast({
+          title: "Campo removido",
+          description: "O campo foi removido com sucesso.",
+        });
+      } catch (error) {
+        console.error("Error deleting field:", error);
+        toast({
+          title: "Erro ao remover campo",
+          description: "Não foi possível remover o campo.",
+          variant: "destructive",
+        });
+      }
+    },
+    handleReorderFields: async (reorderedFields: FormField[]) => {
+      try {
+        const customFields = reorderedFields.filter(field => !defaultFields.map(f => f.id).includes(field.id));
+        
+        const updates = customFields.map((field, index) => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type,
+          order: defaultFields.length + index,
+        }));
+
+        const { error } = await supabase
+          .from('admin_form_fields')
+          .upsert(updates);
+
+        if (error) throw error;
+
+        setFields(reorderedFields);
+      } catch (error) {
+        console.error("Error reordering fields:", error);
+        toast({
+          title: "Erro ao reordenar campos",
+          description: "Não foi possível reordenar os campos.",
+          variant: "destructive",
+        });
+      }
+    },
   };
 };
