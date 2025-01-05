@@ -30,24 +30,36 @@ export function CompanyTableRow({
   onEdit,
   onUpdateStatus,
 }: CompanyTableRowProps) {
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const handleStatusChange = () => {
     const updatedCompany: Company = {
       ...company,
       status: company.status === "Ativa" ? "Inativa" : "Ativa"
-    }
+    };
     
-    onUpdateStatus(updatedCompany)
+    onUpdateStatus(updatedCompany);
     
     toast({
       title: "Status atualizado",
       description: `A empresa ${company.name} foi ${updatedCompany.status === "Ativa" ? "ativada" : "desativada"}.`,
-    })
-  }
+    });
+  };
 
   const usersPercentage = (company.currentUsers / company.usersLimit) * 100;
   const roomsPercentage = (company.currentRooms / company.roomsLimit) * 100;
+
+  const handleEdit = () => {
+    if (company.status === "Inativa") {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar uma empresa inativa.",
+        variant: "destructive",
+      });
+      return;
+    }
+    onEdit(company);
+  };
 
   return (
     <tr className={cn(
@@ -72,6 +84,7 @@ export function CompanyTableRow({
           </div>
         </div>
       </td>
+
       <td className="p-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -102,6 +115,7 @@ export function CompanyTableRow({
           </div>
         </div>
       </td>
+
       <td className="p-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
@@ -132,6 +146,7 @@ export function CompanyTableRow({
           </div>
         </div>
       </td>
+
       <td className="p-4">
         <Switch
           checked={company.status === "Ativa"}
@@ -190,5 +205,5 @@ export function CompanyTableRow({
         </div>
       </td>
     </tr>
-  )
+  );
 }
