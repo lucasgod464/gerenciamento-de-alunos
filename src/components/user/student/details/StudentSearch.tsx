@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Student } from "@/types/student";
+import { Card } from "@/components/ui/card";
 
 interface StudentSearchProps {
   searchTerm: string;
@@ -17,25 +18,30 @@ export function StudentSearch({
   selectedStudent,
 }: StudentSearchProps) {
   return (
-    <div>
+    <div className="relative">
       <Input
-        placeholder="Digite o nome do aluno..."
+        placeholder="Digite o nome do aluno para pesquisar..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
         className="w-full"
       />
       {searchTerm.length >= 3 && students.length > 0 && !selectedStudent && (
-        <div className="mt-2 border rounded-md divide-y">
+        <Card className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto divide-y">
           {students.map((student) => (
             <div
               key={student.id}
-              className="p-2 hover:bg-gray-50 cursor-pointer"
+              className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
               onClick={() => onSelectStudent(student)}
             >
-              {student.name}
+              <div className="font-medium">{student.name}</div>
+              {student.document && (
+                <div className="text-sm text-gray-500">
+                  Documento: {student.document}
+                </div>
+              )}
             </div>
           ))}
-        </div>
+        </Card>
       )}
     </div>
   );

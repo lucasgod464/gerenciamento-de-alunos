@@ -7,7 +7,9 @@ import { StudentSearch } from "./details/StudentSearch";
 import { StudentBasicInfo } from "./details/StudentBasicInfo";
 import { AttendanceStats } from "./details/AttendanceStats";
 import { AttendanceList } from "./details/AttendanceList";
-import { DateRangeSelector } from "./details/DateRangeSelector";
+import { DateRangeFilter } from "../reports/DateRangeFilter";
+import { addMonths, startOfMonth, endOfMonth } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 interface StudentDetailsDialogProps {
   open: boolean;
@@ -18,8 +20,10 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  });
   const [attendance, setAttendance] = useState<any[]>([]);
   const [stats, setStats] = useState({
     present: 0,
@@ -27,72 +31,101 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     late: 0,
     justified: 0
   });
+  const { toast } = useToast();
 
+  // Buscar alunos quando o termo de pesquisa mudar
   useEffect(() => {
     const fetchStudents = async () => {
-      if (searchTerm.length < 3) return;
-
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .ilike('name', `%${searchTerm}%`)
-        .limit(5);
-
-      if (error) {
-        console.error('Erro ao buscar alunos:', error);
+      if (searchTerm.length < 3) {
+        setStudents([]);
         return;
       }
 
-      setStudents(data || []);
+      try {
+        const { data, error } = await supabase
+          .from('students')
+          .select('*')
+          .ilike('name', `%${searchTerm}%`)
+          .limit(5);
+
+        if (error) throw error;
+
+        const mappedStudents = data?.map(student => ({
+          id: student.id,
+          name: student.name,
+          birthDate: student.birth_date,
+          status: student.status,
+          email: student.email || '',
+          document: student.document || '',
+          address: student.address || '',
+          customFields: student.custom_fields || {},
+          companyId: student.company_id,
+          createdAt: student.created_at
+        })) || [];
+
+        setStudents(mappedStudents);
+      } catch (error) {
+        console.error('Erro ao buscar alunos:', error);
+        toast({
+          title: "Erro ao buscar alunos",
+          description: "Não foi possível carregar a lista de alunos.",
+          variant: "destructive"
+        });
+      }
     };
 
     fetchStudents();
-  }, [searchTerm]);
+  }, [searchTerm, toast]);
 
+  // Buscar presenças quando o aluno ou período mudar
   useEffect(() => {
     const fetchAttendance = async () => {
-      if (!selectedStudent) return;
+      if (!selectedStudent || !dateRange.from || !dateRange.to) return;
 
-      const { data, error } = await supabase
-        .from('daily_attendance')
-        .select('*')
-        .eq('student_id', selectedStudent.id)
-        .gte('date', formatDate(startDate))
-        .lte('date', formatDate(endDate));
+      try {
+        const { data, error } = await supabase
+          .from('daily_attendance')
+          .select('*')
+          .eq('student_id', selectedStudent.id)
+          .gte('date', formatDate(dateRange.from))
+          .lte('date', formatDate(dateRange.to));
 
-      if (error) {
+        if (error) throw error;
+
+        setAttendance(data || []);
+
+        // Calcular estatísticas
+        const newStats = (data || []).reduce((acc, record) => {
+          acc[record.status] = (acc[record.status] || 0) + 1;
+          return acc;
+        }, {
+          present: 0,
+          absent: 0,
+          late: 0,
+          justified: 0
+        });
+
+        setStats(newStats);
+      } catch (error) {
         console.error('Erro ao buscar presenças:', error);
-        return;
+        toast({
+          title: "Erro ao carregar presenças",
+          description: "Não foi possível carregar os dados de presença.",
+          variant: "destructive"
+        });
       }
-
-      setAttendance(data || []);
-
-      const stats = (data || []).reduce((acc, record) => {
-        acc[record.status] = (acc[record.status] || 0) + 1;
-        return acc;
-      }, {
-        present: 0,
-        absent: 0,
-        late: 0,
-        justified: 0
-      });
-
-      setStats(stats);
     };
 
-    if (selectedStudent) {
-      fetchAttendance();
-    }
-  }, [selectedStudent, startDate, endDate]);
+    fetchAttendance();
+  }, [selectedStudent, dateRange, toast]);
 
-  const handleDateRangeChange = (start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
+  const handleDateRangeChange = (newRange: { from: Date; to: Date }) => {
+    setDateRange(newRange);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Consulta Individual de Aluno</DialogTitle>
         </DialogHeader>
@@ -110,16 +143,15 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
             <div className="space-y-4">
               <StudentBasicInfo student={selectedStudent} />
               
-              <DateRangeSelector
-                startDate={startDate}
-                endDate={endDate}
-                onDateChange={handleDateRangeChange}
+              <DateRangeFilter
+                dateRange={dateRange}
+                onDateRangeChange={handleDateRangeChange}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <AttendanceStats 
                   stats={stats}
-                  period={{ start: startDate, end: endDate }}
+                  period={dateRange}
                 />
                 <AttendanceList attendance={attendance} />
               </div>
