@@ -3,6 +3,7 @@ import { FormPreview } from "./EnrollmentFormPreview";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { FormField } from "@/types/form";
+import { defaultFields } from "@/hooks/useEnrollmentFields";
 
 interface EnrollmentFormConfigProps {
   fields: FormField[];
@@ -19,6 +20,9 @@ export const EnrollmentFormConfig = ({
   onEditField,
   onReorderFields,
 }: EnrollmentFormConfigProps) => {
+  // Combinar campos padrão com campos personalizados
+  const allFields = [...defaultFields, ...fields];
+
   return (
     <Card>
       <CardHeader>
@@ -37,10 +41,14 @@ export const EnrollmentFormConfig = ({
       </CardHeader>
       <CardContent>
         <FormPreview 
-          fields={fields} 
+          fields={allFields} 
           onDeleteField={onDeleteField}
           onEditField={onEditField}
-          onReorderFields={onReorderFields}
+          onReorderFields={(reorderedFields) => {
+            // Filtra apenas os campos personalizados para reordenação
+            const customFields = reorderedFields.filter(field => !field.isDefault);
+            onReorderFields(customFields);
+          }}
         />
       </CardContent>
     </Card>
