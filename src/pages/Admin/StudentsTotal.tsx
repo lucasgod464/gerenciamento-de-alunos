@@ -1,21 +1,39 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { Student, mapSupabaseStudentToStudent, SupabaseStudent } from "@/types/student";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { StudentColumns } from "@/components/admin/students/StudentColumns";
+import { Student } from "@/types/student";
+import { Room } from "@/types/room";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const StudentsTotal = () => {
-  const { user: currentUser } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
   const { toast } = useToast();
 
   const loadStudents = async () => {
     try {
-      console.log("Iniciando busca de alunos...");
-      console.log("Company ID do usuário:", currentUser?.companyId);
-      
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
@@ -24,35 +42,59 @@ const StudentsTotal = () => {
             room_id
           )
         `)
-        .eq('company_id', currentUser?.companyId);
+        .order('name');
 
-      if (error) {
-        throw error;
+      if (error) throw error;
+
+      if (studentsData) {
+        const mappedStudents = studentsData.map(student => ({
+          id: student.id,
+          name: student.name,
+          birthDate: student.birth_date,
+          status: student.status,
+          email: student.email || '',
+          document: student.document || '',
+          address: student.address || '',
+          customFields: student.custom_fields || {},
+          companyId: student.company_id,
+          createdAt: student.created_at,
+          room: student.room_students?.[0]?.room_id || null
+        }));
+        setStudents(mappedStudents);
       }
-
-      console.log("Dados brutos dos alunos:", studentsData);
-
-      const mappedStudents = studentsData.map(student => 
-        mapSupabaseStudentToStudent(student as SupabaseStudent)
-      );
-      
-      console.log("Alunos mapeados:", mappedStudents);
-      setStudents(mappedStudents);
     } catch (error) {
       console.error('Erro ao carregar alunos:', error);
       toast({
         title: "Erro ao carregar alunos",
-        description: "Não foi possível carregar a lista de alunos.",
+        description: "Ocorreu um erro ao carregar a lista de alunos.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadRooms = async () => {
+    try {
+      const { data: roomsData, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      if (roomsData) setRooms(roomsData);
+    } catch (error) {
+      console.error('Erro ao carregar salas:', error);
+      toast({
+        title: "Erro ao carregar salas",
+        description: "Ocorreu um erro ao carregar as salas.",
         variant: "destructive",
       });
     }
   };
 
   useEffect(() => {
-    if (currentUser?.companyId) {
-      loadStudents();
-    }
-  }, [currentUser?.companyId]);
+    loadStudents();
+    loadRooms();
+  }, []);
 
   const handleDeleteStudent = async (id: string) => {
     try {
@@ -80,20 +122,19 @@ const StudentsTotal = () => {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      // Primeiro, remove qualquer vínculo existente
+      // Primeiro remove qualquer vínculo existente
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', studentId);
 
-      // Depois, cria o novo vínculo
+      // Depois cria o novo vínculo
       const { error } = await supabase
         .from('room_students')
         .insert({ student_id: studentId, room_id: newRoomId });
 
       if (error) throw error;
 
-      // Atualiza a lista local
       setStudents(prev => prev.map(student => 
         student.id === studentId 
           ? { ...student, room: newRoomId }
@@ -114,6 +155,12 @@ const StudentsTotal = () => {
     }
   };
 
+  const getRoomName = (roomId: string | null) => {
+    if (!roomId) return "Sem sala";
+    const room = rooms.find(r => r.id === roomId);
+    return room ? room.name : "Sem sala";
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="space-y-6">
@@ -123,13 +170,89 @@ const StudentsTotal = () => {
             Visualize e gerencie todos os alunos cadastrados
           </p>
         </div>
-        <StudentColumns
-          studentsWithoutRoom={students.filter(s => !s.room)}
-          studentsWithRoom={students.filter(s => s.room)}
-          rooms={[]} // Será preenchido com as salas disponíveis
-          onDeleteStudent={handleDeleteStudent}
-          onTransferStudent={handleTransferStudent}
-        />
+
+        <Card className="p-6">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead>Data de Nascimento</TableHead>
+                <TableHead>Sala Atual</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {students.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell>{student.name}</TableCell>
+                  <TableCell>
+                    {new Date(student.birthDate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Select
+                      value={student.room || ""}
+                      onValueChange={(newRoomId) => handleTransferStudent(student.id, newRoomId)}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder={getRoomName(student.room)} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id}>
+                            {room.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${
+                        student.status
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {student.status ? "Ativo" : "Inativo"}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="icon">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Aluno</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteStudent(student.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
     </DashboardLayout>
   );
