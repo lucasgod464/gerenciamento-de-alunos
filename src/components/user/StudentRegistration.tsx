@@ -67,23 +67,6 @@ export const StudentRegistration = () => {
 
   const handleDeleteStudent = async (id: string) => {
     try {
-      // Primeiro, remover todas as referências em outras tabelas
-      await supabase
-        .from('room_students')
-        .delete()
-        .eq('student_id', id);
-
-      await supabase
-        .from('daily_attendance')
-        .delete()
-        .eq('student_id', id);
-
-      await supabase
-        .from('daily_observations')
-        .delete()
-        .eq('student_id', id);
-
-      // Por fim, remover o aluno
       const { error } = await supabase
         .from('students')
         .delete()

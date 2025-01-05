@@ -7,7 +7,10 @@ import { StudentSearch } from "./details/StudentSearch";
 import { StudentBasicInfo } from "./details/StudentBasicInfo";
 import { AttendanceStats } from "./details/AttendanceStats";
 import { AttendanceList } from "./details/AttendanceList";
-import { PeriodSelector } from "./details/PeriodSelector";
+import { DateRangeSelector } from "./details/DateRangeSelector";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface StudentDetailsDialogProps {
   open: boolean;
@@ -72,20 +75,12 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     const fetchAttendance = async () => {
       if (!selectedStudent) return;
 
-      const startFormatted = formatDate(startDate);
-      const endFormatted = formatDate(endDate);
-      
-      console.log('StudentDetailsDialog - Data inicial:', startDate);
-      console.log('StudentDetailsDialog - Data final:', endDate);
-      console.log('StudentDetailsDialog - Data inicial formatada:', startFormatted);
-      console.log('StudentDetailsDialog - Data final formatada:', endFormatted);
-
       const { data, error } = await supabase
         .from('daily_attendance')
         .select('*')
         .eq('student_id', selectedStudent.id)
-        .gte('date', startFormatted)
-        .lte('date', endFormatted)
+        .gte('date', formatDate(startDate))
+        .lte('date', formatDate(endDate))
         .order('date', { ascending: true });
 
       if (error) {
@@ -93,7 +88,6 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         return;
       }
 
-      console.log('StudentDetailsDialog - Dados de presença:', data);
       setAttendance(data || []);
 
       const stats = (data || []).reduce((acc, record) => {
@@ -114,15 +108,52 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     }
   }, [selectedStudent, startDate, endDate]);
 
+  const handlePresetChange = (value: string) => {
+    const today = new Date();
+    
+    switch (value) {
+      case "today":
+        setStartDate(today);
+        setEndDate(today);
+        break;
+      case "yesterday":
+        const yesterday = subDays(today, 1);
+        setStartDate(yesterday);
+        setEndDate(yesterday);
+        break;
+      case "last7days":
+        setStartDate(subDays(today, 6));
+        setEndDate(today);
+        break;
+      case "last30days":
+        setStartDate(subDays(today, 29));
+        setEndDate(today);
+        break;
+      case "thisMonth":
+        setStartDate(startOfMonth(today));
+        setEndDate(endOfMonth(today));
+        break;
+      case "lastMonth":
+        const lastMonth = subMonths(today, 1);
+        setStartDate(startOfMonth(lastMonth));
+        setEndDate(endOfMonth(lastMonth));
+        break;
+      case "thisWeek":
+        setStartDate(startOfWeek(today, { locale: ptBR }));
+        setEndDate(endOfWeek(today, { locale: ptBR }));
+        break;
+      case "lastWeek":
+        const lastWeek = subWeeks(today, 1);
+        setStartDate(startOfWeek(lastWeek, { locale: ptBR }));
+        setEndDate(endOfWeek(lastWeek, { locale: ptBR }));
+        break;
+    }
+  };
+
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
     setSearchTerm(""); // Limpar o termo de busca após selecionar
     setStudents([]); // Limpar a lista de resultados
-  };
-
-  const handleDateChange = (start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
   };
 
   return (
@@ -145,11 +176,32 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
             <div className="space-y-4">
               <StudentBasicInfo student={selectedStudent} />
               
-              <PeriodSelector
-                startDate={startDate}
-                endDate={endDate}
-                onDateChange={handleDateChange}
-              />
+              <div className="flex gap-4 items-center">
+                <Select onValueChange={handlePresetChange}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Período predefinido" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="today">Hoje</SelectItem>
+                    <SelectItem value="yesterday">Ontem</SelectItem>
+                    <SelectItem value="last7days">Últimos 7 dias</SelectItem>
+                    <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+                    <SelectItem value="thisWeek">Esta semana</SelectItem>
+                    <SelectItem value="lastWeek">Semana passada</SelectItem>
+                    <SelectItem value="thisMonth">Este mês</SelectItem>
+                    <SelectItem value="lastMonth">Mês passado</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <DateRangeSelector
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateChange={(start, end) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <AttendanceStats 

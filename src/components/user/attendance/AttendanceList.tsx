@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDateForDatabase } from "@/utils/dateUtils";
+import { formatDate } from "@/utils/dateUtils";
 import { AttendanceHeader } from "./AttendanceHeader";
 import { AttendanceRow } from "./AttendanceRow";
 import { useAttendanceData } from "./hooks/useAttendanceData";
@@ -19,12 +19,11 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const [observations, setObservations] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
+  // Carregar observações existentes quando a data ou sala mudar
   useEffect(() => {
     const loadObservations = async () => {
       try {
-        const formattedDate = formatDateForDatabase(date);
-        console.log('AttendanceList - Carregando observações para a data:', formattedDate);
-        
+        const formattedDate = formatDate(date);
         const { data, error } = await supabase
           .from('daily_observations')
           .select('student_id, text')
@@ -49,28 +48,11 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   const handleStatusChange = async (studentId: string, status: string) => {
     try {
-      const formattedDate = formatDateForDatabase(date);
-      console.log('AttendanceList - Salvando status:', {
-        data: formattedDate,
-        studentId,
-        status,
-        companyId,
-        roomId
-      });
-
-      // Primeiro deleta qualquer registro existente para esta data/aluno
-      await supabase
-        .from('daily_attendance')
-        .delete()
-        .eq('date', formattedDate)
-        .eq('student_id', studentId)
-        .eq('company_id', companyId)
-        .eq('room_id', roomId);
-
-      // Depois insere o novo registro
+      const formattedDate = formatDate(date);
+      
       const { error } = await supabase
         .from('daily_attendance')
-        .insert({
+        .upsert({
           date: formattedDate,
           student_id: studentId,
           status: status,
@@ -104,35 +86,15 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   const handleSave = async () => {
     try {
-      const formattedDate = formatDateForDatabase(date);
-      console.log('AttendanceList - Salvando todas as presenças e observações:', {
-        data: formattedDate,
-        estudantes: students,
-        observacoes: observations
-      });
+      const formattedDate = formatDate(date);
       
       // Primeiro, salvamos todas as presenças
       for (const student of students) {
         if (!student.status) continue;
 
-        console.log('Salvando presença para estudante:', {
-          studentId: student.id,
-          status: student.status,
-          data: formattedDate
-        });
-
-        // Deleta registro existente antes de inserir o novo
-        await supabase
-          .from('daily_attendance')
-          .delete()
-          .eq('date', formattedDate)
-          .eq('student_id', student.id)
-          .eq('company_id', companyId)
-          .eq('room_id', roomId);
-
         const { error: attendanceError } = await supabase
           .from('daily_attendance')
-          .insert({
+          .upsert({
             date: formattedDate,
             student_id: student.id,
             status: student.status,
@@ -145,25 +107,11 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       
       // Depois, salvamos as observações
       for (const [studentId, text] of Object.entries(observations)) {
-        if (!text.trim()) continue;
+        if (!text.trim()) continue; // Pula observações vazias
         
-        console.log('Salvando observação para estudante:', {
-          studentId,
-          text,
-          data: formattedDate
-        });
-
-        // Deleta observação existente antes de inserir a nova
-        await supabase
-          .from('daily_observations')
-          .delete()
-          .eq('date', formattedDate)
-          .eq('student_id', studentId)
-          .eq('company_id', companyId);
-
         const { error: observationError } = await supabase
           .from('daily_observations')
-          .insert({
+          .upsert({
             date: formattedDate,
             text,
             company_id: companyId,

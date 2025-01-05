@@ -1,40 +1,15 @@
-import { format, addDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format, startOfDay } from "date-fns";
 
-export const formatDate = (date: Date): string => {
-  // Criar uma nova data no fuso horário local
-  const localDate = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate()
-  );
-
-  // Ajustar para o início do dia em UTC
-  const adjustedDate = new Date(Date.UTC(
-    localDate.getFullYear(),
-    localDate.getMonth(),
-    localDate.getDate()
-  ));
-
-  const formattedDate = format(adjustedDate, 'yyyy-MM-dd', { locale: ptBR });
-  
-  console.log('=== Debug formatDate ===');
-  console.log('Data original:', date);
-  console.log('Data local ajustada:', localDate);
-  console.log('Data com ajuste UTC:', adjustedDate);
-  console.log('Data formatada para o banco:', formattedDate);
-  console.log('=======================');
-  
-  return formattedDate;
+export const formatDate = (date: Date) => {
+  return format(date, 'yyyy-MM-dd');
 };
 
-export const formatDisplayDate = (date: Date): string => {
-  // Adiciona um dia para compensar o fuso horário na exibição
-  const displayDate = addDays(date, 1);
-  return format(displayDate, 'dd/MM/yyyy', { locale: ptBR });
+export const normalizeDate = (date: Date) => {
+  return startOfDay(date);
 };
 
-export const formatDateForDatabase = (date: Date): string => {
-  // Mantém a lógica original para salvar no banco
-  return formatDate(date);
+export const areDatesEqual = (date1: Date, date2: Date) => {
+  const d1 = normalizeDate(date1);
+  const d2 = normalizeDate(date2);
+  return d1.getTime() === d2.getTime();
 };
