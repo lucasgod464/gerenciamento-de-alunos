@@ -62,7 +62,6 @@ export function EmailFormFields({
             type="password"
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
-            required
           />
           {showPasswordGenerator && onGeneratePassword && (
             <button
