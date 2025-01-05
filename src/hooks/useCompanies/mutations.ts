@@ -5,7 +5,7 @@ import { toast } from "@/components/ui/use-toast";
 export async function updateCompany(company: Company) {
   console.log("Updating company:", company);
 
-  // Verificar limites antes de atualizar
+  // Verificar contagens atuais
   const { data: currentData } = await supabase
     .from("companies")
     .select(`
@@ -27,8 +27,8 @@ export async function updateCompany(company: Company) {
       users_limit: company.usersLimit,
       rooms_limit: company.roomsLimit,
       status: company.status,
-      current_users: currentData.emails.count || 0,
-      current_rooms: currentData.rooms.count || 0
+      current_users: currentData.emails?.count || 0,
+      current_rooms: currentData.rooms?.count || 0
     })
     .eq("id", company.id)
     .select()
@@ -44,9 +44,9 @@ export async function updateCompany(company: Company) {
     name: data.name,
     document: data.document,
     usersLimit: data.users_limit,
-    currentUsers: currentData.emails.count || 0,
+    currentUsers: currentData.emails?.count || 0,
     roomsLimit: data.rooms_limit,
-    currentRooms: currentData.rooms.count || 0,
+    currentRooms: currentData.rooms?.count || 0,
     status: data.status,
     createdAt: new Date(data.created_at).toLocaleDateString(),
     publicFolderPath: data.public_folder_path,
