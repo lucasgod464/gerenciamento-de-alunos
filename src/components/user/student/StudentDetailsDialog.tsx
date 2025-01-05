@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Student } from "@/types/student";
 import { formatDate } from "@/utils/dateUtils";
+import { ptBR } from "date-fns/locale";
 
 interface StudentDetailsDialogProps {
   open: boolean;
@@ -18,6 +19,12 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [monthStats, setMonthStats] = useState({
+    present: 0,
+    absent: 0,
+    late: 0,
+    justified: 0
+  });
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -60,6 +67,19 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
       }
 
       setAttendance(data || []);
+
+      // Calcular estatísticas do mês
+      const stats = (data || []).reduce((acc, record) => {
+        acc[record.status] = (acc[record.status] || 0) + 1;
+        return acc;
+      }, {
+        present: 0,
+        absent: 0,
+        late: 0,
+        justified: 0
+      });
+
+      setMonthStats(stats);
     };
 
     fetchAttendance();
@@ -73,8 +93,25 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         return 'bg-red-100 text-red-800';
       case 'late':
         return 'bg-yellow-100 text-yellow-800';
+      case 'justified':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'present':
+        return 'Presente';
+      case 'absent':
+        return 'Ausente';
+      case 'late':
+        return 'Atrasado';
+      case 'justified':
+        return 'Justificado';
+      default:
+        return status;
     }
   };
 
@@ -124,29 +161,53 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
               <div>
                 <h3 className="font-semibold mb-2">Calendário de Presenças</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg border p-1">
+                  <div className="bg-white rounded-lg border p-3">
                     <Calendar
                       mode="single"
                       selected={selectedDate}
                       onSelect={(date) => date && setSelectedDate(date)}
+                      locale={ptBR}
+                      className="w-full"
                     />
                   </div>
                   
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Registro do Mês</h4>
-                    <div className="space-y-1 max-h-[300px] overflow-y-auto pr-2">
-                      {attendance.map((record) => (
-                        <div
-                          key={record.id}
-                          className={`px-3 py-2 rounded-md ${getStatusColor(record.status)}`}
-                        >
-                          {new Date(record.date).toLocaleDateString('pt-BR')}: {
-                            record.status === 'present' ? 'Presente' :
-                            record.status === 'absent' ? 'Ausente' :
-                            record.status === 'late' ? 'Atrasado' : record.status
-                          }
+                  <div className="space-y-4">
+                    <Card className="p-4">
+                      <h4 className="font-medium mb-2">Resumo do Mês</h4>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-green-100 text-green-800 p-2 rounded-md">
+                            <p className="text-sm font-medium">Presenças</p>
+                            <p className="text-lg">{monthStats.present}</p>
+                          </div>
+                          <div className="bg-red-100 text-red-800 p-2 rounded-md">
+                            <p className="text-sm font-medium">Faltas</p>
+                            <p className="text-lg">{monthStats.absent}</p>
+                          </div>
+                          <div className="bg-yellow-100 text-yellow-800 p-2 rounded-md">
+                            <p className="text-sm font-medium">Atrasos</p>
+                            <p className="text-lg">{monthStats.late}</p>
+                          </div>
+                          <div className="bg-blue-100 text-blue-800 p-2 rounded-md">
+                            <p className="text-sm font-medium">Justificadas</p>
+                            <p className="text-lg">{monthStats.justified}</p>
+                          </div>
                         </div>
-                      ))}
+                      </div>
+                    </Card>
+
+                    <div>
+                      <h4 className="font-medium mb-2">Registro Detalhado</h4>
+                      <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
+                        {attendance.map((record) => (
+                          <div
+                            key={record.id}
+                            className={`px-3 py-2 rounded-md ${getStatusColor(record.status)}`}
+                          >
+                            {new Date(record.date).toLocaleDateString('pt-BR')}: {getStatusText(record.status)}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
