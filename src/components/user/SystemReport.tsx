@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
-import { StudentDistributionChart } from "./reports/StudentDistributionChart";
 import { GeneralStats } from "./reports/GeneralStats";
 import { startOfMonth, endOfMonth, format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -73,20 +72,28 @@ export const SystemReport = () => {
       const groupedData = data.reduce((acc, curr) => {
         const date = format(new Date(curr.date), 'dd/MM', { locale: ptBR });
         if (!acc[date]) {
-          acc[date] = { presenca: 0, faltas: 0 };
+          acc[date] = { presente: 0, falta: 0, atrasado: 0, justificado: 0 };
         }
-        if (curr.status === 'present') {
-          acc[date].presenca++;
-        } else {
-          acc[date].faltas++;
+        switch (curr.status) {
+          case 'present':
+            acc[date].presente++;
+            break;
+          case 'absent':
+            acc[date].falta++;
+            break;
+          case 'late':
+            acc[date].atrasado++;
+            break;
+          case 'justified':
+            acc[date].justificado++;
+            break;
         }
         return acc;
       }, {});
 
       return Object.entries(groupedData).map(([name, values]) => ({
         name,
-        presenca: values.presenca,
-        faltas: values.faltas,
+        ...values
       }));
     },
   });
@@ -102,7 +109,7 @@ export const SystemReport = () => {
   const totalRooms = filteredRooms.length;
 
   const averageAttendance = attendanceData?.reduce((acc, curr) => 
-    acc + curr.presenca, 0) / (attendanceData?.length || 1);
+    acc + curr.presente, 0) / (attendanceData?.length || 1);
 
   const handleExportReport = () => {
     toast({
@@ -155,15 +162,7 @@ export const SystemReport = () => {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <AttendanceChart data={attendanceData || []} />
-        <StudentDistributionChart 
-          rooms={filteredRooms}
-          selectedRoom={selectedRoom}
-          currentDate={currentDate}
-          attendanceData={attendanceData || []}
-        />
-      </div>
+      <AttendanceChart data={attendanceData || []} />
 
       <GeneralStats
         averageAttendance={averageAttendance}
