@@ -1,7 +1,7 @@
 import { Room } from "@/types/room";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Users } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +18,6 @@ export const RoomTableRow = ({
   room,
   onEdit,
   onDelete,
-  onShowStudents,
 }: RoomTableRowProps) => {
   const [categoryName, setCategoryName] = useState("");
   const [teachers, setTeachers] = useState<{ name: string; id: string }[]>([]);
@@ -96,16 +95,6 @@ export const RoomTableRow = ({
             <span className="text-sm text-muted-foreground">Nenhum usuário vinculado</span>
           )}
         </div>
-      </TableCell>
-      <TableCell>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onShowStudents(room)}
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Ver Alunos
-        </Button>
       </TableCell>
       <TableCell>
         <span
