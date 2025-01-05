@@ -66,6 +66,14 @@ export const useEnrollmentFields = () => {
   const updateField = async (updatedField: FormField) => {
     try {
       if (!user?.companyId) throw new Error("Empresa não encontrada");
+      if (updatedField.isDefault) {
+        toast({
+          title: "Operação não permitida",
+          description: "Não é possível editar campos padrão do formulário.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('enrollment_form_fields')

@@ -9,10 +9,9 @@ interface FieldCardProps {
   field: FormField;
   onDelete: (id: string) => void;
   onEdit: (field: FormField) => void;
-  isSystemField?: boolean;
 }
 
-export const EnrollmentFieldCard = ({ field, onDelete, onEdit, isSystemField }: FieldCardProps) => {
+export const EnrollmentFieldCard = ({ field, onDelete, onEdit }: FieldCardProps) => {
   const {
     attributes,
     listeners,
