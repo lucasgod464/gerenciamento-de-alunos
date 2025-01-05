@@ -6,15 +6,21 @@ import { useStudentData } from "./student/hooks/useStudentData";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export const StudentRegistration = () => {
   const { students, rooms, loadStudents } = useStudentData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAddStudent = async (student: Student) => {
     try {
+      if (!user?.companyId) {
+        throw new Error("Usuário não está vinculado a uma empresa");
+      }
+
       const { data: newStudent, error: studentError } = await supabase
         .from('students')
         .insert([{
@@ -24,7 +30,7 @@ export const StudentRegistration = () => {
           document: student.document,
           address: student.address,
           custom_fields: student.customFields,
-          company_id: student.companyId,
+          company_id: user.companyId, // Vincula o aluno à empresa do usuário
           status: true
         }])
         .select()
@@ -136,7 +142,7 @@ export const StudentRegistration = () => {
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRoom = !selectedRoom || student.room === selectedRoom;
-    return matchesSearch && matchesRoom && student.room;
+    return matchesSearch && matchesRoom;
   });
 
   return (
