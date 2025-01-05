@@ -6,12 +6,6 @@ import { ptBR } from "date-fns/locale";
 import { CircleCheck, CircleX, Clock, FileQuestion } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface AttendanceDetailsProps {
-  studentId: string;
-  startDate: Date;
-  endDate: Date;
-}
-
 interface AttendanceStats {
   present: number;
   absent: number;
@@ -134,7 +128,7 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
       <div className="flex justify-end mb-4">
         <Select defaultValue="last30days" onValueChange={handlePeriodChange}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecione o período" />
+            <SelectValue placeholder="Período predefinido" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="last30days">Últimos 30 dias</SelectItem>
