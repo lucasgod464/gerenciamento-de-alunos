@@ -10,18 +10,14 @@ import { Room } from "@/types/room";
 interface RoomSelectorProps {
   rooms: Room[];
   selectedRoom: string;
-  onRoomChange: (value: string) => void;
+  onRoomChange: (roomId: string) => void;
 }
 
-export const RoomSelector = ({ 
-  rooms, 
-  selectedRoom, 
-  onRoomChange 
-}: RoomSelectorProps) => {
+export const RoomSelector = ({ rooms, selectedRoom, onRoomChange }: RoomSelectorProps) => {
   return (
     <Select value={selectedRoom} onValueChange={onRoomChange}>
-      <SelectTrigger className="w-[200px]">
-        <SelectValue placeholder="Selecione uma sala" />
+      <SelectTrigger className="w-[180px]">
+        <SelectValue placeholder="Selecionar Sala" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Todas as Salas</SelectItem>

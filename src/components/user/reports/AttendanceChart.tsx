@@ -14,10 +14,8 @@ import {
 interface AttendanceChartProps {
   data: Array<{
     name: string;
-    presente: number;
-    ausente: number;
-    atrasado: number;
-    justificado: number;
+    presenca: number;
+    faltas: number;
   }>;
 }
 
@@ -42,27 +40,15 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
               />
               <Legend />
               <Bar 
-                dataKey="presente" 
+                dataKey="presenca" 
                 fill="#22c55e" 
-                name="Presente" 
+                name="Presenças" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
-                dataKey="ausente" 
+                dataKey="faltas" 
                 fill="#ef4444" 
-                name="Ausente" 
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar 
-                dataKey="atrasado" 
-                fill="#eab308" 
-                name="Atrasado" 
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar 
-                dataKey="justificado" 
-                fill="#3b82f6" 
-                name="Justificado" 
+                name="Faltas" 
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
