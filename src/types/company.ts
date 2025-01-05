@@ -12,7 +12,7 @@ export interface Company {
   createdAt: string;
   publicFolderPath: string;
   storageUsed: number;
-  enrollmentFormUrl?: string;
+  enrollmentFormUrl?: string | null;
 }
 
 export interface CompanyFormData {
@@ -20,35 +20,19 @@ export interface CompanyFormData {
   document: string;
   usersLimit: number;
   roomsLimit: number;
-  publicFolderPath: string;
 }
 
-export interface SupabaseCompany {
-  id: string;
-  name: string;
-  document: string;
-  users_limit: number;
-  current_users: number;
-  rooms_limit: number;
-  current_rooms: number;
-  status: string;
-  created_at: string;
-  public_folder_path: string;
-  storage_used: number;
-  enrollment_form_url?: string;
-}
-
-export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
-  id: company.id,
-  name: company.name,
-  document: company.document,
-  usersLimit: company.users_limit,
-  currentUsers: company.current_users,
-  roomsLimit: company.rooms_limit,
-  currentRooms: company.current_rooms,
-  status: company.status as CompanyStatus,
-  createdAt: company.created_at,
-  publicFolderPath: company.public_folder_path,
-  storageUsed: company.storage_used,
-  enrollmentFormUrl: company.enrollment_form_url,
+export const mapSupabaseCompanyToCompany = (data: any): Company => ({
+  id: data.id,
+  name: data.name,
+  document: data.document,
+  usersLimit: data.users_limit,
+  currentUsers: data.current_users,
+  roomsLimit: data.rooms_limit,
+  currentRooms: data.current_rooms,
+  status: data.status as CompanyStatus,
+  createdAt: data.created_at,
+  publicFolderPath: data.public_folder_path,
+  storageUsed: data.storage_used,
+  enrollmentFormUrl: data.enrollment_form_url,
 });
