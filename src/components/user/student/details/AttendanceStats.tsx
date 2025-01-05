@@ -1,4 +1,6 @@
 import { Card } from "@/components/ui/card";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface AttendanceStatsProps {
   stats: {
@@ -17,7 +19,7 @@ export function AttendanceStats({ stats, period }: AttendanceStatsProps) {
   return (
     <Card className="p-4">
       <h4 className="font-medium mb-2">
-        Resumo do Período ({period.start.toLocaleDateString()} - {period.end.toLocaleDateString()})
+        Resumo do Período ({format(period.start, "dd/MM/yyyy", { locale: ptBR })} - {format(period.end, "dd/MM/yyyy", { locale: ptBR })})
       </h4>
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-green-100 text-green-800 p-2 rounded-md">

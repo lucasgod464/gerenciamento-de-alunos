@@ -9,7 +9,7 @@ import { AttendanceStats } from "./details/AttendanceStats";
 import { AttendanceList } from "./details/AttendanceList";
 import { DateRangeSelector } from "./details/DateRangeSelector";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
+import { addDays, endOfMonth, endOfWeek, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface StudentDetailsDialogProps {
@@ -31,7 +31,6 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     justified: 0
   });
 
-  // Resetar o estado quando o diálogo é fechado
   useEffect(() => {
     if (!open) {
       setSearchTerm("");
@@ -90,7 +89,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
 
       setAttendance(data || []);
 
-      const stats = (data || []).reduce((acc, record) => {
+      const newStats = (data || []).reduce((acc, record) => {
         acc[record.status] = (acc[record.status] || 0) + 1;
         return acc;
       }, {
@@ -100,7 +99,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         justified: 0
       });
 
-      setStats(stats);
+      setStats(newStats);
     };
 
     if (selectedStudent) {
@@ -152,8 +151,8 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
 
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
-    setSearchTerm(""); // Limpar o termo de busca após selecionar
-    setStudents([]); // Limpar a lista de resultados
+    setSearchTerm("");
+    setStudents([]);
   };
 
   return (
