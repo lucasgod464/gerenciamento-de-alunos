@@ -12,6 +12,7 @@ export interface FormField {
   order: number;
   options?: string[];
   isDefault?: boolean;
+  companyId?: string;
 }
 
 export interface SupabaseFormField {
@@ -36,6 +37,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required,
   order: field.order,
   options: field.options as string[] | undefined,
+  companyId: field.company_id || undefined,
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
@@ -46,5 +48,5 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   required: field.required,
   options: field.options || null,
   order: field.order,
-  company_id: null
+  company_id: field.companyId || null
 });
