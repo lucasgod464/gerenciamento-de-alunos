@@ -46,7 +46,7 @@ export const SystemReport = () => {
   });
 
   // Buscar dados de presença do mês selecionado
-  const { data: attendanceData } = useQuery({
+  const { data: attendanceData = [] } = useQuery({
     queryKey: ["attendance-data", user?.id, selectedRoom, currentDate],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -157,7 +157,12 @@ export const SystemReport = () => {
 
       <div className="grid gap-6 md:grid-cols-2">
         <AttendanceChart data={attendanceData || []} />
-        <StudentDistributionChart rooms={filteredRooms} />
+        <StudentDistributionChart 
+          rooms={filteredRooms}
+          selectedRoom={selectedRoom}
+          currentDate={currentDate}
+          attendanceData={attendanceData || []}
+        />
       </div>
 
       <GeneralStats
