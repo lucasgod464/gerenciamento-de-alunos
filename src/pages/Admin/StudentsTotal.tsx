@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { StudentTable } from "@/components/user/StudentTable";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 const StudentsTotal = () => {
@@ -197,14 +200,52 @@ const StudentsTotal = () => {
           </p>
         </div>
 
-        <StudentColumns
-          studentsWithoutRoom={studentsWithoutRoom}
-          studentsWithRoom={studentsWithRoom}
-          rooms={rooms}
-          onDeleteStudent={handleDeleteStudent}
-          onTransferStudent={handleTransferStudent}
-          onUpdateStudent={handleUpdateStudent}
-        />
+        <Tabs defaultValue="without-room" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="without-room">Alunos sem Sala</TabsTrigger>
+            <TabsTrigger value="with-room">Alunos com Sala</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="without-room">
+            <Card>
+              <CardContent className="pt-6">
+                <StudentTable 
+                  students={studentsWithoutRoom}
+                  rooms={rooms}
+                  onDeleteStudent={handleDeleteStudent}
+                  onTransferStudent={handleTransferStudent}
+                  onUpdateStudent={handleUpdateStudent}
+                  showTransferOption={true}
+                />
+                {studentsWithoutRoom.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Nenhum aluno sem sala encontrado
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="with-room">
+            <Card>
+              <CardContent className="pt-6">
+                <StudentTable 
+                  students={studentsWithRoom}
+                  rooms={rooms}
+                  onDeleteStudent={handleDeleteStudent}
+                  onTransferStudent={handleTransferStudent}
+                  onUpdateStudent={handleUpdateStudent}
+                  showTransferOption={true}
+                />
+                {studentsWithRoom.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Nenhum aluno com sala encontrado
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
