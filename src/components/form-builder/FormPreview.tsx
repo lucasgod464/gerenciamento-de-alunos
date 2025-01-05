@@ -20,7 +20,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CSSProperties } from "react";
 
 interface FormPreviewProps {
   fields: FormField[];
@@ -44,7 +43,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
     isDragging,
   } = useSortable({ id: field.id });
 
-  const style: CSSProperties = {
+  const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,

@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
-import { useFormBuilder } from "./useFormBuilder";
+import { useFormFields } from "./hooks/useFormFields";
 
 export const FormBuilder = () => {
   const {
@@ -18,7 +18,7 @@ export const FormBuilder = () => {
     handleUpdateField,
     handleDeleteField,
     handleReorderFields,
-  } = useFormBuilder();
+  } = useFormFields();
 
   return (
     <div className="space-y-6">
