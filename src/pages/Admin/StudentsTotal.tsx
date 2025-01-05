@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StudentTable } from "@/components/user/StudentTable";
+import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -102,13 +103,11 @@ const StudentsTotal = () => {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      // Primeiro remove qualquer vínculo existente
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', studentId);
 
-      // Depois cria o novo vínculo
       const { error } = await supabase
         .from('room_students')
         .insert({ student_id: studentId, room_id: newRoomId });
@@ -130,6 +129,59 @@ const StudentsTotal = () => {
       toast({
         title: "Erro ao transferir aluno",
         description: "Não foi possível transferir o aluno para a nova sala.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateStudent = async (updatedStudent: Student) => {
+    try {
+      const { error: studentError } = await supabase
+        .from('students')
+        .update({
+          name: updatedStudent.name,
+          birth_date: updatedStudent.birthDate,
+          status: updatedStudent.status,
+          email: updatedStudent.email,
+          document: updatedStudent.document,
+          address: updatedStudent.address,
+          custom_fields: updatedStudent.customFields
+        })
+        .eq('id', updatedStudent.id);
+
+      if (studentError) throw studentError;
+
+      if (updatedStudent.room) {
+        await supabase
+          .from('room_students')
+          .delete()
+          .eq('student_id', updatedStudent.id);
+
+        const { error: roomError } = await supabase
+          .from('room_students')
+          .insert({
+            student_id: updatedStudent.id,
+            room_id: updatedStudent.room
+          });
+
+        if (roomError) throw roomError;
+      }
+
+      setStudents(prev => prev.map(student => 
+        student.id === updatedStudent.id 
+          ? updatedStudent
+          : student
+      ));
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno atualizado com sucesso!",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar aluno:', error);
+      toast({
+        title: "Erro ao atualizar aluno",
+        description: "Não foi possível atualizar o aluno.",
         variant: "destructive",
       });
     }
@@ -162,6 +214,7 @@ const StudentsTotal = () => {
                   rooms={rooms}
                   onDeleteStudent={handleDeleteStudent}
                   onTransferStudent={handleTransferStudent}
+                  onUpdateStudent={handleUpdateStudent}
                   showTransferOption={true}
                 />
                 {studentsWithoutRoom.length === 0 && (
@@ -181,6 +234,7 @@ const StudentsTotal = () => {
                   rooms={rooms}
                   onDeleteStudent={handleDeleteStudent}
                   onTransferStudent={handleTransferStudent}
+                  onUpdateStudent={handleUpdateStudent}
                   showTransferOption={true}
                 />
                 {studentsWithRoom.length === 0 && (

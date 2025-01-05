@@ -8,6 +8,7 @@ interface StudentColumnsProps {
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
   onTransferStudent: (studentId: string, newRoomId: string) => void;
+  onUpdateStudent: (student: Student) => void;
 }
 
 export const StudentColumns = ({
@@ -16,6 +17,7 @@ export const StudentColumns = ({
   rooms,
   onDeleteStudent,
   onTransferStudent,
+  onUpdateStudent,
 }: StudentColumnsProps) => {
   console.log("Alunos sem sala:", studentsWithoutRoom);
   console.log("Alunos com sala:", studentsWithRoom);
@@ -30,6 +32,7 @@ export const StudentColumns = ({
             rooms={rooms}
             onDeleteStudent={onDeleteStudent}
             onTransferStudent={onTransferStudent}
+            onUpdateStudent={onUpdateStudent}
             showTransferOption={true}
           />
           {studentsWithoutRoom.length === 0 && (
@@ -48,6 +51,7 @@ export const StudentColumns = ({
             rooms={rooms}
             onDeleteStudent={onDeleteStudent}
             onTransferStudent={onTransferStudent}
+            onUpdateStudent={onUpdateStudent}
             showTransferOption={true}
           />
           {studentsWithRoom.length === 0 && (
