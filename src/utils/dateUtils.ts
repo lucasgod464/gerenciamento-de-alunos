@@ -1,23 +1,21 @@
-import { format, addDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { format, addDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export const formatDate = (date: Date): string => {
-  // Cria uma nova data no fuso horário local
-  const localDate = new Date(date);
-  
-  // Ajusta para o início do dia no fuso horário local
-  localDate.setHours(0, 0, 0, 0);
-  
-  // Adiciona um dia para compensar o fuso horário
-  const adjustedDate = addDays(localDate, 1);
-  
-  // Converte para UTC mantendo o mesmo dia
-  const utcDate = new Date(Date.UTC(
-    adjustedDate.getFullYear(),
-    adjustedDate.getMonth(),
-    adjustedDate.getDate()
+  // Criar uma nova data no fuso horário local
+  const localDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate()
+  );
+
+  // Ajustar para o início do dia
+  const adjustedDate = new Date(Date.UTC(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate()
   ));
-  
+
   const formattedDate = format(utcDate, 'yyyy-MM-dd', { locale: ptBR });
   
   console.log('=== Debug formatDate ===');
@@ -29,4 +27,15 @@ export const formatDate = (date: Date): string => {
   console.log('=======================');
   
   return formattedDate;
+};
+
+export const formatDisplayDate = (date: Date): string => {
+  // Adiciona um dia para compensar o fuso horário na exibição
+  const displayDate = addDays(date, 1);
+  return format(displayDate, 'dd/MM/yyyy', { locale: ptBR });
+};
+
+export const formatDateForDatabase = (date: Date): string => {
+  // Mantém a lógica original para salvar no banco
+  return formatDate(date);
 };

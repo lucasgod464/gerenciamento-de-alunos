@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/utils/dateUtils";
+import { formatDateForDatabase } from "@/utils/dateUtils";
 import { AttendanceHeader } from "./AttendanceHeader";
 import { AttendanceRow } from "./AttendanceRow";
 import { useAttendanceData } from "./hooks/useAttendanceData";
@@ -22,7 +22,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   useEffect(() => {
     const loadObservations = async () => {
       try {
-        const formattedDate = formatDate(date);
+        const formattedDate = formatDateForDatabase(date);
         console.log('AttendanceList - Carregando observações para a data:', formattedDate);
         
         const { data, error } = await supabase
@@ -49,7 +49,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   const handleStatusChange = async (studentId: string, status: string) => {
     try {
-      const formattedDate = formatDate(date);
+      const formattedDate = formatDateForDatabase(date);
       console.log('AttendanceList - Salvando status:', {
         data: formattedDate,
         studentId,
@@ -104,7 +104,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   const handleSave = async () => {
     try {
-      const formattedDate = formatDate(date);
+      const formattedDate = formatDateForDatabase(date);
       console.log('AttendanceList - Salvando todas as presenças e observações:', {
         data: formattedDate,
         estudantes: students,
