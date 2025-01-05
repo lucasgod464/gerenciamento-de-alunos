@@ -1,7 +1,7 @@
 import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Lock, GripVertical } from "lucide-react";
+import { Trash2, Pencil, Lock, GripVertical, Asterisk } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
@@ -54,7 +54,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   return (
     <div ref={setNodeRef} style={style} className="mb-4">
-      <Card className="p-4">
+      <Card className={`p-4 ${isSystemField ? 'bg-gray-50 border-dashed border-2' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isSystemField && (
@@ -68,9 +68,16 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             )}
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                <h3 className="font-medium">{field.label}</h3>
-                {field.required && (
-                  <Badge variant="secondary">Obrigatório</Badge>
+                <h3 className="font-medium">
+                  {field.label}
+                  {field.required && (
+                    <Asterisk className="inline-block h-3 w-3 text-red-500 ml-1" />
+                  )}
+                </h3>
+                {isSystemField && (
+                  <Badge variant="secondary" className="text-xs">
+                    Campo padrão do sistema
+                  </Badge>
                 )}
               </div>
               {field.description && (
