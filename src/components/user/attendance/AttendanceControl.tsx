@@ -121,52 +121,53 @@ export const AttendanceControl = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Data</h3>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border bg-white"
-                />
-              </div>
+      <Card className="bg-white shadow-sm">
+        <CardContent className="pt-6">
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
+              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="Selecione uma sala" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.id} value={room.id}>
+                      {room.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
-                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                  <SelectTrigger className="bg-white">
-                    <SelectValue placeholder="Selecione uma sala" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rooms.map((room) => (
-                      <SelectItem key={room.id} value={room.id}>
-                        {room.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div>
+              <h3 className="font-medium mb-2 text-gray-700">Data</h3>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md border bg-white"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              {isStarted && (
+                <Button 
+                  variant="outline"
+                  onClick={handleStartAttendance}
+                  disabled={!selectedRoom || !selectedDate}
+                >
+                  Cancelar Chamada
+                </Button>
+              )}
               <Button 
-                className="w-full"
                 onClick={handleStartAttendance}
                 disabled={!selectedRoom || !selectedDate}
               >
-                {isStarted ? "Cancelar Chamada" : "Iniciar Chamada"}
+                {isStarted ? "Salvar Chamada" : "Iniciar Chamada"}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {isStarted && (
         <Card className="bg-white shadow-sm">
