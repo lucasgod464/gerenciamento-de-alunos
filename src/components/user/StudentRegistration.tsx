@@ -67,6 +67,13 @@ export const StudentRegistration = () => {
 
   const handleDeleteStudent = async (id: string) => {
     try {
+      // Primeiro, remover as relações na tabela room_students
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', id);
+
+      // Depois, remover o aluno
       const { error } = await supabase
         .from('students')
         .delete()
@@ -80,7 +87,7 @@ export const StudentRegistration = () => {
       });
       
       loadStudents();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao deletar aluno:', error);
       toast({
         title: "Erro ao remover aluno",
