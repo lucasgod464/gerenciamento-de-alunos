@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { AttendanceList } from "./AttendanceList";
-import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateUtils";
+import { StudentDetailsDialog } from "../student/StudentDetailsDialog";
 
 interface Room {
   id: string;
@@ -20,6 +21,7 @@ export const AttendanceControl = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isStarted, setIsStarted] = useState(false);
   const [hasAttendance, setHasAttendance] = useState(false);
+  const [showStudentDetails, setShowStudentDetails] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -163,6 +165,13 @@ export const AttendanceControl = () => {
               >
                 {isStarted ? "Cancelar Chamada" : "Iniciar Chamada"}
               </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowStudentDetails(true)}
+              >
+                Consultar Aluno Individual
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -180,6 +189,11 @@ export const AttendanceControl = () => {
           </CardContent>
         </Card>
       )}
+
+      <StudentDetailsDialog
+        open={showStudentDetails}
+        onClose={() => setShowStudentDetails(false)}
+      />
     </div>
   );
 };
