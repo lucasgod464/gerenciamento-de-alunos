@@ -150,8 +150,14 @@ export const SystemReport = () => {
 
   const totalRooms = filteredRooms.length;
 
-  const averageAttendance = attendanceData?.reduce((acc, curr) => 
-    acc + curr.presente, 0) / (attendanceData?.length || 1);
+  // Novo cálculo da taxa de presença
+  const totalDays = attendanceData.length;
+  const totalPossibleAttendances = totalStudents * totalDays;
+  const totalPresences = attendanceData.reduce((acc, curr) => acc + curr.presente, 0);
+  
+  const averageAttendance = totalPossibleAttendances > 0 
+    ? (totalPresences / totalPossibleAttendances) * 100 
+    : 0;
 
   return (
     <div className="space-y-6">
