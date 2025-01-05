@@ -39,9 +39,7 @@ export const useEnrollmentFields = () => {
 
   const addField = async (field: Omit<FormField, "id" | "order">) => {
     try {
-      if (!user?.companyId) {
-        throw new Error("No company ID found");
-      }
+      if (!user?.companyId) throw new Error("Empresa não encontrada");
 
       const newField = {
         ...mapFormFieldToSupabase(field as FormField),
@@ -49,92 +47,52 @@ export const useEnrollmentFields = () => {
         company_id: user.companyId
       };
 
-      console.log("Adding new field:", newField);
-
       const { data, error } = await supabase
         .from('enrollment_form_fields')
         .insert([newField])
         .select()
         .single();
 
-      if (error) {
-        console.error("Error adding field:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Field added successfully:", data);
       const mappedField = mapSupabaseFormField(data);
-      setFields(prev => [...prev, mappedField]);
-      
-      toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso.",
-      });
+      setFields(prev => [...defaultFields, ...prev.filter(f => !f.isDefault), mappedField]);
     } catch (error) {
-      console.error("Error adding field:", error);
-      toast({
-        title: "Erro ao adicionar campo",
-        description: "Não foi possível adicionar o campo.",
-        variant: "destructive",
-      });
+      console.error("Erro ao adicionar campo:", error);
+      throw error;
     }
   };
 
   const updateField = async (updatedField: FormField) => {
-    const isDefaultField = defaultFields.some(field => field.id === updatedField.id);
-    if (isDefaultField) {
-      toast({
-        title: "Operação não permitida",
-        description: "Não é possível editar campos padrão do formulário.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
-      if (!user?.companyId) {
-        throw new Error("No company ID found");
-      }
-
-      const supabaseField = mapFormFieldToSupabase(updatedField);
-      console.log("Updating field:", { id: updatedField.id, ...supabaseField });
+      if (!user?.companyId) throw new Error("Empresa não encontrada");
 
       const { error } = await supabase
         .from('enrollment_form_fields')
         .update({
-          ...supabaseField,
+          ...mapFormFieldToSupabase(updatedField),
           company_id: user.companyId
         })
         .eq('id', updatedField.id)
         .eq('company_id', user.companyId);
 
-      if (error) {
-        console.error("Error updating field:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Field updated successfully");
-      setFields(prev => prev.map(field => 
-        field.id === updatedField.id ? updatedField : field
-      ));
-
-      toast({
-        title: "Campo atualizado",
-        description: "O campo foi atualizado com sucesso.",
-      });
+      setFields(prev => [
+        ...defaultFields,
+        ...prev
+          .filter(f => !f.isDefault)
+          .map(field => field.id === updatedField.id ? updatedField : field)
+      ]);
     } catch (error) {
-      console.error("Error updating field:", error);
-      toast({
-        title: "Erro ao atualizar campo",
-        description: "Não foi possível atualizar o campo.",
-        variant: "destructive",
-      });
+      console.error("Erro ao atualizar campo:", error);
+      throw error;
     }
   };
 
   const deleteField = async (id: string) => {
-    const isDefaultField = defaultFields.some(field => field.id === id);
-    if (isDefaultField) {
+    // Não permitir deletar campos padrão
+    if (defaultFields.some(f => f.id === id)) {
       toast({
         title: "Operação não permitida",
         description: "Não é possível excluir campos padrão do formulário.",
@@ -150,36 +108,22 @@ export const useEnrollmentFields = () => {
         .eq('id', id)
         .eq('company_id', user?.companyId);
 
-      if (error) {
-        console.error("Error deleting field:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Field deleted successfully");
-      setFields(prev => prev.filter(field => field.id !== id));
-      toast({
-        title: "Campo removido",
-        description: "O campo foi removido com sucesso.",
-      });
+      setFields(prev => [...defaultFields, ...prev.filter(f => !f.isDefault && f.id !== id)]);
     } catch (error) {
-      console.error("Error deleting field:", error);
-      toast({
-        title: "Erro ao remover campo",
-        description: "Não foi possível remover o campo.",
-        variant: "destructive",
-      });
+      console.error("Erro ao deletar campo:", error);
+      throw error;
     }
   };
 
   const reorderFields = async (reorderedFields: FormField[]) => {
-    if (!user?.companyId) {
-      console.error("No company ID found");
-      return;
-    }
-
-    const customFields = reorderedFields.filter(field => !defaultFields.some(df => df.id === field.id));
+    // Garantir que os campos padrão permaneçam no topo
+    const customFields = reorderedFields.filter(field => !field.isDefault);
     
     try {
+      if (!user?.companyId) throw new Error("Empresa não encontrada");
+
       const updates = customFields.map((field, index) => ({
         id: field.id,
         ...mapFormFieldToSupabase(field),
@@ -187,26 +131,16 @@ export const useEnrollmentFields = () => {
         company_id: user.companyId
       }));
 
-      console.log("Reordering fields:", updates);
-
       const { error } = await supabase
         .from('enrollment_form_fields')
         .upsert(updates);
 
-      if (error) {
-        console.error("Error reordering fields:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log("Fields reordered successfully");
-      setFields(reorderedFields);
+      setFields([...defaultFields, ...customFields]);
     } catch (error) {
-      console.error("Error reordering fields:", error);
-      toast({
-        title: "Erro ao reordenar campos",
-        description: "Não foi possível atualizar a ordem dos campos.",
-        variant: "destructive",
-      });
+      console.error("Erro ao reordenar campos:", error);
+      throw error;
     }
   };
 

@@ -1,9 +1,8 @@
 import { FormField } from "@/types/form";
-import { v4 as uuidv4 } from "uuid";
 
 export const defaultFields: FormField[] = [
   {
-    id: uuidv4(),
+    id: "nome_completo",
     name: "nome_completo",
     label: "Nome Completo",
     type: "text",
@@ -12,7 +11,7 @@ export const defaultFields: FormField[] = [
     isDefault: true
   },
   {
-    id: uuidv4(),
+    id: "data_nascimento",
     name: "data_nascimento",
     label: "Data de Nascimento",
     type: "date",
