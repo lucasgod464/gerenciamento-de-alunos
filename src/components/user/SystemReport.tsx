@@ -22,7 +22,6 @@ export const SystemReport = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  // Buscar salas autorizadas do usuário
   const { data: authorizedRooms = [] } = useQuery({
     queryKey: ["authorized-rooms", user?.id],
     queryFn: async () => {
@@ -166,13 +165,13 @@ export const SystemReport = () => {
         </Button>
       </div>
 
-      <AttendanceChart data={attendanceData || []} />
-
       <GeneralStats
         averageAttendance={averageAttendance}
         totalStudents={totalStudents}
         totalRooms={totalRooms}
       />
+
+      <AttendanceChart data={attendanceData || []} />
     </div>
   );
 };
