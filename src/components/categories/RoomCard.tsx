@@ -68,13 +68,13 @@ export const RoomCard = ({
     >
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-purple-600" />
+          <Building2 className="h-4 w-4 text-black" />
           <h4 className="font-medium text-sm">{room.name}</h4>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-purple-600" />
+            <Users className="h-4 w-4 text-black" />
             <span className="text-sm text-muted-foreground">
               Usuários Vinculados ({authorizedUsers.length})
             </span>
@@ -97,7 +97,7 @@ export const RoomCard = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <GraduationCap className="h-4 w-4 text-purple-600" />
+          <GraduationCap className="h-4 w-4 text-black" />
           <span className="text-sm text-muted-foreground">
             {room.students?.length || 0} alunos
           </span>
@@ -105,14 +105,14 @@ export const RoomCard = ({
 
         {room.schedule && (
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-purple-600" />
+            <Clock className="h-4 w-4 text-black" />
             <span className="text-sm text-muted-foreground">{room.schedule}</span>
           </div>
         )}
 
         {room.location && (
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-purple-600" />
+            <MapPin className="h-4 w-4 text-black" />
             <span className="text-sm text-muted-foreground">{room.location}</span>
           </div>
         )}
