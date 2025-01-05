@@ -4,11 +4,11 @@ import { AttendanceControl } from "@/components/user/attendance/AttendanceContro
 const AttendancePage = () => {
   return (
     <DashboardLayout role="user">
-      <div className="space-y-6">
-        <div>
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h1 className="text-2xl font-bold mb-2">Controle de Presença</h1>
           <p className="text-muted-foreground">
-            Gerencie a presença dos seus alunos
+            Gerencie a presença dos seus alunos de forma simples e eficiente
           </p>
         </div>
         <AttendanceControl />

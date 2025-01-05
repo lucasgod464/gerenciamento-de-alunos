@@ -111,29 +111,29 @@ export const AttendanceControl = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
+        <Card className="bg-white shadow-sm">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div>
-                <h3 className="font-medium mb-2">Data</h3>
+                <h3 className="font-medium mb-2 text-gray-700">Data</h3>
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border"
+                  className="rounded-md border bg-white"
                 />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white shadow-sm">
           <CardContent className="pt-6">
             <div className="space-y-4">
               <div>
-                <h3 className="font-medium mb-2">Sala</h3>
+                <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
                 <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecione uma sala" />
                   </SelectTrigger>
                   <SelectContent>
@@ -156,10 +156,10 @@ export const AttendanceControl = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white shadow-sm">
           <CardContent className="pt-6">
             <AttendanceChart 
-              date={selectedDate} 
+              data={[]} 
               companyId={user?.companyId || ''} 
               roomId={selectedRoom}
             />
@@ -168,12 +168,16 @@ export const AttendanceControl = () => {
       </div>
 
       {isStarted && (
-        <AttendanceList
-          date={selectedDate}
-          roomId={selectedRoom}
-          companyId={user?.companyId || ''}
-          onAttendanceSaved={() => setHasAttendance(true)}
-        />
+        <Card className="bg-white shadow-sm">
+          <CardContent className="pt-6">
+            <AttendanceList
+              date={selectedDate}
+              roomId={selectedRoom}
+              companyId={user?.companyId || ''}
+              onAttendanceSaved={() => setHasAttendance(true)}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   );
