@@ -12,6 +12,7 @@ import { MapPin } from "lucide-react";
 import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
+import { SpecializationSelectionFields } from "./fields/SpecializationSelectionFields";
 
 export interface UserFormFieldsProps {
   defaultValues?: {
@@ -27,6 +28,7 @@ export interface UserFormFieldsProps {
   };
   onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
   onRoomsChange?: (rooms: string[]) => void;
+  onSpecializationsChange?: (specializations: string[]) => void;
   isEditing?: boolean;
 }
 
@@ -34,6 +36,7 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
   defaultValues = {}, 
   onTagsChange,
   onRoomsChange,
+  onSpecializationsChange,
   isEditing
 }) => {
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
@@ -42,6 +45,7 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
   useEffect(() => {
     if (defaultValues.authorizedRooms) {
@@ -67,6 +71,15 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
     
     setSelectedRooms(newSelectedRooms);
     onRoomsChange?.(newSelectedRooms);
+  };
+
+  const handleSpecializationToggle = (specializationId: string) => {
+    const newSelectedSpecializations = selectedSpecializations.includes(specializationId)
+      ? selectedSpecializations.filter(id => id !== specializationId)
+      : [...selectedSpecializations, specializationId];
+    
+    setSelectedSpecializations(newSelectedSpecializations);
+    onSpecializationsChange?.(newSelectedSpecializations);
   };
 
   return (
@@ -117,16 +130,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="specialization">Especialização</Label>
-        <Input
-          id="specialization"
-          name="specialization"
-          defaultValue={defaultValues.specialization}
-          placeholder="Digite a especialização..."
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="accessLevel">Nível de Acesso</Label>
         <Select name="accessLevel" defaultValue={defaultValues.accessLevel}>
           <SelectTrigger>
@@ -155,6 +158,12 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
       <TagSelectionFields
         selectedTags={selectedTags}
         onTagToggle={handleTagToggle}
+        defaultValues={defaultValues}
+      />
+
+      <SpecializationSelectionFields
+        selectedSpecializations={selectedSpecializations}
+        onSpecializationToggle={handleSpecializationToggle}
         defaultValues={defaultValues}
       />
 
