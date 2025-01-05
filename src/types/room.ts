@@ -1,4 +1,5 @@
-import { Student, SupabaseStudent, mapSupabaseStudent } from "./student";
+import { Json } from "@/integrations/supabase/types";
+import { Student, mapSupabaseStudent } from "./student";
 
 export interface Room {
   id: string;
@@ -10,7 +11,8 @@ export interface Room {
   companyId: string;
   studyRoom: string;
   createdAt: string;
-  students: Student[];
+  students?: Student[];
+  companyName?: string;
 }
 
 export interface SupabaseRoom {
@@ -23,8 +25,22 @@ export interface SupabaseRoom {
   company_id: string;
   study_room: string;
   created_at: string;
+  companies?: {
+    name: string;
+  };
   room_students?: {
-    student: SupabaseStudent;
+    student: {
+      id: string;
+      name: string;
+      birth_date: string;
+      status: boolean;
+      email?: string;
+      document?: string;
+      address?: string;
+      custom_fields: Json;
+      company_id: string;
+      created_at: string;
+    };
   }[];
 }
 
@@ -38,8 +54,11 @@ export const mapSupabaseRoom = (room: SupabaseRoom): Room => ({
   companyId: room.company_id,
   studyRoom: room.study_room,
   createdAt: room.created_at,
-  students: room.room_students?.map(rs => mapSupabaseStudent(rs.student)) || [],
+  companyName: room.companies?.name,
+  students: room.room_students?.map(rs => mapSupabaseStudent(rs.student as any)) || [],
 });
+
+export const mapSupabaseRoomToRoom = mapSupabaseRoom;
 
 export const mapRoomToSupabase = (room: Room): Omit<SupabaseRoom, 'id' | 'created_at' | 'room_students'> => ({
   name: room.name,

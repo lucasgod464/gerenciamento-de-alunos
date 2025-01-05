@@ -11,6 +11,7 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
+  room?: string; // Adicionando campo opcional de sala
 }
 
 export interface SupabaseStudent {
@@ -38,6 +39,8 @@ export const mapSupabaseStudent = (student: SupabaseStudent): Student => ({
   companyId: student.company_id,
   createdAt: student.created_at,
 });
+
+export const mapSupabaseStudentToStudent = mapSupabaseStudent;
 
 export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'id' | 'created_at'> => ({
   name: student.name,
