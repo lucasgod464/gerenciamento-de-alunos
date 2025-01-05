@@ -1,7 +1,8 @@
-import { FormField } from "./types";
+import { FormField } from "@/types/form";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Lock, GripVertical } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   DndContext,
   closestCenter,
@@ -67,32 +68,24 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             )}
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
-                {isSystemField && (
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                )}
                 <h3 className="font-medium">{field.label}</h3>
+                {field.required && (
+                  <Badge variant="secondary">Obrigatório</Badge>
+                )}
               </div>
-              {isSystemField ? (
+              {field.description && (
                 <p className="text-sm text-muted-foreground">
-                  Campo padrão do sistema
+                  {field.description}
                 </p>
-              ) : (
-                <>
-                  {field.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {field.description}
-                    </p>
-                  )}
-                  <p className="text-sm text-muted-foreground">
-                    Tipo: {field.type}
-                    {(field.type === "select" || field.type === "multiple") && field.options && (
-                      <span className="ml-2">
-                        (Opções: {field.options.join(", ")})
-                      </span>
-                    )}
-                  </p>
-                </>
               )}
+              <p className="text-sm text-muted-foreground">
+                Tipo: {field.type}
+                {(field.type === "select" || field.type === "multiple") && field.options && (
+                  <span className="ml-2">
+                    (Opções: {field.options.join(", ")})
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
@@ -158,15 +151,6 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
     }
   };
 
-  // Ordenar campos para mostrar campos do sistema primeiro
-  const orderedFields = [...fields].sort((a, b) => {
-    const aIsSystem = systemFields.includes(a.id);
-    const bIsSystem = systemFields.includes(b.id);
-    if (aIsSystem && !bIsSystem) return -1;
-    if (!aIsSystem && bIsSystem) return 1;
-    return 0;
-  });
-
   return (
     <div className="space-y-4">
       <DndContext
@@ -175,10 +159,10 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={orderedFields.map(f => f.id)}
+          items={fields.map(f => f.id)}
           strategy={verticalListSortingStrategy}
         >
-          {orderedFields.map((field) => (
+          {fields.map((field) => (
             <SortableFieldCard
               key={field.id}
               field={field}

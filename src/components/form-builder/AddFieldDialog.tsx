@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
-import { FormField, FieldType } from "./types";
+import { FormField, FieldType } from "@/types/form";
 import { CustomFieldOptions } from "./CustomFieldOptions";
 
 interface AddFieldDialogProps {
