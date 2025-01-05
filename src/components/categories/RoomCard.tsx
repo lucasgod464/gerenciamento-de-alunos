@@ -1,60 +1,80 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Users, UserPlus } from "lucide-react";
-import { RoomStudentsDialog } from "@/components/rooms/RoomStudentsDialog";
-import { useState } from "react";
-import { AuthorizedUsersList } from "./AuthorizedUsersList";
 import { Room } from "@/types/room";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { School, Users, Clock, MapPin } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { AuthorizedUsersList } from "./AuthorizedUsersList";
 
 interface RoomCardProps {
   room: Room;
-  onAddUser: (roomId: string) => void;
+  isSelected: boolean;
+  companyId: string;
+  onToggleSelection: (roomId: string) => void;
+  getStudentsCount: (room: Room) => number;
 }
 
-export const RoomCard = ({ room, onAddUser }: RoomCardProps) => {
-  const [showStudents, setShowStudents] = useState(false);
-
+export const RoomCard = ({
+  room,
+  isSelected,
+  companyId,
+  onToggleSelection,
+  getStudentsCount,
+}: RoomCardProps) => {
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
+    <Card 
+      className={`bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-colors cursor-pointer ${
+        isSelected ? 'ring-2 ring-primary' : ''
+      }`}
+      onClick={() => onToggleSelection(room.id)}
+    >
+      <CardHeader className="p-4">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <School className="h-4 w-4" />
+          {room.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0 text-sm text-muted-foreground space-y-4">
         <div>
-          <h3 className="text-lg font-semibold">{room.name}</h3>
-          <p className="text-sm text-muted-foreground">{room.schedule}</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => onAddUser(room.id)}
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Adicionar Usuário
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Usuários Vinculados</span>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              Total: {room.students?.length || 0} alunos
-            </span>
+          <div className="flex items-center gap-2 text-sm mb-1">
+            <Users className="h-4 w-4" />
+            <span className="font-medium text-xs text-foreground/70">Usuários Vinculados</span>
           </div>
-          <AuthorizedUsersList roomId={room.id} companyId={room.companyId || ''} />
+          <AuthorizedUsersList roomId={room.id} companyId={companyId} />
         </div>
-      </div>
+        
+        <Separator className="my-2" />
+        
+        <div className="space-y-2">
+          <div>
+            <div className="flex items-center gap-2 text-sm mb-1">
+              <Users className="h-4 w-4" />
+              <span className="font-medium text-xs text-foreground/70">Total de Alunos</span>
+            </div>
+            <div className="pl-6 text-left">
+              <span className="text-sm">{getStudentsCount(room)} alunos</span>
+            </div>
+          </div>
 
-      <RoomStudentsDialog
-        open={showStudents}
-        onOpenChange={setShowStudents}
-        students={room.students || []}
-        rooms={[{ id: room.id, name: room.name }]}
-        currentRoomId={room.id}
-        onDeleteStudent={() => {}}
-        onTransferStudent={() => {}}
-      />
+          <div>
+            <div className="flex items-center gap-2 text-sm mb-1">
+              <Clock className="h-4 w-4" />
+              <span className="font-medium text-xs text-foreground/70">Horário</span>
+            </div>
+            <div className="pl-6 text-left">
+              <span className="text-sm">{room.schedule}</span>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-2 text-sm mb-1">
+              <MapPin className="h-4 w-4" />
+              <span className="font-medium text-xs text-foreground/70">Local</span>
+            </div>
+            <div className="pl-6 text-left">
+              <span className="text-sm">{room.location}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };
