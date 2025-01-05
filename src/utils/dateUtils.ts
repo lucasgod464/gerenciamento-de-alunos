@@ -9,20 +9,19 @@ export const formatDate = (date: Date): string => {
     date.getDate()
   );
 
-  // Ajustar para o início do dia
+  // Ajustar para o início do dia em UTC
   const adjustedDate = new Date(Date.UTC(
     localDate.getFullYear(),
     localDate.getMonth(),
     localDate.getDate()
   ));
 
-  const formattedDate = format(utcDate, 'yyyy-MM-dd', { locale: ptBR });
+  const formattedDate = format(adjustedDate, 'yyyy-MM-dd', { locale: ptBR });
   
   console.log('=== Debug formatDate ===');
   console.log('Data original:', date);
   console.log('Data local ajustada:', localDate);
-  console.log('Data com ajuste de dia:', adjustedDate);
-  console.log('Data UTC:', utcDate);
+  console.log('Data com ajuste UTC:', adjustedDate);
   console.log('Data formatada para o banco:', formattedDate);
   console.log('=======================');
   
