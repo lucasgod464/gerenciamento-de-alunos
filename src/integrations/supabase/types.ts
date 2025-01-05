@@ -226,6 +226,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          student_id: string | null
           text: string
         }
         Insert: {
@@ -233,6 +234,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
+          student_id?: string | null
           text: string
         }
         Update: {
@@ -240,6 +242,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          student_id?: string | null
           text?: string
         }
         Relationships: [
@@ -248,6 +251,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_observations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]

@@ -62,9 +62,10 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       const formattedDate = formatDate(date);
       
       // Primeiro, salvamos todas as presenças
-      const studentsWithStatus = students.filter(student => student.status);
-      for (const student of studentsWithStatus) {
-        const { error } = await supabase
+      for (const student of students) {
+        if (!student.status) continue;
+
+        const { error: attendanceError } = await supabase
           .from('daily_attendance')
           .upsert({
             date: formattedDate,
@@ -74,26 +75,23 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
             room_id: roomId
           });
           
-        if (error) throw error;
+        if (attendanceError) throw attendanceError;
       }
       
       // Depois, salvamos as observações
-      const observationEntries = Object.entries(observations);
-      if (observationEntries.length > 0) {
-        for (const [studentId, text] of observationEntries) {
-          if (!text) continue; // Pula observações vazias
+      for (const [studentId, text] of Object.entries(observations)) {
+        if (!text.trim()) continue; // Pula observações vazias
+        
+        const { error: observationError } = await supabase
+          .from('daily_observations')
+          .upsert({
+            date: formattedDate,
+            text,
+            company_id: companyId,
+            student_id: studentId
+          });
           
-          const { error } = await supabase
-            .from('daily_observations')
-            .upsert({
-              date: formattedDate,
-              text,
-              company_id: companyId,
-              student_id: studentId
-            });
-            
-          if (error) throw error;
-        }
+        if (observationError) throw observationError;
       }
 
       onAttendanceSaved();
