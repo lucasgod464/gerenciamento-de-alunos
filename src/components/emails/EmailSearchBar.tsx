@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search } from "lucide-react"
+import { CreateEmailDialog } from "./CreateEmailDialog"
 
 interface EmailSearchBarProps {
   onSearchChange: (value: string) => void
@@ -21,16 +22,19 @@ export function EmailSearchBar({
           className="pl-10 max-w-[800px]"
         />
       </div>
-      <Select defaultValue="all" onValueChange={onAccessLevelChange}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Nível de Acesso" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos</SelectItem>
-          <SelectItem value="Admin">Administrador</SelectItem>
-          <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
-        </SelectContent>
-      </Select>
+      <div className="flex gap-2">
+        <Select defaultValue="all" onValueChange={onAccessLevelChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Nível de Acesso" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos Status</SelectItem>
+            <SelectItem value="Admin">Administrador</SelectItem>
+            <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
+          </SelectContent>
+        </Select>
+        <CreateEmailDialog onEmailCreated={() => {}} />
+      </div>
     </div>
   )
 }

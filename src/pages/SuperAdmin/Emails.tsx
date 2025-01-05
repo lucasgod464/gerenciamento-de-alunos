@@ -144,10 +144,7 @@ const Emails = () => {
 
         <EmailStats data={emails} />
 
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Lista de Emails</h2>
-          <CreateEmailDialog onEmailCreated={fetchEmails} />
-        </div>
+        <h2 className="text-xl font-semibold">Lista de Emails</h2>
 
         <EmailSearchBar
           onSearchChange={setSearchTerm}
