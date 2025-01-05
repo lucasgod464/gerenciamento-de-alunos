@@ -28,13 +28,12 @@ export function EditUserDialog({
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  const [selectedSpecializations, setSelectedSpecializations] = useState<{ id: string; name: string; }[]>([]);
 
+  // Atualiza os estados quando o usuário ou o diálogo mudam
   useEffect(() => {
     if (user && open) {
       setSelectedTags(user.tags || []);
       setSelectedRooms(user.authorizedRooms?.map(room => room.id) || []);
-      setSelectedSpecializations(user.specializations || []);
     }
   }, [user, open]);
 
@@ -43,12 +42,14 @@ export function EditUserDialog({
 
     try {
       setLoading(true);
+      console.log('Updating user with rooms:', selectedRooms);
 
       const updateData = {
         name: formData.get('name')?.toString() || '',
         email: formData.get('email')?.toString() || '',
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
+        specialization: formData.get('specialization')?.toString() || '',
         status: formData.get('status')?.toString() || 'active',
         address: formData.get('address')?.toString() || ''
       };
@@ -59,21 +60,6 @@ export function EditUserDialog({
         .eq('id', user.id);
 
       if (updateError) throw updateError;
-
-      // Update user_specializations
-      await supabase
-        .from('user_specializations')
-        .delete()
-        .eq('user_id', user.id);
-
-      if (selectedSpecializations.length > 0) {
-        await supabase
-          .from('user_specializations')
-          .insert(selectedSpecializations.map(spec => ({
-            user_id: user.id,
-            specialization_id: spec.id
-          })));
-      }
 
       // Update tags
       await supabase
@@ -91,6 +77,7 @@ export function EditUserDialog({
       }
 
       // Update rooms
+      console.log('Deleting existing room assignments for user:', user.id);
       const { error: deleteRoomsError } = await supabase
         .from('user_rooms')
         .delete()
@@ -99,6 +86,7 @@ export function EditUserDialog({
       if (deleteRoomsError) throw deleteRoomsError;
 
       if (selectedRooms.length > 0) {
+        console.log('Inserting new room assignments:', selectedRooms);
         const { error: insertRoomsError } = await supabase
           .from('user_rooms')
           .insert(selectedRooms.map(roomId => ({
@@ -109,16 +97,25 @@ export function EditUserDialog({
         if (insertRoomsError) throw insertRoomsError;
       }
 
+      // Fetch updated room names
+      const { data: roomsData, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id, name')
+        .in('id', selectedRooms);
+
+      if (roomsError) throw roomsError;
+
       const updatedUser: User = {
         ...user,
         ...updateData,
         tags: selectedTags,
-        authorizedRooms: selectedRooms.map(roomId => ({
-          id: roomId,
-          name: user.authorizedRooms?.find(r => r.id === roomId)?.name || ''
-        })),
-        specializations: selectedSpecializations
+        authorizedRooms: roomsData?.map(room => ({ 
+          id: room.id, 
+          name: room.name 
+        })) || []
       };
+
+      console.log('Updated user with rooms:', updatedUser);
 
       toast({
         title: "Usuário atualizado",
@@ -155,17 +152,16 @@ export function EditUserDialog({
             defaultValues={{
               name: user.name,
               email: user.email,
+              specialization: user.specialization || '',
               location: user.location || '',
               status: user.status,
               tags: user.tags,
               accessLevel: user.accessLevel,
               authorizedRooms: user.authorizedRooms,
-              address: user.address || '',
-              specializations: user.specializations
+              address: user.address || ''
             }}
             onTagsChange={setSelectedTags}
             onRoomsChange={setSelectedRooms}
-            onSpecializationsChange={setSelectedSpecializations}
             isEditing
           />
           <div className="flex justify-end gap-2 sticky bottom-0 bg-white p-4 border-t">

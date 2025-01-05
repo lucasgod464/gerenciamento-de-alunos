@@ -12,10 +12,6 @@ import { MapPin } from "lucide-react";
 import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 
 export interface UserFormFieldsProps {
   defaultValues?: {
@@ -28,11 +24,9 @@ export interface UserFormFieldsProps {
     accessLevel?: AccessLevel;
     authorizedRooms?: { id: string; name: string; }[];
     address?: string;
-    specializations?: { id: string; name: string; }[];
   };
   onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
   onRoomsChange?: (rooms: string[]) => void;
-  onSpecializationsChange?: (specializations: { id: string; name: string; }[]) => void;
   isEditing?: boolean;
 }
 
@@ -40,7 +34,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
   defaultValues = {}, 
   onTagsChange,
   onRoomsChange,
-  onSpecializationsChange,
   isEditing
 }) => {
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
@@ -49,34 +42,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
-  const [selectedSpecializations, setSelectedSpecializations] = useState<{ id: string; name: string; }[]>(
-    defaultValues.specializations || []
-  );
-  const [specializations, setSpecializations] = useState<{ id: string; name: string; }[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const { user: currentUser } = useAuth();
-
-  useEffect(() => {
-    const fetchSpecializations = async () => {
-      if (!currentUser?.companyId) return;
-
-      const { data, error } = await supabase
-        .from('specializations')
-        .select('id, name')
-        .eq('company_id', currentUser.companyId)
-        .eq('status', true)
-        .order('name');
-
-      if (error) {
-        console.error('Erro ao buscar especializações:', error);
-        return;
-      }
-
-      setSpecializations(data || []);
-    };
-
-    fetchSpecializations();
-  }, [currentUser?.companyId]);
 
   useEffect(() => {
     if (defaultValues.authorizedRooms) {
@@ -103,19 +68,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
     setSelectedRooms(newSelectedRooms);
     onRoomsChange?.(newSelectedRooms);
   };
-
-  const handleSpecializationToggle = (specialization: { id: string; name: string; }) => {
-    const newSelectedSpecializations = selectedSpecializations.some(s => s.id === specialization.id)
-      ? selectedSpecializations.filter(s => s.id !== specialization.id)
-      : [...selectedSpecializations, specialization];
-    
-    setSelectedSpecializations(newSelectedSpecializations);
-    onSpecializationsChange?.(newSelectedSpecializations);
-  };
-
-  const filteredSpecializations = specializations.filter(spec =>
-    spec.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-4">
@@ -165,37 +117,13 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label>Especializações</Label>
+        <Label htmlFor="specialization">Especialização</Label>
         <Input
-          placeholder="Buscar especializações..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-2"
+          id="specialization"
+          name="specialization"
+          defaultValue={defaultValues.specialization}
+          placeholder="Digite a especialização..."
         />
-        <ScrollArea className="h-[200px] w-full rounded-md border p-4">
-          <div className="space-y-4">
-            {filteredSpecializations.map((spec) => (
-              <div key={spec.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`spec-${spec.id}`}
-                  checked={selectedSpecializations.some(s => s.id === spec.id)}
-                  onCheckedChange={() => handleSpecializationToggle(spec)}
-                />
-                <label
-                  htmlFor={`spec-${spec.id}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {spec.name}
-                </label>
-              </div>
-            ))}
-            {filteredSpecializations.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                {searchTerm ? "Nenhuma especialização encontrada" : "Nenhuma especialização disponível"}
-              </p>
-            )}
-          </div>
-        </ScrollArea>
       </div>
 
       <div className="space-y-2">

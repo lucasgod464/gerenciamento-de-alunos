@@ -6,7 +6,6 @@ import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface UserBasicInfoProps {
   formData: any;
@@ -45,31 +44,31 @@ export const UserBasicInfo = ({
     fetchSpecializations();
   }, []);
 
-  useEffect(() => {
-    if (formData.specializations) {
-      setSelectedSpecializations(formData.specializations);
+  const handleSpecializationSelect = (specialization: { id: string; name: string }) => {
+    const isAlreadySelected = selectedSpecializations.some(s => s.id === specialization.id);
+    
+    if (!isAlreadySelected) {
+      const newSelectedSpecializations = [...selectedSpecializations, specialization];
+      setSelectedSpecializations(newSelectedSpecializations);
+      setFormData({ 
+        ...formData, 
+        specializations: newSelectedSpecializations.map(s => s.id)
+      });
     }
-  }, [formData.specializations]);
+  };
 
-  const handleSpecializationToggle = (specialization: { id: string; name: string }) => {
-    const isSelected = selectedSpecializations.some(s => s.id === specialization.id);
-    let newSelectedSpecializations;
-    
-    if (isSelected) {
-      newSelectedSpecializations = selectedSpecializations.filter(s => s.id !== specialization.id);
-    } else {
-      newSelectedSpecializations = [...selectedSpecializations, specialization];
-    }
-    
+  const handleRemoveSpecialization = (specializationId: string) => {
+    const newSelectedSpecializations = selectedSpecializations.filter(s => s.id !== specializationId);
     setSelectedSpecializations(newSelectedSpecializations);
     setFormData({ 
       ...formData, 
-      specializations: newSelectedSpecializations
+      specializations: newSelectedSpecializations.map(s => s.id)
     });
   };
 
   const filteredSpecializations = specializations.filter(spec => 
-    spec.name.toLowerCase().includes(searchTerm.toLowerCase())
+    spec.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    !selectedSpecializations.some(s => s.id === spec.id)
   );
 
   return (
@@ -117,7 +116,7 @@ export const UserBasicInfo = ({
                 variant="ghost"
                 size="icon"
                 className="h-4 w-4 p-0 hover:bg-transparent"
-                onClick={() => handleSpecializationToggle(spec)}
+                onClick={() => handleRemoveSpecialization(spec.id)}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -129,19 +128,10 @@ export const UserBasicInfo = ({
             {filteredSpecializations.map((spec) => (
               <div
                 key={spec.id}
-                className="flex items-center space-x-2 p-2 hover:bg-accent rounded-md"
+                className="cursor-pointer p-2 hover:bg-accent rounded-md"
+                onClick={() => handleSpecializationSelect(spec)}
               >
-                <Checkbox
-                  checked={selectedSpecializations.some(s => s.id === spec.id)}
-                  onCheckedChange={() => handleSpecializationToggle(spec)}
-                  id={`spec-${spec.id}`}
-                />
-                <label
-                  htmlFor={`spec-${spec.id}`}
-                  className="flex-grow cursor-pointer"
-                >
-                  {spec.name}
-                </label>
+                {spec.name}
               </div>
             ))}
           </div>
