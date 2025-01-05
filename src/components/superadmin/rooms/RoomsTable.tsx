@@ -36,7 +36,7 @@ export function RoomsTable({ rooms }: RoomsTableProps) {
                   <div className="flex items-center text-gray-600 gap-2">
                     <Building2 className="h-4 w-4 text-blue-500" />
                     <span className="font-medium">Empresa:</span>
-                    <span className="text-gray-700">{room.companyId || "Sem empresa"}</span>
+                    <span className="text-gray-700">{room.companyName || "Sem empresa"}</span>
                   </div>
                   
                   {room.schedule && (
