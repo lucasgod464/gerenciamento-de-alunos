@@ -1,6 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Student } from "@/types/student";
 import { StudentTable } from "@/components/user/StudentTable";
+import { StudentSearch } from "./StudentSearch";
+import { useState } from "react";
 
 interface StudentColumnsProps {
   studentsWithoutRoom: Student[];
@@ -19,23 +21,36 @@ export const StudentColumns = ({
   onTransferStudent,
   onUpdateStudent,
 }: StudentColumnsProps) => {
-  console.log("Alunos sem sala:", studentsWithoutRoom);
-  console.log("Alunos com sala:", studentsWithRoom);
+  const [searchWithoutRoom, setSearchWithoutRoom] = useState("");
+  const [searchWithRoom, setSearchWithRoom] = useState("");
+
+  const filteredStudentsWithoutRoom = studentsWithoutRoom.filter(student =>
+    student.name.toLowerCase().includes(searchWithoutRoom.toLowerCase())
+  );
+
+  const filteredStudentsWithRoom = studentsWithRoom.filter(student =>
+    student.name.toLowerCase().includes(searchWithRoom.toLowerCase())
+  );
   
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
+          <StudentSearch 
+            value={searchWithoutRoom}
+            onChange={setSearchWithoutRoom}
+            placeholder="Buscar alunos sem sala..."
+          />
           <StudentTable 
-            students={studentsWithoutRoom}
+            students={filteredStudentsWithoutRoom}
             rooms={rooms}
             onDeleteStudent={onDeleteStudent}
             onTransferStudent={onTransferStudent}
             onUpdateStudent={onUpdateStudent}
             showTransferOption={true}
           />
-          {studentsWithoutRoom.length === 0 && (
+          {filteredStudentsWithoutRoom.length === 0 && (
             <p className="text-center text-muted-foreground py-4">
               Nenhum aluno sem sala encontrado
             </p>
@@ -46,15 +61,20 @@ export const StudentColumns = ({
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
+          <StudentSearch 
+            value={searchWithRoom}
+            onChange={setSearchWithRoom}
+            placeholder="Buscar alunos com sala..."
+          />
           <StudentTable 
-            students={studentsWithRoom}
+            students={filteredStudentsWithRoom}
             rooms={rooms}
             onDeleteStudent={onDeleteStudent}
             onTransferStudent={onTransferStudent}
             onUpdateStudent={onUpdateStudent}
             showTransferOption={true}
           />
-          {studentsWithRoom.length === 0 && (
+          {filteredStudentsWithRoom.length === 0 && (
             <p className="text-center text-muted-foreground py-4">
               Nenhum aluno com sala encontrado
             </p>
