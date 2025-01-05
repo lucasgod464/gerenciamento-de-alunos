@@ -19,7 +19,6 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const [observations, setObservations] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // Carregar observações existentes quando a data ou sala mudar
   useEffect(() => {
     const loadObservations = async () => {
       try {
@@ -60,9 +59,19 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
         status
       });
       
+      // Primeiro deleta qualquer registro existente para esta data/aluno
+      await supabase
+        .from('daily_attendance')
+        .delete()
+        .eq('date', formattedDate)
+        .eq('student_id', studentId)
+        .eq('company_id', companyId)
+        .eq('room_id', roomId);
+
+      // Depois insere o novo registro
       const { error } = await supabase
         .from('daily_attendance')
-        .upsert({
+        .insert({
           date: formattedDate,
           student_id: studentId,
           status: status,
@@ -107,9 +116,18 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       for (const student of students) {
         if (!student.status) continue;
 
+        // Deleta registro existente antes de inserir o novo
+        await supabase
+          .from('daily_attendance')
+          .delete()
+          .eq('date', formattedDate)
+          .eq('student_id', student.id)
+          .eq('company_id', companyId)
+          .eq('room_id', roomId);
+
         const { error: attendanceError } = await supabase
           .from('daily_attendance')
-          .upsert({
+          .insert({
             date: formattedDate,
             student_id: student.id,
             status: student.status,
@@ -124,9 +142,17 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       for (const [studentId, text] of Object.entries(observations)) {
         if (!text.trim()) continue; // Pula observações vazias
         
+        // Deleta observação existente antes de inserir a nova
+        await supabase
+          .from('daily_observations')
+          .delete()
+          .eq('date', formattedDate)
+          .eq('student_id', studentId)
+          .eq('company_id', companyId);
+
         const { error: observationError } = await supabase
           .from('daily_observations')
-          .upsert({
+          .insert({
             date: formattedDate,
             text,
             company_id: companyId,
