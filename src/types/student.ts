@@ -11,6 +11,7 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
+  room?: string; // Adicionando a propriedade room como opcional
 }
 
 export interface SupabaseStudent {
