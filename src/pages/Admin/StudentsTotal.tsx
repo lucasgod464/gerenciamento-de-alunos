@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
 import { useAuth } from "@/hooks/useAuth";
+import { useStudentDeletion } from "./hooks/useStudentDeletion";
 
 const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { deleteStudent } = useStudentDeletion();
 
   const loadStudents = async () => {
     try {
@@ -86,13 +88,7 @@ const StudentsTotal = () => {
 
   const handleDeleteStudent = async (id: string) => {
     try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await deleteStudent(id);
       setStudents(prev => prev.filter(student => student.id !== id));
       toast({
         title: "Sucesso",
@@ -110,13 +106,11 @@ const StudentsTotal = () => {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
-      // Primeiro remove qualquer vínculo existente
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', studentId);
 
-      // Depois cria o novo vínculo
       const { error } = await supabase
         .from('room_students')
         .insert({ student_id: studentId, room_id: newRoomId });
