@@ -36,12 +36,15 @@ export function PublicEnrollment() {
         throw new Error("URL do formulário não encontrada");
       }
 
-      console.log("Buscando empresa com URL:", formUrl);
+      console.log("URL do formulário recebida:", formUrl);
+      
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .select('id')
         .eq('enrollment_form_url', formUrl)
         .maybeSingle();
+
+      console.log("Resultado da busca da empresa:", { company, error: companyError });
 
       if (companyError) {
         console.error("Erro ao buscar empresa:", companyError);
