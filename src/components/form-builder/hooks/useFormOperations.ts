@@ -1,11 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
-import { FormField, SupabaseFormField, mapSupabaseFormField } from "@/types/form";
+import { FormField } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 
 export const useFormOperations = () => {
   const { toast } = useToast();
 
-  const updateField = async (field: FormField) => {
+  const updateField = async (field: FormField): Promise<FormField> => {
     try {
       const { data, error } = await supabase
         .from('admin_form_fields')
@@ -24,19 +24,23 @@ export const useFormOperations = () => {
 
       if (error) throw error;
 
-      return mapSupabaseFormField(data as SupabaseFormField);
+      return {
+        id: data.id,
+        name: data.name,
+        label: data.label,
+        type: data.type as FormField['type'],
+        description: data.description || "",
+        required: data.required || false,
+        order: data.order,
+        options: Array.isArray(data.options) ? data.options : undefined,
+      };
     } catch (error) {
       console.error('Error updating field:', error);
-      toast({
-        title: "Erro ao atualizar campo",
-        description: "Não foi possível atualizar o campo do formulário.",
-        variant: "destructive",
-      });
       throw error;
     }
   };
 
-  const addField = async (field: Omit<FormField, "id" | "order">, order: number) => {
+  const addField = async (field: Omit<FormField, "id" | "order">, order: number): Promise<FormField> => {
     try {
       const { data, error } = await supabase
         .from('admin_form_fields')
@@ -54,14 +58,18 @@ export const useFormOperations = () => {
 
       if (error) throw error;
 
-      return mapSupabaseFormField(data as SupabaseFormField);
+      return {
+        id: data.id,
+        name: data.name,
+        label: data.label,
+        type: data.type as FormField['type'],
+        description: data.description || "",
+        required: data.required || false,
+        order: data.order,
+        options: Array.isArray(data.options) ? data.options : undefined,
+      };
     } catch (error) {
       console.error('Error adding field:', error);
-      toast({
-        title: "Erro ao adicionar campo",
-        description: "Não foi possível adicionar o campo ao formulário.",
-        variant: "destructive",
-      });
       throw error;
     }
   };
@@ -76,11 +84,6 @@ export const useFormOperations = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting field:', error);
-      toast({
-        title: "Erro ao excluir campo",
-        description: "Não foi possível excluir o campo do formulário.",
-        variant: "destructive",
-      });
       throw error;
     }
   };

@@ -25,7 +25,7 @@ export const useFormBuilder = () => {
           id: field.id,
           name: field.name,
           label: field.label,
-          type: field.type,
+          type: field.type as FormField['type'],
           description: field.description || "",
           required: field.required || false,
           order: field.order,
@@ -55,6 +55,11 @@ export const useFormBuilder = () => {
       });
     } catch (error) {
       console.error("Error adding field:", error);
+      toast({
+        title: "Erro ao adicionar campo",
+        description: "Não foi possível adicionar o campo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -73,6 +78,11 @@ export const useFormBuilder = () => {
       });
     } catch (error) {
       console.error("Error updating field:", error);
+      toast({
+        title: "Erro ao atualizar campo",
+        description: "Não foi possível atualizar o campo.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -87,6 +97,11 @@ export const useFormBuilder = () => {
       });
     } catch (error) {
       console.error("Error deleting field:", error);
+      toast({
+        title: "Erro ao remover campo",
+        description: "Não foi possível remover o campo.",
+        variant: "destructive",
+      });
     }
   };
 
