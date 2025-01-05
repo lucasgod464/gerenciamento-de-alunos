@@ -3,6 +3,7 @@ import { EmailList } from "@/components/emails/EmailList";
 import { EmailStats } from "@/components/emails/EmailStats";
 import { CreateEmailDialog } from "@/components/emails/CreateEmailDialog";
 import { EditEmailDialog } from "@/components/emails/EditEmailDialog";
+import { EmailSearchBar } from "@/components/emails/EmailSearchBar";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,8 @@ const Emails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [accessLevelFilter, setAccessLevelFilter] = useState("all");
   const { toast } = useToast();
 
   const fetchEmails = async () => {
@@ -113,6 +116,18 @@ const Emails = () => {
     }
   };
 
+  const filteredEmails = emails.filter((email) => {
+    const matchesSearch = searchTerm.toLowerCase() === "" || 
+      email.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      email.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (email.company?.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesAccessLevel = accessLevelFilter === "all" || 
+      email.accessLevel === accessLevelFilter;
+
+    return matchesSearch && matchesAccessLevel;
+  });
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
@@ -134,8 +149,13 @@ const Emails = () => {
           <CreateEmailDialog onEmailCreated={fetchEmails} />
         </div>
 
+        <EmailSearchBar
+          onSearchChange={setSearchTerm}
+          onAccessLevelChange={setAccessLevelFilter}
+        />
+
         <EmailList
-          data={emails}
+          data={filteredEmails}
           onUpdateEmail={handleUpdateEmail}
           onDeleteEmail={handleDeleteEmail}
         />

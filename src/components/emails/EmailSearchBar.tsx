@@ -18,11 +18,11 @@ export function EmailSearchBar({
         <Input
           placeholder="Buscar por nome, email ou empresa..."
           onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10"
+          className="pl-10 max-w-[800px]"
         />
       </div>
       <Select defaultValue="all" onValueChange={onAccessLevelChange}>
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Nível de Acesso" />
         </SelectTrigger>
         <SelectContent>
