@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,18 +14,51 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyId, setCompanyId] = useState<string | null>(null);
+  const { formUrl } = useParams();
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
-    loadFields();
-  }, []);
+    if (formUrl) {
+      loadCompanyId();
+    }
+  }, [formUrl]);
+
+  useEffect(() => {
+    if (companyId) {
+      loadFields();
+    }
+  }, [companyId]);
+
+  const loadCompanyId = async () => {
+    try {
+      const { data: company, error } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('enrollment_form_url', formUrl)
+        .single();
+
+      if (error) throw error;
+      if (company) {
+        setCompanyId(company.id);
+      }
+    } catch (error) {
+      console.error("Error loading company:", error);
+      toast({
+        title: "Erro ao carregar formulário",
+        description: "Formulário não encontrado ou inválido.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const loadFields = async () => {
     try {
       const { data: formFields, error } = await supabase
         .from('enrollment_form_fields')
         .select('*')
+        .eq('company_id', companyId)
         .order('order');
 
       if (error) throw error;
@@ -33,7 +67,7 @@ export function PublicEnrollment() {
         id: field.id,
         name: field.name,
         label: field.label,
-        type: field.type,
+        type: field.type as FormField['type'],
         description: field.description || undefined,
         required: field.required || false,
         order: field.order,
