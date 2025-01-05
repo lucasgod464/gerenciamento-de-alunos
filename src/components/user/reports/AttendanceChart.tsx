@@ -3,7 +3,6 @@ import { Calendar } from "lucide-react";
 import {
   BarChart,
   Bar,
-  XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
@@ -54,6 +53,15 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
     );
   }
 
+  // Transformar os dados para mostrar apenas os totais
+  const transformedData = [{
+    name: "Total",
+    presente: data.reduce((acc, curr) => acc + curr.presente, 0),
+    falta: data.reduce((acc, curr) => acc + curr.falta, 0),
+    atrasado: data.reduce((acc, curr) => acc + curr.atrasado, 0),
+    justificado: data.reduce((acc, curr) => acc + curr.justificado, 0)
+  }];
+
   return (
     <Card>
       <CardHeader>
@@ -65,9 +73,8 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
+            <BarChart data={transformedData}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip 
                 formatter={(value: number, name: string) => [
