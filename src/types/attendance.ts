@@ -8,8 +8,8 @@ export interface AttendanceRecord {
   date: string;
   studentId: string;
   status: string;
-  companyId: string;
-  roomId: string;
+  companyId?: string;
+  roomId?: string;
   createdAt: string;
 }
 
@@ -18,12 +18,12 @@ export interface SupabaseAttendanceRecord {
   date: string;
   student_id: string;
   status: string;
-  company_id: string;
-  room_id: string;
+  company_id?: string;
+  room_id?: string;
   created_at: string;
 }
 
-export const mapSupabaseAttendanceRecord = (record: SupabaseAttendanceRecord): AttendanceRecord => ({
+export const mapSupabaseAttendance = (record: SupabaseAttendanceRecord): AttendanceRecord => ({
   id: record.id,
   date: record.date,
   studentId: record.student_id,

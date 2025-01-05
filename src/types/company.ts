@@ -1,3 +1,5 @@
+export type CompanyStatus = "Ativa" | "Inativa";
+
 export interface Company {
   id: string;
   name: string;
@@ -6,7 +8,7 @@ export interface Company {
   currentUsers: number;
   roomsLimit: number;
   currentRooms: number;
-  status: "Ativa" | "Inativa";
+  status: CompanyStatus;
   createdAt: string;
   publicFolderPath: string;
   storageUsed: number;
@@ -18,6 +20,7 @@ export interface CompanyFormData {
   document: string;
   usersLimit: number;
   roomsLimit: number;
+  publicFolderPath: string;
 }
 
 export interface SupabaseCompany {
@@ -43,7 +46,7 @@ export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
   currentUsers: company.current_users,
   roomsLimit: company.rooms_limit,
   currentRooms: company.current_rooms,
-  status: company.status as "Ativa" | "Inativa",
+  status: company.status as CompanyStatus,
   createdAt: company.created_at,
   publicFolderPath: company.public_folder_path,
   storageUsed: company.storage_used,
