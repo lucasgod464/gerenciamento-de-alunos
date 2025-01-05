@@ -43,7 +43,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
               email.accessLevel === "Admin" ? "text-purple-600" : "text-blue-600"
             )} />
           </div>
-          <div>
+          <div className="text-left">
             <div className="font-medium">{email.name}</div>
             <div className="text-sm text-gray-500">
               {email.email}
@@ -51,8 +51,8 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           </div>
         </div>
       </TableCell>
-      <TableCell>{email.email}</TableCell>
-      <TableCell>
+      <TableCell className="text-left">{email.email}</TableCell>
+      <TableCell className="text-left">
         <span
           className={cn(
             "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
@@ -64,8 +64,8 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           {email.accessLevel}
         </span>
       </TableCell>
-      <TableCell>{email.company?.name}</TableCell>
-      <TableCell>
+      <TableCell className="text-left">{email.company?.name}</TableCell>
+      <TableCell className="text-left">
         <span className="inline-flex items-center">
           <span 
             className={cn(
@@ -76,7 +76,7 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           {isCompanyActive ? "Ativa" : "Inativa"}
         </span>
       </TableCell>
-      <TableCell>
+      <TableCell className="text-left">
         {format(new Date(email.createdAt), "dd/MM/yyyy 'às' HH:mm", {
           locale: ptBR,
         })}
