@@ -29,6 +29,7 @@ export const useStudentData = () => {
         .from('room_students')
         .select(`
           student_id,
+          room_id,
           students (
             id,
             name,
@@ -47,29 +48,24 @@ export const useStudentData = () => {
       if (roomStudentsError) throw roomStudentsError;
 
       if (roomStudents) {
-        // Remover duplicatas e mapear para o formato correto
-        const uniqueStudents = Array.from(new Set(roomStudents.map(rs => rs.students?.id)))
-          .map(studentId => {
-            const studentData = roomStudents.find(rs => rs.students?.id === studentId)?.students;
-            if (!studentData) return null;
+        // Mapear os dados dos alunos e incluir a sala associada
+        const mappedStudents = roomStudents
+          .filter(rs => rs.students) // Filtrar registros sem alunos
+          .map(rs => ({
+            id: rs.students.id,
+            name: rs.students.name,
+            birthDate: rs.students.birth_date,
+            status: rs.students.status ?? true,
+            email: rs.students.email || '',
+            document: rs.students.document || '',
+            address: rs.students.address || '',
+            customFields: rs.students.custom_fields as Record<string, any> || {},
+            companyId: rs.students.company_id,
+            createdAt: rs.students.created_at,
+            room: rs.room_id
+          }));
 
-            return {
-              id: studentData.id,
-              name: studentData.name,
-              birthDate: studentData.birth_date,
-              status: studentData.status ?? true,
-              email: studentData.email || '',
-              document: studentData.document || '',
-              address: studentData.address || '',
-              customFields: studentData.custom_fields as Record<string, any> || {},
-              companyId: studentData.company_id,
-              createdAt: studentData.created_at,
-              room: null // Será atualizado abaixo
-            };
-          })
-          .filter((student): student is Student => student !== null);
-
-        setStudents(uniqueStudents);
+        setStudents(mappedStudents);
       }
     } catch (error) {
       console.error('Erro ao carregar alunos:', error);
@@ -82,9 +78,9 @@ export const useStudentData = () => {
   };
 
   const loadRooms = async () => {
-    if (!user?.id) return;
-    
     try {
+      if (!user?.id) return;
+      
       const mappedRooms = authorizedRooms.map(room => ({
         id: room.id,
         name: room.name
