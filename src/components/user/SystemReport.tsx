@@ -8,23 +8,16 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
 import { GeneralStats } from "./reports/GeneralStats";
-import { startOfMonth, endOfMonth, format, subMonths, addMonths, startOfDay, endOfDay } from "date-fns";
+import { startOfMonth, endOfMonth, format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { useEffect } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { DateRangeFilter } from "./reports/DateRangeFilter";
 
 export const SystemReport = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [dateRange, setDateRange] = useState<{
-    from: Date;
-    to: Date | undefined;
-  }>({
-    from: startOfMonth(currentDate),
-    to: endOfMonth(currentDate)
+  const [dateRange, setDateRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -152,91 +145,19 @@ export const SystemReport = () => {
     });
   };
 
-  const handlePreviousMonth = () => {
-    const newDate = subMonths(currentDate, 1);
-    setCurrentDate(newDate);
-    setDateRange({
-      from: startOfMonth(newDate),
-      to: endOfMonth(newDate)
-    });
-  };
-
-  const handleNextMonth = () => {
-    const newDate = addMonths(currentDate, 1);
-    setCurrentDate(newDate);
-    setDateRange({
-      from: startOfMonth(newDate),
-      to: endOfMonth(newDate)
-    });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-4 items-center flex-wrap">
           <RoomSelector
             rooms={authorizedRooms}
             selectedRoom={selectedRoom}
             onRoomChange={setSelectedRoom}
           />
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handlePreviousMonth}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "justify-start text-left font-normal w-[280px]",
-                    !dateRange && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "dd/MM/yyyy")} -{" "}
-                        {format(dateRange.to, "dd/MM/yyyy")}
-                      </>
-                    ) : (
-                      format(dateRange.from, "dd/MM/yyyy")
-                    )
-                  ) : (
-                    <span>Selecione um período</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={(range) => {
-                    if (range?.from && range?.to) {
-                      setDateRange(range);
-                    }
-                  }}
-                  numberOfMonths={2}
-                  locale={ptBR}
-                />
-              </PopoverContent>
-            </Popover>
-
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleNextMonth}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          <DateRangeFilter
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+          />
         </div>
 
         <Button variant="outline" onClick={handleExportReport}>
