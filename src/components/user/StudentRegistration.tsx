@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { AddStudentDialog } from "./AddStudentDialog";
-import { StudentTable } from "./StudentTable";
+import { StudentTable } from "./student/StudentTable";
 import { StudentFilters } from "./student/StudentFilters";
 import { useStudentData } from "./student/hooks/useStudentData";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useStudentFilters } from "./student/hooks/useStudentFilters";
 
 export const StudentRegistration = () => {
   const { students, rooms, loadStudents } = useStudentData();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
+  const { searchTerm, setSearchTerm, selectedRoom, setSelectedRoom, filteredStudents } = useStudentFilters(students);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -30,7 +30,7 @@ export const StudentRegistration = () => {
           document: student.document,
           address: student.address,
           custom_fields: student.customFields,
-          company_id: user.companyId, // Vincula o aluno à empresa do usuário
+          company_id: user.companyId,
           status: true
         }])
         .select()
@@ -90,6 +90,38 @@ export const StudentRegistration = () => {
     }
   };
 
+  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
+    try {
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', studentId);
+
+      const { error: roomError } = await supabase
+        .from('room_students')
+        .insert({
+          student_id: studentId,
+          room_id: newRoomId
+        });
+
+      if (roomError) throw roomError;
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
+      
+      loadStudents();
+    } catch (error) {
+      console.error('Erro ao transferir aluno:', error);
+      toast({
+        title: "Erro ao transferir aluno",
+        description: "Não foi possível transferir o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
       const { error: studentError } = await supabase
@@ -139,12 +171,6 @@ export const StudentRegistration = () => {
     }
   };
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRoom = !selectedRoom || student.room === selectedRoom;
-    return matchesSearch && matchesRoom;
-  });
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -162,6 +188,7 @@ export const StudentRegistration = () => {
         students={filteredStudents}
         rooms={rooms}
         onDeleteStudent={handleDeleteStudent}
+        onTransferStudent={handleTransferStudent}
         onUpdateStudent={handleUpdateStudent}
       />
     </div>

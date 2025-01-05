@@ -39,7 +39,7 @@ export const StudentFilters = ({
           <SelectValue placeholder="Filtrar por sala" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Todas as salas</SelectItem>
+          <SelectItem value="">Todas as salas</SelectItem>
           {rooms.map((room) => (
             <SelectItem key={room.id} value={room.id}>
               {room.name}
