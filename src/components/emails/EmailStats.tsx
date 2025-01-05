@@ -1,15 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Mail, CheckCircle2, XCircle } from "lucide-react"
+import { Email } from "@/types/email"
 
 interface EmailStatsProps {
-  data: {
-    totalEmails: number
-    activeEmails: number
-    inactiveEmails: number
-  }
+  data: Email[]
 }
 
 export function EmailStats({ data }: EmailStatsProps) {
+  const totalEmails = data.length
+  const activeEmails = data.filter(email => email.status === "active").length
+  const inactiveEmails = data.filter(email => email.status === "inactive").length
+
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
@@ -22,7 +23,7 @@ export function EmailStats({ data }: EmailStatsProps) {
               <p className="text-sm font-medium text-muted-foreground">
                 Total de Emails
               </p>
-              <h2 className="text-2xl font-bold">{data.totalEmails}</h2>
+              <h2 className="text-2xl font-bold">{totalEmails}</h2>
             </div>
           </div>
         </CardContent>
@@ -38,7 +39,7 @@ export function EmailStats({ data }: EmailStatsProps) {
               <p className="text-sm font-medium text-muted-foreground">
                 Emails Ativos
               </p>
-              <h2 className="text-2xl font-bold">{data.activeEmails}</h2>
+              <h2 className="text-2xl font-bold">{activeEmails}</h2>
             </div>
           </div>
         </CardContent>
@@ -54,7 +55,7 @@ export function EmailStats({ data }: EmailStatsProps) {
               <p className="text-sm font-medium text-muted-foreground">
                 Emails Inativos
               </p>
-              <h2 className="text-2xl font-bold">{data.inactiveEmails}</h2>
+              <h2 className="text-2xl font-bold">{inactiveEmails}</h2>
             </div>
           </div>
         </CardContent>
