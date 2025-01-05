@@ -36,49 +36,6 @@ export const STATUS_LABELS = {
   justificado: "Justificados"
 };
 
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    const dataKey = payload[0].dataKey;
-    const label = STATUS_LABELS[dataKey as keyof typeof STATUS_LABELS];
-    return (
-      <div className="bg-white p-2 border rounded shadow-sm">
-        <p className="text-sm">
-          {data[dataKey]} {label}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
-
-const CustomLegend = (props: any) => {
-  const { payload } = props;
-  if (!payload) return null;
-  
-  return (
-    <div className="flex flex-col gap-2 mt-4">
-      {payload.map((entry: any, index: number) => {
-        if (!entry || !entry.payload) return null;
-        const dataKey = entry.dataKey;
-        const label = STATUS_LABELS[dataKey as keyof typeof STATUS_LABELS];
-        
-        return (
-          <div key={`legend-${index}`} className="flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm">
-              {label}: {entry.payload[dataKey]} ({((entry.payload[dataKey] / Object.values(entry.payload).reduce((acc: number, val: any) => typeof val === 'number' ? acc + val : acc, 0)) * 100).toFixed(1)}%)
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
 export const AttendanceChart = ({ data }: AttendanceChartProps) => {
   if (!data || data.length === 0) {
     return (
@@ -96,6 +53,15 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
     );
   }
 
+  // Transformar os dados para mostrar apenas os totais
+  const transformedData = [{
+    name: "Total",
+    presente: data.reduce((acc, curr) => acc + curr.presente, 0),
+    falta: data.reduce((acc, curr) => acc + curr.falta, 0),
+    atrasado: data.reduce((acc, curr) => acc + curr.atrasado, 0),
+    justificado: data.reduce((acc, curr) => acc + curr.justificado, 0)
+  }];
+
   return (
     <Card>
       <CardHeader>
@@ -107,10 +73,12 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
+            <BarChart data={transformedData}>
               <CartesianGrid strokeDasharray="3 3" />
               <YAxis />
-              <Legend content={<CustomLegend />} />
+              <Legend 
+                formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] || value}
+              />
               {Object.entries(STATUS_COLORS).map(([status, color]) => (
                 <Bar
                   key={status}
@@ -123,10 +91,7 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
                     dataKey={status}
                     position="center"
                     fill="#fff"
-                    formatter={(value: number) => {
-                      const label = STATUS_LABELS[status as keyof typeof STATUS_LABELS];
-                      return `${value} ${label}`;
-                    }}
+                    formatter={(value: number) => `${value} ${value === 1 ? 'aluno' : 'alunos'}`}
                   />
                 </Bar>
               ))}
