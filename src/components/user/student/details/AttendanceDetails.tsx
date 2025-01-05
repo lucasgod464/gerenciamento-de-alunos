@@ -139,11 +139,7 @@ export function AttendanceDetails({ studentId, startDate, endDate }: AttendanceD
               key={record.id}
               className="flex justify-between items-center p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
             >
-              <div className="flex items-center space-x-4">
-                <span>{format(new Date(record.date), "dd/MM/yyyy", { locale: ptBR })}</span>
-                <span className="text-gray-500">→</span>
-                <span>{format(addDays(new Date(record.date), 1), "dd/MM/yyyy", { locale: ptBR })}</span>
-              </div>
+              <span>{format(addDays(new Date(record.date), 1), "dd/MM/yyyy", { locale: ptBR })}</span>
               <div className="flex items-center space-x-2">
                 {getStatusIcon(record.status)}
                 <span className={`font-medium ${getStatusColor(record.status)}`}>
