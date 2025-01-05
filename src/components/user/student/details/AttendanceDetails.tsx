@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { format, subDays, subYears } from "date-fns";
-import { AttendanceStats } from "./attendance/AttendanceStats";
-import { AttendanceHistory } from "./attendance/AttendanceHistory";
-import { PeriodSelector } from "./attendance/PeriodSelector";
+import { format, addDays, subDays, subYears } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CircleCheck, CircleX, Clock, FileQuestion, ChevronDown, ChevronUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 interface AttendanceStats {
   present: number;
@@ -11,6 +13,51 @@ interface AttendanceStats {
   late: number;
   justified: number;
 }
+
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "present":
+      return <CircleCheck className="h-4 w-4 text-green-500" />;
+    case "absent":
+      return <CircleX className="h-4 w-4 text-red-500" />;
+    case "late":
+      return <Clock className="h-4 w-4 text-yellow-500" />;
+    case "justified":
+      return <FileQuestion className="h-4 w-4 text-blue-500" />;
+    default:
+      return null;
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case "present":
+      return "Presente";
+    case "absent":
+      return "Ausente";
+    case "late":
+      return "Atrasado";
+    case "justified":
+      return "Justificado";
+    default:
+      return status;
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "present":
+      return "text-green-600";
+    case "absent":
+      return "text-red-600";
+    case "late":
+      return "text-yellow-600";
+    case "justified":
+      return "text-blue-600";
+    default:
+      return "text-gray-600";
+  }
+};
 
 export function AttendanceDetails({ studentId }: { studentId: string }) {
   const today = new Date();
@@ -25,6 +72,7 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
     justified: 0
   });
   const [attendance, setAttendance] = useState<any[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handlePeriodChange = (value: string) => {
     const today = new Date();
@@ -79,9 +127,79 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
 
   return (
     <div className="space-y-4">
-      <PeriodSelector onPeriodChange={handlePeriodChange} />
-      <AttendanceStats stats={stats} dateRange={dateRange} />
-      <AttendanceHistory attendance={attendance} />
+      <div className="flex mb-4">
+        <Select defaultValue="last30days" onValueChange={handlePeriodChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Período predefinido" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+            <SelectItem value="lastYear">Último ano</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Card className="p-4">
+        <h4 className="font-medium mb-2">
+          Resumo do Período ({format(dateRange.startDate, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.endDate, "dd/MM/yyyy", { locale: ptBR })})
+        </h4>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-green-100 text-green-800 p-2 rounded-md">
+            <p className="text-sm">Presentes</p>
+            <p className="text-lg font-bold">{stats.present}</p>
+          </div>
+          <div className="bg-red-100 text-red-800 p-2 rounded-md">
+            <p className="text-sm">Faltas</p>
+            <p className="text-lg font-bold">{stats.absent}</p>
+          </div>
+          <div className="bg-yellow-100 text-yellow-800 p-2 rounded-md">
+            <p className="text-sm">Atrasos</p>
+            <p className="text-lg font-bold">{stats.late}</p>
+          </div>
+          <div className="bg-blue-100 text-blue-800 p-2 rounded-md">
+            <p className="text-sm">Justificadas</p>
+            <p className="text-lg font-bold">{stats.justified}</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-4">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="font-medium">Histórico de Presenças</h4>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-gray-600 hover:text-gray-900"
+          >
+            {showHistory ? (
+              <ChevronUp className="h-4 w-4 mr-1" />
+            ) : (
+              <ChevronDown className="h-4 w-4 mr-1" />
+            )}
+            {showHistory ? "Ocultar" : "Mostrar"}
+          </Button>
+        </div>
+        
+        {showHistory && (
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {attendance.map((record) => (
+              <div
+                key={record.id}
+                className="flex justify-between items-center p-2 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors"
+              >
+                <span>{format(addDays(new Date(record.date), 1), "dd/MM/yyyy", { locale: ptBR })}</span>
+                <div className="flex items-center space-x-2">
+                  {getStatusIcon(record.status)}
+                  <span className={`font-medium ${getStatusColor(record.status)}`}>
+                    {getStatusText(record.status)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
