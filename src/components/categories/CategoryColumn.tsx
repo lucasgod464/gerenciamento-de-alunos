@@ -38,13 +38,12 @@ export const CategoryColumn = ({
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isTransferMode, setIsTransferMode] = useState(false);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
   const getTotalStudents = () => {
     return rooms.reduce((total, room) => total + (room.students?.length || 0), 0);
   };
 
-  const handleTransferRooms = () => {
+  const handleTransferRooms = (targetCategoryId: string) => {
     if (selectedRooms.length === 0) {
       toast({
         title: "Selecione as salas",
@@ -54,19 +53,9 @@ export const CategoryColumn = ({
       return;
     }
 
-    if (!selectedCategoryId) {
-      toast({
-        title: "Selecione a categoria",
-        description: "Selecione uma categoria para transferir as salas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    onTransferRooms(selectedRooms, selectedCategoryId);
+    onTransferRooms(selectedRooms, targetCategoryId);
     setSelectedRooms([]);
     setIsTransferMode(false);
-    setSelectedCategoryId("");
     
     toast({
       title: "Salas transferidas",
@@ -180,7 +169,7 @@ export const CategoryColumn = ({
                     <MoveRight className="h-4 w-4" />
                     <span className="text-sm font-medium">Transferir para:</span>
                   </div>
-                  <Select onValueChange={setSelectedCategoryId} value={selectedCategoryId}>
+                  <Select onValueChange={handleTransferRooms}>
                     <SelectTrigger className="bg-white/50">
                       <SelectValue placeholder="Selecione a categoria" />
                     </SelectTrigger>
@@ -205,16 +194,6 @@ export const CategoryColumn = ({
                   {selectedRooms.length === rooms.length 
                     ? "Desmarcar Todas" 
                     : "Selecionar Todas"}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleTransferRooms}
-                  className="w-full bg-white/50 hover:bg-white/70"
-                  disabled={!selectedCategoryId || selectedRooms.length === 0}
-                >
-                  Confirmar Transferência
                 </Button>
               </div>
             )}
