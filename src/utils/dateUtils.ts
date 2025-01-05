@@ -18,11 +18,15 @@ export const formatDate = (date: Date): string => {
     adjustedDate.getDate()
   ));
   
+  const formattedDate = format(utcDate, 'yyyy-MM-dd', { locale: ptBR });
+  
+  console.log('=== Debug formatDate ===');
   console.log('Data original:', date);
   console.log('Data local ajustada:', localDate);
   console.log('Data com ajuste de dia:', adjustedDate);
   console.log('Data UTC:', utcDate);
-  console.log('Data formatada para o banco:', format(utcDate, 'yyyy-MM-dd', { locale: ptBR }));
+  console.log('Data formatada para o banco:', formattedDate);
+  console.log('=======================');
   
-  return format(utcDate, 'yyyy-MM-dd', { locale: ptBR });
+  return formattedDate;
 };

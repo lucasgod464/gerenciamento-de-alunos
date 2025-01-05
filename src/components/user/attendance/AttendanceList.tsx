@@ -23,8 +23,7 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
     const loadObservations = async () => {
       try {
         const formattedDate = formatDate(date);
-        console.log('AttendanceList - Data recebida:', date);
-        console.log('AttendanceList - Data formatada:', formattedDate);
+        console.log('AttendanceList - Carregando observações para a data:', formattedDate);
         
         const { data, error } = await supabase
           .from('daily_observations')
@@ -33,8 +32,6 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
           .eq('company_id', companyId);
 
         if (error) throw error;
-
-        console.log('AttendanceList - Observações carregadas:', data);
 
         const observationsMap = (data || []).reduce((acc, curr) => {
           acc[curr.student_id] = curr.text;
@@ -56,7 +53,9 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       console.log('AttendanceList - Salvando status:', {
         data: formattedDate,
         studentId,
-        status
+        status,
+        companyId,
+        roomId
       });
 
       // Primeiro deleta qualquer registro existente para esta data/aluno
@@ -116,6 +115,12 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       for (const student of students) {
         if (!student.status) continue;
 
+        console.log('Salvando presença para estudante:', {
+          studentId: student.id,
+          status: student.status,
+          data: formattedDate
+        });
+
         // Deleta registro existente antes de inserir o novo
         await supabase
           .from('daily_attendance')
@@ -140,8 +145,14 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
       
       // Depois, salvamos as observações
       for (const [studentId, text] of Object.entries(observations)) {
-        if (!text.trim()) continue; // Pula observações vazias
+        if (!text.trim()) continue;
         
+        console.log('Salvando observação para estudante:', {
+          studentId,
+          text,
+          data: formattedDate
+        });
+
         // Deleta observação existente antes de inserir a nova
         await supabase
           .from('daily_observations')
