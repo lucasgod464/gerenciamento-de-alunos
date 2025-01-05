@@ -11,36 +11,71 @@ export const useStudentData = () => {
   const { toast } = useToast();
 
   const loadStudents = async () => {
-    if (!user?.companyId) return;
+    if (!user?.id) return;
 
     try {
+      // Primeiro, buscar as salas autorizadas do usuário
+      const { data: userRooms, error: roomsError } = await supabase
+        .from('user_rooms')
+        .select('room_id')
+        .eq('user_id', user.id);
+
+      if (roomsError) throw roomsError;
+
+      if (!userRooms?.length) {
+        setStudents([]);
+        return;
+      }
+
+      const roomIds = userRooms.map(ur => ur.room_id);
+
+      // Depois, buscar os alunos vinculados a essas salas
       const { data: studentsData, error } = await supabase
-        .from('students')
+        .from('room_students')
         .select(`
-          *,
-          room_students (
-            room_id
+          student:students (
+            id,
+            name,
+            birth_date,
+            status,
+            email,
+            document,
+            address,
+            custom_fields,
+            company_id,
+            created_at
           )
         `)
-        .eq('company_id', user.companyId);
+        .in('room_id', roomIds);
 
       if (error) throw error;
 
-      const mappedStudents = studentsData.map(student => ({
-        id: student.id,
-        name: student.name,
-        birthDate: student.birth_date,
-        status: student.status ?? true,
-        email: student.email || '',
-        document: student.document || '',
-        address: student.address || '',
-        customFields: student.custom_fields || {},
-        companyId: student.company_id,
-        createdAt: student.created_at,
-        room: student.room_students?.[0]?.room_id || null
-      }));
+      if (!studentsData) {
+        setStudents([]);
+        return;
+      }
 
-      setStudents(mappedStudents);
+      const uniqueStudents = Array.from(
+        new Map(
+          studentsData
+            .filter(rs => rs.student)
+            .map(rs => [rs.student.id, {
+              id: rs.student.id,
+              name: rs.student.name,
+              birthDate: rs.student.birth_date,
+              status: rs.student.status ?? true,
+              email: rs.student.email || null,
+              document: rs.student.document || null,
+              address: rs.student.address || null,
+              customFields: rs.student.custom_fields as Record<string, any> || {},
+              companyId: rs.student.company_id,
+              createdAt: rs.student.created_at,
+              room: null // Será preenchido depois
+            }])
+        ).values()
+      );
+
+      setStudents(uniqueStudents);
     } catch (error) {
       console.error('Erro ao carregar alunos:', error);
       toast({
@@ -52,17 +87,30 @@ export const useStudentData = () => {
   };
 
   const loadRooms = async () => {
-    if (!user?.companyId) return;
+    if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
+        .from('user_rooms')
+        .select(`
+          rooms (
+            id,
+            name
+          )
+        `)
+        .eq('user_id', user.id);
 
       if (error) throw error;
-      setRooms(data || []);
+
+      const formattedRooms = data
+        ?.map(item => item.rooms)
+        .filter(room => room !== null)
+        .map(room => ({
+          id: room.id,
+          name: room.name
+        })) || [];
+
+      setRooms(formattedRooms);
     } catch (error) {
       console.error('Erro ao carregar salas:', error);
       toast({
