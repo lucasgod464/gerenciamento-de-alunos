@@ -180,6 +180,14 @@ export const routes = createBrowserRouter([
     path: "/user",
     element: (
       <RoleGuard allowedRoles={["USER"]}>
+        <Navigate to="/user/reports" replace />
+      </RoleGuard>
+    ),
+  },
+  {
+    path: "/user/dashboard",
+    element: (
+      <RoleGuard allowedRoles={["USER"]}>
         <UserDashboard />
       </RoleGuard>
     ),
