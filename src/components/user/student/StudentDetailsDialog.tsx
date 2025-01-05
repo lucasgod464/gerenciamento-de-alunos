@@ -141,13 +141,34 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         </DialogHeader>
 
         <div className="space-y-4">
-          <StudentSearch
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            students={students}
-            onSelectStudent={setSelectedStudent}
-            selectedStudent={selectedStudent}
-          />
+          <div className="relative">
+            <StudentSearch
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              students={students}
+              onSelectStudent={setSelectedStudent}
+              selectedStudent={selectedStudent}
+            />
+
+            {searchTerm.length >= 3 && students.length > 0 && !selectedStudent && (
+              <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {students.map((student) => (
+                  <div
+                    key={student.id}
+                    className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedStudent(student)}
+                  >
+                    <div className="font-medium">{student.name}</div>
+                    {student.document && (
+                      <div className="text-sm text-gray-500">
+                        Documento: {student.document}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {selectedStudent && (
             <div className="space-y-4">
