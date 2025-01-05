@@ -37,6 +37,7 @@ export function PublicEnrollment() {
       }
 
       console.log("URL do formulário recebida:", formUrl);
+      console.log("Iniciando busca da empresa...");
       
       const { data: company, error: companyError } = await supabase
         .from('companies')
@@ -65,12 +66,12 @@ export function PublicEnrollment() {
         .eq('company_id', company.id)
         .order('order');
 
+      console.log("Resultado da busca dos campos:", { formFields, error: fieldsError });
+
       if (fieldsError) {
         console.error("Erro ao buscar campos do formulário:", fieldsError);
         throw fieldsError;
       }
-
-      console.log("Campos do formulário encontrados:", formFields);
 
       const validatedFields = (formFields || []).map(field => ({
         id: field.id,
@@ -83,6 +84,7 @@ export function PublicEnrollment() {
         options: field.options as string[] | undefined,
       }));
 
+      console.log("Campos validados:", validatedFields);
       setFields(validatedFields);
     } catch (error) {
       console.error("Erro ao carregar formulário:", error);
@@ -281,6 +283,6 @@ export function PublicEnrollment() {
       </Card>
     </div>
   );
-}
+};
 
 export default PublicEnrollment;
