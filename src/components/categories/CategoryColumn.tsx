@@ -37,6 +37,7 @@ export const CategoryColumn = ({
   const { toast } = useToast();
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTransferMode, setIsTransferMode] = useState(false);
 
   const getTotalStudents = () => {
     return rooms.reduce((total, room) => total + (room.students?.length || 0), 0);
@@ -54,6 +55,7 @@ export const CategoryColumn = ({
 
     onTransferRooms(selectedRooms, targetCategoryId);
     setSelectedRooms([]);
+    setIsTransferMode(false);
     
     toast({
       title: "Salas transferidas",
@@ -85,6 +87,14 @@ export const CategoryColumn = ({
         ? prev.filter(id => id !== roomId)
         : [...prev, roomId]
     );
+  };
+
+  const selectAllRooms = () => {
+    if (selectedRooms.length === rooms.length) {
+      setSelectedRooms([]);
+    } else {
+      setSelectedRooms(rooms.map(room => room.id));
+    }
   };
 
   return (
@@ -135,25 +145,46 @@ export const CategoryColumn = ({
         </div>
 
         {rooms.length > 0 && (
-          <div className="mb-4 p-3 bg-white/30 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <MoveRight className="h-4 w-4" />
-              <span className="text-sm font-medium">Transferir salas para:</span>
-            </div>
-            <Select onValueChange={handleTransferRooms}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories
-                  .filter(cat => cat.id !== category.id)
-                  .map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-4 space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full bg-white/50 hover:bg-white/70"
+              onClick={() => setIsTransferMode(!isTransferMode)}
+            >
+              <MoveRight className="h-4 w-4 mr-2" />
+              {isTransferMode ? "Cancelar Transferência" : "Iniciar Transferência"}
+            </Button>
+
+            {isTransferMode && (
+              <div className="space-y-2 p-3 bg-white/30 rounded-lg">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full bg-white/50 hover:bg-white/70"
+                  onClick={selectAllRooms}
+                >
+                  {selectedRooms.length === rooms.length 
+                    ? "Desmarcar Todas" 
+                    : "Selecionar Todas"}
+                </Button>
+
+                <Select onValueChange={handleTransferRooms}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione a categoria destino" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories
+                      .filter(cat => cat.id !== category.id)
+                      .map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
         
@@ -162,9 +193,8 @@ export const CategoryColumn = ({
             <RoomCard
               key={room.id}
               room={room}
-              companyId={currentUser?.companyId || ""}
               onSelect={() => toggleRoomSelection(room.id)}
-              selected={selectedRooms.includes(room.id)}
+              selected={isTransferMode && selectedRooms.includes(room.id)}
             />
           ))}
         </div>
