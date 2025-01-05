@@ -8,14 +8,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
 import { GeneralStats } from "./reports/GeneralStats";
-import { startOfMonth, endOfMonth, format, subMonths, addMonths } from "date-fns";
+import { startOfMonth, endOfMonth, format, subMonths, addMonths, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from "lucide-react";
 import { useEffect } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 export const SystemReport = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [dateRange, setDateRange] = useState<{
+    from: Date;
+    to: Date | undefined;
+  }>({
+    from: startOfMonth(currentDate),
+    to: endOfMonth(currentDate)
+  });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -45,14 +55,14 @@ export const SystemReport = () => {
     },
   });
 
-  // Buscar dados de presença do mês selecionado
+  // Buscar dados de presença do período selecionado
   const { data: attendanceData = [], refetch: refetchAttendance } = useQuery({
-    queryKey: ["attendance-data", user?.id, selectedRoom, currentDate],
+    queryKey: ["attendance-data", user?.id, selectedRoom, dateRange],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id || !dateRange.from || !dateRange.to) return [];
       
-      const startDate = format(startOfMonth(currentDate), 'yyyy-MM-dd');
-      const endDate = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+      const startDate = format(startOfDay(dateRange.from), 'yyyy-MM-dd');
+      const endDate = format(endOfDay(dateRange.to), 'yyyy-MM-dd');
       
       let query = supabase
         .from("daily_attendance")
@@ -143,11 +153,21 @@ export const SystemReport = () => {
   };
 
   const handlePreviousMonth = () => {
-    setCurrentDate(prev => subMonths(prev, 1));
+    const newDate = subMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    setDateRange({
+      from: startOfMonth(newDate),
+      to: endOfMonth(newDate)
+    });
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(prev => addMonths(prev, 1));
+    const newDate = addMonths(currentDate, 1);
+    setCurrentDate(newDate);
+    setDateRange({
+      from: startOfMonth(newDate),
+      to: endOfMonth(newDate)
+    });
   };
 
   return (
@@ -167,9 +187,48 @@ export const SystemReport = () => {
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[120px] text-center">
-              {format(currentDate, 'MMMM/yyyy', { locale: ptBR })}
-            </span>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "justify-start text-left font-normal w-[280px]",
+                    !dateRange && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, "dd/MM/yyyy")} -{" "}
+                        {format(dateRange.to, "dd/MM/yyyy")}
+                      </>
+                    ) : (
+                      format(dateRange.from, "dd/MM/yyyy")
+                    )
+                  ) : (
+                    <span>Selecione um período</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={(range) => {
+                    if (range?.from && range?.to) {
+                      setDateRange(range);
+                    }
+                  }}
+                  numberOfMonths={2}
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+
             <Button 
               variant="outline" 
               size="icon"
