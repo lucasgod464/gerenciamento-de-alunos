@@ -7,11 +7,14 @@ import { AttendanceList } from "./AttendanceList";
 import { useAttendanceData } from "./hooks/useAttendanceData";
 import { StudentDetailsDialog } from "../student/StudentDetailsDialog";
 import { Search, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export function AttendanceControl() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedRoom, setSelectedRoom] = useState("");
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [isAttendanceStarted, setIsAttendanceStarted] = useState(false);
+  const { toast } = useToast();
   
   const {
     students,
@@ -20,6 +23,18 @@ export function AttendanceControl() {
     handleSaveAttendance,
     handleCancelAttendance,
   } = useAttendanceData(selectedDate, selectedRoom);
+
+  const handleStartAttendance = () => {
+    if (!selectedRoom) {
+      toast({
+        title: "Selecione uma sala",
+        description: "É necessário selecionar uma sala para iniciar a chamada",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsAttendanceStarted(true);
+  };
 
   if (isLoading) {
     return <div>Carregando...</div>;
@@ -31,6 +46,8 @@ export function AttendanceControl() {
         <AttendanceHeader
           selectedRoom={selectedRoom}
           onRoomChange={setSelectedRoom}
+          onStartAttendance={handleStartAttendance}
+          isAttendanceStarted={isAttendanceStarted}
         />
         <Button
           variant="outline"
@@ -53,26 +70,40 @@ export function AttendanceControl() {
         </Card>
 
         <Card className="p-4">
-          <AttendanceList
-            students={students}
-            onStatusChange={handleStatusChange}
-          />
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <Button
-              variant="outline"
-              onClick={handleCancelAttendance}
-            >
-              Cancelar Chamada
-            </Button>
-            <Button
-              onClick={handleSaveAttendance}
-              className="flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              Salvar Chamada
-            </Button>
-          </div>
+          {isAttendanceStarted ? (
+            <>
+              <AttendanceList
+                students={students}
+                onStatusChange={handleStatusChange}
+              />
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    handleCancelAttendance();
+                    setIsAttendanceStarted(false);
+                  }}
+                >
+                  Cancelar Chamada
+                </Button>
+                <Button
+                  onClick={() => {
+                    handleSaveAttendance();
+                    setIsAttendanceStarted(false);
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Salvar Chamada
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+              Selecione uma sala e inicie a chamada para visualizar a lista de alunos
+            </div>
+          )}
         </Card>
       </div>
 
