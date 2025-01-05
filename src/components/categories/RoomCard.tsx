@@ -2,6 +2,9 @@ import { Room } from "@/types/room";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Building2, Users, GraduationCap, Clock, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { UserWithTags } from "./UserWithTags";
 
 interface RoomCardProps {
   room: Room;
@@ -9,11 +12,52 @@ interface RoomCardProps {
   onSelect: () => void;
 }
 
+interface AuthorizedUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export const RoomCard = ({
   room,
   selected,
   onSelect
 }: RoomCardProps) => {
+  const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
+
+  useEffect(() => {
+    const fetchAuthorizedUsers = async () => {
+      try {
+        const { data: userData, error } = await supabase
+          .from('user_rooms')
+          .select(`
+            user_id,
+            emails:user_id (
+              id,
+              name,
+              email
+            )
+          `)
+          .eq('room_id', room.id);
+
+        if (error) throw error;
+
+        if (userData) {
+          const users = userData.map(ur => ({
+            id: ur.emails.id,
+            name: ur.emails.name,
+            email: ur.emails.email
+          }));
+          setAuthorizedUsers(users);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar usuários vinculados:', error);
+      }
+    };
+
+    fetchAuthorizedUsers();
+  }, [room.id]);
+
   return (
     <Card
       className={cn(
@@ -28,11 +72,28 @@ export const RoomCard = ({
           <h4 className="font-medium text-sm">{room.name}</h4>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Users className="h-4 w-4 text-purple-600" />
-          <span className="text-sm text-muted-foreground">
-            Usuários Vinculados
-          </span>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-purple-600" />
+            <span className="text-sm text-muted-foreground">
+              Usuários Vinculados ({authorizedUsers.length})
+            </span>
+          </div>
+          <div className="pl-6 space-y-1">
+            {authorizedUsers.length > 0 ? (
+              authorizedUsers.map((user) => (
+                <UserWithTags
+                  key={user.id}
+                  userName={user.name}
+                  companyId={room.companyId || ""}
+                />
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">
+                Nenhum usuário vinculado
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
