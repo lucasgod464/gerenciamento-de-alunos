@@ -2,17 +2,23 @@ import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const formatDate = (date: Date): string => {
-  // Cria uma cópia da data e ajusta para o início do dia
-  const localDate = startOfDay(new Date(date));
+  // Cria uma nova data no fuso horário local
+  const localDate = new Date(date);
   
-  // Ajusta para o fuso horário local
-  const offset = localDate.getTimezoneOffset();
-  localDate.setMinutes(localDate.getMinutes() - offset);
+  // Ajusta para o início do dia no fuso horário local
+  localDate.setHours(0, 0, 0, 0);
+  
+  // Converte para UTC mantendo o mesmo dia
+  const utcDate = new Date(Date.UTC(
+    localDate.getFullYear(),
+    localDate.getMonth(),
+    localDate.getDate()
+  ));
   
   console.log('Data original:', date);
-  console.log('Offset do fuso horário (minutos):', offset);
   console.log('Data local ajustada:', localDate);
-  console.log('Data formatada para o banco:', format(localDate, 'yyyy-MM-dd', { locale: ptBR }));
+  console.log('Data UTC:', utcDate);
+  console.log('Data formatada para o banco:', format(utcDate, 'yyyy-MM-dd', { locale: ptBR }));
   
-  return format(localDate, 'yyyy-MM-dd', { locale: ptBR });
+  return format(utcDate, 'yyyy-MM-dd', { locale: ptBR });
 };

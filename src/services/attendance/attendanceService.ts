@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { AttendanceStudent } from "./types";
+import { formatDate } from "@/utils/dateUtils";
 
 export const attendanceService = {
   async getCompanyStudents(companyId: string): Promise<AttendanceStudent[]> {
@@ -40,7 +41,10 @@ export const attendanceService = {
     return uniqueDates.map(date => new Date(date));
   },
 
-  async getDailyAttendance(date: string, companyId: string) {
+  async getDailyAttendance(date: Date, companyId: string) {
+    const formattedDate = formatDate(date);
+    console.log('Buscando presença para a data:', formattedDate);
+    
     const { data: attendanceData, error } = await supabase
       .from('daily_attendance')
       .select(`
@@ -54,7 +58,7 @@ export const attendanceService = {
           )
         )
       `)
-      .eq('date', date)
+      .eq('date', formattedDate)
       .eq('company_id', companyId);
 
     if (error) throw error;
@@ -63,15 +67,18 @@ export const attendanceService = {
   },
 
   async saveAttendance(attendance: {
-    date: string;
+    date: Date;
     studentId: string;
     status: string;
     companyId: string;
   }) {
+    const formattedDate = formatDate(attendance.date);
+    console.log('Salvando presença para a data:', formattedDate);
+    
     const { error } = await supabase
       .from('daily_attendance')
       .upsert({
-        date: attendance.date,
+        date: formattedDate,
         student_id: attendance.studentId,
         status: attendance.status,
         company_id: attendance.companyId
@@ -81,14 +88,16 @@ export const attendanceService = {
   },
 
   async saveObservation(observation: {
-    date: string;
+    date: Date;
     text: string;
     companyId: string;
   }) {
+    const formattedDate = formatDate(observation.date);
+    
     const { error } = await supabase
       .from('daily_observations')
       .upsert({
-        date: observation.date,
+        date: formattedDate,
         text: observation.text,
         company_id: observation.companyId
       });
@@ -96,11 +105,13 @@ export const attendanceService = {
     if (error) throw error;
   },
 
-  async cancelAttendance(date: string, companyId: string) {
+  async cancelAttendance(date: Date, companyId: string) {
+    const formattedDate = formatDate(date);
+    
     const { error: attendanceError } = await supabase
       .from('daily_attendance')
       .delete()
-      .eq('date', date)
+      .eq('date', formattedDate)
       .eq('company_id', companyId);
 
     if (attendanceError) throw attendanceError;
@@ -108,7 +119,7 @@ export const attendanceService = {
     const { error: observationError } = await supabase
       .from('daily_observations')
       .delete()
-      .eq('date', date)
+      .eq('date', formattedDate)
       .eq('company_id', companyId);
 
     if (observationError) throw observationError;
