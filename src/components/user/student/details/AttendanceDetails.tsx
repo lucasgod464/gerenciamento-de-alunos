@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays } from "date-fns";
+import { format, addDays, subDays, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CircleCheck, CircleX, Clock, FileQuestion } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface AttendanceDetailsProps {
   studentId: string;
@@ -63,7 +64,12 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export function AttendanceDetails({ studentId, startDate, endDate }: AttendanceDetailsProps) {
+export function AttendanceDetails({ studentId }: { studentId: string }) {
+  const today = new Date();
+  const [dateRange, setDateRange] = useState({
+    startDate: subDays(today, 29),
+    endDate: today
+  });
   const [stats, setStats] = useState<AttendanceStats>({
     present: 0,
     absent: 0,
@@ -72,14 +78,32 @@ export function AttendanceDetails({ studentId, startDate, endDate }: AttendanceD
   });
   const [attendance, setAttendance] = useState<any[]>([]);
 
+  const handlePeriodChange = (value: string) => {
+    const today = new Date();
+    switch (value) {
+      case "last30days":
+        setDateRange({
+          startDate: subDays(today, 29),
+          endDate: today
+        });
+        break;
+      case "lastYear":
+        setDateRange({
+          startDate: subYears(today, 1),
+          endDate: today
+        });
+        break;
+    }
+  };
+
   useEffect(() => {
     const fetchAttendance = async () => {
       const { data, error } = await supabase
         .from('daily_attendance')
         .select('*')
         .eq('student_id', studentId)
-        .gte('date', format(startDate, 'yyyy-MM-dd'))
-        .lte('date', format(endDate, 'yyyy-MM-dd'))
+        .gte('date', format(dateRange.startDate, 'yyyy-MM-dd'))
+        .lte('date', format(dateRange.endDate, 'yyyy-MM-dd'))
         .order('date', { ascending: true });
 
       if (error) {
@@ -103,13 +127,25 @@ export function AttendanceDetails({ studentId, startDate, endDate }: AttendanceD
     };
 
     fetchAttendance();
-  }, [studentId, startDate, endDate]);
+  }, [studentId, dateRange]);
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <Select defaultValue="last30days" onValueChange={handlePeriodChange}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Selecione o período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="last30days">Últimos 30 dias</SelectItem>
+            <SelectItem value="lastYear">Último ano</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <Card className="p-4">
         <h4 className="font-medium mb-2">
-          Resumo do Período ({format(startDate, "dd/MM/yyyy", { locale: ptBR })} - {format(endDate, "dd/MM/yyyy", { locale: ptBR })})
+          Resumo do Período ({format(dateRange.startDate, "dd/MM/yyyy", { locale: ptBR })} - {format(dateRange.endDate, "dd/MM/yyyy", { locale: ptBR })})
         </h4>
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-green-100 text-green-800 p-2 rounded-md">
