@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { Room } from "@/types/room";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface StudentDistributionChartProps {
   rooms: Room[];
@@ -77,21 +78,13 @@ export const StudentDistributionChart = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-muted-foreground" />
-          Estatísticas de Presença - {format(currentDate, 'MMMM/yyyy')}
+          Estatísticas de Presença - {format(currentDate, 'MMMM/yyyy', { locale: ptBR })}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
+            <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />

@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { SystemReport } from "@/components/user/SystemReport";
+import { SystemReport } from "@/components/user/reports/SystemReport";
 
 const ReportsPage = () => {
   return (
