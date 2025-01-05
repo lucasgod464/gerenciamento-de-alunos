@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
+import { format } from "date-fns";
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -13,6 +14,13 @@ interface DateRangeSelectorProps {
 
 export function DateRangeSelector({ startDate, endDate, onDateChange }: DateRangeSelectorProps) {
   const [open, setOpen] = useState(false);
+  const [date, setDate] = useState<{
+    from: Date;
+    to?: Date;
+  }>({
+    from: startDate,
+    to: endDate,
+  });
 
   return (
     <div className="flex items-center gap-2">
@@ -20,25 +28,36 @@ export function DateRangeSelector({ startDate, endDate, onDateChange }: DateRang
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
+            {date.from ? (
+              date.to ? (
+                <>
+                  {format(date.from, "dd/MM/yyyy")} - {format(date.to, "dd/MM/yyyy")}
+                </>
+              ) : (
+                format(date.from, "dd/MM/yyyy")
+              )
+            ) : (
+              <span>Selecione um período</span>
+            )}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
           <Calendar
+            initialFocus
             mode="range"
-            selected={{
-              from: startDate,
-              to: endDate,
-            }}
-            onSelect={(range) => {
-              if (range?.from && range?.to) {
-                onDateChange(range.from, range.to);
-                setOpen(false); // Só fecha após selecionar o período completo
+            defaultMonth={startDate}
+            selected={date}
+            onSelect={(selectedDate) => {
+              if (selectedDate?.from && selectedDate?.to) {
+                setDate(selectedDate);
+                onDateChange(selectedDate.from, selectedDate.to);
+                setOpen(false);
+              } else if (selectedDate?.from) {
+                setDate(selectedDate);
               }
             }}
             locale={ptBR}
             numberOfMonths={2}
-            defaultMonth={startDate}
           />
         </PopoverContent>
       </Popover>

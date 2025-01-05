@@ -61,7 +61,8 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         .select('*')
         .eq('student_id', selectedStudent.id)
         .gte('date', formatDate(startDate))
-        .lte('date', formatDate(endDate));
+        .lte('date', formatDate(endDate))
+        .order('date', { ascending: true });
 
       if (error) {
         console.error('Erro ao buscar presenças:', error);
