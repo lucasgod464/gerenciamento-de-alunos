@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { Company } from "./CompanyList"
+import { Company, CompanyFormData } from "@/types/company"
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void

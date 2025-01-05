@@ -1,40 +1,43 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { CompanyList, Company } from "@/components/companies/CompanyList";
-import { CompanyStats } from "@/components/companies/CompanyStats";
-import { CreateCompanyDialog } from "@/components/companies/CreateCompanyDialog";
-import { useCompanies } from "@/hooks/useCompanies";
-import { useToast } from "@/components/ui/use-toast";
+import { DashboardLayout } from "@/components/DashboardLayout"
+import { CompanyTable } from "@/components/companies/table/CompanyTable"
+import { CompanyStats } from "@/components/companies/stats/CompanyStats"
+import { CreateCompanyDialog } from "@/components/companies/form/CreateCompanyDialog"
+import { CompanyFilters } from "@/components/companies/filters/CompanyFilters"
+import { useCompanies } from "@/hooks/useCompanies"
+import { useState } from "react"
+import { Company } from "@/types/company"
 
-const Companies = () => {
-  const { toast } = useToast();
+export default function Companies() {
   const {
     companies,
     isLoading,
     createCompany,
     updateCompany,
     deleteCompany,
-  } = useCompanies();
+  } = useCompanies()
 
-  const handleCreateCompany = (newCompany: Omit<Company, "id" | "createdAt">) => {
-    createCompany(newCompany);
-    toast({
-      title: "Empresa criada",
-      description: "A empresa foi criada com sucesso.",
-    });
-  };
+  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
 
-  // Calculate statistics
-  const activeCompanies = companies.filter(company => company.status === "Ativa").length;
-  const inactiveCompanies = companies.filter(company => company.status === "Inativa").length;
+  // Filtragem de empresas
+  const filteredCompanies = companies.filter(company => {
+    const matchesSearch = company.name.toLowerCase().includes(search.toLowerCase()) ||
+                         company.document.toLowerCase().includes(search.toLowerCase())
+    
+    const matchesStatus = statusFilter === "all" ? true :
+                         statusFilter === "active" ? company.status === "Ativa" :
+                         company.status === "Inativa"
+    
+    return matchesSearch && matchesStatus
+  })
+
+  // Cálculo de estatísticas
+  const activeCompanies = companies.filter(company => company.status === "Ativa").length
+  const inactiveCompanies = companies.filter(company => company.status === "Inativa").length
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return <div>Carregando...</div>
   }
-
-  const typedCompanies = companies.map(company => ({
-    ...company,
-    status: company.status as "Ativa" | "Inativa"
-  }));
 
   return (
     <DashboardLayout role="super-admin">
@@ -54,17 +57,22 @@ const Companies = () => {
 
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Lista de Empresas</h2>
-          <CreateCompanyDialog onCompanyCreated={handleCreateCompany} />
+          <CreateCompanyDialog onCompanyCreated={createCompany} />
         </div>
 
-        <CompanyList
-          companies={typedCompanies}
+        <CompanyFilters
+          search={search}
+          onSearchChange={setSearch}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+        />
+
+        <CompanyTable
+          companies={filteredCompanies}
           onUpdateCompany={updateCompany}
           onDeleteCompany={deleteCompany}
         />
       </div>
     </DashboardLayout>
-  );
-};
-
-export default Companies;
+  )
+}

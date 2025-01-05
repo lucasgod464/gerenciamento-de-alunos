@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
-import { CompanyDataUsage } from "./CompanyDataUsage"
+import { CompanyDataUsage } from "../CompanyDataUsage"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,14 +14,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Company } from "./CompanyList"
+import { Company } from "@/types/company"
 import { useToast } from "@/components/ui/use-toast"
 
 interface CompanyTableRowProps {
-  company: Company;
-  onDelete: (id: string) => void;
-  onEdit: (company: Company) => void;
-  onUpdateStatus: (company: Company) => void;
+  company: Company
+  onDelete: (id: string) => void
+  onEdit: (company: Company) => void
+  onUpdateStatus: (company: Company) => void
 }
 
 export function CompanyTableRow({
@@ -30,36 +30,24 @@ export function CompanyTableRow({
   onEdit,
   onUpdateStatus,
 }: CompanyTableRowProps) {
-  const { toast } = useToast();
+  const { toast } = useToast()
 
   const handleStatusChange = () => {
     const updatedCompany: Company = {
       ...company,
       status: company.status === "Ativa" ? "Inativa" : "Ativa"
-    };
+    }
     
-    onUpdateStatus(updatedCompany);
+    onUpdateStatus(updatedCompany)
     
     toast({
       title: "Status atualizado",
       description: `A empresa ${company.name} foi ${updatedCompany.status === "Ativa" ? "ativada" : "desativada"}.`,
-    });
-  };
+    })
+  }
 
-  const usersPercentage = (company.currentUsers / company.usersLimit) * 100;
-  const roomsPercentage = (company.currentRooms / company.roomsLimit) * 100;
-
-  const handleEdit = () => {
-    if (company.status === "Inativa") {
-      toast({
-        title: "Operação não permitida",
-        description: "Não é possível editar uma empresa inativa.",
-        variant: "destructive",
-      });
-      return;
-    }
-    onEdit(company);
-  };
+  const usersPercentage = (company.currentUsers / company.usersLimit) * 100
+  const roomsPercentage = (company.currentRooms / company.roomsLimit) * 100
 
   return (
     <tr className={cn(
@@ -86,65 +74,21 @@ export function CompanyTableRow({
       </td>
 
       <td className="p-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <Users2 className={cn(
-              "w-4 h-4",
-              usersPercentage >= 90 ? "text-red-500" : 
-              usersPercentage >= 70 ? "text-yellow-500" : 
-              "text-blue-500"
-            )} />
-            <span className={cn(
-              usersPercentage >= 90 ? "text-red-600" : 
-              usersPercentage >= 70 ? "text-yellow-600" : 
-              "text-gray-600"
-            )}>
-              {company.currentUsers}/{company.usersLimit}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className={cn(
-                "h-1.5 rounded-full",
-                usersPercentage >= 90 ? "bg-red-500" : 
-                usersPercentage >= 70 ? "bg-yellow-500" : 
-                "bg-blue-500"
-              )}
-              style={{ width: `${usersPercentage}%` }}
-            />
-          </div>
-        </div>
+        <UsageIndicator
+          icon={<Users2 className="w-4 h-4" />}
+          current={company.currentUsers}
+          limit={company.usersLimit}
+          percentage={usersPercentage}
+        />
       </td>
 
       <td className="p-4">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <DoorOpen className={cn(
-              "w-4 h-4",
-              roomsPercentage >= 90 ? "text-red-500" : 
-              roomsPercentage >= 70 ? "text-yellow-500" : 
-              "text-purple-500"
-            )} />
-            <span className={cn(
-              roomsPercentage >= 90 ? "text-red-600" : 
-              roomsPercentage >= 70 ? "text-yellow-600" : 
-              "text-gray-600"
-            )}>
-              {company.currentRooms}/{company.roomsLimit}
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className={cn(
-                "h-1.5 rounded-full",
-                roomsPercentage >= 90 ? "bg-red-500" : 
-                roomsPercentage >= 70 ? "bg-yellow-500" : 
-                "bg-purple-500"
-              )}
-              style={{ width: `${roomsPercentage}%` }}
-            />
-          </div>
-        </div>
+        <UsageIndicator
+          icon={<DoorOpen className="w-4 h-4" />}
+          current={company.currentRooms}
+          limit={company.roomsLimit}
+          percentage={roomsPercentage}
+        />
       </td>
 
       <td className="p-4">
@@ -205,5 +149,47 @@ export function CompanyTableRow({
         </div>
       </td>
     </tr>
-  );
+  )
+}
+
+interface UsageIndicatorProps {
+  icon: React.ReactNode
+  current: number
+  limit: number
+  percentage: number
+}
+
+function UsageIndicator({ icon, current, limit, percentage }: UsageIndicatorProps) {
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          "transition-colors",
+          percentage >= 90 ? "text-red-500" : 
+          percentage >= 70 ? "text-yellow-500" : 
+          "text-blue-500"
+        )}>
+          {icon}
+        </span>
+        <span className={cn(
+          percentage >= 90 ? "text-red-600" : 
+          percentage >= 70 ? "text-yellow-600" : 
+          "text-gray-600"
+        )}>
+          {current}/{limit}
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-1.5">
+        <div
+          className={cn(
+            "h-1.5 rounded-full transition-all",
+            percentage >= 90 ? "bg-red-500" : 
+            percentage >= 70 ? "bg-yellow-500" : 
+            "bg-blue-500"
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+    </div>
+  )
 }
