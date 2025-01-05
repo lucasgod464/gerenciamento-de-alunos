@@ -1,6 +1,4 @@
-import { Json } from "@/integrations/supabase/types";
-
-export type FieldType = "text" | "email" | "tel" | "date" | "textarea" | "select" | "multiple";
+export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
 
 export interface FormField {
   id: string;
@@ -12,7 +10,6 @@ export interface FormField {
   order: number;
   options?: string[];
   isDefault?: boolean;
-  companyId?: string;
 }
 
 export interface SupabaseFormField {
@@ -20,11 +17,11 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description: string | null;
+  description?: string;
   required: boolean;
   order: number;
-  options: Json | null;
-  company_id: string | null;
+  options?: string[];
+  company_id: string;
   created_at: string;
 }
 
@@ -33,20 +30,19 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description || undefined,
+  description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options as string[] | undefined,
-  companyId: field.company_id || undefined,
+  options: field.options,
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description || null,
+  description: field.description,
   required: field.required,
-  options: field.options || null,
   order: field.order,
-  company_id: field.companyId || null
+  options: field.options,
+  company_id: '', // Será preenchido no hook
 });

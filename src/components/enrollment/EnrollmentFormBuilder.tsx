@@ -24,13 +24,29 @@ export const EnrollmentFormBuilder = () => {
       return;
     }
 
-    if (editingField) {
-      await updateField({ ...editingField, ...field });
-      setEditingField(undefined);
-    } else {
-      await addField(field);
+    try {
+      if (editingField) {
+        await updateField({ ...editingField, ...field });
+        setEditingField(undefined);
+      } else {
+        await addField(field);
+      }
+      setIsAddingField(false);
+      
+      toast({
+        title: editingField ? "Campo atualizado" : "Campo adicionado",
+        description: editingField 
+          ? "O campo foi atualizado com sucesso."
+          : "O novo campo foi adicionado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao manipular campo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar o campo. Tente novamente.",
+        variant: "destructive",
+      });
     }
-    setIsAddingField(false);
   };
 
   return (
