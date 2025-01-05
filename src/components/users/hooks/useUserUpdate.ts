@@ -35,7 +35,7 @@ export function useUserUpdate() {
         .from('emails')
         .update(updateData)
         .eq('id', user.id)
-        .select()
+        .select('*')
         .single();
 
       if (updateError) throw updateError;
@@ -71,10 +71,12 @@ export function useUserUpdate() {
         console.log('Inserting new specializations:', selectedSpecializations);
         const { error: insertSpecError } = await supabase
           .from('user_specializations')
-          .insert(selectedSpecializations.map(specId => ({
-            user_id: user.id,
-            specialization_id: specId
-          })));
+          .insert(
+            selectedSpecializations.map(specId => ({
+              user_id: user.id,
+              specialization_id: specId
+            }))
+          );
 
         if (insertSpecError) {
           console.error('Error inserting specializations:', insertSpecError);
@@ -120,9 +122,19 @@ export function useUserUpdate() {
         specialization: updateData.specialization
       };
 
+      toast({
+        title: "Usuário atualizado",
+        description: "As informações do usuário foram atualizadas com sucesso.",
+      });
+
       return updatedUserData;
     } catch (error) {
       console.error('Error updating user:', error);
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: "Ocorreu um erro ao atualizar as informações do usuário.",
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setLoading(false);
