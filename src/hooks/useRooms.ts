@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Room, SupabaseRoom, mapSupabaseRoom } from "@/types/room";
+import { Room, SupabaseRoom, mapSupabaseRoomToRoom } from "@/types/room";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -40,7 +40,7 @@ export const useRooms = () => {
       if (error) throw error;
 
       const formattedRooms = (roomsData as unknown as SupabaseRoom[]).map(room => 
-        mapSupabaseRoom(room)
+        mapSupabaseRoomToRoom(room)
       );
 
       setRooms(formattedRooms);
