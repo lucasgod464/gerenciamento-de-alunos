@@ -1,6 +1,6 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type FieldType = "text" | "email" | "tel" | "select" | "multiple" | "textarea" | "date";
+export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
 
 export interface FormField {
   id: string;
@@ -11,9 +11,6 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  company_id?: string;
-  created_at?: string;
-  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -21,10 +18,10 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description?: string;
-  required: boolean;
+  description: string | null;
+  required: boolean | null;
   order: number;
-  options: Json[];
+  options: Json[] | null;
   company_id: string;
   created_at: string;
 }
@@ -34,22 +31,19 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description,
-  required: field.required,
+  description: field.description || undefined,
+  required: field.required || false,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(opt => String(opt)) : undefined,
-  company_id: field.company_id,
-  created_at: field.created_at
+  options: field.options ? field.options.map(opt => String(opt)) : undefined
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id'> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description,
+  description: field.description || null,
   required: field.required,
   order: field.order,
-  options: field.options?.map(opt => opt as Json) || [],
-  company_id: field.company_id || '',
-  created_at: field.created_at || new Date().toISOString()
+  options: field.options ? field.options.map(opt => opt as Json) : null,
+  company_id: ''
 });
