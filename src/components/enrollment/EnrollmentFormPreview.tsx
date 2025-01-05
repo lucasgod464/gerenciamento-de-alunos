@@ -101,18 +101,20 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const renderSystemFields = () => (
     <div className="mb-4 space-y-2">
       {systemFields.map((field) => (
-        <Card key={field.id} className="p-4 bg-gray-50 border-dashed">
+        <Card key={field.id} className="p-4 bg-white border border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">{field.label}</h3>
-                  <span className="text-sm text-red-500">*</span>
-                  <Lock className="h-4 w-4 text-gray-400" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <div className="space-y-1 w-full">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium text-gray-900">{field.label}</h3>
+                    <span className="text-sm text-red-500">*</span>
+                    <Lock className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-blue-600">
+                    Campo padrão do sistema
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Campo padrão do sistema
-                </p>
               </div>
             </div>
           </div>
