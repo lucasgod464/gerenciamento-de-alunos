@@ -24,6 +24,7 @@ export const RoomCard = ({
   onSelect
 }: RoomCardProps) => {
   const [authorizedUsers, setAuthorizedUsers] = useState<AuthorizedUser[]>([]);
+  const [categoryColor, setCategoryColor] = useState<string>("#6b21a8"); // cor roxa padrão
 
   useEffect(() => {
     const fetchAuthorizedUsers = async () => {
@@ -55,8 +56,27 @@ export const RoomCard = ({
       }
     };
 
+    const fetchCategoryColor = async () => {
+      try {
+        const { data: categoryData, error } = await supabase
+          .from('categories')
+          .select('color')
+          .eq('id', room.category)
+          .single();
+
+        if (error) throw error;
+
+        if (categoryData && categoryData.color) {
+          setCategoryColor(categoryData.color);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar cor da categoria:', error);
+      }
+    };
+
     fetchAuthorizedUsers();
-  }, [room.id]);
+    fetchCategoryColor();
+  }, [room.id, room.category]);
 
   return (
     <Card
@@ -68,13 +88,13 @@ export const RoomCard = ({
     >
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-purple-600" />
+          <Building2 className="h-4 w-4" style={{ color: categoryColor }} />
           <h4 className="font-medium text-sm">{room.name}</h4>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-purple-600" />
+            <Users className="h-4 w-4" style={{ color: categoryColor }} />
             <span className="text-sm text-muted-foreground">
               Usuários Vinculados ({authorizedUsers.length})
             </span>
@@ -97,7 +117,7 @@ export const RoomCard = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <GraduationCap className="h-4 w-4 text-purple-600" />
+          <GraduationCap className="h-4 w-4" style={{ color: categoryColor }} />
           <span className="text-sm text-muted-foreground">
             {room.students?.length || 0} alunos
           </span>
@@ -105,14 +125,14 @@ export const RoomCard = ({
 
         {room.schedule && (
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-purple-600" />
+            <Clock className="h-4 w-4" style={{ color: categoryColor }} />
             <span className="text-sm text-muted-foreground">{room.schedule}</span>
           </div>
         )}
 
         {room.location && (
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-purple-600" />
+            <MapPin className="h-4 w-4" style={{ color: categoryColor }} />
             <span className="text-sm text-muted-foreground">{room.location}</span>
           </div>
         )}
