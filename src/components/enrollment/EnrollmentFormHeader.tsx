@@ -58,7 +58,7 @@ export const EnrollmentFormHeader = () => {
           </div>
           {enrollmentUrl && (
             <Button asChild>
-              <Link to={`/enrollment/${user?.companyId}`} target="_blank">
+              <Link to={enrollmentUrl.replace(window.location.origin, '')} target="_blank">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Visualizar Formulário
               </Link>
