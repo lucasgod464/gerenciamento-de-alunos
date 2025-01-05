@@ -72,12 +72,20 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     const fetchAttendance = async () => {
       if (!selectedStudent) return;
 
+      const startFormatted = formatDate(startDate);
+      const endFormatted = formatDate(endDate);
+      
+      console.log('StudentDetailsDialog - Data inicial:', startDate);
+      console.log('StudentDetailsDialog - Data final:', endDate);
+      console.log('StudentDetailsDialog - Data inicial formatada:', startFormatted);
+      console.log('StudentDetailsDialog - Data final formatada:', endFormatted);
+
       const { data, error } = await supabase
         .from('daily_attendance')
         .select('*')
         .eq('student_id', selectedStudent.id)
-        .gte('date', formatDate(startDate))
-        .lte('date', formatDate(endDate))
+        .gte('date', startFormatted)
+        .lte('date', endFormatted)
         .order('date', { ascending: true });
 
       if (error) {
@@ -85,6 +93,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         return;
       }
 
+      console.log('StudentDetailsDialog - Dados de presença:', data);
       setAttendance(data || []);
 
       const stats = (data || []).reduce((acc, record) => {

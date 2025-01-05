@@ -58,8 +58,8 @@ export const AttendanceControl = () => {
       if (!user?.companyId || !selectedDate || !selectedRoom) return;
 
       const formattedDate = formatDate(selectedDate);
-      console.log('Data selecionada:', selectedDate);
-      console.log('Data formatada para o banco:', formattedDate);
+      console.log('AttendanceControl - Data selecionada:', selectedDate);
+      console.log('AttendanceControl - Data formatada:', formattedDate);
       
       try {
         const { data, error } = await supabase
@@ -71,7 +71,7 @@ export const AttendanceControl = () => {
 
         if (error) throw error;
 
-        console.log('Resposta do banco:', data);
+        console.log('AttendanceControl - Resposta do banco:', data);
         const hasData = data && data.length > 0;
         setHasAttendance(hasData);
         setIsStarted(hasData);
