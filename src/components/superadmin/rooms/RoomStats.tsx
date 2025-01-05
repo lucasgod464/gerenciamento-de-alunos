@@ -1,5 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Room } from "@/types/room";
+import { Building2, CheckCircle2, XCircle } from "lucide-react";
 
 export interface RoomStatsProps {
   rooms: Room[];
@@ -13,27 +14,50 @@ export function RoomStats({ rooms }: RoomStatsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total de Salas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalRooms}</div>
+        <CardContent className="flex items-center p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Building2 className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Total de Salas
+              </p>
+              <h2 className="text-2xl font-bold">{totalRooms}</h2>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Salas Ativas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-green-600">{activeRooms}</div>
+        <CardContent className="flex items-center p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Salas Ativas
+              </p>
+              <h2 className="text-2xl font-bold">{activeRooms}</h2>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Salas Inativas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-red-600">{inactiveRooms}</div>
+        <CardContent className="flex items-center p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <XCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Salas Inativas
+              </p>
+              <h2 className="text-2xl font-bold">{inactiveRooms}</h2>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
