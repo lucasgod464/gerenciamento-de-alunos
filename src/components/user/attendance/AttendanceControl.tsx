@@ -58,7 +58,8 @@ export const AttendanceControl = () => {
       if (!user?.companyId || !selectedDate || !selectedRoom) return;
 
       const formattedDate = formatDate(selectedDate);
-      console.log('Data formatada:', formattedDate); // Log para debug
+      console.log('Data selecionada:', selectedDate);
+      console.log('Data formatada para o banco:', formattedDate);
       
       try {
         const { data, error } = await supabase
@@ -70,7 +71,7 @@ export const AttendanceControl = () => {
 
         if (error) throw error;
 
-        console.log('Dados da chamada:', data); // Log para debug
+        console.log('Resposta do banco:', data);
         const hasData = data && data.length > 0;
         setHasAttendance(hasData);
         setIsStarted(hasData);
@@ -93,7 +94,8 @@ export const AttendanceControl = () => {
     if (isStarted) {
       try {
         const formattedDate = formatDate(selectedDate);
-        console.log('Data ao cancelar chamada:', formattedDate); // Log para debug
+        console.log('Data selecionada ao cancelar:', selectedDate);
+        console.log('Data formatada ao cancelar:', formattedDate);
         
         const { error } = await supabase
           .from('daily_attendance')
@@ -135,7 +137,12 @@ export const AttendanceControl = () => {
                 <Calendar
                   mode="single"
                   selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => {
+                    if (date) {
+                      console.log('Nova data selecionada:', date);
+                      setSelectedDate(date);
+                    }
+                  }}
                   className="rounded-md border bg-white"
                 />
               </div>

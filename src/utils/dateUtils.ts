@@ -1,12 +1,10 @@
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 export const formatDate = (date: Date): string => {
-  // Ajusta a data para meia-noite no fuso horário local
+  // Cria uma nova data no fuso horário local (já configurado como America/Sao_Paulo no banco)
   const localDate = new Date(date);
-  localDate.setHours(0, 0, 0, 0);
   
-  // Formata a data no padrão YYYY-MM-DD
-  const year = localDate.getFullYear();
-  const month = String(localDate.getMonth() + 1).padStart(2, '0');
-  const day = String(localDate.getDate()).padStart(2, '0');
-  
-  return `${year}-${month}-${day}`;
+  // Formata a data usando date-fns para garantir consistência
+  return format(localDate, 'yyyy-MM-dd', { locale: ptBR });
 };
