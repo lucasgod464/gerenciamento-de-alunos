@@ -28,11 +28,13 @@ export function EditUserDialog({
   const [loading, setLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<{ id: string; name: string; }[]>([]);
 
   useEffect(() => {
     if (user && open) {
       setSelectedTags(user.tags || []);
       setSelectedRooms(user.authorizedRooms?.map(room => room.id) || []);
+      setSelectedSpecializations(user.specializations || []);
     }
   }, [user, open]);
 
@@ -47,7 +49,6 @@ export function EditUserDialog({
         email: formData.get('email')?.toString() || '',
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
-        specialization: formData.get('specialization')?.toString() || '',
         status: formData.get('status')?.toString() || 'active',
         address: formData.get('address')?.toString() || ''
       };
@@ -65,10 +66,10 @@ export function EditUserDialog({
         .delete()
         .eq('user_id', user.id);
 
-      if (selectedTags.length > 0) {
+      if (selectedSpecializations.length > 0) {
         await supabase
           .from('user_specializations')
-          .insert(selectedTags.map(spec => ({
+          .insert(selectedSpecializations.map(spec => ({
             user_id: user.id,
             specialization_id: spec.id
           })));
@@ -115,7 +116,8 @@ export function EditUserDialog({
         authorizedRooms: selectedRooms.map(roomId => ({
           id: roomId,
           name: user.authorizedRooms?.find(r => r.id === roomId)?.name || ''
-        }))
+        })),
+        specializations: selectedSpecializations
       };
 
       toast({
@@ -153,16 +155,17 @@ export function EditUserDialog({
             defaultValues={{
               name: user.name,
               email: user.email,
-              specialization: user.specialization || '',
               location: user.location || '',
               status: user.status,
               tags: user.tags,
               accessLevel: user.accessLevel,
               authorizedRooms: user.authorizedRooms,
-              address: user.address || ''
+              address: user.address || '',
+              specializations: user.specializations
             }}
             onTagsChange={setSelectedTags}
             onRoomsChange={setSelectedRooms}
+            onSpecializationsChange={setSelectedSpecializations}
             isEditing
           />
           <div className="flex justify-end gap-2 sticky bottom-0 bg-white p-4 border-t">
