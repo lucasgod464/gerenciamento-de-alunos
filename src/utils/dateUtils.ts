@@ -1,7 +1,11 @@
 import { format, startOfDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const formatDate = (date: Date) => {
-  return format(date, 'yyyy-MM-dd');
+  // Ajusta a data para meia-noite no fuso horário local
+  const localDate = startOfDay(date);
+  // Formata mantendo o fuso horário local
+  return format(localDate, 'yyyy-MM-dd');
 };
 
 export const normalizeDate = (date: Date) => {
