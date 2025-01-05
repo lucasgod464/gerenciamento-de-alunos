@@ -97,6 +97,7 @@ export type Database = {
           current_rooms: number
           current_users: number
           document: string
+          enrollment_form_url: string | null
           id: string
           name: string
           public_folder_path: string
@@ -110,6 +111,7 @@ export type Database = {
           current_rooms?: number
           current_users?: number
           document: string
+          enrollment_form_url?: string | null
           id?: string
           name: string
           public_folder_path: string
@@ -123,6 +125,7 @@ export type Database = {
           current_rooms?: number
           current_users?: number
           document?: string
+          enrollment_form_url?: string | null
           id?: string
           name?: string
           public_folder_path?: string
@@ -304,7 +307,7 @@ export type Database = {
       }
       enrollment_form_fields: {
         Row: {
-          company_id: string | null
+          company_id: string
           created_at: string
           description: string | null
           id: string
@@ -316,7 +319,7 @@ export type Database = {
           type: string
         }
         Insert: {
-          company_id?: string | null
+          company_id: string
           created_at?: string
           description?: string | null
           id?: string
@@ -328,7 +331,7 @@ export type Database = {
           type: string
         }
         Update: {
-          company_id?: string | null
+          company_id?: string
           created_at?: string
           description?: string | null
           id?: string
