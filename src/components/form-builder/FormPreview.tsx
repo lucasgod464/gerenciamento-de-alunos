@@ -67,34 +67,32 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
               </button>
             )}
             <div className="space-y-1">
-              <div className="flex items-center">
+              <div className="flex items-center space-x-2">
                 <h3 className="font-medium">
                   {field.label}
                   {field.required && (
                     <Asterisk className="inline-block h-3 w-3 text-red-500 ml-1" />
                   )}
                 </h3>
+                {isSystemField && (
+                  <Badge variant="secondary" className="text-xs">
+                    Campo padrão do sistema
+                  </Badge>
+                )}
               </div>
-              {isSystemField && (
-                <p className="text-sm text-muted-foreground">
-                  Campo padrão do sistema
-                </p>
-              )}
               {field.description && (
                 <p className="text-sm text-muted-foreground">
                   {field.description}
                 </p>
               )}
-              {!isSystemField && field.type && (
-                <p className="text-sm text-muted-foreground">
-                  Tipo: {field.type}
-                  {(field.type === "select" || field.type === "multiple") && field.options && (
-                    <span className="ml-2">
-                      (Opções: {field.options.join(", ")})
-                    </span>
-                  )}
-                </p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                Tipo: {field.type}
+                {(field.type === "select" || field.type === "multiple") && field.options && (
+                  <span className="ml-2">
+                    (Opções: {field.options.join(", ")})
+                  </span>
+                )}
+              </p>
             </div>
           </div>
           <div className="flex space-x-2">
