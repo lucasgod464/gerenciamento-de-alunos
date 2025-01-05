@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -21,7 +22,7 @@ export function PublicEnrollment() {
   const [multipleSelections, setMultipleSelections] = useState<Record<string, string[]>>({});
   const { formUrl } = useParams();
   const { toast } = useToast();
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm();
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm();
 
   useEffect(() => {
     loadFormData();
@@ -87,9 +88,8 @@ export function PublicEnrollment() {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
           let value = data[field.name];
           
-          // Para campos de múltipla escolha, use o estado local
           if (field.type === "multiple") {
-            value = multipleSelections[field.name] || [];
+            value = multipleSelections[field.name]?.join(",") || "";
           }
           
           customFields[field.id] = {
@@ -209,7 +209,67 @@ export function PublicEnrollment() {
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
                   
-                  {field.type === "multiple" ? (
+                  {field.type === "text" && (
+                    <Input
+                      id={field.name}
+                      type="text"
+                      {...register(field.name, { required: field.required })}
+                      placeholder={`Digite ${field.label.toLowerCase()}`}
+                      className="w-full"
+                    />
+                  )}
+
+                  {field.type === "email" && (
+                    <Input
+                      id={field.name}
+                      type="email"
+                      {...register(field.name, { 
+                        required: field.required,
+                        pattern: {
+                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                          message: "Email inválido"
+                        }
+                      })}
+                      placeholder="Digite seu email"
+                      className="w-full"
+                    />
+                  )}
+
+                  {field.type === "tel" && (
+                    <Input
+                      id={field.name}
+                      type="tel"
+                      {...register(field.name, { 
+                        required: field.required,
+                        pattern: {
+                          value: /^[0-9]{10,11}$/,
+                          message: "Telefone inválido"
+                        }
+                      })}
+                      placeholder="Digite seu telefone"
+                      className="w-full"
+                    />
+                  )}
+
+                  {field.type === "textarea" && (
+                    <Textarea
+                      id={field.name}
+                      {...register(field.name, { required: field.required })}
+                      placeholder={`Digite ${field.label.toLowerCase()}`}
+                      className="w-full min-h-[100px]"
+                    />
+                  )}
+
+                  {field.type === "date" && (
+                    <Input
+                      id={field.name}
+                      type="date"
+                      {...register(field.name, { required: field.required })}
+                      className="w-full"
+                    />
+                  )}
+
+                  {field.type === "multiple" && (
                     <div className="space-y-2">
                       {field.options?.map((option) => (
                         <div key={option} className="flex items-center space-x-2">
@@ -235,14 +295,16 @@ export function PublicEnrollment() {
                           />
                           <label
                             htmlFor={`${field.name}-${option}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            className="text-sm font-medium leading-none"
                           >
                             {option}
                           </label>
                         </div>
                       ))}
                     </div>
-                  ) : field.type === "select" ? (
+                  )}
+
+                  {field.type === "select" && (
                     <Select 
                       onValueChange={(value) => setValue(field.name, value)}
                       {...register(field.name, { required: field.required })}
@@ -258,18 +320,14 @@ export function PublicEnrollment() {
                         ))}
                       </SelectContent>
                     </Select>
-                  ) : (
-                    <Input
-                      id={field.name}
-                      type={field.type}
-                      {...register(field.name, { required: field.required })}
-                      placeholder={`Digite ${field.label.toLowerCase()}`}
-                      className="w-full"
-                    />
                   )}
                   
                   {errors[field.name] && (
-                    <p className="text-sm text-red-500">Este campo é obrigatório</p>
+                    <p className="text-sm text-red-500">
+                      {typeof errors[field.name]?.message === 'string' 
+                        ? errors[field.name]?.message 
+                        : "Este campo é obrigatório"}
+                    </p>
                   )}
                 </div>
               );
