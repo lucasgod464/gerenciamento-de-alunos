@@ -46,12 +46,6 @@ export function CompanyTableRow({
     })
   }
 
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    onEdit(company)
-  }
-
   const usersPercentage = (company.currentUsers / company.usersLimit) * 100
   const roomsPercentage = (company.currentRooms / company.roomsLimit) * 100
 
@@ -115,7 +109,7 @@ export function CompanyTableRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleEditClick}
+            onClick={() => onEdit(company)}
             className="hover:bg-blue-50 hover:text-blue-600"
             disabled={company.status === "Inativa"}
           >
