@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import { Pencil, Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
+import { Trash2, Folder, Building2, Users2, DoorOpen } from "lucide-react"
 import { CompanyDataUsage } from "../CompanyDataUsage"
 import {
   AlertDialog,
@@ -105,16 +105,6 @@ export function CompanyTableRow({
       <td className="p-4">
         <div className="flex justify-end space-x-2">
           <CompanyDataUsage company={company} />
-          
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onEdit(company)}
-            className="hover:bg-blue-50 hover:text-blue-600"
-            disabled={company.status === "Inativa"}
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
