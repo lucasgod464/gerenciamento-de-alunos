@@ -3,6 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -11,9 +12,11 @@ interface DateRangeSelectorProps {
 }
 
 export function DateRangeSelector({ startDate, endDate, onDateChange }: DateRangeSelectorProps) {
+  const [open, setOpen] = useState(false);
+
   return (
     <div className="flex items-center gap-2">
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -30,10 +33,12 @@ export function DateRangeSelector({ startDate, endDate, onDateChange }: DateRang
             onSelect={(range) => {
               if (range?.from && range?.to) {
                 onDateChange(range.from, range.to);
+                setOpen(false); // Só fecha após selecionar o período completo
               }
             }}
             locale={ptBR}
             numberOfMonths={2}
+            defaultMonth={startDate}
           />
         </PopoverContent>
       </Popover>
