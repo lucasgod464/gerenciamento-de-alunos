@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,7 +10,6 @@ import { AttendanceChart } from "./reports/AttendanceChart";
 import { GeneralStats } from "./reports/GeneralStats";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useEffect } from "react";
 import { DateRangeFilter } from "./reports/DateRangeFilter";
 
 export const SystemReport = () => {
@@ -23,7 +22,7 @@ export const SystemReport = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const { data: authorizedRooms = [] } = useQuery({
+  const { data: authorizedRooms = [], refetch: refetchRooms } = useQuery({
     queryKey: ["authorized-rooms", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -125,6 +124,28 @@ export const SystemReport = () => {
     };
   }, [selectedRoom, refetchAttendance]);
 
+  // Atualizar dados quando entrar na página
+  useEffect(() => {
+    refetchRooms();
+    refetchAttendance();
+  }, [refetchRooms, refetchAttendance]);
+
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([refetchRooms(), refetchAttendance()]);
+      toast({
+        title: "Dados atualizados",
+        description: "Os dados foram atualizados com sucesso",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Ocorreu um erro ao atualizar os dados",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Calcular estatísticas gerais
   const filteredRooms = selectedRoom === "all" 
     ? authorizedRooms 
@@ -158,6 +179,10 @@ export const SystemReport = () => {
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
           />
+          <Button variant="outline" onClick={handleRefresh}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Atualizar
+          </Button>
         </div>
 
         <Button variant="outline" onClick={handleExportReport}>
