@@ -12,14 +12,18 @@ interface StudentTableProps {
   students: Student[];
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
+  onTransferStudent: (studentId: string, newRoomId: string) => void;
   onUpdateStudent: (student: Student) => void;
+  showTransferOption?: boolean;
 }
 
 export function StudentTable({
   students,
   rooms,
   onDeleteStudent,
+  onTransferStudent,
   onUpdateStudent,
+  showTransferOption = false,
 }: StudentTableProps) {
   return (
     <Table>
@@ -39,7 +43,9 @@ export function StudentTable({
             student={student}
             rooms={rooms}
             onDelete={onDeleteStudent}
+            onTransfer={onTransferStudent}
             onUpdate={onUpdateStudent}
+            showTransferOption={showTransferOption}
           />
         ))}
         {students.length === 0 && (

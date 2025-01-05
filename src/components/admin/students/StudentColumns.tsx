@@ -1,6 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Student } from "@/types/student";
-import { StudentTable } from "@/components/user/StudentTable";
+import { StudentSection } from "./StudentSection";
 
 interface StudentColumnsProps {
   studentsWithoutRoom: Student[];
@@ -19,48 +18,24 @@ export const StudentColumns = ({
   onTransferStudent,
   onUpdateStudent,
 }: StudentColumnsProps) => {
-  console.log("Alunos sem sala:", studentsWithoutRoom);
-  console.log("Alunos com sala:", studentsWithRoom);
-  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">Alunos sem Sala</h2>
-          <StudentTable 
-            students={studentsWithoutRoom}
-            rooms={rooms}
-            onDeleteStudent={onDeleteStudent}
-            onTransferStudent={onTransferStudent}
-            onUpdateStudent={onUpdateStudent}
-            showTransferOption={true}
-          />
-          {studentsWithoutRoom.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">
-              Nenhum aluno sem sala encontrado
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-xl font-semibold mb-4">Alunos com Sala</h2>
-          <StudentTable 
-            students={studentsWithRoom}
-            rooms={rooms}
-            onDeleteStudent={onDeleteStudent}
-            onTransferStudent={onTransferStudent}
-            onUpdateStudent={onUpdateStudent}
-            showTransferOption={true}
-          />
-          {studentsWithRoom.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">
-              Nenhum aluno com sala encontrado
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <StudentSection
+        title="Alunos sem Sala"
+        students={studentsWithoutRoom}
+        rooms={rooms}
+        onDeleteStudent={onDeleteStudent}
+        onTransferStudent={onTransferStudent}
+        onUpdateStudent={onUpdateStudent}
+      />
+      <StudentSection
+        title="Alunos com Sala"
+        students={studentsWithRoom}
+        rooms={rooms}
+        onDeleteStudent={onDeleteStudent}
+        onTransferStudent={onTransferStudent}
+        onUpdateStudent={onUpdateStudent}
+      />
     </div>
   );
 };
