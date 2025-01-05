@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AttendanceList } from "./AttendanceList";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateUtils";
+import { CalendarDays, School } from "lucide-react";
 
 interface Room {
   id: string;
@@ -121,56 +122,76 @@ export const AttendanceControl = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white shadow-sm">
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
-              <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                <SelectTrigger className="bg-white">
-                  <SelectValue placeholder="Selecione uma sala" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rooms.map((room) => (
-                    <SelectItem key={room.id} value={room.id}>
-                      {room.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <h3 className="font-medium mb-2 text-gray-700">Data</h3>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-md border bg-white"
-              />
-            </div>
-            <div className="flex gap-2 justify-end">
-              {isStarted && (
-                <Button 
-                  variant="outline"
-                  onClick={handleStartAttendance}
-                  disabled={!selectedRoom || !selectedDate}
-                >
-                  Cancelar Chamada
-                </Button>
-              )}
-              <Button 
-                onClick={handleStartAttendance}
-                disabled={!selectedRoom || !selectedDate}
-              >
-                {isStarted ? "Salvar Chamada" : "Iniciar Chamada"}
-              </Button>
+      <Card className="bg-white shadow-sm border-blue-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-medium text-gray-700 flex items-center gap-2">
+            <School className="h-5 w-5 text-blue-500" />
+            Controle de Presença
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-4 rounded-lg">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium mb-2 text-gray-700 flex items-center gap-2">
+                    <School className="h-4 w-4 text-blue-500" />
+                    Sala
+                  </h3>
+                  <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                    <SelectTrigger className="bg-white border-blue-100">
+                      <SelectValue placeholder="Selecione uma sala" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rooms.map((room) => (
+                        <SelectItem key={room.id} value={room.id}>
+                          {room.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-2 text-gray-700 flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-blue-500" />
+                    Data
+                  </h3>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => date && setSelectedDate(date)}
+                    className="rounded-lg border-blue-100 bg-white p-3"
+                  />
+                </div>
+
+                <div className="flex gap-3 justify-end pt-2">
+                  {isStarted && (
+                    <Button 
+                      variant="outline"
+                      onClick={handleStartAttendance}
+                      disabled={!selectedRoom || !selectedDate}
+                      className="border-blue-200 hover:bg-blue-50"
+                    >
+                      Cancelar Chamada
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={handleStartAttendance}
+                    disabled={!selectedRoom || !selectedDate}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    {isStarted ? "Salvar Chamada" : "Iniciar Chamada"}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {isStarted && (
-        <Card className="bg-white shadow-sm">
+        <Card className="bg-white shadow-sm border-blue-100">
           <CardContent className="pt-6">
             <AttendanceList
               date={selectedDate}
