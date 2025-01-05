@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export const STATUS_COLORS = {
   presente: "#22c55e",

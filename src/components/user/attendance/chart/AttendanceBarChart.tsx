@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { BarChart, Bar, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { STATUS_COLORS, CustomTooltip, CustomLegend } from "./ChartConfig";
 
 interface ChartData {
