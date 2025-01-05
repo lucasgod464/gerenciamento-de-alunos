@@ -13,8 +13,9 @@ interface StudentTableProps {
   rooms: { id: string; name: string }[];
   onDeleteStudent: (id: string) => void;
   onTransferStudent: (studentId: string, newRoomId: string) => void;
-  onUpdateStudent: (student: Student) => void;
+  onUpdateStudent?: (student: Student) => void;
   showTransferOption?: boolean;
+  currentRoomId?: string;
 }
 
 export function StudentTable({
@@ -24,6 +25,7 @@ export function StudentTable({
   onTransferStudent,
   onUpdateStudent,
   showTransferOption = false,
+  currentRoomId,
 }: StudentTableProps) {
   return (
     <Table>
@@ -46,6 +48,7 @@ export function StudentTable({
             onTransfer={onTransferStudent}
             onUpdate={onUpdateStudent}
             showTransferOption={showTransferOption}
+            currentRoomId={currentRoomId}
           />
         ))}
         {students.length === 0 && (
