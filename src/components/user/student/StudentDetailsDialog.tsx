@@ -21,8 +21,8 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [dateRange, setDateRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
+    start: startOfMonth(new Date()),
+    end: endOfMonth(new Date())
   });
   const [attendance, setAttendance] = useState<any[]>([]);
   const [stats, setStats] = useState({
@@ -36,13 +36,15 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
   // Buscar alunos quando o termo de pesquisa mudar
   useEffect(() => {
     const fetchStudents = async () => {
-      if (searchTerm.length < 3) {
-        setStudents([]);
-        return;
-      }
-
       try {
-        const { data, error } = await supabase
+        if (searchTerm.length < 3) {
+          setStudents([]);
+          return;
+        }
+
+        console.log('Buscando alunos com termo:', searchTerm);
+
+        const { data: studentsData, error } = await supabase
           .from('students')
           .select('*')
           .ilike('name', `%${searchTerm}%`)
@@ -50,20 +52,24 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
 
         if (error) throw error;
 
-        const mappedStudents = data?.map(student => ({
-          id: student.id,
-          name: student.name,
-          birthDate: student.birth_date,
-          status: student.status,
-          email: student.email || '',
-          document: student.document || '',
-          address: student.address || '',
-          customFields: student.custom_fields || {},
-          companyId: student.company_id,
-          createdAt: student.created_at
-        })) || [];
+        if (studentsData) {
+          console.log('Alunos encontrados:', studentsData);
+          
+          const mappedStudents = studentsData.map(student => ({
+            id: student.id,
+            name: student.name,
+            birthDate: student.birth_date,
+            status: student.status,
+            email: student.email || '',
+            document: student.document || '',
+            address: student.address || '',
+            customFields: student.custom_fields || {},
+            companyId: student.company_id,
+            createdAt: student.created_at
+          }));
 
-        setStudents(mappedStudents);
+          setStudents(mappedStudents);
+        }
       } catch (error) {
         console.error('Erro ao buscar alunos:', error);
         toast({
@@ -74,21 +80,25 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
       }
     };
 
-    fetchStudents();
+    const debounceTimeout = setTimeout(() => {
+      fetchStudents();
+    }, 300);
+
+    return () => clearTimeout(debounceTimeout);
   }, [searchTerm, toast]);
 
   // Buscar presenças quando o aluno ou período mudar
   useEffect(() => {
     const fetchAttendance = async () => {
-      if (!selectedStudent || !dateRange.from || !dateRange.to) return;
+      if (!selectedStudent || !dateRange.start || !dateRange.end) return;
 
       try {
         const { data, error } = await supabase
           .from('daily_attendance')
           .select('*')
           .eq('student_id', selectedStudent.id)
-          .gte('date', formatDate(dateRange.from))
-          .lte('date', formatDate(dateRange.to));
+          .gte('date', formatDate(dateRange.start))
+          .lte('date', formatDate(dateRange.end));
 
         if (error) throw error;
 
@@ -119,7 +129,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     fetchAttendance();
   }, [selectedStudent, dateRange, toast]);
 
-  const handleDateRangeChange = (newRange: { from: Date; to: Date }) => {
+  const handleDateRangeChange = (newRange: { start: Date; end: Date }) => {
     setDateRange(newRange);
   };
 
