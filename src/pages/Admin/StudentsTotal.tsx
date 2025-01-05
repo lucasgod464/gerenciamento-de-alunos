@@ -4,14 +4,18 @@ import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StudentColumns } from "@/components/admin/students/StudentColumns";
+import { useAuth } from "@/hooks/useAuth";
 
 const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const loadStudents = async () => {
     try {
+      if (!user?.companyId) return;
+
       const { data: studentsData, error } = await supabase
         .from('students')
         .select(`
@@ -20,6 +24,7 @@ const StudentsTotal = () => {
             room_id
           )
         `)
+        .eq('company_id', user.companyId)
         .order('name');
 
       if (error) throw error;
@@ -29,7 +34,7 @@ const StudentsTotal = () => {
           id: student.id,
           name: student.name,
           birthDate: student.birth_date,
-          status: student.status,
+          status: student.status ?? true,
           email: student.email || '',
           document: student.document || '',
           address: student.address || '',
@@ -52,9 +57,12 @@ const StudentsTotal = () => {
 
   const loadRooms = async () => {
     try {
+      if (!user?.companyId) return;
+
       const { data: roomsData, error } = await supabase
         .from('rooms')
         .select('id, name')
+        .eq('company_id', user.companyId)
         .eq('status', true);
 
       if (error) throw error;
@@ -70,9 +78,11 @@ const StudentsTotal = () => {
   };
 
   useEffect(() => {
-    loadStudents();
-    loadRooms();
-  }, []);
+    if (user?.companyId) {
+      loadStudents();
+      loadRooms();
+    }
+  }, [user?.companyId]);
 
   const handleDeleteStudent = async (id: string) => {
     try {
@@ -100,11 +110,13 @@ const StudentsTotal = () => {
 
   const handleTransferStudent = async (studentId: string, newRoomId: string) => {
     try {
+      // Primeiro remove qualquer vínculo existente
       await supabase
         .from('room_students')
         .delete()
         .eq('student_id', studentId);
 
+      // Depois cria o novo vínculo
       const { error } = await supabase
         .from('room_students')
         .insert({ student_id: studentId, room_id: newRoomId });
@@ -184,6 +196,7 @@ const StudentsTotal = () => {
     }
   };
 
+  // Separa os alunos em duas listas: com sala e sem sala
   const studentsWithRoom = students.filter(student => student.room !== null);
   const studentsWithoutRoom = students.filter(student => student.room === null);
 
