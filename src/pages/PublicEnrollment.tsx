@@ -10,58 +10,48 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [companyId, setCompanyId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { formUrl } = useParams();
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
 
   useEffect(() => {
-    if (formUrl) {
-      loadCompanyId();
-    }
+    loadFormData();
   }, [formUrl]);
 
-  useEffect(() => {
-    if (companyId) {
-      loadFields();
-    }
-  }, [companyId]);
-
-  const loadCompanyId = async () => {
+  const loadFormData = async () => {
     try {
-      const { data: company, error } = await supabase
+      setIsLoading(true);
+      setError(null);
+
+      if (!formUrl) {
+        throw new Error("URL do formulário não encontrada");
+      }
+
+      const { data: company, error: companyError } = await supabase
         .from('companies')
         .select('id')
         .eq('enrollment_form_url', formUrl)
         .single();
 
-      if (error) throw error;
-      if (company) {
-        setCompanyId(company.id);
+      if (companyError || !company) {
+        throw new Error("Formulário não encontrado ou inválido");
       }
-    } catch (error) {
-      console.error("Error loading company:", error);
-      toast({
-        title: "Erro ao carregar formulário",
-        description: "Formulário não encontrado ou inválido.",
-        variant: "destructive",
-      });
-    }
-  };
 
-  const loadFields = async () => {
-    try {
-      const { data: formFields, error } = await supabase
+      const { data: formFields, error: fieldsError } = await supabase
         .from('enrollment_form_fields')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', company.id)
         .order('order');
 
-      if (error) throw error;
+      if (fieldsError) throw fieldsError;
 
       const validatedFields = (formFields || []).map(field => ({
         id: field.id,
@@ -76,12 +66,10 @@ export function PublicEnrollment() {
 
       setFields(validatedFields);
     } catch (error) {
-      console.error("Error loading form fields:", error);
-      toast({
-        title: "Erro ao carregar formulário",
-        description: "Não foi possível carregar os campos do formulário.",
-        variant: "destructive",
-      });
+      console.error("Error loading form:", error);
+      setError(error instanceof Error ? error.message : "Erro ao carregar formulário");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,11 +131,31 @@ export function PublicEnrollment() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">Formulário de Inscrição</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold">
+            Formulário de Inscrição
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -240,7 +248,14 @@ export function PublicEnrollment() {
               className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Enviando..." : "Enviar"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                "Enviar"
+              )}
             </Button>
           </form>
         </CardContent>
