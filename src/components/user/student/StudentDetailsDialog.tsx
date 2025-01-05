@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Calendar } from "@/components/ui/calendar";
-import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Student } from "@/types/student";
 import { formatDate } from "@/utils/dateUtils";
-import { ptBR } from "date-fns/locale";
+import { StudentSearch } from "./details/StudentSearch";
+import { StudentBasicInfo } from "./details/StudentBasicInfo";
+import { AttendanceStats } from "./details/AttendanceStats";
+import { AttendanceList } from "./details/AttendanceList";
+import { DateRangeSelector } from "./details/DateRangeSelector";
 
 interface StudentDetailsDialogProps {
   open: boolean;
@@ -17,9 +18,10 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
   const [attendance, setAttendance] = useState<any[]>([]);
-  const [monthStats, setMonthStats] = useState({
+  const [stats, setStats] = useState({
     present: 0,
     absent: 0,
     late: 0,
@@ -51,15 +53,12 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     const fetchAttendance = async () => {
       if (!selectedStudent) return;
 
-      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
-      const endOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0);
-
       const { data, error } = await supabase
         .from('daily_attendance')
         .select('*')
         .eq('student_id', selectedStudent.id)
-        .gte('date', formatDate(startOfMonth))
-        .lte('date', formatDate(endOfMonth));
+        .gte('date', formatDate(startDate))
+        .lte('date', formatDate(endDate));
 
       if (error) {
         console.error('Erro ao buscar presenças:', error);
@@ -68,7 +67,6 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
 
       setAttendance(data || []);
 
-      // Calcular estatísticas do mês
       const stats = (data || []).reduce((acc, record) => {
         acc[record.status] = (acc[record.status] || 0) + 1;
         return acc;
@@ -79,40 +77,17 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         justified: 0
       });
 
-      setMonthStats(stats);
+      setStats(stats);
     };
 
-    fetchAttendance();
-  }, [selectedStudent, selectedDate]);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present':
-        return 'bg-green-100 text-green-800';
-      case 'absent':
-        return 'bg-red-100 text-red-800';
-      case 'late':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'justified':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    if (selectedStudent) {
+      fetchAttendance();
     }
-  };
+  }, [selectedStudent, startDate, endDate]);
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'present':
-        return 'Presente';
-      case 'absent':
-        return 'Ausente';
-      case 'late':
-        return 'Atrasado';
-      case 'justified':
-        return 'Justificado';
-      default:
-        return status;
-    }
+  const handleDateRangeChange = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
   };
 
   return (
@@ -123,94 +98,30 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Input
-              placeholder="Digite o nome do aluno..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-            />
-            {searchTerm.length >= 3 && students.length > 0 && !selectedStudent && (
-              <div className="mt-2 border rounded-md divide-y">
-                {students.map((student) => (
-                  <div
-                    key={student.id}
-                    className="p-2 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => setSelectedStudent(student)}
-                  >
-                    {student.name}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          <StudentSearch
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            students={students}
+            onSelectStudent={setSelectedStudent}
+            selectedStudent={selectedStudent}
+          />
 
           {selectedStudent && (
             <div className="space-y-4">
-              <Card className="p-4">
-                <h3 className="font-semibold mb-2">Dados do Aluno</h3>
-                <div className="space-y-2">
-                  <p><span className="font-medium">Nome:</span> {selectedStudent.name}</p>
-                  <p><span className="font-medium">Data de Nascimento:</span> {selectedStudent.birthDate}</p>
-                  {selectedStudent.email && (
-                    <p><span className="font-medium">Email:</span> {selectedStudent.email}</p>
-                  )}
-                </div>
-              </Card>
+              <StudentBasicInfo student={selectedStudent} />
+              
+              <DateRangeSelector
+                startDate={startDate}
+                endDate={endDate}
+                onDateChange={handleDateRangeChange}
+              />
 
-              <div>
-                <h3 className="font-semibold mb-2">Calendário de Presenças</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg border p-3">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => date && setSelectedDate(date)}
-                      locale={ptBR}
-                      className="w-full"
-                    />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <Card className="p-4">
-                      <h4 className="font-medium mb-2">Resumo do Mês</h4>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-green-100 text-green-800 p-2 rounded-md">
-                            <p className="text-sm font-medium">Presenças</p>
-                            <p className="text-lg">{monthStats.present}</p>
-                          </div>
-                          <div className="bg-red-100 text-red-800 p-2 rounded-md">
-                            <p className="text-sm font-medium">Faltas</p>
-                            <p className="text-lg">{monthStats.absent}</p>
-                          </div>
-                          <div className="bg-yellow-100 text-yellow-800 p-2 rounded-md">
-                            <p className="text-sm font-medium">Atrasos</p>
-                            <p className="text-lg">{monthStats.late}</p>
-                          </div>
-                          <div className="bg-blue-100 text-blue-800 p-2 rounded-md">
-                            <p className="text-sm font-medium">Justificadas</p>
-                            <p className="text-lg">{monthStats.justified}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Registro Detalhado</h4>
-                      <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
-                        {attendance.map((record) => (
-                          <div
-                            key={record.id}
-                            className={`px-3 py-2 rounded-md ${getStatusColor(record.status)}`}
-                          >
-                            {new Date(record.date).toLocaleDateString('pt-BR')}: {getStatusText(record.status)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AttendanceStats 
+                  stats={stats}
+                  period={{ start: startDate, end: endDate }}
+                />
+                <AttendanceList attendance={attendance} />
               </div>
             </div>
           )}
