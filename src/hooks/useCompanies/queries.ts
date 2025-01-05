@@ -3,6 +3,7 @@ import { Company } from "@/components/companies/CompanyList";
 
 export async function fetchCompanies() {
   console.log("Fetching companies from Supabase");
+  
   const { data, error } = await supabase
     .from("companies")
     .select(`

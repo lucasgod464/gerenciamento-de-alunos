@@ -27,6 +27,8 @@ export async function updateCompany(company: Company) {
       users_limit: company.usersLimit,
       rooms_limit: company.roomsLimit,
       status: company.status,
+      current_users: currentData.emails?.count || 0,
+      current_rooms: currentData.rooms?.count || 0
     })
     .eq("id", company.id)
     .select()
@@ -94,6 +96,8 @@ export async function createCompany(newCompany: Omit<Company, "id" | "createdAt"
       status: newCompany.status,
       public_folder_path: newCompany.publicFolderPath,
       storage_used: 0,
+      current_users: 0,
+      current_rooms: 0
     }])
     .select()
     .single();
