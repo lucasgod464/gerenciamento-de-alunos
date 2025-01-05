@@ -14,7 +14,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Consulta Individual de Aluno</DialogTitle>
         </DialogHeader>
