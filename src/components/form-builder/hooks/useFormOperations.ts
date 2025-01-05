@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { FormField, SupabaseFormField, mapSupabaseFormField, mapFormFieldToSupabase } from "../types";
@@ -44,13 +43,16 @@ export const useFormOperations = () => {
   const updateField = async (field: FormField) => {
     try {
       const supabaseField = mapFormFieldToSupabase(field);
-      const { error } = await supabase
+      
+      const { data, error } = await supabase
         .from('admin_form_fields')
         .update({
           ...supabaseField,
           order: field.order,
         })
-        .eq('id', field.id);
+        .eq('id', field.id)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -59,7 +61,7 @@ export const useFormOperations = () => {
         description: "O campo foi atualizado com sucesso.",
       });
 
-      return field;
+      return mapSupabaseFormField(data as SupabaseFormField);
     } catch (error) {
       console.error("Error updating field:", error);
       toast({
@@ -97,9 +99,15 @@ export const useFormOperations = () => {
 
   const reorderFields = async (reorderedFields: FormField[]) => {
     try {
-      const updates = reorderedFields.map((field, index) => ({
+      const updates = reorderedFields.map((field) => ({
         id: field.id,
-        order: index,
+        order: field.order,
+        name: field.name,
+        label: field.label,
+        type: field.type,
+        description: field.description,
+        required: field.required,
+        options: field.options,
       }));
 
       const { error } = await supabase
