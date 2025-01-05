@@ -163,18 +163,7 @@ export const CategoryColumn = ({
             </Button>
 
             {isTransferMode && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleAllRooms}
-                  className="w-full bg-white/50 hover:bg-white/70"
-                >
-                  {selectedRooms.length === rooms.length 
-                    ? "Desmarcar Todas" 
-                    : "Selecionar Todas"}
-                </Button>
-
+              <div className="space-y-2">
                 <div className="p-3 bg-white/30 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <MoveRight className="h-4 w-4" />
@@ -195,7 +184,18 @@ export const CategoryColumn = ({
                     </SelectContent>
                   </Select>
                 </div>
-              </>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleAllRooms}
+                  className="w-full bg-white/50 hover:bg-white/70"
+                >
+                  {selectedRooms.length === rooms.length 
+                    ? "Desmarcar Todas" 
+                    : "Selecionar Todas"}
+                </Button>
+              </div>
             )}
           </div>
         )}
