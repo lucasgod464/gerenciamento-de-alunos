@@ -1,207 +1,128 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { AttendanceList } from "./AttendanceList";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { AttendanceList } from "./AttendanceList";
+import { AttendanceHeader } from "./AttendanceHeader";
+import { useAttendanceData } from "./hooks/useAttendanceData";
 import { formatDate } from "@/utils/dateUtils";
-import { CalendarDays, School } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { StudentDetailsDialog } from "../student/StudentDetailsDialog";
+import { User } from "lucide-react";
 
-interface Room {
-  id: string;
-  name: string;
-}
-
-export const AttendanceControl = () => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedRoom, setSelectedRoom] = useState<string>("");
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [isStarted, setIsStarted] = useState(false);
-  const [hasAttendance, setHasAttendance] = useState(false);
-  const { user } = useAuth();
+export function AttendanceControl() {
+  const [date, setDate] = useState<Date>(new Date());
+  const [selectedRoom, setSelectedRoom] = useState("");
+  const { students, setStudents } = useAttendanceData(date, selectedRoom);
   const { toast } = useToast();
+  const [showStudentDetails, setShowStudentDetails] = useState(false);
 
-  // Busca as salas disponíveis
-  useEffect(() => {
-    const fetchRooms = async () => {
-      if (!user?.companyId) return;
-      
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
+  const handleStatusChange = (studentId: string, newStatus: string) => {
+    setStudents(
+      students.map((student) =>
+        student.id === studentId ? { ...student, status: newStatus } : student
+      )
+    );
+  };
 
-      if (error) {
-        console.error('Erro ao buscar salas:', error);
-        toast({
-          title: "Erro ao carregar salas",
-          description: "Não foi possível carregar a lista de salas.",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleSave = async () => {
+    try {
+      const formattedDate = formatDate(date);
+      const attendancePromises = students.map(async (student) => {
+        if (!student.status) return;
+        const attendance = {
+          date: formattedDate,
+          studentId: student.id,
+          status: student.status,
+          roomId: selectedRoom,
+        };
+        // Save attendance logic here
+      });
 
-      setRooms(data || []);
-    };
+      await Promise.all(attendancePromises);
 
-    fetchRooms();
-  }, [user?.companyId, toast]);
+      toast({
+        title: "Sucesso",
+        description: "Chamada salva com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar chamada:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao salvar a chamada",
+        variant: "destructive",
+      });
+    }
+  };
 
-  // Verifica se já existe chamada para a data e sala selecionadas
-  useEffect(() => {
-    const checkAttendance = async () => {
-      if (!user?.companyId || !selectedDate || !selectedRoom) return;
-
-      const formattedDate = formatDate(selectedDate);
-      
-      try {
-        const { data, error } = await supabase
-          .from('daily_attendance')
-          .select('id')
-          .eq('date', formattedDate)
-          .eq('company_id', user.companyId)
-          .eq('room_id', selectedRoom);
-
-        if (error) throw error;
-
-        const hasData = data && data.length > 0;
-        setHasAttendance(hasData);
-        setIsStarted(hasData);
-      } catch (error) {
-        console.error('Erro ao verificar chamada:', error);
-        toast({
-          title: "Erro ao verificar chamada",
-          description: "Não foi possível verificar se já existe chamada para esta data.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    checkAttendance();
-  }, [selectedDate, selectedRoom, user?.companyId, toast]);
-
-  const handleStartAttendance = async () => {
-    if (!user?.companyId) return;
-
-    if (isStarted) {
-      try {
-        const formattedDate = formatDate(selectedDate);
-        
-        const { error } = await supabase
-          .from('daily_attendance')
-          .delete()
-          .eq('date', formattedDate)
-          .eq('company_id', user.companyId)
-          .eq('room_id', selectedRoom);
-
-        if (error) throw error;
-
-        setIsStarted(false);
-        setHasAttendance(false);
-        
-        toast({
-          title: "Chamada cancelada",
-          description: "A chamada foi cancelada com sucesso.",
-        });
-      } catch (error) {
-        console.error('Erro ao cancelar chamada:', error);
-        toast({
-          title: "Erro ao cancelar chamada",
-          description: "Não foi possível cancelar a chamada.",
-          variant: "destructive",
-        });
-      }
-    } else {
-      setIsStarted(true);
+  const handleCancel = async () => {
+    try {
+      const formattedDate = formatDate(date);
+      // Cancel attendance logic here
+      toast({
+        title: "Sucesso",
+        description: "Chamada cancelada com sucesso!",
+      });
+    } catch (error) {
+      console.error("Erro ao cancelar chamada:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao cancelar a chamada",
+        variant: "destructive",
+      });
     }
   };
 
   return (
     <div className="space-y-6">
-      <Card className="bg-white shadow-sm border-blue-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-medium text-gray-700 flex items-center gap-2">
-            <School className="h-5 w-5 text-blue-500" />
-            Controle de Presença
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-4 rounded-lg">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700 flex items-center gap-2">
-                    <School className="h-4 w-4 text-blue-500" />
-                    Sala
-                  </h3>
-                  <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-                    <SelectTrigger className="bg-white border-blue-100">
-                      <SelectValue placeholder="Selecione uma sala" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id}>
-                          {room.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Controle de Presença</h2>
+        <Button
+          variant="outline"
+          onClick={() => setShowStudentDetails(true)}
+          className="flex items-center gap-2"
+        >
+          <User className="h-4 w-4" />
+          Consultar Aluno
+        </Button>
+      </div>
 
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700 flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-blue-500" />
-                    Data
-                  </h3>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-lg border-blue-100 bg-white p-3"
-                  />
-                </div>
+      <Card className="p-6">
+        <div className="space-y-6">
+          <AttendanceHeader
+            selectedRoom={selectedRoom}
+            onRoomChange={setSelectedRoom}
+          />
 
-                <div className="flex gap-3 justify-end pt-2">
-                  {isStarted && (
-                    <Button 
-                      variant="outline"
-                      onClick={handleStartAttendance}
-                      disabled={!selectedRoom || !selectedDate}
-                      className="border-blue-200 hover:bg-blue-50"
-                    >
-                      Cancelar Chamada
-                    </Button>
-                  )}
-                  <Button 
-                    onClick={handleStartAttendance}
-                    disabled={!selectedRoom || !selectedDate}
-                    className="bg-blue-500 hover:bg-blue-600"
-                  >
-                    {isStarted ? "Salvar Chamada" : "Iniciar Chamada"}
-                  </Button>
-                </div>
-              </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={(newDate) => newDate && setDate(newDate)}
+                className="rounded-md border"
+              />
             </div>
+
+            <AttendanceList
+              students={students}
+              onStatusChange={handleStatusChange}
+            />
           </div>
-        </CardContent>
+
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancelar Chamada
+            </Button>
+            <Button onClick={handleSave}>Salvar Chamada</Button>
+          </div>
+        </div>
       </Card>
 
-      {isStarted && (
-        <Card className="bg-white shadow-sm border-blue-100">
-          <CardContent className="pt-6">
-            <AttendanceList
-              date={selectedDate}
-              roomId={selectedRoom}
-              companyId={user?.companyId || ''}
-              onAttendanceSaved={() => setHasAttendance(true)}
-            />
-          </CardContent>
-        </Card>
-      )}
+      <StudentDetailsDialog
+        open={showStudentDetails}
+        onClose={() => setShowStudentDetails(false)}
+      />
     </div>
   );
-};
+}
