@@ -17,11 +17,6 @@ import {
 import { Company } from "./CompanyList"
 import { useToast } from "@/components/ui/use-toast"
 
-// Extraindo os componentes de indicadores para arquivos separados
-import { UsersIndicator } from "./indicators/UsersIndicator"
-import { RoomsIndicator } from "./indicators/RoomsIndicator"
-import { CompanyInfo } from "./CompanyInfo"
-
 interface CompanyTableRowProps {
   company: Company;
   onDelete: (id: string) => void;
@@ -51,9 +46,10 @@ export function CompanyTableRow({
     });
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault(); // Previne o comportamento padrão
-    
+  const usersPercentage = (company.currentUsers / company.usersLimit) * 100;
+  const roomsPercentage = (company.currentRooms / company.roomsLimit) * 100;
+
+  const handleEdit = () => {
     if (company.status === "Inativa") {
       toast({
         title: "Operação não permitida",
@@ -71,21 +67,84 @@ export function CompanyTableRow({
       company.status === "Inativa" && "bg-gray-50 opacity-75"
     )}>
       <td className="p-4">
-        <CompanyInfo company={company} />
+        <div className="flex items-start gap-3">
+          <div className="bg-primary/10 p-2 rounded-lg">
+            <Building2 className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <div className="font-medium text-gray-900">{company.name}</div>
+            <div className="text-sm text-gray-500">
+              ID: {company.id}
+              <br />
+              <span className="flex items-center gap-1 text-gray-400">
+                <Folder className="w-4 h-4" />
+                {company.publicFolderPath}
+              </span>
+            </div>
+          </div>
+        </div>
       </td>
 
       <td className="p-4">
-        <UsersIndicator 
-          currentUsers={company.currentUsers} 
-          usersLimit={company.usersLimit} 
-        />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <Users2 className={cn(
+              "w-4 h-4",
+              usersPercentage >= 90 ? "text-red-500" : 
+              usersPercentage >= 70 ? "text-yellow-500" : 
+              "text-blue-500"
+            )} />
+            <span className={cn(
+              usersPercentage >= 90 ? "text-red-600" : 
+              usersPercentage >= 70 ? "text-yellow-600" : 
+              "text-gray-600"
+            )}>
+              {company.currentUsers}/{company.usersLimit}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className={cn(
+                "h-1.5 rounded-full",
+                usersPercentage >= 90 ? "bg-red-500" : 
+                usersPercentage >= 70 ? "bg-yellow-500" : 
+                "bg-blue-500"
+              )}
+              style={{ width: `${usersPercentage}%` }}
+            />
+          </div>
+        </div>
       </td>
 
       <td className="p-4">
-        <RoomsIndicator 
-          currentRooms={company.currentRooms} 
-          roomsLimit={company.roomsLimit} 
-        />
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <DoorOpen className={cn(
+              "w-4 h-4",
+              roomsPercentage >= 90 ? "text-red-500" : 
+              roomsPercentage >= 70 ? "text-yellow-500" : 
+              "text-purple-500"
+            )} />
+            <span className={cn(
+              roomsPercentage >= 90 ? "text-red-600" : 
+              roomsPercentage >= 70 ? "text-yellow-600" : 
+              "text-gray-600"
+            )}>
+              {company.currentRooms}/{company.roomsLimit}
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div
+              className={cn(
+                "h-1.5 rounded-full",
+                roomsPercentage >= 90 ? "bg-red-500" : 
+                roomsPercentage >= 70 ? "bg-yellow-500" : 
+                "bg-purple-500"
+              )}
+              style={{ width: `${roomsPercentage}%` }}
+            />
+          </div>
+        </div>
       </td>
 
       <td className="p-4">
@@ -106,7 +165,7 @@ export function CompanyTableRow({
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleEdit}
+            onClick={() => onEdit(company)}
             className="hover:bg-blue-50 hover:text-blue-600"
             disabled={company.status === "Inativa"}
           >
