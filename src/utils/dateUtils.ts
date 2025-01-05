@@ -2,10 +2,16 @@ import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export const formatDate = (date: Date) => {
-  // Ajusta a data para meia-noite no fuso horário local
-  const localDate = startOfDay(date);
-  // Formata mantendo o fuso horário local
-  return format(localDate, 'yyyy-MM-dd');
+  // Ajusta a data para meia-noite no fuso horário local (Brasil)
+  const localDate = new Date(date);
+  localDate.setHours(0, 0, 0, 0);
+  
+  // Adiciona o offset do fuso horário brasileiro (UTC-3)
+  const brasiliaOffset = -3 * 60 * 60 * 1000; // 3 horas em milissegundos
+  const adjustedDate = new Date(localDate.getTime() - brasiliaOffset);
+  
+  // Formata a data mantendo o fuso horário
+  return format(adjustedDate, 'yyyy-MM-dd');
 };
 
 export const normalizeDate = (date: Date) => {
