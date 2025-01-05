@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { FormField } from "@/types/form";
+import { FormField } from "./types";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
-import { useFormBuilder } from "./useFormBuilder";
+import { useFormBuilder } from "./hooks/useFormBuilder";
 
 export const FormBuilder = () => {
   const {

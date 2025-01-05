@@ -1,4 +1,4 @@
-import { FormField } from "@/types/form";
+import { FormField } from "./types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Lock, GripVertical } from "lucide-react";
