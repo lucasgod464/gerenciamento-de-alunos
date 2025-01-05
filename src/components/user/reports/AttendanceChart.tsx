@@ -7,6 +7,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   LabelList,
+  Legend,
 } from "recharts";
 
 interface AttendanceData {
@@ -21,14 +22,14 @@ interface AttendanceChartProps {
   data: AttendanceData[];
 }
 
-const STATUS_COLORS = {
+export const STATUS_COLORS = {
   presente: "#22c55e",
   falta: "#ef4444",
   atrasado: "#eab308",
   justificado: "#3b82f6"
 };
 
-const STATUS_LABELS = {
+export const STATUS_LABELS = {
   presente: "Presenças",
   falta: "Faltas",
   atrasado: "Atrasos",
@@ -75,28 +76,22 @@ export const AttendanceChart = ({ data }: AttendanceChartProps) => {
             <BarChart data={transformedData}>
               <CartesianGrid strokeDasharray="3 3" />
               <YAxis />
+              <Legend 
+                formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] || value}
+              />
               {Object.entries(STATUS_COLORS).map(([status, color]) => (
                 <Bar
                   key={status}
                   dataKey={status}
                   fill={color}
-                  name={STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                  name={status}
                   radius={[4, 4, 0, 0]}
                 >
                   <LabelList
                     dataKey={status}
                     position="center"
-                    content={({ value }) => (
-                      <text
-                        x={value as number}
-                        y={value as number}
-                        fill="#fff"
-                        textAnchor="middle"
-                        dy={-10}
-                      >
-                        {`${value} ${value === 1 ? 'aluno' : 'alunos'}`}
-                      </text>
-                    )}
+                    fill="#fff"
+                    formatter={(value: number) => `${value} ${value === 1 ? 'aluno' : 'alunos'}`}
                   />
                 </Bar>
               ))}
