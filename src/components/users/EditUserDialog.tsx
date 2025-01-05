@@ -61,7 +61,8 @@ export function EditUserDialog({
         access_level: formData.get('accessLevel')?.toString() as "Admin" | "Usuário Comum",
         location: formData.get('location')?.toString() || '',
         status: formData.get('status')?.toString() || 'active',
-        address: formData.get('address')?.toString() || ''
+        address: formData.get('address')?.toString() || '',
+        specialization: formData.get('specialization')?.toString() || ''
       };
 
       const { error: updateError } = await supabase
