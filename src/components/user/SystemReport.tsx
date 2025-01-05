@@ -11,6 +11,7 @@ import { GeneralStats } from "./reports/GeneralStats";
 import { startOfMonth, endOfMonth, format, subMonths, addMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect } from "react";
 
 export const SystemReport = () => {
   const [selectedRoom, setSelectedRoom] = useState("all");
@@ -45,7 +46,7 @@ export const SystemReport = () => {
   });
 
   // Buscar dados de presença do mês selecionado
-  const { data: attendanceData = [] } = useQuery({
+  const { data: attendanceData = [], refetch: refetchAttendance } = useQuery({
     queryKey: ["attendance-data", user?.id, selectedRoom, currentDate],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -97,6 +98,29 @@ export const SystemReport = () => {
       }));
     },
   });
+
+  // Configurar canal realtime para atualizações de presença
+  useEffect(() => {
+    const channel = supabase
+      .channel('attendance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_attendance',
+          filter: selectedRoom !== "all" ? `room_id=eq.${selectedRoom}` : undefined
+        },
+        () => {
+          refetchAttendance();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedRoom, refetchAttendance]);
 
   // Calcular estatísticas gerais
   const filteredRooms = selectedRoom === "all" 
