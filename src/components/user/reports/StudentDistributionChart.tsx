@@ -19,36 +19,48 @@ interface StudentDistributionChartProps {
   currentDate: Date;
   attendanceData: Array<{
     name: string;
-    presente: number;
-    falta: number;
-    atrasado: number;
-    justificado: number;
+    presenca: number;
+    faltas: number;
   }>;
 }
 
 export const StudentDistributionChart = ({ 
   rooms, 
-  selectedRoom,
+  selectedRoom, 
   currentDate,
   attendanceData 
 }: StudentDistributionChartProps) => {
-  // Calcular total de cada status
-  const totalPresentes = attendanceData.reduce((acc, curr) => acc + curr.presente, 0);
-  const totalFaltas = attendanceData.reduce((acc, curr) => acc + curr.falta, 0);
-  const totalAtrasados = attendanceData.reduce((acc, curr) => acc + curr.atrasado, 0);
-  const totalJustificados = attendanceData.reduce((acc, curr) => acc + curr.justificado, 0);
-  const totalGeral = totalPresentes + totalFaltas + totalAtrasados + totalJustificados;
+  // Calcular total de presenças e faltas do mês
+  const totalPresencas = attendanceData.reduce((acc, curr) => acc + curr.presenca, 0);
+  const totalFaltas = attendanceData.reduce((acc, curr) => acc + curr.faltas, 0);
+  const totalGeral = totalPresencas + totalFaltas;
   
   // Preparar dados para o gráfico
-  const chartData = [
-    {
-      name: "Estatísticas Gerais",
-      "Taxa de Presença": totalGeral > 0 ? Math.round((totalPresentes / totalGeral) * 100) : 0,
-      "Taxa de Faltas": totalGeral > 0 ? Math.round((totalFaltas / totalGeral) * 100) : 0,
-      "Taxa de Atrasos": totalGeral > 0 ? Math.round((totalAtrasados / totalGeral) * 100) : 0,
-      "Taxa de Justificativas": totalGeral > 0 ? Math.round((totalJustificados / totalGeral) * 100) : 0,
-    }
-  ];
+  const chartData = selectedRoom === "all" 
+    ? [{
+        name: "Total Geral",
+        "Presenças": totalPresencas,
+        "Faltas": totalFaltas,
+        "Taxa de Presença": totalGeral > 0 
+          ? Math.round((totalPresencas / totalGeral) * 100) 
+          : 0
+      }]
+    : rooms
+        .filter(room => room.id === selectedRoom)
+        .map(room => {
+          const roomPresencas = attendanceData.reduce((acc, curr) => acc + curr.presenca, 0);
+          const roomFaltas = attendanceData.reduce((acc, curr) => acc + curr.faltas, 0);
+          const total = roomPresencas + roomFaltas;
+          
+          return {
+            name: room.name,
+            "Presenças": roomPresencas,
+            "Faltas": roomFaltas,
+            "Taxa de Presença": total > 0 
+              ? Math.round((roomPresencas / total) * 100)
+              : 0
+          };
+        });
 
   return (
     <Card>
@@ -72,26 +84,21 @@ export const StudentDistributionChart = ({
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
-              <YAxis unit="%" />
-              <Tooltip formatter={(value: number) => [`${value}%`, '']} />
+              <YAxis />
+              <Tooltip />
               <Legend />
               <Bar 
-                dataKey="Taxa de Presença" 
+                dataKey="Presenças" 
                 fill="#22c55e" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
-                dataKey="Taxa de Faltas" 
+                dataKey="Faltas" 
                 fill="#ef4444" 
                 radius={[4, 4, 0, 0]}
               />
               <Bar 
-                dataKey="Taxa de Atrasos" 
-                fill="#eab308" 
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar 
-                dataKey="Taxa de Justificativas" 
+                dataKey="Taxa de Presença" 
                 fill="#3b82f6" 
                 radius={[4, 4, 0, 0]}
               />
