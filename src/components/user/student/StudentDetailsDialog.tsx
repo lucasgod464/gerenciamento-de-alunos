@@ -31,9 +31,28 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     justified: 0
   });
 
+  // Resetar o estado quando o diálogo é fechado
+  useEffect(() => {
+    if (!open) {
+      setSearchTerm("");
+      setStudents([]);
+      setSelectedStudent(null);
+      setAttendance([]);
+      setStats({
+        present: 0,
+        absent: 0,
+        late: 0,
+        justified: 0
+      });
+    }
+  }, [open]);
+
   useEffect(() => {
     const fetchStudents = async () => {
-      if (searchTerm.length < 3) return;
+      if (searchTerm.length < 3) {
+        setStudents([]);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('students')
@@ -131,6 +150,12 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
     }
   };
 
+  const handleStudentSelect = (student: Student) => {
+    setSelectedStudent(student);
+    setSearchTerm(""); // Limpar o termo de busca após selecionar
+    setStudents([]); // Limpar a lista de resultados
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl">
@@ -143,7 +168,7 @@ export function StudentDetailsDialog({ open, onClose }: StudentDetailsDialogProp
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             students={students}
-            onSelectStudent={setSelectedStudent}
+            onSelectStudent={handleStudentSelect}
             selectedStudent={selectedStudent}
           />
 
