@@ -26,6 +26,8 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
+import { Card } from "@/components/ui/card";
+import { Lock } from "lucide-react";
 
 interface FormPreviewProps {
   fields: FormField[];
@@ -38,7 +40,26 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [fieldToDelete, setFieldToDelete] = useState<string | null>(null);
 
-  const systemFields = ["nome_completo", "data_nascimento"];
+  const systemFields = [
+    {
+      id: "nome_completo_preview",
+      name: "nome_completo",
+      label: "Nome Completo",
+      type: "text",
+      required: true,
+      order: -2,
+      isDefault: true
+    },
+    {
+      id: "data_nascimento_preview",
+      name: "data_nascimento",
+      label: "Data de Nascimento",
+      type: "date",
+      required: true,
+      order: -1,
+      isDefault: true
+    }
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -76,9 +97,35 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
     setDeleteDialogOpen(false);
   };
 
+  // Renderiza os campos do sistema (apenas visualização)
+  const renderSystemFields = () => (
+    <div className="mb-4 space-y-2">
+      {systemFields.map((field) => (
+        <Card key={field.id} className="p-4 bg-gray-50 border-dashed">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-medium">{field.label}</h3>
+                  <span className="text-sm text-red-500">*</span>
+                  <Lock className="h-4 w-4 text-gray-400" />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Campo padrão do sistema
+                </p>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+
   return (
     <>
       <div className="relative space-y-4">
+        {renderSystemFields()}
+        
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -94,7 +141,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
                 field={field}
                 onDelete={handleDeleteClick}
                 onEdit={onEditField}
-                isSystemField={systemFields.includes(field.name)}
+                isSystemField={field.isDefault}
               />
             ))}
           </SortableContext>
