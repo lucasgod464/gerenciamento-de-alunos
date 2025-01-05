@@ -43,7 +43,7 @@ export const useEnrollmentFields = () => {
 
       const newField = {
         ...mapFormFieldToSupabase(field as FormField),
-        order: fields.length,
+        order: fields.length - defaultFields.length,
         company_id: user.companyId
       };
 
@@ -88,9 +88,8 @@ export const useEnrollmentFields = () => {
 
       setFields(prev => [
         ...defaultFields,
-        ...prev
-          .filter(f => !f.isDefault)
-          .map(field => field.id === updatedField.id ? updatedField : field)
+        ...prev.filter(f => !f.isDefault && f.id !== updatedField.id),
+        updatedField
       ]);
     } catch (error) {
       console.error("Erro ao atualizar campo:", error);
@@ -99,8 +98,8 @@ export const useEnrollmentFields = () => {
   };
 
   const deleteField = async (id: string) => {
-    // Não permitir deletar campos padrão
-    if (defaultFields.some(f => f.id === id)) {
+    const isDefaultField = defaultFields.some(f => f.id === id);
+    if (isDefaultField) {
       toast({
         title: "Operação não permitida",
         description: "Não é possível excluir campos padrão do formulário.",
@@ -126,7 +125,6 @@ export const useEnrollmentFields = () => {
   };
 
   const reorderFields = async (reorderedFields: FormField[]) => {
-    // Garantir que os campos padrão permaneçam no topo
     const customFields = reorderedFields.filter(field => !field.isDefault);
     
     try {
@@ -135,7 +133,7 @@ export const useEnrollmentFields = () => {
       const updates = customFields.map((field, index) => ({
         id: field.id,
         ...mapFormFieldToSupabase(field),
-        order: defaultFields.length + index,
+        order: index,
         company_id: user.companyId
       }));
 
