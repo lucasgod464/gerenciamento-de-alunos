@@ -24,6 +24,9 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
     const loadObservations = async () => {
       try {
         const formattedDate = formatDate(date);
+        console.log('AttendanceList - Data recebida:', date);
+        console.log('AttendanceList - Data formatada:', formattedDate);
+        
         const { data, error } = await supabase
           .from('daily_observations')
           .select('student_id, text')
@@ -31,6 +34,8 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
           .eq('company_id', companyId);
 
         if (error) throw error;
+
+        console.log('AttendanceList - Observações carregadas:', data);
 
         const observationsMap = (data || []).reduce((acc, curr) => {
           acc[curr.student_id] = curr.text;
@@ -49,6 +54,11 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const handleStatusChange = async (studentId: string, status: string) => {
     try {
       const formattedDate = formatDate(date);
+      console.log('AttendanceList - Salvando status:', {
+        data: formattedDate,
+        studentId,
+        status
+      });
       
       const { error } = await supabase
         .from('daily_attendance')
@@ -87,6 +97,11 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const handleSave = async () => {
     try {
       const formattedDate = formatDate(date);
+      console.log('AttendanceList - Salvando todas as presenças e observações:', {
+        data: formattedDate,
+        estudantes: students,
+        observacoes: observations
+      });
       
       // Primeiro, salvamos todas as presenças
       for (const student of students) {
