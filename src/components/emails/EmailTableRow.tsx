@@ -2,6 +2,8 @@ import { TableCell, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,7 +76,11 @@ export function EmailTableRow({ email, onUpdate, onDelete }: EmailTableRowProps)
           {isCompanyActive ? "Ativa" : "Inativa"}
         </span>
       </TableCell>
-      <TableCell>{email.createdAt}</TableCell>
+      <TableCell>
+        {format(new Date(email.createdAt), "dd/MM/yyyy 'às' HH:mm", {
+          locale: ptBR,
+        })}
+      </TableCell>
       <TableCell>
         <div className="flex justify-end space-x-2">
           <Button
