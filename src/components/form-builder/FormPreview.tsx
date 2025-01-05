@@ -67,6 +67,9 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             )}
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
+                {isSystemField && (
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                )}
                 <h3 className="font-medium">
                   {field.label}
                   {field.required && (
