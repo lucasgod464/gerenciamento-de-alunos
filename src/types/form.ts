@@ -1,3 +1,5 @@
+import { Json } from "@/integrations/supabase/types";
+
 export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
 
 export interface FormField {
@@ -20,7 +22,7 @@ export interface SupabaseFormField {
   description?: string;
   required: boolean;
   order: number;
-  options?: string[];
+  options?: Json;
   company_id: string;
   created_at: string;
 }
@@ -33,16 +35,16 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options,
+  options: Array.isArray(field.options) ? field.options : undefined,
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description,
   required: field.required,
-  order: field.order,
-  options: field.options,
+  order: 0, // Será definido no momento da inserção
+  options: field.options || null,
   company_id: '', // Será preenchido no hook
 });
