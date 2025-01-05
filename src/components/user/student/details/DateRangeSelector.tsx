@@ -3,8 +3,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { ptBR } from "date-fns/locale";
-import { useState } from "react";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
+import { useState } from "react";
 
 interface DateRangeSelectorProps {
   startDate: Date;
@@ -14,10 +15,7 @@ interface DateRangeSelectorProps {
 
 export function DateRangeSelector({ startDate, endDate, onDateChange }: DateRangeSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState<{
-    from: Date;
-    to?: Date;
-  }>({
+  const [date, setDate] = useState<DateRange>({
     from: startDate,
     to: endDate,
   });
