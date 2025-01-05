@@ -1,35 +1,13 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useEffect, useState } from "react";
 import { Student } from "@/types/student";
-import { Room } from "@/types/room";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { StudentColumns } from "@/components/admin/students/StudentColumns";
 
 const StudentsTotal = () => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
 
   const loadStudents = async () => {
@@ -76,8 +54,8 @@ const StudentsTotal = () => {
     try {
       const { data: roomsData, error } = await supabase
         .from('rooms')
-        .select('*')
-        .order('name');
+        .select('id, name')
+        .eq('status', true);
 
       if (error) throw error;
       if (roomsData) setRooms(roomsData);
@@ -155,11 +133,8 @@ const StudentsTotal = () => {
     }
   };
 
-  const getRoomName = (roomId: string | null) => {
-    if (!roomId) return "Sem sala";
-    const room = rooms.find(r => r.id === roomId);
-    return room ? room.name : "Sem sala";
-  };
+  const studentsWithRoom = students.filter(student => student.room !== null);
+  const studentsWithoutRoom = students.filter(student => student.room === null);
 
   return (
     <DashboardLayout role="admin">
@@ -171,88 +146,13 @@ const StudentsTotal = () => {
           </p>
         </div>
 
-        <Card className="p-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Data de Nascimento</TableHead>
-                <TableHead>Sala Atual</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {students.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>{student.name}</TableCell>
-                  <TableCell>
-                    {new Date(student.birthDate).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={student.room || ""}
-                      onValueChange={(newRoomId) => handleTransferStudent(student.id, newRoomId)}
-                    >
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={getRoomName(student.room)} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {rooms.map((room) => (
-                          <SelectItem key={room.id} value={room.id}>
-                            {room.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        student.status
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {student.status ? "Ativo" : "Inativo"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Excluir Aluno</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir este aluno? Esta ação não pode ser desfeita.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteStudent(student.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
+        <StudentColumns 
+          studentsWithoutRoom={studentsWithoutRoom}
+          studentsWithRoom={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={handleDeleteStudent}
+          onTransferStudent={handleTransferStudent}
+        />
       </div>
     </DashboardLayout>
   );
