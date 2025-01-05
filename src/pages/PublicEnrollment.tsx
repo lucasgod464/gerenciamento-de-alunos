@@ -8,7 +8,7 @@ import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
@@ -18,6 +18,7 @@ export function PublicEnrollment() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [multipleSelections, setMultipleSelections] = useState<Record<string, string[]>>({});
   const { formUrl } = useParams();
   const { toast } = useToast();
   const { register, handleSubmit, setValue, formState: { errors } } = useForm();
@@ -32,33 +33,17 @@ export function PublicEnrollment() {
       setError(null);
 
       if (!formUrl) {
-        console.error("URL do formulário não encontrada");
         throw new Error("URL do formulário não encontrada");
       }
 
-      console.log("URL do formulário recebida:", formUrl);
-      console.log("Iniciando busca da empresa...");
-      
       const { data: company, error: companyError } = await supabase
         .from('companies')
         .select('id')
         .eq('enrollment_form_url', formUrl)
         .maybeSingle();
 
-      console.log("Resultado da busca da empresa:", { company, error: companyError });
-
-      if (companyError) {
-        console.error("Erro ao buscar empresa:", companyError);
-        throw companyError;
-      }
-
-      if (!company) {
-        console.error("Empresa não encontrada para a URL:", formUrl);
-        throw new Error("Formulário não encontrado ou inválido");
-      }
-
-      console.log("Empresa encontrada:", company);
-      console.log("Buscando campos do formulário para a empresa:", company.id);
+      if (companyError) throw companyError;
+      if (!company) throw new Error("Formulário não encontrado");
 
       const { data: formFields, error: fieldsError } = await supabase
         .from('enrollment_form_fields')
@@ -66,12 +51,7 @@ export function PublicEnrollment() {
         .eq('company_id', company.id)
         .order('order');
 
-      console.log("Resultado da busca dos campos:", { formFields, error: fieldsError });
-
-      if (fieldsError) {
-        console.error("Erro ao buscar campos do formulário:", fieldsError);
-        throw fieldsError;
-      }
+      if (fieldsError) throw fieldsError;
 
       const validatedFields = (formFields || []).map(field => ({
         id: field.id,
@@ -84,7 +64,6 @@ export function PublicEnrollment() {
         options: field.options as string[] | undefined,
       }));
 
-      console.log("Campos validados:", validatedFields);
       setFields(validatedFields);
     } catch (error) {
       console.error("Erro ao carregar formulário:", error);
@@ -97,23 +76,27 @@ export function PublicEnrollment() {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const { data: companies, error: companiesError } = await supabase
+      const { data: company } = await supabase
         .from('companies')
         .select('id')
         .eq('enrollment_form_url', formUrl)
-        .maybeSingle();
-
-      if (companiesError) throw companiesError;
-      if (!companies) throw new Error("Empresa não encontrada");
+        .single();
 
       const customFields: Record<string, any> = {};
       fields.forEach(field => {
         if (field.name !== "nome_completo" && field.name !== "data_nascimento") {
+          let value = data[field.name];
+          
+          // Para campos de múltipla escolha, use o estado local
+          if (field.type === "multiple") {
+            value = multipleSelections[field.name] || [];
+          }
+          
           customFields[field.id] = {
             fieldId: field.id,
             fieldName: field.name,
             label: field.label,
-            value: data[field.name],
+            value: value,
             type: field.type
           };
         }
@@ -126,7 +109,7 @@ export function PublicEnrollment() {
           birth_date: data.data_nascimento,
           status: true,
           custom_fields: customFields,
-          company_id: companies.id
+          company_id: company.id
         });
 
       if (studentError) throw studentError;
@@ -136,10 +119,12 @@ export function PublicEnrollment() {
         description: "Formulário enviado com sucesso.",
       });
 
-      // Reset form
+      // Limpar formulário
       Object.keys(data).forEach(key => {
         setValue(key, '');
       });
+      setMultipleSelections({});
+      
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
@@ -180,7 +165,6 @@ export function PublicEnrollment() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Campos obrigatórios */}
             <div className="space-y-2">
               <Label htmlFor="nome_completo">
                 Nome Completo
@@ -213,12 +197,7 @@ export function PublicEnrollment() {
               )}
             </div>
 
-            {/* Campos customizados */}
             {fields.map(field => {
-              if (field.name === "sala" || field.name === "status") {
-                return null;
-              }
-
               if (field.name === "nome_completo" || field.name === "data_nascimento") {
                 return null;
               }
@@ -229,15 +208,45 @@ export function PublicEnrollment() {
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
-                  {field.type === "textarea" ? (
-                    <Textarea
-                      id={field.name}
-                      {...register(field.name, { required: field.required })}
-                      placeholder={`Digite ${field.label.toLowerCase()}`}
-                      className="w-full"
-                    />
+                  
+                  {field.type === "multiple" ? (
+                    <div className="space-y-2">
+                      {field.options?.map((option) => (
+                        <div key={option} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`${field.name}-${option}`}
+                            checked={multipleSelections[field.name]?.includes(option)}
+                            onCheckedChange={(checked) => {
+                              setMultipleSelections(prev => {
+                                const current = prev[field.name] || [];
+                                if (checked) {
+                                  return {
+                                    ...prev,
+                                    [field.name]: [...current, option]
+                                  };
+                                } else {
+                                  return {
+                                    ...prev,
+                                    [field.name]: current.filter(item => item !== option)
+                                  };
+                                }
+                              });
+                            }}
+                          />
+                          <label
+                            htmlFor={`${field.name}-${option}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {option}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   ) : field.type === "select" ? (
-                    <Select onValueChange={(value) => setValue(field.name, value)}>
+                    <Select 
+                      onValueChange={(value) => setValue(field.name, value)}
+                      {...register(field.name, { required: field.required })}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
                       </SelectTrigger>
@@ -258,12 +267,14 @@ export function PublicEnrollment() {
                       className="w-full"
                     />
                   )}
+                  
                   {errors[field.name] && (
                     <p className="text-sm text-red-500">Este campo é obrigatório</p>
                   )}
                 </div>
               );
             })}
+            
             <Button 
               type="submit" 
               className="w-full"
@@ -283,6 +294,6 @@ export function PublicEnrollment() {
       </Card>
     </div>
   );
-};
+}
 
 export default PublicEnrollment;
