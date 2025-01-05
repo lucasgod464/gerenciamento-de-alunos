@@ -6,7 +6,7 @@ import { defaultFields } from "./defaultFields";
 import { useAuth } from "@/hooks/useAuth";
 
 export const useEnrollmentFields = () => {
-  const [fields, setFields] = useState<FormField[]>(defaultFields);
+  const [fields, setFields] = useState<FormField[]>([]);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -30,9 +30,14 @@ export const useEnrollmentFields = () => {
 
       console.log("Loaded custom fields:", customFields);
       const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
-      const mergedFields = [...defaultFields, ...mappedCustomFields];
       
-      setFields(mergedFields);
+      // Combine default fields with custom fields
+      const allFields = [...defaultFields, ...mappedCustomFields];
+      
+      // Sort fields by order
+      const sortedFields = allFields.sort((a, b) => a.order - b.order);
+      
+      setFields(sortedFields);
     } catch (error) {
       console.error("Error loading enrollment fields:", error);
       toast({
@@ -183,6 +188,7 @@ export const useEnrollmentFields = () => {
       return;
     }
 
+    // Separate default fields and custom fields
     const customFields = reorderedFields.filter(field => !defaultFields.some(df => df.id === field.id));
     
     try {
