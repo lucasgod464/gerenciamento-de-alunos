@@ -1,85 +1,17 @@
-import { useEffect, useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react";
 import { AddStudentDialog } from "./AddStudentDialog";
 import { StudentTable } from "./StudentTable";
 import { StudentFilters } from "./student/StudentFilters";
-import { useAuth } from "@/hooks/useAuth";
+import { useStudentData } from "./student/hooks/useStudentData";
 import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 export const StudentRegistration = () => {
-  const { user } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
+  const { students, rooms, loadStudents } = useStudentData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRoom, setSelectedRoom] = useState<string>("");
   const { toast } = useToast();
-
-  const loadStudents = async () => {
-    if (!user?.companyId) return;
-
-    try {
-      const { data: studentsData, error } = await supabase
-        .from('students')
-        .select(`
-          *,
-          room_students (
-            room_id
-          )
-        `)
-        .eq('company_id', user.companyId);
-
-      if (error) throw error;
-
-      const mappedStudents = studentsData.map(student => ({
-        id: student.id,
-        name: student.name,
-        birthDate: student.birth_date,
-        status: student.status ?? true,
-        email: student.email || '',
-        document: student.document || '',
-        address: student.address || '',
-        customFields: student.custom_fields || {},
-        companyId: student.company_id,
-        createdAt: student.created_at,
-        room: student.room_students?.[0]?.room_id || null
-      }));
-
-      setStudents(mappedStudents);
-    } catch (error) {
-      console.error('Erro ao carregar alunos:', error);
-      toast({
-        title: "Erro ao carregar alunos",
-        description: "Não foi possível carregar a lista de alunos.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const loadRooms = async () => {
-    if (!user?.companyId) return;
-
-    try {
-      const { data: roomsData, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
-
-      if (error) throw error;
-      setRooms(roomsData);
-    } catch (error) {
-      console.error('Erro ao carregar salas:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (user?.id) {
-      loadStudents();
-      loadRooms();
-    }
-  }, [user?.id]);
 
   const handleAddStudent = async (student: Student) => {
     try {
@@ -92,7 +24,7 @@ export const StudentRegistration = () => {
           document: student.document,
           address: student.address,
           custom_fields: student.customFields,
-          company_id: user?.companyId,
+          company_id: student.companyId,
           status: true
         }])
         .select()
@@ -111,18 +43,12 @@ export const StudentRegistration = () => {
         if (roomError) throw roomError;
       }
 
-      const mappedStudent = {
-        ...student,
-        id: newStudent.id,
-        companyId: newStudent.company_id,
-        createdAt: newStudent.created_at,
-      };
-
-      setStudents(prev => [...prev, mappedStudent]);
       toast({
         title: "Sucesso",
         description: "Aluno adicionado com sucesso!",
       });
+      
+      loadStudents();
     } catch (error) {
       console.error('Erro ao adicionar aluno:', error);
       toast({
@@ -142,11 +68,12 @@ export const StudentRegistration = () => {
 
       if (error) throw error;
 
-      setStudents(prev => prev.filter(student => student.id !== id));
       toast({
         title: "Sucesso",
         description: "Aluno removido com sucesso!",
       });
+      
+      loadStudents();
     } catch (error) {
       console.error('Erro ao deletar aluno:', error);
       toast({
@@ -174,7 +101,6 @@ export const StudentRegistration = () => {
 
       if (studentError) throw studentError;
 
-      // Atualiza a sala do aluno
       await supabase
         .from('room_students')
         .delete()
@@ -191,14 +117,12 @@ export const StudentRegistration = () => {
         if (roomError) throw roomError;
       }
 
-      setStudents(prev => prev.map(student => 
-        student.id === updatedStudent.id ? updatedStudent : student
-      ));
-
       toast({
         title: "Sucesso",
         description: "Aluno atualizado com sucesso!",
       });
+      
+      loadStudents();
     } catch (error) {
       console.error('Erro ao atualizar aluno:', error);
       toast({
@@ -212,11 +136,8 @@ export const StudentRegistration = () => {
   const filteredStudents = students.filter(student => {
     const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRoom = !selectedRoom || student.room === selectedRoom;
-    return matchesSearch && matchesRoom;
+    return matchesSearch && matchesRoom && student.room;
   });
-
-  const studentsWithRoom = filteredStudents.filter(student => student.room);
-  const studentsWithoutRoom = filteredStudents.filter(student => !student.room);
 
   return (
     <div className="space-y-6">
@@ -231,34 +152,12 @@ export const StudentRegistration = () => {
         <AddStudentDialog onStudentAdded={handleAddStudent} />
       </div>
 
-      <Tabs defaultValue="without-room" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="without-room">
-            Alunos sem Sala ({studentsWithoutRoom.length})
-          </TabsTrigger>
-          <TabsTrigger value="with-room">
-            Alunos com Sala ({studentsWithRoom.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="without-room">
-          <StudentTable
-            students={studentsWithoutRoom}
-            rooms={rooms}
-            onDeleteStudent={handleDeleteStudent}
-            onUpdateStudent={handleUpdateStudent}
-          />
-        </TabsContent>
-
-        <TabsContent value="with-room">
-          <StudentTable
-            students={studentsWithRoom}
-            rooms={rooms}
-            onDeleteStudent={handleDeleteStudent}
-            onUpdateStudent={handleUpdateStudent}
-          />
-        </TabsContent>
-      </Tabs>
+      <StudentTable
+        students={filteredStudents}
+        rooms={rooms}
+        onDeleteStudent={handleDeleteStudent}
+        onUpdateStudent={handleUpdateStudent}
+      />
     </div>
   );
 };
