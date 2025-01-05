@@ -1,18 +1,21 @@
-export interface Student {
+export interface DateRange {
+  from: Date;
+  to: Date;
+}
+
+export interface AttendanceRecord {
   id: string;
-  name: string;
-  room: string;
-  roomName?: string;
-  status: "present" | "absent" | "late" | "justified";
-  companyId: string | null;
+  date: string;
+  status: string;
+  studentId: string;
+  roomId?: string;
+  companyId?: string;
 }
 
-export interface DailyAttendance {
-  date: string;
-  students: Student[];
-}
-
-export interface DailyObservation {
-  date: string;
-  text: string;
+export interface AttendanceStats {
+  present: number;
+  absent: number;
+  late: number;
+  justified: number;
+  total: number;
 }
