@@ -125,7 +125,7 @@ export function AttendanceDetails({ studentId }: { studentId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
+      <div className="flex mb-4">
         <Select defaultValue="last30days" onValueChange={handlePeriodChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Período predefinido" />
