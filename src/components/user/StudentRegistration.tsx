@@ -30,7 +30,7 @@ export const StudentRegistration = () => {
           document: student.document,
           address: student.address,
           custom_fields: student.customFields,
-          company_id: user.companyId, // Vincula o aluno à empresa do usuário
+          company_id: user.companyId,
           status: true
         }])
         .select()
@@ -90,6 +90,38 @@ export const StudentRegistration = () => {
     }
   };
 
+  const handleTransferStudent = async (studentId: string, newRoomId: string) => {
+    try {
+      await supabase
+        .from('room_students')
+        .delete()
+        .eq('student_id', studentId);
+
+      const { error } = await supabase
+        .from('room_students')
+        .insert({
+          student_id: studentId,
+          room_id: newRoomId
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Aluno transferido com sucesso!",
+      });
+      
+      loadStudents();
+    } catch (error) {
+      console.error('Erro ao transferir aluno:', error);
+      toast({
+        title: "Erro ao transferir aluno",
+        description: "Não foi possível transferir o aluno.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleUpdateStudent = async (updatedStudent: Student) => {
     try {
       const { error: studentError } = await supabase
@@ -107,12 +139,12 @@ export const StudentRegistration = () => {
 
       if (studentError) throw studentError;
 
-      await supabase
-        .from('room_students')
-        .delete()
-        .eq('student_id', updatedStudent.id);
-
       if (updatedStudent.room) {
+        await supabase
+          .from('room_students')
+          .delete()
+          .eq('student_id', updatedStudent.id);
+
         const { error: roomError } = await supabase
           .from('room_students')
           .insert({
@@ -162,6 +194,7 @@ export const StudentRegistration = () => {
         students={filteredStudents}
         rooms={rooms}
         onDeleteStudent={handleDeleteStudent}
+        onTransferStudent={handleTransferStudent}
         onUpdateStudent={handleUpdateStudent}
       />
     </div>

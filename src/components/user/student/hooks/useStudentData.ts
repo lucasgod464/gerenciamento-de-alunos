@@ -3,44 +3,74 @@ import { Student } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRooms } from "@/hooks/useUserRooms";
 
 export const useStudentData = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const { rooms: authorizedRooms } = useUserRooms();
 
   const loadStudents = async () => {
-    if (!user?.companyId) return;
-
     try {
-      const { data: studentsData, error } = await supabase
-        .from('students')
+      if (!user?.id) return;
+
+      // Primeiro, obter os IDs das salas autorizadas
+      const authorizedRoomIds = authorizedRooms.map(room => room.id);
+
+      if (authorizedRoomIds.length === 0) {
+        setStudents([]);
+        return;
+      }
+
+      // Buscar alunos vinculados às salas autorizadas
+      const { data: roomStudents, error: roomStudentsError } = await supabase
+        .from('room_students')
         .select(`
-          *,
-          room_students (
-            room_id
+          student_id,
+          students (
+            id,
+            name,
+            birth_date,
+            status,
+            email,
+            document,
+            address,
+            custom_fields,
+            company_id,
+            created_at
           )
         `)
-        .eq('company_id', user.companyId);
+        .in('room_id', authorizedRoomIds);
 
-      if (error) throw error;
+      if (roomStudentsError) throw roomStudentsError;
 
-      const mappedStudents = studentsData.map(student => ({
-        id: student.id,
-        name: student.name,
-        birthDate: student.birth_date,
-        status: student.status ?? true,
-        email: student.email || '',
-        document: student.document || '',
-        address: student.address || '',
-        customFields: student.custom_fields || {},
-        companyId: student.company_id,
-        createdAt: student.created_at,
-        room: student.room_students?.[0]?.room_id || null
-      }));
+      if (roomStudents) {
+        // Remover duplicatas e mapear para o formato correto
+        const uniqueStudents = Array.from(new Set(roomStudents.map(rs => rs.students?.id)))
+          .map(studentId => {
+            const studentData = roomStudents.find(rs => rs.students?.id === studentId)?.students;
+            if (!studentData) return null;
 
-      setStudents(mappedStudents);
+            return {
+              id: studentData.id,
+              name: studentData.name,
+              birthDate: studentData.birth_date,
+              status: studentData.status ?? true,
+              email: studentData.email || '',
+              document: studentData.document || '',
+              address: studentData.address || '',
+              customFields: studentData.custom_fields as Record<string, any> || {},
+              companyId: studentData.company_id,
+              createdAt: studentData.created_at,
+              room: null // Será atualizado abaixo
+            };
+          })
+          .filter((student): student is Student => student !== null);
+
+        setStudents(uniqueStudents);
+      }
     } catch (error) {
       console.error('Erro ao carregar alunos:', error);
       toast({
@@ -52,17 +82,15 @@ export const useStudentData = () => {
   };
 
   const loadRooms = async () => {
-    if (!user?.companyId) return;
-
+    if (!user?.id) return;
+    
     try {
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
-
-      if (error) throw error;
-      setRooms(data || []);
+      const mappedRooms = authorizedRooms.map(room => ({
+        id: room.id,
+        name: room.name
+      }));
+      
+      setRooms(mappedRooms);
     } catch (error) {
       console.error('Erro ao carregar salas:', error);
       toast({
@@ -78,7 +106,7 @@ export const useStudentData = () => {
       loadStudents();
       loadRooms();
     }
-  }, [user?.id]);
+  }, [user?.id, authorizedRooms]);
 
   return {
     students,
