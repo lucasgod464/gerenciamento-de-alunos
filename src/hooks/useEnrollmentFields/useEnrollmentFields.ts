@@ -23,8 +23,12 @@ export const useEnrollmentFields = () => {
         .eq('company_id', user.companyId)
         .order('order');
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading fields:", error);
+        throw error;
+      }
 
+      console.log("Loaded custom fields:", customFields);
       const mappedCustomFields = (customFields || []).map(mapSupabaseFormField);
       const mergedFields = [...defaultFields, ...mappedCustomFields];
       
@@ -51,14 +55,20 @@ export const useEnrollmentFields = () => {
         company_id: user.companyId
       };
 
+      console.log("Adding new field:", newField);
+
       const { data, error } = await supabase
         .from('enrollment_form_fields')
         .insert([newField])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding field:", error);
+        throw error;
+      }
 
+      console.log("Field added successfully:", data);
       const mappedField = mapSupabaseFormField(data);
       setFields(prev => [...prev, mappedField]);
       
@@ -71,6 +81,58 @@ export const useEnrollmentFields = () => {
       toast({
         title: "Erro ao adicionar campo",
         description: "Não foi possível adicionar o campo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateField = async (updatedField: FormField) => {
+    const isDefaultField = defaultFields.some(field => field.id === updatedField.id);
+    if (isDefaultField) {
+      toast({
+        title: "Operação não permitida",
+        description: "Não é possível editar campos padrão do formulário.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (!user?.companyId) {
+        throw new Error("No company ID found");
+      }
+
+      const supabaseField = mapFormFieldToSupabase(updatedField);
+      console.log("Updating field:", { id: updatedField.id, ...supabaseField });
+
+      const { error } = await supabase
+        .from('enrollment_form_fields')
+        .update({
+          ...supabaseField,
+          company_id: user.companyId
+        })
+        .eq('id', updatedField.id)
+        .eq('company_id', user.companyId);
+
+      if (error) {
+        console.error("Error updating field:", error);
+        throw error;
+      }
+
+      console.log("Field updated successfully");
+      setFields(prev => prev.map(field => 
+        field.id === updatedField.id ? updatedField : field
+      ));
+
+      toast({
+        title: "Campo atualizado",
+        description: "O campo foi atualizado com sucesso.",
+      });
+    } catch (error) {
+      console.error("Error updating field:", error);
+      toast({
+        title: "Erro ao atualizar campo",
+        description: "Não foi possível atualizar o campo.",
         variant: "destructive",
       });
     }
@@ -94,8 +156,12 @@ export const useEnrollmentFields = () => {
         .eq('id', id)
         .eq('company_id', user?.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting field:", error);
+        throw error;
+      }
 
+      console.log("Field deleted successfully");
       setFields(prev => prev.filter(field => field.id !== id));
       toast({
         title: "Campo removido",
@@ -106,51 +172,6 @@ export const useEnrollmentFields = () => {
       toast({
         title: "Erro ao remover campo",
         description: "Não foi possível remover o campo.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateField = async (updatedField: FormField) => {
-    const isDefaultField = defaultFields.some(field => field.id === updatedField.id);
-    if (isDefaultField) {
-      toast({
-        title: "Operação não permitida",
-        description: "Não é possível editar campos padrão do formulário.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (!user?.companyId) {
-        throw new Error("No company ID found");
-      }
-
-      const { error } = await supabase
-        .from('enrollment_form_fields')
-        .update({
-          ...mapFormFieldToSupabase(updatedField),
-          company_id: user.companyId
-        })
-        .eq('id', updatedField.id)
-        .eq('company_id', user.companyId);
-
-      if (error) throw error;
-
-      setFields(prev => prev.map(field => 
-        field.id === updatedField.id ? updatedField : field
-      ));
-
-      toast({
-        title: "Campo atualizado",
-        description: "O campo foi atualizado com sucesso.",
-      });
-    } catch (error) {
-      console.error("Error updating field:", error);
-      toast({
-        title: "Erro ao atualizar campo",
-        description: "Não foi possível atualizar o campo.",
         variant: "destructive",
       });
     }
@@ -172,12 +193,18 @@ export const useEnrollmentFields = () => {
         company_id: user.companyId
       }));
 
+      console.log("Reordering fields:", updates);
+
       const { error } = await supabase
         .from('enrollment_form_fields')
         .upsert(updates);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error reordering fields:", error);
+        throw error;
+      }
 
+      console.log("Fields reordered successfully");
       setFields(reorderedFields);
     } catch (error) {
       console.error("Error reordering fields:", error);
