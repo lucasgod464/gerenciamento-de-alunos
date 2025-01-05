@@ -13,6 +13,13 @@ export interface Company {
   enrollmentFormUrl?: string;
 }
 
+export interface CompanyFormData {
+  name: string;
+  document: string;
+  usersLimit: number;
+  roomsLimit: number;
+}
+
 export interface SupabaseCompany {
   id: string;
   name: string;
@@ -28,7 +35,7 @@ export interface SupabaseCompany {
   enrollment_form_url?: string;
 }
 
-export const mapSupabaseCompanyToCompany = (company: SupabaseCompany): Company => ({
+export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
   id: company.id,
   name: company.name,
   document: company.document,

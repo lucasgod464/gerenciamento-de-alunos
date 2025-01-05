@@ -11,6 +11,7 @@ export interface Room {
   studyRoom: string;
   createdAt: string;
   students?: Student[];
+  companyName?: string;
 }
 
 export interface SupabaseRoom {
