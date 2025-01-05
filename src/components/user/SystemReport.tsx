@@ -1,16 +1,13 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { FileSpreadsheet, RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
 import { GeneralStats } from "./reports/GeneralStats";
 import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { DateRangeFilter } from "./reports/DateRangeFilter";
+import { ReportHeader } from "./reports/ReportHeader";
 
 export const SystemReport = () => {
   const today = new Date();
@@ -47,7 +44,6 @@ export const SystemReport = () => {
     },
   });
 
-  // Buscar dados de presença do período selecionado
   const { data: attendanceData = [], refetch: refetchAttendance } = useQuery({
     queryKey: ["attendance-data", user?.id, selectedRoom, dateRange],
     queryFn: async () => {
@@ -101,7 +97,6 @@ export const SystemReport = () => {
     },
   });
 
-  // Configurar canal realtime para atualizações de presença
   useEffect(() => {
     const channel = supabase
       .channel('attendance-changes')
@@ -124,7 +119,6 @@ export const SystemReport = () => {
     };
   }, [selectedRoom, refetchAttendance]);
 
-  // Atualizar dados quando entrar na página
   useEffect(() => {
     refetchRooms();
     refetchAttendance();
@@ -159,37 +153,16 @@ export const SystemReport = () => {
   const averageAttendance = attendanceData?.reduce((acc, curr) => 
     acc + curr.presente, 0) / (attendanceData?.length || 1);
 
-  const handleExportReport = () => {
-    toast({
-      title: "Exportando relatório",
-      description: "Seu relatório será baixado em breve",
-    });
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex gap-4 items-center flex-wrap">
-          <RoomSelector
-            rooms={authorizedRooms}
-            selectedRoom={selectedRoom}
-            onRoomChange={setSelectedRoom}
-          />
-          <DateRangeFilter
-            dateRange={dateRange}
-            onDateRangeChange={setDateRange}
-          />
-          <Button variant="outline" onClick={handleRefresh}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Atualizar
-          </Button>
-        </div>
-
-        <Button variant="outline" onClick={handleExportReport}>
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Exportar CSV
-        </Button>
-      </div>
+      <ReportHeader
+        rooms={authorizedRooms}
+        selectedRoom={selectedRoom}
+        dateRange={dateRange}
+        onRoomChange={setSelectedRoom}
+        onDateRangeChange={setDateRange}
+        onRefresh={handleRefresh}
+      />
 
       <GeneralStats
         averageAttendance={averageAttendance}
