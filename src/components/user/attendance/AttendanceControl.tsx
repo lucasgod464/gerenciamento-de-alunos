@@ -58,6 +58,7 @@ export const AttendanceControl = () => {
       if (!user?.companyId || !selectedDate || !selectedRoom) return;
 
       const formattedDate = formatDate(selectedDate);
+      console.log('Data formatada:', formattedDate); // Log para debug
       
       try {
         const { data, error } = await supabase
@@ -69,6 +70,7 @@ export const AttendanceControl = () => {
 
         if (error) throw error;
 
+        console.log('Dados da chamada:', data); // Log para debug
         const hasData = data && data.length > 0;
         setHasAttendance(hasData);
         setIsStarted(hasData);
@@ -91,6 +93,7 @@ export const AttendanceControl = () => {
     if (isStarted) {
       try {
         const formattedDate = formatDate(selectedDate);
+        console.log('Data ao cancelar chamada:', formattedDate); // Log para debug
         
         const { error } = await supabase
           .from('daily_attendance')
