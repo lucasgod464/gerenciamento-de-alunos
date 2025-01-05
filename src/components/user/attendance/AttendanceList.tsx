@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,33 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const { students, setStudents } = useAttendanceData(date, roomId);
   const [observations, setObservations] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  // Carregar observações existentes quando a data ou sala mudar
+  useEffect(() => {
+    const loadObservations = async () => {
+      try {
+        const formattedDate = formatDate(date);
+        const { data, error } = await supabase
+          .from('daily_observations')
+          .select('student_id, text')
+          .eq('date', formattedDate)
+          .eq('company_id', companyId);
+
+        if (error) throw error;
+
+        const observationsMap = (data || []).reduce((acc, curr) => {
+          acc[curr.student_id] = curr.text;
+          return acc;
+        }, {} as Record<string, string>);
+
+        setObservations(observationsMap);
+      } catch (error) {
+        console.error('Erro ao carregar observações:', error);
+      }
+    };
+
+    loadObservations();
+  }, [date, roomId, companyId]);
 
   const handleStatusChange = async (studentId: string, status: string) => {
     try {
