@@ -3,7 +3,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, subDays, subMonths, subWeeks } from "date-fns";
+import { addDays, endOfMonth, endOfWeek, format, startOfMonth, startOfWeek, subDays, subMonths, subWeeks, subYears } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -53,6 +53,9 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange }: DateRangeFilte
           to: endOfWeek(lastWeek, { locale: ptBR }) 
         };
         break;
+      case "lastYear":
+        newRange = { from: subYears(today, 1), to: today };
+        break;
       default:
         return;
     }
@@ -82,7 +85,7 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange }: DateRangeFilte
 
   return (
     <div className="flex items-center gap-2">
-      <Select onValueChange={handlePresetChange}>
+      <Select defaultValue="last30days" onValueChange={handlePresetChange}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Período predefinido" />
         </SelectTrigger>
@@ -95,6 +98,7 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange }: DateRangeFilte
           <SelectItem value="lastWeek">Semana passada</SelectItem>
           <SelectItem value="thisMonth">Este mês</SelectItem>
           <SelectItem value="lastMonth">Mês passado</SelectItem>
+          <SelectItem value="lastYear">Último ano</SelectItem>
         </SelectContent>
       </Select>
 

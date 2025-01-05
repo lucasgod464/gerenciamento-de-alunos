@@ -8,16 +8,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoomSelector } from "./reports/RoomSelector";
 import { AttendanceChart } from "./reports/AttendanceChart";
 import { GeneralStats } from "./reports/GeneralStats";
-import { startOfMonth, endOfMonth, format, startOfDay, endOfDay } from "date-fns";
+import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useEffect } from "react";
 import { DateRangeFilter } from "./reports/DateRangeFilter";
 
 export const SystemReport = () => {
+  const today = new Date();
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [dateRange, setDateRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date())
+    from: subDays(today, 29),
+    to: today
   });
   const { toast } = useToast();
   const { user } = useAuth();
