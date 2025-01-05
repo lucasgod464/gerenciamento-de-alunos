@@ -29,7 +29,6 @@ export function EditUserDialog({
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>([]);
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
 
-  // Atualiza os estados quando o usuário ou o diálogo mudam
   useEffect(() => {
     if (user && open) {
       setSelectedTags(user.tags || []);
@@ -42,7 +41,6 @@ export function EditUserDialog({
 
     try {
       setLoading(true);
-      console.log('Updating user with rooms:', selectedRooms);
 
       const updateData = {
         name: formData.get('name')?.toString() || '',
@@ -61,6 +59,21 @@ export function EditUserDialog({
 
       if (updateError) throw updateError;
 
+      // Update user_specializations
+      await supabase
+        .from('user_specializations')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (selectedTags.length > 0) {
+        await supabase
+          .from('user_specializations')
+          .insert(selectedTags.map(spec => ({
+            user_id: user.id,
+            specialization_id: spec.id
+          })));
+      }
+
       // Update tags
       await supabase
         .from('user_tags')
@@ -77,7 +90,6 @@ export function EditUserDialog({
       }
 
       // Update rooms
-      console.log('Deleting existing room assignments for user:', user.id);
       const { error: deleteRoomsError } = await supabase
         .from('user_rooms')
         .delete()
@@ -86,7 +98,6 @@ export function EditUserDialog({
       if (deleteRoomsError) throw deleteRoomsError;
 
       if (selectedRooms.length > 0) {
-        console.log('Inserting new room assignments:', selectedRooms);
         const { error: insertRoomsError } = await supabase
           .from('user_rooms')
           .insert(selectedRooms.map(roomId => ({
@@ -97,25 +108,15 @@ export function EditUserDialog({
         if (insertRoomsError) throw insertRoomsError;
       }
 
-      // Fetch updated room names
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .in('id', selectedRooms);
-
-      if (roomsError) throw roomsError;
-
       const updatedUser: User = {
         ...user,
         ...updateData,
         tags: selectedTags,
-        authorizedRooms: roomsData?.map(room => ({ 
-          id: room.id, 
-          name: room.name 
-        })) || []
+        authorizedRooms: selectedRooms.map(roomId => ({
+          id: roomId,
+          name: user.authorizedRooms?.find(r => r.id === roomId)?.name || ''
+        }))
       };
-
-      console.log('Updated user with rooms:', updatedUser);
 
       toast({
         title: "Usuário atualizado",
