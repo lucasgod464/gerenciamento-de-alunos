@@ -4,18 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-export function useRooms() {
+export const useRooms = () => {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const fetchRooms = async () => {
+  const loadRooms = async () => {
     try {
+      setLoading(true);
+      
       const { data: roomsData, error } = await supabase
-        .from("rooms")
+        .from('rooms')
         .select(`
           *,
+          companies (
+            name
+          ),
           room_students (
             student:students (
               id,
@@ -30,8 +35,7 @@ export function useRooms() {
               created_at
             )
           )
-        `)
-        .eq('company_id', user?.companyId);
+        `);
 
       if (error) throw error;
 
@@ -41,108 +45,26 @@ export function useRooms() {
 
       setRooms(formattedRooms);
     } catch (error) {
-      console.error("Error fetching rooms:", error);
+      console.error('Error loading rooms:', error);
       toast({
         title: "Erro ao carregar salas",
-        description: "Não foi possível carregar as salas. Tente novamente mais tarde.",
+        description: "Não foi possível carregar a lista de salas.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user?.companyId) {
-      fetchRooms();
+    if (user?.id) {
+      loadRooms();
     }
-  }, [user?.companyId]);
-
-  const handleSave = async (room: Partial<Room>) => {
-    try {
-      if (room.id) {
-        const { error: updateError } = await supabase
-          .from('rooms')
-          .update({
-            name: room.name,
-            schedule: room.schedule,
-            location: room.location,
-            category: room.category,
-            status: room.status,
-            study_room: room.studyRoom || '',
-            company_id: user?.companyId
-          })
-          .eq('id', room.id);
-
-        if (updateError) throw updateError;
-
-        toast({
-          title: "Sala atualizada",
-          description: "A sala foi atualizada com sucesso!",
-        });
-      } else {
-        const { error: createError } = await supabase
-          .from('rooms')
-          .insert({
-            name: room.name,
-            schedule: room.schedule,
-            location: room.location,
-            category: room.category,
-            status: room.status,
-            study_room: room.studyRoom || '',
-            company_id: user?.companyId,
-          });
-
-        if (createError) throw createError;
-
-        toast({
-          title: "Sala criada",
-          description: "A sala foi criada com sucesso!",
-        });
-      }
-
-      fetchRooms();
-    } catch (error) {
-      console.error("Error saving room:", error);
-      toast({
-        title: "Erro ao salvar sala",
-        description: "Ocorreu um erro ao salvar a sala. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteConfirm = async (roomId: string) => {
-    if (!roomId) return;
-
-    try {
-      const { error: deleteError } = await supabase
-        .from('rooms')
-        .delete()
-        .eq('id', roomId);
-
-      if (deleteError) throw deleteError;
-
-      toast({
-        title: "Sala excluída",
-        description: "A sala foi excluída com sucesso!",
-      });
-
-      fetchRooms();
-    } catch (error) {
-      console.error("Error deleting room:", error);
-      toast({
-        title: "Erro ao excluir sala",
-        description: "Ocorreu um erro ao excluir a sala. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
+  }, [user?.id]);
 
   return {
     rooms,
-    isLoading,
-    handleSave,
-    handleDeleteConfirm,
+    loading,
+    loadRooms
   };
-}
+};
