@@ -27,28 +27,54 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   });
   
   const [customFields, setCustomFields] = useState<FormField[]>([]);
+  const [enrollmentFields, setEnrollmentFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadCustomFields = async () => {
-      const { data: fields } = await supabase
-        .from('admin_form_fields')
-        .select('*')
-        .order('order');
-      
-      if (fields) {
-        const mappedFields = fields.map(field => ({
-          id: field.id,
-          name: field.name,
-          label: field.label,
-          type: field.type as FormField['type'],
-          description: field.description || undefined,
-          required: field.required || false,
-          order: field.order,
-          options: field.options as string[] | undefined,
-        }));
-        setCustomFields(mappedFields);
+    const loadAllFields = async () => {
+      try {
+        // Carregar campos administrativos
+        const { data: adminFields } = await supabase
+          .from('admin_form_fields')
+          .select('*')
+          .order('order');
+        
+        // Carregar campos do formulário público
+        const { data: publicFields } = await supabase
+          .from('enrollment_form_fields')
+          .select('*')
+          .order('order');
+        
+        if (adminFields) {
+          const mappedAdminFields = adminFields.map(field => ({
+            id: field.id,
+            name: field.name,
+            label: field.label,
+            type: field.type as FormField['type'],
+            description: field.description || undefined,
+            required: field.required || false,
+            order: field.order,
+            options: field.options as string[] | undefined,
+          }));
+          setCustomFields(mappedAdminFields);
+        }
+
+        if (publicFields) {
+          const mappedPublicFields = publicFields.map(field => ({
+            id: field.id,
+            name: field.name,
+            label: field.label,
+            type: field.type as FormField['type'],
+            description: field.description || undefined,
+            required: field.required || false,
+            order: field.order,
+            options: field.options as string[] | undefined,
+          }));
+          setEnrollmentFields(mappedPublicFields);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar campos:', error);
       }
     };
 
@@ -63,7 +89,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       }
     };
 
-    loadCustomFields();
+    loadAllFields();
     loadRooms();
   }, []);
 
@@ -144,11 +170,31 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         rooms={rooms}
       />
 
-      {customFields.map((field) => (
-        <div key={`field-wrapper-${field.id}`}>
-          {renderCustomField(field)}
+      {/* Campos administrativos */}
+      {customFields.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Campos Administrativos</h3>
+          {customFields.map((field) => (
+            <div key={`field-wrapper-${field.id}`}>
+              {renderCustomField(field)}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Campos do formulário público */}
+      {enrollmentFields.length > 0 && Object.keys(formData.customFields || {}).some(key => 
+        enrollmentFields.find(field => field.id === key)
+      ) && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Campos do Formulário Público</h3>
+          {enrollmentFields.map((field) => (
+            <div key={`field-wrapper-${field.id}`}>
+              {renderCustomField(field)}
+            </div>
+          ))}
+        </div>
+      )}
 
       <Button type="submit" className="w-full">
         {initialData ? "Salvar Alterações" : "Adicionar Aluno"}
