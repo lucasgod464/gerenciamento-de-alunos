@@ -32,6 +32,12 @@ const Users = () => {
               id,
               name
             )
+          ),
+          user_specializations (
+            specializations (
+              id,
+              name
+            )
           )
         `);
 
@@ -49,7 +55,7 @@ const Users = () => {
         status: dbUser.status,
         accessLevel: dbUser.access_level,
         location: dbUser.location,
-        specialization: dbUser.specialization,
+        specialization: dbUser.user_specializations?.map(us => us.specializations.name).join(', ') || 'Não definido',
         address: dbUser.address,
         tags: dbUser.user_tags?.map(ut => ({
           id: ut.tags.id,
