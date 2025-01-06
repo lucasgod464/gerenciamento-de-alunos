@@ -10,8 +10,12 @@ import { ChartPie } from "lucide-react";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
+interface CustomField extends FormField {
+  source: 'admin' | 'public';
+}
+
 export const CustomFieldsChart = () => {
-  const [fields, setFields] = useState<FormField[]>([]);
+  const [fields, setFields] = useState<CustomField[]>([]);
   const [selectedField, setSelectedField] = useState<string>("");
   const [chartData, setChartData] = useState<any[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -36,18 +40,31 @@ export const CustomFieldsChart = () => {
             .in('type', ['select', 'multiple'])
         ]);
 
-        const allFields = [
-          ...(adminFields || []).map(field => ({
-            ...field,
-            source: 'admin'
-          })),
-          ...(publicFields || []).map(field => ({
-            ...field,
-            source: 'public'
-          }))
-        ];
+        const mappedAdminFields: CustomField[] = (adminFields || []).map(field => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type as FormField['type'],
+          description: field.description || "",
+          required: field.required || false,
+          order: field.order,
+          options: Array.isArray(field.options) ? field.options.map(String) : [],
+          source: 'admin'
+        }));
 
-        setFields(allFields);
+        const mappedPublicFields: CustomField[] = (publicFields || []).map(field => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type as FormField['type'],
+          description: field.description || "",
+          required: field.required || false,
+          order: field.order,
+          options: Array.isArray(field.options) ? field.options.map(String) : [],
+          source: 'public'
+        }));
+
+        setFields([...mappedAdminFields, ...mappedPublicFields]);
       } catch (error) {
         console.error('Erro ao carregar campos:', error);
       }
@@ -68,7 +85,19 @@ export const CustomFieldsChart = () => {
           .eq('company_id', user.companyId);
 
         if (data) {
-          setStudents(data);
+          const mappedStudents = data.map(student => ({
+            id: student.id,
+            name: student.name,
+            birthDate: student.birth_date,
+            status: student.status,
+            email: student.email || '',
+            document: student.document || '',
+            address: student.address || '',
+            customFields: student.custom_fields || {},
+            companyId: student.company_id,
+            createdAt: student.created_at
+          }));
+          setStudents(mappedStudents);
         }
       } catch (error) {
         console.error('Erro ao carregar alunos:', error);
@@ -88,9 +117,9 @@ export const CustomFieldsChart = () => {
     const valueCount: Record<string, number> = {};
     
     students.forEach(student => {
-      if (!student.custom_fields) return;
+      if (!student.customFields) return;
       
-      const fieldValue = student.custom_fields[selectedField]?.value;
+      const fieldValue = student.customFields[selectedField]?.value;
       if (!fieldValue) return;
 
       // Lidar com valores múltiplos (array) ou único
