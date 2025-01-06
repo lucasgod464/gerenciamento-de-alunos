@@ -1,5 +1,6 @@
 export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
 export type UserStatus = 'active' | 'inactive';
+export type AccessLevel = 'Admin' | 'Usuário Comum';
 
 export interface User {
   id: string;
@@ -10,7 +11,7 @@ export interface User {
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: 'Admin' | 'Usuário Comum';
+  accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
@@ -27,7 +28,7 @@ export interface SupabaseUser {
   created_at: string;
   last_access: string;
   status: string;
-  access_level: 'Admin' | 'Usuário Comum';
+  access_level: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
@@ -46,4 +47,13 @@ export const mapSupabaseUser = (user: SupabaseUser): User => ({
   location: user.location,
   specialization: user.specialization,
   address: user.address,
+  tags: [],
+  authorizedRooms: []
 });
+
+export interface CompanyFormData {
+  name: string;
+  document: string;
+  usersLimit: number;
+  roomsLimit: number;
+}
