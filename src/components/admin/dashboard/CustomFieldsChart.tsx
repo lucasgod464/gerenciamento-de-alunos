@@ -68,7 +68,7 @@ export const CustomFieldsChart = () => {
             <SelectContent>
               {fields.map((field) => (
                 <SelectItem key={field.id} value={field.id}>
-                  {field.label}
+                  {field.label} ({field.source === 'admin' ? 'Admin' : 'Público'})
                 </SelectItem>
               ))}
             </SelectContent>
