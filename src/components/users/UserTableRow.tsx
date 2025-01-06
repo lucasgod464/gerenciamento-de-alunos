@@ -1,6 +1,6 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, UserCog, User } from "lucide-react";
+import { Edit2, Trash2, UserCog, User, Eye } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { User as UserType } from "@/types/user";
 import { UserTags } from "./table/UserTags";
@@ -12,6 +12,7 @@ interface UserTableRowProps {
   user: UserType;
   onEdit: (user: UserType) => void;
   onDelete: (id: string) => void;
+  onView: (user: UserType) => void;
   onStatusChange: (id: string, checked: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ export function UserTableRow({
   user,
   onEdit,
   onDelete,
+  onView,
   onStatusChange,
 }: UserTableRowProps) {
   const [authorizedRooms, setAuthorizedRooms] = useState<string[]>([]);
@@ -69,15 +71,6 @@ export function UserTableRow({
       </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
-        {user.specialization ? (
-          <Badge variant="outline" className="font-normal">
-            {user.specialization}
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-sm">Não definido</span>
-        )}
-      </TableCell>
-      <TableCell>
         {authorizedRooms.length > 0 
           ? authorizedRooms.join(", ")
           : "Nenhuma sala autorizada"}
@@ -99,6 +92,14 @@ export function UserTableRow({
       </TableCell>
       <TableCell>
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onView(user)}
+            className="hover:text-blue-600"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="icon"
