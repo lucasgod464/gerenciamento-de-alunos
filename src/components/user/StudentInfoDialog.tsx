@@ -62,17 +62,44 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
   };
 
   // Função para obter o label do campo personalizado
-  const getFieldLabel = (fieldName: string): string => {
-    const field = enrollmentFields.find(f => f.name === fieldName);
-    return field?.label || fieldName;
+  const getFieldLabel = (fieldId: string): string => {
+    if (!student.customFields || typeof student.customFields !== 'object') {
+      return fieldId;
+    }
+
+    const customField = student.customFields[fieldId];
+    if (customField && typeof customField === 'object' && 'label' in customField) {
+      return customField.label as string;
+    }
+
+    const field = enrollmentFields.find(f => f.id === fieldId);
+    return field?.label || fieldId;
   };
 
-  // Filter out duplicate fields from customFields that are already shown in basic fields
-  const filteredCustomFields = student.customFields ? 
-    Object.entries(student.customFields).filter(([key]) => {
-      const normalizedKey = key.toLowerCase().replace(/_/g, '');
-      return !['nome', 'nomecompleto', 'datanascimento', 'datadenanscimento'].includes(normalizedKey);
-    }) : [];
+  // Função para obter o valor do campo personalizado
+  const getFieldValue = (fieldId: string): string => {
+    if (!student.customFields || typeof student.customFields !== 'object') {
+      return "Não informado";
+    }
+
+    const customField = student.customFields[fieldId];
+    if (customField && typeof customField === 'object' && 'value' in customField) {
+      return formatCustomFieldValue(customField.value);
+    }
+
+    return "Não informado";
+  };
+
+  // Filtrar campos personalizados que já são mostrados nos campos básicos
+  const basicFields = ['nome_completo', 'data_nascimento'];
+  const customFieldEntries = student.customFields && typeof student.customFields === 'object' 
+    ? Object.entries(student.customFields)
+    : [];
+
+  const filteredCustomFields = customFieldEntries.filter(([key]) => {
+    const normalizedKey = key.toLowerCase().replace(/_/g, '');
+    return !basicFields.includes(normalizedKey);
+  });
 
   return (
     <Dialog open={!!student} onOpenChange={onClose}>
@@ -112,14 +139,14 @@ export function StudentInfoDialog({ student, onClose }: StudentInfoDialogProps) 
             </div>
           )}
           
-          {/* Campos personalizados (excluindo duplicatas) */}
-          {filteredCustomFields.map(([key, value]) => (
-            <div key={key} className="flex flex-col space-y-1.5">
+          {/* Campos personalizados */}
+          {filteredCustomFields.map(([fieldId]) => (
+            <div key={fieldId} className="flex flex-col space-y-1.5">
               <label className="font-semibold">
-                {getFieldLabel(key)}
+                {getFieldLabel(fieldId)}
               </label>
               <p className="text-sm text-muted-foreground">
-                {formatCustomFieldValue(value)}
+                {getFieldValue(fieldId)}
               </p>
             </div>
           ))}
