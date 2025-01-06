@@ -32,14 +32,19 @@ export const CustomFieldsChart = () => {
           .from('admin_form_fields')
           .select('*')
           .eq('company_id', user.companyId)
+          .eq('form_type', 'admin')
           .order('order');
 
         if (error) throw error;
 
         if (data) {
-          setCustomFields(data);
-          if (data.length > 0) {
-            setSelectedField(data[0].name);
+          const formattedFields = data.map(field => ({
+            ...field,
+            formType: field.form_type as 'admin' | 'enrollment'
+          }));
+          setCustomFields(formattedFields);
+          if (formattedFields.length > 0) {
+            setSelectedField(formattedFields[0].name);
           }
         }
       } catch (error) {
@@ -69,7 +74,14 @@ export const CustomFieldsChart = () => {
         if (error) throw error;
 
         if (data) {
-          setStudents(data);
+          const formattedStudents = data.map(student => ({
+            ...student,
+            birthDate: student.birth_date,
+            customFields: student.custom_fields || {},
+            companyId: student.company_id,
+            createdAt: student.created_at
+          }));
+          setStudents(formattedStudents);
         }
       } catch (error) {
         console.error('Erro ao carregar alunos:', error);
