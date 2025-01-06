@@ -6,9 +6,9 @@ interface RoomStatsProps {
   rooms: Room[];
 }
 
-export function RoomStats({ rooms }: RoomStatsProps) {
-  const totalRooms = rooms.length;
-  const activeRooms = rooms.filter(room => room.status).length;
+export function RoomStats({ rooms = [] }: RoomStatsProps) {
+  const totalRooms = rooms?.length || 0;
+  const activeRooms = rooms?.filter(room => room.status).length || 0;
   const inactiveRooms = totalRooms - activeRooms;
 
   return (
