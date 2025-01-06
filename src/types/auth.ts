@@ -1,90 +1,55 @@
-export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
-export type UserStatus = 'active' | 'inactive';
+export type UserRole = "Admin" | "Usuário Comum";
+export type UserStatus = "active" | "inactive";
 
 export interface AuthUser {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: UserRole;
-  companyId: string | null;
-  accessLevel: 'Admin' | 'Usuário Comum';
+  companyId: string;
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
+  accessLevel: UserRole;
+  location?: string;
+  specialization?: string;
+  address?: string;
 }
 
 export interface AuthResponse {
-  user: AuthUser;
-  token: string;
+  user: AuthUser | null;
+  error: Error | null;
 }
 
 export interface DatabaseUser {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: UserRole;
   company_id: string;
-  access_level: 'Admin' | 'Usuário Comum';
   created_at: string;
   last_access: string;
   status: UserStatus;
+  access_level: UserRole;
+  location?: string;
+  specialization?: string;
+  address?: string;
+  password: string;
 }
 
-export type Permission = 
-  | 'canCreateCompany'
-  | 'canCreateAdmin'
-  | 'canCreateUser'
-  | 'canViewAllCompanies'
-  | 'canManageUsers'
-  | 'canManageRooms'
-  | 'canManageStudies'
-  | 'canManageTags'
-  | 'canManageSpecializations';
-
-export const ROLE_PERMISSIONS = {
-  SUPER_ADMIN: {
-    canCreateCompany: true,
-    canCreateAdmin: true,
-    canCreateUser: true,
-    canViewAllCompanies: true,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  ADMIN: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: true,
-    canViewAllCompanies: false,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  USER: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: false,
-    canViewAllCompanies: false,
-    canManageUsers: false,
-    canManageRooms: false,
-    canManageStudies: false,
-    canManageTags: false,
-    canManageSpecializations: false,
-  },
-} as const;
-
-export const mapDatabaseUser = (user: DatabaseUser): AuthUser => ({
-  id: user.id,
-  email: user.email,
-  name: user.name,
-  role: user.role,
-  companyId: user.company_id,
-  accessLevel: user.access_level,
-  createdAt: user.created_at,
-  lastAccess: user.last_access,
-  status: user.status || 'active'
+export const mapDatabaseUser = (dbUser: DatabaseUser): AuthUser => ({
+  id: dbUser.id,
+  name: dbUser.name,
+  email: dbUser.email,
+  role: dbUser.role,
+  companyId: dbUser.company_id,
+  createdAt: dbUser.created_at,
+  lastAccess: dbUser.last_access,
+  status: dbUser.status as UserStatus,
+  accessLevel: dbUser.access_level,
+  location: dbUser.location,
+  specialization: dbUser.specialization,
+  address: dbUser.address
 });
+
+export type Permission = "read" | "write" | "delete" | "admin";

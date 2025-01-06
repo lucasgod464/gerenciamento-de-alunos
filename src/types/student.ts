@@ -5,13 +5,13 @@ export interface Student {
   name: string;
   birthDate: string;
   status: boolean;
-  email: string;
-  document: string;
-  address: string;
+  email?: string;
+  document?: string;
+  address?: string;
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
-  room?: string | null;
+  room?: string;
 }
 
 export interface SupabaseStudent {
@@ -31,16 +31,16 @@ export const mapSupabaseStudent = (student: SupabaseStudent): Student => ({
   id: student.id,
   name: student.name,
   birthDate: student.birth_date,
-  status: student.status ?? true,
-  email: student.email || '',
-  document: student.document || '',
-  address: student.address || '',
-  customFields: typeof student.custom_fields === 'object' ? student.custom_fields : {},
+  status: student.status,
+  email: student.email,
+  document: student.document,
+  address: student.address,
+  customFields: student.custom_fields as Record<string, any>,
   companyId: student.company_id,
-  createdAt: student.created_at,
+  createdAt: student.created_at
 });
 
-export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'id' | 'created_at'> => ({
+export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, "id" | "created_at"> => ({
   name: student.name,
   birth_date: student.birthDate,
   status: student.status,
@@ -48,5 +48,5 @@ export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'i
   document: student.document,
   address: student.address,
   custom_fields: student.customFields,
-  company_id: student.companyId,
+  company_id: student.companyId
 });

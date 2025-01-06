@@ -1,144 +1,93 @@
-import { useQuery } from "@tanstack/react-query";
-import { AuthUser, AuthResponse, UserRole, ROLE_PERMISSIONS } from "@/types/auth";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthUser, UserRole, UserStatus, mapDatabaseUser } from "@/types/auth";
 
-export function useAuth() {
-  const { data: session, refetch } = useQuery({
-    queryKey: ["auth-session"],
-    queryFn: async (): Promise<AuthResponse | null> => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      
+export const useAuth = () => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUser = async () => {
       try {
-        const parsedSession = JSON.parse(storedSession);
-        if (!parsedSession?.user?.id || !parsedSession?.token) {
-          localStorage.removeItem("session");
-          return null;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        
+        if (authUser) {
+          const { data: userData, error } = await supabase
+            .from('emails')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+
+          if (error) throw error;
+
+          if (userData) {
+            const mappedUser: AuthUser = {
+              id: userData.id,
+              name: userData.name,
+              email: userData.email,
+              role: userData.access_level as UserRole,
+              companyId: userData.company_id,
+              createdAt: userData.created_at,
+              lastAccess: userData.updated_at,
+              status: userData.status as UserStatus,
+              accessLevel: userData.access_level as UserRole,
+              location: userData.location,
+              specialization: userData.specialization,
+              address: userData.address
+            };
+            setUser(mappedUser);
+          }
         }
-        return parsedSession;
       } catch (error) {
-        localStorage.removeItem("session");
-        return null;
+        console.error('Error loading user:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-    },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: true,
-    initialData: () => {
-      const storedSession = localStorage.getItem("session");
-      if (!storedSession) return null;
-      try {
-        return JSON.parse(storedSession);
-      } catch {
-        return null;
-      }
-    },
-  });
+    };
 
-  const login = async (email: string, password: string) => {
-    console.log("Attempting login for:", email);
+    loadUser();
 
-    try {
-      // First try to login with users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .maybeSingle();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const { data: userData, error } = await supabase
+          .from('emails')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-      console.log("User login response:", { userData, userError });
+        if (error) {
+          console.error('Error loading user data:', error);
+          setUser(null);
+          return;
+        }
 
-      if (userData && userData.password === password) {
-        const response: AuthResponse = {
-          user: {
+        if (userData) {
+          const mappedUser: AuthUser = {
             id: userData.id,
-            name: userData.name || '',
+            name: userData.name,
             email: userData.email,
-            role: userData.role as UserRole,
-            companyId: userData.company_id || null,
+            role: userData.access_level as UserRole,
+            companyId: userData.company_id,
             createdAt: userData.created_at,
-            lastAccess: new Date().toISOString(),
-            status: userData.status ? 'active' : 'inactive',
-          },
-          token: `${userData.role.toLowerCase()}-token`,
-        };
-
-        localStorage.setItem("session", JSON.stringify(response));
-        await refetch();
-        return response;
+            lastAccess: userData.updated_at,
+            status: userData.status as UserStatus,
+            accessLevel: userData.access_level as UserRole,
+            location: userData.location,
+            specialization: userData.specialization,
+            address: userData.address
+          };
+          setUser(mappedUser);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
       }
+    });
 
-      // If no user found or password doesn't match, try emails table
-      const { data: emailData, error: emailError } = await supabase
-        .from('emails')
-        .select('*, companies:company_id(*)')
-        .eq('email', email)
-        .maybeSingle();
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
-      console.log("Email login response:", { emailData, emailError });
-
-      if (emailData && emailData.password === password) {
-        // Map access_level to role
-        const roleMap: { [key: string]: UserRole } = {
-          'Admin': 'ADMIN',
-          'Usuário Comum': 'USER'
-        };
-
-        const response: AuthResponse = {
-          user: {
-            id: emailData.id,
-            name: emailData.name || '',
-            email: emailData.email,
-            role: roleMap[emailData.access_level],
-            companyId: emailData.company_id || null,
-            createdAt: emailData.created_at,
-            lastAccess: new Date().toISOString(),
-            status: emailData.status === 'active' ? 'active' : 'inactive',
-          },
-          token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
-        };
-
-        localStorage.setItem("session", JSON.stringify(response));
-        await refetch();
-        return response;
-      }
-
-      throw new Error("Email ou senha inválidos");
-    } catch (error) {
-      console.error("Login failed:", error);
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
-      throw new Error("Erro ao fazer login");
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("session");
-    refetch();
-  };
-
-  const isAuthenticated = !!session?.user?.id && !!session?.token;
-  const user = session?.user;
-
-  const can = (permission: keyof typeof ROLE_PERMISSIONS[UserRole]) => {
-    if (!user) return false;
-    return ROLE_PERMISSIONS[user.role][permission];
-  };
-
-  const isCompanyMember = (companyId: string) => {
-    if (!user) return false;
-    if (user.role === "SUPER_ADMIN") return true;
-    return user.companyId === companyId;
-  };
-
-  return {
-    user,
-    isAuthenticated,
-    login,
-    logout,
-    can,
-    isCompanyMember,
-  };
-}
+  return { user, loading };
+};
