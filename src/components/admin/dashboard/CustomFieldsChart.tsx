@@ -33,12 +33,14 @@ export const CustomFieldsChart = () => {
             .from('admin_form_fields')
             .select('*')
             .eq('company_id', user.companyId)
-            .in('type', ['select', 'multiple']),
+            .in('type', ['select', 'multiple'])
+            .order('order'),
           supabase
             .from('enrollment_form_fields')
             .select('*')
             .eq('company_id', user.companyId)
             .in('type', ['select', 'multiple'])
+            .order('order')
         ]);
 
         if (adminError) throw adminError;
@@ -101,7 +103,7 @@ export const CustomFieldsChart = () => {
             id: student.id,
             name: student.name,
             birthDate: student.birth_date,
-            status: student.status,
+            status: student.status ?? true,
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
