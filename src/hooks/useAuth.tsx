@@ -1,17 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { AuthResponse, UserRole, AuthUser } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ROLE_PERMISSIONS } from "@/types/auth";
 
-interface UseAuthReturn {
-  user: AuthUser | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<AuthResponse>;
-  logout: () => void;
-  can: (permission: keyof typeof ROLE_PERMISSIONS[UserRole]) => boolean;
-  isCompanyMember: (companyId: string) => boolean;
-}
-
-export function useAuth(): UseAuthReturn {
+export function useAuth() {
   const { data: session, refetch } = useQuery({
     queryKey: ["auth-session"],
     queryFn: async (): Promise<AuthResponse | null> => {
@@ -49,31 +41,28 @@ export function useAuth(): UseAuthReturn {
     console.log("Attempting login for:", email);
 
     try {
-      // Primeiro, tenta encontrar o usuário na tabela users (para super admin)
-      const { data: superAdminData, error: superAdminError } = await supabase
+      // First try to login with users table
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
-      console.log("Super admin check:", { superAdminData, superAdminError });
+      console.log("User login response:", { userData, userError });
 
-      if (superAdminData && superAdminData.password === password) {
+      if (userData && userData.password === password) {
         const response: AuthResponse = {
           user: {
-            id: superAdminData.id,
-            name: superAdminData.name,
-            email: superAdminData.email,
-            role: "SUPER_ADMIN",
-            companyId: superAdminData.company_id,
-            createdAt: superAdminData.created_at,
+            id: userData.id,
+            name: userData.name || '',
+            email: userData.email,
+            role: userData.role as UserRole,
+            companyId: userData.company_id || null,
+            createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
-            status: "active",
-            location: null,
-            specialization: null,
-            address: null
+            status: userData.status ? 'active' : 'inactive',
           },
-          token: "super-admin-token"
+          token: `${userData.role.toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
@@ -81,31 +70,34 @@ export function useAuth(): UseAuthReturn {
         return response;
       }
 
-      // Se não encontrar como super admin, procura na tabela emails
-      const { data: userData, error: userError } = await supabase
+      // If no user found or password doesn't match, try emails table
+      const { data: emailData, error: emailError } = await supabase
         .from('emails')
-        .select('*')
+        .select('*, companies:company_id(*)')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
-      console.log("Regular user check:", { userData, userError });
+      console.log("Email login response:", { emailData, emailError });
 
-      if (userData && userData.password === password) {
+      if (emailData && emailData.password === password) {
+        // Map access_level to role
+        const roleMap: { [key: string]: UserRole } = {
+          'Admin': 'ADMIN',
+          'Usuário Comum': 'USER'
+        };
+
         const response: AuthResponse = {
           user: {
-            id: userData.id,
-            name: userData.name,
-            email: userData.email,
-            role: userData.role || "USER",
-            companyId: userData.company_id,
-            createdAt: userData.created_at,
+            id: emailData.id,
+            name: emailData.name || '',
+            email: emailData.email,
+            role: roleMap[emailData.access_level],
+            companyId: emailData.company_id || null,
+            createdAt: emailData.created_at,
             lastAccess: new Date().toISOString(),
-            status: userData.status as "active" | "inactive",
-            location: userData.location,
-            specialization: userData.specialization,
-            address: userData.address
+            status: emailData.status === 'active' ? 'active' : 'inactive',
           },
-          token: `${userData.role?.toLowerCase()}-token` || "user-token"
+          token: `${roleMap[emailData.access_level].toLowerCase()}-token`,
         };
 
         localStorage.setItem("session", JSON.stringify(response));
@@ -128,20 +120,23 @@ export function useAuth(): UseAuthReturn {
     refetch();
   };
 
+  const isAuthenticated = !!session?.user?.id && !!session?.token;
+  const user = session?.user;
+
   const can = (permission: keyof typeof ROLE_PERMISSIONS[UserRole]) => {
-    if (!session?.user) return false;
-    return ROLE_PERMISSIONS[session.user.role]?.[permission] ?? false;
+    if (!user) return false;
+    return ROLE_PERMISSIONS[user.role][permission];
   };
 
   const isCompanyMember = (companyId: string) => {
-    if (!session?.user) return false;
-    if (session.user.role === "SUPER_ADMIN") return true;
-    return session.user.companyId === companyId;
+    if (!user) return false;
+    if (user.role === "SUPER_ADMIN") return true;
+    return user.companyId === companyId;
   };
 
   return {
-    user: session?.user ?? null,
-    loading: false,
+    user,
+    isAuthenticated,
     login,
     logout,
     can,

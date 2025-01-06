@@ -31,18 +31,23 @@ export function RoleGuard({
   // Verificação rigorosa de roles
   if (allowedRoles) {
     const hasAllowedRole = allowedRoles.some(role => {
-      if (role === "Admin") {
-        return user.role === "Admin";
+      if (role === "SUPER_ADMIN") {
+        return user.role === "SUPER_ADMIN";
       }
-      if (role === "Usuário Comum") {
-        return user.role === "Usuário Comum";
+      if (role === "ADMIN") {
+        return user.role === "ADMIN" || user.accessLevel === "Admin";
+      }
+      if (role === "USER") {
+        return user.role === "USER" || user.accessLevel === "Usuário Comum";
       }
       return false;
     });
 
     if (!hasAllowedRole) {
       // Redireciona para o dashboard apropriado baseado no papel do usuário
-      if (user.role === "Admin") {
+      if (user.role === "SUPER_ADMIN") {
+        return <Navigate to="/super-admin" replace />;
+      } else if (user.role === "ADMIN" || user.accessLevel === "Admin") {
         return <Navigate to="/admin" replace />;
       } else {
         return <Navigate to="/user" replace />;

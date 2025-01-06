@@ -1,18 +1,16 @@
-export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
-export type UserStatus = "active" | "inactive";
+export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
+export type UserStatus = 'active' | 'inactive';
 
 export interface AuthUser {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: UserRole;
   companyId: string | null;
+  accessLevel: 'Admin' | 'Usuário Comum';
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
-  location?: string;
-  specialization?: string;
-  address?: string;
 }
 
 export interface AuthResponse {
@@ -22,38 +20,26 @@ export interface AuthResponse {
 
 export interface DatabaseUser {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: UserRole;
-  company_id: string | null;
+  company_id: string;
+  access_level: 'Admin' | 'Usuário Comum';
   created_at: string;
   last_access: string;
   status: UserStatus;
-  location?: string;
-  specialization?: string;
-  address?: string;
-  password: string;
 }
 
-export const mapDatabaseUser = (dbUser: DatabaseUser): AuthUser => ({
-  id: dbUser.id,
-  name: dbUser.name,
-  email: dbUser.email,
-  role: dbUser.role,
-  companyId: dbUser.company_id,
-  createdAt: dbUser.created_at,
-  lastAccess: dbUser.last_access,
-  status: dbUser.status,
-  location: dbUser.location,
-  specialization: dbUser.specialization,
-  address: dbUser.address
-});
-
 export type Permission = 
-  | "read" 
-  | "write" 
-  | "delete" 
-  | "admin";
+  | 'canCreateCompany'
+  | 'canCreateAdmin'
+  | 'canCreateUser'
+  | 'canViewAllCompanies'
+  | 'canManageUsers'
+  | 'canManageRooms'
+  | 'canManageStudies'
+  | 'canManageTags'
+  | 'canManageSpecializations';
 
 export const ROLE_PERMISSIONS = {
   SUPER_ADMIN: {
@@ -90,3 +76,15 @@ export const ROLE_PERMISSIONS = {
     canManageSpecializations: false,
   },
 } as const;
+
+export const mapDatabaseUser = (user: DatabaseUser): AuthUser => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  role: user.role,
+  companyId: user.company_id,
+  accessLevel: user.access_level,
+  createdAt: user.created_at,
+  lastAccess: user.last_access,
+  status: user.status || 'active'
+});

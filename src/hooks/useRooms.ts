@@ -18,14 +18,28 @@ export const useRooms = () => {
         .from('rooms')
         .select(`
           *,
+          companies (
+            name
+          ),
           room_students (
-            student:students (*)
+            student:students (
+              id,
+              name,
+              birth_date,
+              status,
+              email,
+              document,
+              address,
+              custom_fields,
+              company_id,
+              created_at
+            )
           )
         `);
 
       if (error) throw error;
 
-      const formattedRooms = (roomsData as SupabaseRoom[]).map(room => 
+      const formattedRooms = (roomsData as unknown as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
 
