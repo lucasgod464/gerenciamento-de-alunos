@@ -19,7 +19,7 @@ export const useFieldOperations = () => {
           required: field.required,
           options: field.options || [],
           company_id: companyId,
-          order: 0, // será atualizado após a inserção
+          order: 0,
           form_type: 'admin'
         }])
         .select()
@@ -51,6 +51,11 @@ export const useFieldOperations = () => {
 
   const updateField = async (field: FormField) => {
     try {
+      // Validação para garantir que temos um ID válido
+      if (!field.id) {
+        throw new Error("ID do campo é necessário para atualização");
+      }
+
       const { error } = await supabase
         .from('admin_form_fields')
         .update({
@@ -81,6 +86,11 @@ export const useFieldOperations = () => {
 
   const deleteField = async (id: string) => {
     try {
+      // Validação para garantir que temos um ID válido
+      if (!id) {
+        throw new Error("ID do campo é necessário para remoção");
+      }
+
       const { error } = await supabase
         .from('admin_form_fields')
         .delete()
