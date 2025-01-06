@@ -6,6 +6,16 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type SavedChart = {
   id: string;
@@ -18,6 +28,7 @@ type SavedChart = {
 
 export const ChartManager = () => {
   const [charts, setCharts] = useState<number[]>([0]);
+  const [chartToDelete, setChartToDelete] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -146,6 +157,7 @@ export const ChartManager = () => {
       }
 
       await refetchCharts();
+      setChartToDelete(null);
       
       toast({
         title: "Gráfico removido",
@@ -162,41 +174,60 @@ export const ChartManager = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {savedCharts.map((chart) => (
-          <div key={chart.id} className="w-full">
-            <CustomFieldsChart
-              savedFieldIds={chart.field_id.split(',')}
-              mergeIdenticalValues={chart.merge_identical_values}
-              customTitle={chart.custom_title}
-              onSave={() => {}}
-              onUpdate={(mergeIdenticalValues, customTitle) => handleUpdateChart(chart.id, mergeIdenticalValues, customTitle)}
-              onRemove={() => handleRemoveChart(chart.id)}
-              showRemoveButton
-              showUpdateButton
-            />
-          </div>
-        ))}
+    <>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {savedCharts.map((chart) => (
+            <div key={chart.id} className="w-full">
+              <CustomFieldsChart
+                savedFieldIds={chart.field_id.split(',')}
+                mergeIdenticalValues={chart.merge_identical_values}
+                customTitle={chart.custom_title}
+                onSave={() => {}}
+                onUpdate={(mergeIdenticalValues, customTitle) => handleUpdateChart(chart.id, mergeIdenticalValues, customTitle)}
+                onRemove={() => setChartToDelete(chart.id)}
+                showRemoveButton
+                showUpdateButton
+              />
+            </div>
+          ))}
 
-        {charts.map((index) => (
-          <div key={index} className="w-full">
-            <CustomFieldsChart
-              onSave={(fieldIds, mergeIdenticalValues, customTitle) => handleSaveChart(fieldIds, index, mergeIdenticalValues, customTitle)}
-              showSaveButton
-            />
-          </div>
-        ))}
+          {charts.map((index) => (
+            <div key={index} className="w-full">
+              <CustomFieldsChart
+                onSave={(fieldIds, mergeIdenticalValues, customTitle) => handleSaveChart(fieldIds, index, mergeIdenticalValues, customTitle)}
+                showSaveButton
+              />
+            </div>
+          ))}
+        </div>
+
+        <Button
+          onClick={handleAddChart}
+          variant="outline"
+          className="w-full"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Novo Gráfico
+        </Button>
       </div>
 
-      <Button
-        onClick={handleAddChart}
-        variant="outline"
-        className="w-full"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Adicionar Novo Gráfico
-      </Button>
-    </div>
+      <AlertDialog open={!!chartToDelete} onOpenChange={() => setChartToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover gráfico</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este gráfico? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => chartToDelete && handleRemoveChart(chartToDelete)}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
