@@ -1,4 +1,4 @@
-export type CompanyStatus = 'Ativa' | 'Inativa' | 'Suspensa';
+export type CompanyStatus = 'Ativa' | 'Inativa' | 'Pendente';
 
 export interface Company {
   id: string;
@@ -12,7 +12,7 @@ export interface Company {
   createdAt: string;
   publicFolderPath: string;
   storageUsed: number;
-  enrollmentFormUrl?: string | null;
+  enrollmentFormUrl?: string;
 }
 
 export interface SupabaseCompany {
@@ -27,7 +27,7 @@ export interface SupabaseCompany {
   created_at: string;
   public_folder_path: string;
   storage_used: number;
-  enrollment_form_url?: string | null;
+  enrollment_form_url?: string;
 }
 
 export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
@@ -44,10 +44,3 @@ export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
   storageUsed: company.storage_used,
   enrollmentFormUrl: company.enrollment_form_url,
 });
-
-export interface CompanyFormData {
-  name: string;
-  document: string;
-  usersLimit: number;
-  roomsLimit: number;
-}
