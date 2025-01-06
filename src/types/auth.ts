@@ -10,11 +10,9 @@ export interface AuthUser {
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: UserRole;
   location?: string;
   specialization?: string;
   address?: string;
-  profilePicture?: string;
 }
 
 export interface AuthResponse {
@@ -31,7 +29,6 @@ export interface DatabaseUser {
   created_at: string;
   last_access: string;
   status: UserStatus;
-  access_level: UserRole;
   location?: string;
   specialization?: string;
   address?: string;
@@ -47,7 +44,6 @@ export const mapDatabaseUser = (dbUser: DatabaseUser): AuthUser => ({
   createdAt: dbUser.created_at,
   lastAccess: dbUser.last_access,
   status: dbUser.status,
-  accessLevel: dbUser.access_level,
   location: dbUser.location,
   specialization: dbUser.specialization,
   address: dbUser.address

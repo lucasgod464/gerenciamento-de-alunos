@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { AuthResponse, UserRole, AuthUser, ROLE_PERMISSIONS } from "@/types/auth";
+import { AuthResponse, UserRole, AuthUser } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UseAuthReturn {
@@ -64,12 +64,11 @@ export function useAuth(): UseAuthReturn {
             id: superAdminData.id,
             name: superAdminData.name,
             email: superAdminData.email,
-            role: "SUPER_ADMIN" as UserRole,
+            role: "SUPER_ADMIN",
             companyId: superAdminData.company_id,
             createdAt: superAdminData.created_at,
             lastAccess: new Date().toISOString(),
             status: "active",
-            accessLevel: "SUPER_ADMIN" as UserRole,
             location: null,
             specialization: null,
             address: null
@@ -97,17 +96,16 @@ export function useAuth(): UseAuthReturn {
             id: userData.id,
             name: userData.name,
             email: userData.email,
-            role: userData.access_level as UserRole,
+            role: userData.role || "USER",
             companyId: userData.company_id,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
             status: userData.status as "active" | "inactive",
-            accessLevel: userData.access_level as UserRole,
             location: userData.location,
             specialization: userData.specialization,
             address: userData.address
           },
-          token: `${userData.access_level.toLowerCase()}-token`
+          token: `${userData.role?.toLowerCase()}-token` || "user-token"
         };
 
         localStorage.setItem("session", JSON.stringify(response));
