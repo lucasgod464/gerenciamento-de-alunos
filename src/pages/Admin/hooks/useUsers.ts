@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useUserOperations } from "@/hooks/useUserOperations";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const { updateUser, isUpdating } = useUserOperations();
+  const [loading, setLoading] = useState(false);
 
   const loadUsers = async () => {
+    setLoading(true);
     try {
       console.log('Carregando usuários do banco de dados...');
       
@@ -25,6 +25,12 @@ export function useUsers() {
           ),
           user_rooms (
             rooms (
+              id,
+              name
+            )
+          ),
+          user_specializations (
+            specializations (
               id,
               name
             )
@@ -58,17 +64,37 @@ export function useUsers() {
       }));
 
       console.log('Usuários carregados:', mappedUsers);
-      setUsers(mappedUsers as User[]);
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleUpdateUser = async (updatedUser: User) => {
-    const success = await updateUser(updatedUser);
-    if (success) {
+    try {
+      const { error } = await supabase
+        .from('emails')
+        .update({
+          name: updatedUser.name,
+          email: updatedUser.email,
+          access_level: updatedUser.accessLevel,
+          location: updatedUser.location,
+          specialization: updatedUser.specialization,
+          status: updatedUser.status,
+          address: updatedUser.address,
+        })
+        .eq('id', updatedUser.id);
+
+      if (error) throw error;
+
       await loadUsers(); // Recarrega a lista após atualização bem-sucedida
+      toast.success('Usuário atualizado com sucesso');
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      toast.error('Erro ao atualizar usuário');
     }
   };
 
@@ -119,9 +145,9 @@ export function useUsers() {
 
   return {
     users,
+    loading,
     loadUsers,
     handleUpdateUser,
-    handleDeleteUser,
-    isUpdating
+    handleDeleteUser
   };
 }

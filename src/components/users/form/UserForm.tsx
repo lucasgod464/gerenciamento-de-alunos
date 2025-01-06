@@ -3,9 +3,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { TagSelectionFields } from "../fields/TagSelectionFields";
-import { RoomSelectionFields } from "../fields/RoomSelectionFields";
-import { SpecializationSelectionFields } from "../fields/SpecializationSelectionFields";
 import UserFormFields from "../UserFormFields";
 
 interface UserFormProps {
@@ -41,7 +38,6 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum",
         status: formData.get('status') as string,
         company_id: user?.companyId,
-        password: '123456', // Senha padrão para novos usuários
       };
 
       console.log('Dados a serem atualizados:', userData);
@@ -104,7 +100,10 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
       } else {
         const { error } = await supabase
           .from('emails')
-          .insert([userData]);
+          .insert([{
+            ...userData,
+            password: '123456', // Senha padrão para novos usuários
+          }]);
 
         if (error) throw error;
         toast.success('Usuário criado com sucesso!');
