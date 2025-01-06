@@ -5,7 +5,7 @@ import {
 import { Room } from "@/types/room";
 import { RoomStudentsDialog } from "./RoomStudentsDialog";
 import { useState } from "react";
-import { Student, mapSupabaseStudentToStudent } from "@/types/student";
+import { Student, mapSupabaseStudent } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
 import { RoomTableHeader } from "./table/RoomTableHeader";
 import { RoomTableRow } from "./table/RoomTableRow";
@@ -60,7 +60,7 @@ export function RoomTable({ rooms, onEdit, onDelete }: RoomTableProps) {
 
       const studentsList: Student[] = roomStudents
         .filter(rs => rs.student && typeof rs.student === 'object')
-        .map(rs => mapSupabaseStudentToStudent(rs.student as any));
+        .map(rs => mapSupabaseStudent(rs.student as any));
     
       setSelectedRoomStudents(studentsList);
       setSelectedRoomId(room.id);

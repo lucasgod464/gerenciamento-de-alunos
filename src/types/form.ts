@@ -1,6 +1,6 @@
-import { Json } from "./supabase";
+import { Json } from "@/integrations/supabase/types";
 
-export type FormFieldType = 'text' | 'number' | 'email' | 'tel' | 'select' | 'multiple' | 'date' | 'textarea';
+export type FormFieldType = 'text' | 'number' | 'date' | 'select' | 'multiple' | 'phone';
 
 export interface FormField {
   id: string;
@@ -10,9 +10,8 @@ export interface FormField {
   description?: string;
   required: boolean;
   order: number;
-  options?: string[];
-  source?: 'admin' | 'public';
-  isDefault?: boolean;
+  options: string[];
+  source: 'admin' | 'public';
 }
 
 export interface SupabaseFormField {
@@ -20,35 +19,37 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description: string | null;
+  description?: string;
   required: boolean;
   order: number;
-  options: string[];
-  company_id: string;
+  options: Json[];
+  company_id?: string;
   created_at: string;
   form_type: 'admin' | 'enrollment';
 }
 
-export const mapSupabaseFormField = (field: any): FormField => ({
+export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   id: field.id,
   name: field.name,
   label: field.label,
   type: field.type as FormFieldType,
-  description: field.description || undefined,
+  description: field.description,
   required: field.required || false,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : [],
   source: field.form_type === 'admin' ? 'admin' : 'public'
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description || null,
+  description: field.description,
   required: field.required,
-  order: field.order,
-  options: field.options || [],
-  company_id: undefined as any, // será definido no momento da inserção
+  order: 0, // Será definido ao inserir
+  options: field.options,
   form_type: field.source === 'admin' ? 'admin' : 'enrollment'
 });
+
+// Re-exportando o tipo para compatibilidade
+export type FieldType = FormFieldType;
