@@ -71,6 +71,9 @@ export const ChartManager = () => {
         return;
       }
 
+      // Remove o gráfico temporário após salvar com sucesso
+      setCharts(prev => prev.filter(chartIndex => chartIndex !== index));
+
       await refetchCharts();
       
       toast({
