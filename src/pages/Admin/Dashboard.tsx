@@ -5,7 +5,6 @@ import { UserStats } from "@/components/users/UserStats";
 import { RoomStats } from "@/components/rooms/RoomStats";
 import { StudyStats } from "@/components/studies/StudyStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
-import { DashboardCharts } from "@/components/admin/dashboard/DashboardCharts";
 import { Room } from "@/types/room";
 
 const AdminDashboard = () => {
@@ -13,7 +12,6 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
-    inactiveUsers: 0,
     totalRooms: 0,
     activeRooms: 0,
     totalStudies: 0,
@@ -43,7 +41,6 @@ const AdminDashboard = () => {
     setStats({
       totalUsers: companyUsers.length,
       activeUsers: activeUsers.length,
-      inactiveUsers: companyUsers.length - activeUsers.length,
       totalRooms: companyRooms.length,
       activeRooms: activeRooms.length,
       totalStudies: companyStudies.length,
@@ -62,21 +59,10 @@ const AdminDashboard = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <UserStats 
-            totalUsers={stats.totalUsers} 
-            activeUsers={stats.activeUsers} 
-            inactiveUsers={stats.inactiveUsers}
-          />
-          <RoomStats 
-            rooms={rooms}
-          />
-          <StudyStats 
-            totalStudies={stats.totalStudies} 
-            activeStudies={stats.activeStudies} 
-          />
+          <UserStats totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
+          <RoomStats rooms={rooms} totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
+          <StudyStats totalStudies={stats.totalStudies} activeStudies={stats.activeStudies} />
         </div>
-
-        <DashboardCharts />
 
         <DashboardTabs />
       </div>
