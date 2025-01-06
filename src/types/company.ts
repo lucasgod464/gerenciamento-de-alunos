@@ -44,10 +44,3 @@ export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
   storageUsed: company.storage_used,
   enrollmentFormUrl: company.enrollment_form_url
 });
-
-export interface CompanyFormData {
-  name: string;
-  document: string;
-  usersLimit: number;
-  roomsLimit: number;
-}
