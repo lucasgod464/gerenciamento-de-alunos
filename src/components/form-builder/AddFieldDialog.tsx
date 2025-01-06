@@ -77,6 +77,8 @@ export const AddFieldDialog = ({
     const field = {
       ...fieldData,
       name: fieldData.name.toLowerCase().replace(/\s+/g, "_"),
+      source: 'admin' as const,
+      ...(editingField && { id: editingField.id }), // Incluir o ID se estiver editando
     };
     onAddField(field);
   };
