@@ -99,25 +99,30 @@ export const ChartManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Gráficos salvos */}
-      {savedCharts.map((chart) => (
-        <CustomFieldsChart
-          key={chart.id}
-          savedFieldId={chart.field_id}
-          onSave={() => {}}
-          onRemove={() => handleRemoveChart(chart.id)}
-          showRemoveButton
-        />
-      ))}
+      {/* Grid container para os gráficos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Gráficos salvos */}
+        {savedCharts.map((chart) => (
+          <div key={chart.id} className="w-full">
+            <CustomFieldsChart
+              savedFieldId={chart.field_id}
+              onSave={() => {}}
+              onRemove={() => handleRemoveChart(chart.id)}
+              showRemoveButton
+            />
+          </div>
+        ))}
 
-      {/* Gráficos temporários */}
-      {charts.map((index) => (
-        <CustomFieldsChart
-          key={index}
-          onSave={(fieldId) => handleSaveChart(fieldId, index)}
-          showSaveButton
-        />
-      ))}
+        {/* Gráficos temporários */}
+        {charts.map((index) => (
+          <div key={index} className="w-full">
+            <CustomFieldsChart
+              onSave={(fieldId) => handleSaveChart(fieldId, index)}
+              showSaveButton
+            />
+          </div>
+        ))}
+      </div>
 
       <Button
         onClick={handleAddChart}
