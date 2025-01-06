@@ -32,7 +32,10 @@ export const ChartManager = () => {
         .select("*")
         .eq("company_id", companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao carregar gráficos:", error);
+        throw error;
+      }
       return data as SavedChart[];
     },
     enabled: !!companyId
@@ -51,20 +54,21 @@ export const ChartManager = () => {
     try {
       const { error } = await supabase
         .from("dashboard_charts")
-        .insert([
-          {
-            name: "Distribuição por Campo Personalizado",
-            field_id: selectedField,
-            company_id: companyId,
-          },
-        ]);
+        .insert({
+          name: "Distribuição por Campo Personalizado",
+          field_id: selectedField,
+          company_id: companyId,
+        });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro detalhado:", error);
+        throw error;
+      }
       
       await queryClient.invalidateQueries({ queryKey: ["dashboard-charts", companyId] });
       
       toast({
-        title: "Gráfico adicionado",
+        title: "Sucesso",
         description: "O novo gráfico foi adicionado com sucesso.",
       });
 
@@ -73,7 +77,7 @@ export const ChartManager = () => {
       console.error("Erro ao adicionar gráfico:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível adicionar o gráfico.",
+        description: "Não foi possível adicionar o gráfico. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -86,19 +90,22 @@ export const ChartManager = () => {
         .delete()
         .eq("id", chartId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro detalhado:", error);
+        throw error;
+      }
       
       await queryClient.invalidateQueries({ queryKey: ["dashboard-charts", companyId] });
       
       toast({
-        title: "Gráfico removido",
+        title: "Sucesso",
         description: "O gráfico foi removido com sucesso.",
       });
     } catch (error) {
       console.error("Erro ao remover gráfico:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível remover o gráfico.",
+        description: "Não foi possível remover o gráfico. Tente novamente.",
         variant: "destructive",
       });
     }
