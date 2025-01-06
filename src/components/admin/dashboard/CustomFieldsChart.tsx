@@ -3,14 +3,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useAuth } from "@/hooks/useAuth";
-import { ChartPie } from "lucide-react";
+import { ChartPie, Save, Trash2 } from "lucide-react";
 import { useCustomFieldsData } from "./charts/useCustomFieldsData";
 import { useChartData } from "./charts/useChartData";
+import { Button } from "@/components/ui/button";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-export const CustomFieldsChart = () => {
-  const [selectedField, setSelectedField] = useState<string>("");
+interface CustomFieldsChartProps {
+  savedFieldId?: string;
+  onSave?: (fieldId: string) => void;
+  onRemove?: () => void;
+  showSaveButton?: boolean;
+  showRemoveButton?: boolean;
+}
+
+export const CustomFieldsChart = ({ 
+  savedFieldId,
+  onSave,
+  onRemove,
+  showSaveButton,
+  showRemoveButton 
+}: CustomFieldsChartProps) => {
+  const [selectedField, setSelectedField] = useState<string>(savedFieldId || "");
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedField, students, fields);
@@ -54,14 +69,42 @@ export const CustomFieldsChart = () => {
   return (
     <Card className="col-span-3">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <ChartPie className="h-5 w-5 text-muted-foreground" />
-          Distribuição por Campo Personalizado
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5 text-muted-foreground" />
+            Distribuição por Campo Personalizado
+          </CardTitle>
+          <div className="flex gap-2">
+            {showSaveButton && selectedField && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSave?.(selectedField)}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Salvar
+              </Button>
+            )}
+            {showRemoveButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRemove}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Remover
+              </Button>
+            )}
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="mb-6">
-          <Select value={selectedField} onValueChange={setSelectedField}>
+          <Select 
+            value={selectedField} 
+            onValueChange={setSelectedField}
+            disabled={!!savedFieldId}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Selecione um campo personalizado" />
             </SelectTrigger>

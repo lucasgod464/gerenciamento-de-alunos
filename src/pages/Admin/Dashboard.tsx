@@ -4,7 +4,7 @@ import { UserStats } from "@/components/users/UserStats";
 import { RoomStats } from "@/components/rooms/RoomStats";
 import { StudyStats } from "@/components/studies/StudyStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
-import { CustomFieldsChart } from "@/components/admin/dashboard/CustomFieldsChart";
+import { ChartManager } from "@/components/admin/dashboard/ChartManager";
 import { useEffect, useState } from "react";
 import { Room } from "@/types/room";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,8 +73,8 @@ const AdminDashboard = () => {
           <StudyStats totalStudies={0} activeStudies={0} />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <CustomFieldsChart />
+        <div className="grid gap-4">
+          <ChartManager />
         </div>
 
         <DashboardTabs />
