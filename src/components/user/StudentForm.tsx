@@ -18,9 +18,18 @@ interface StudentFormProps {
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(() => {
     if (initialData?.customFields) {
+      // Mapear os valores dos campos personalizados do formato armazenado para o formato do formulário
+      const mappedCustomFields: Record<string, any> = {};
+      Object.entries(initialData.customFields).forEach(([key, fieldData]) => {
+        if (typeof fieldData === 'object' && fieldData !== null && 'value' in fieldData) {
+          mappedCustomFields[key] = fieldData.value;
+        } else {
+          mappedCustomFields[key] = fieldData;
+        }
+      });
       return {
         ...initialData,
-        customFields: { ...initialData.customFields }
+        customFields: mappedCustomFields
       };
     }
     return initialData || {};
@@ -72,13 +81,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       ...prev,
       customFields: {
         ...(prev.customFields || {}),
-        [field.id]: {
-          fieldId: field.id,
-          fieldName: field.name,
-          label: field.label,
-          value: value,
-          type: field.type
-        }
+        [field.id]: value
       }
     }));
   };
@@ -94,8 +97,30 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
       return;
     }
 
+    // Preparar os campos personalizados no formato correto para salvar
+    const formattedCustomFields: Record<string, any> = {};
+    if (formData.customFields) {
+      Object.entries(formData.customFields).forEach(([fieldId, value]) => {
+        const field = customFields.find(f => f.id === fieldId);
+        if (field) {
+          formattedCustomFields[fieldId] = {
+            fieldId: field.id,
+            fieldName: field.name,
+            label: field.label,
+            value: value,
+            type: field.type
+          };
+        }
+      });
+    }
+
     try {
-      await onSubmit(formData as Student);
+      const studentData = {
+        ...formData,
+        customFields: formattedCustomFields
+      } as Student;
+      
+      await onSubmit(studentData);
       setFormData({});
       toast({
         title: "Sucesso",
@@ -112,7 +137,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   };
 
   const renderCustomField = (field: FormField) => {
-    const currentValue = formData.customFields?.[field.id]?.value || "";
+    // Obter o valor atual do campo personalizado
+    const currentValue = formData.customFields?.[field.id] || "";
 
     const commonProps = {
       key: field.id,
