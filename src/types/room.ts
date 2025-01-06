@@ -12,7 +12,7 @@ export interface Room {
   studyRoom: string;
   createdAt: string;
   students?: Student[];
-  companyName?: string; // Adicionado para suportar a visualização do superadmin
+  companyName?: string;
 }
 
 export interface SupabaseRoom {

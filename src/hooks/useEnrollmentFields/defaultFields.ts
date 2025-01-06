@@ -8,6 +8,8 @@ export const defaultFields: FormField[] = [
     type: "text",
     required: true,
     order: 0,
+    options: [],
+    source: "public",
     isDefault: true
   },
   {
@@ -17,6 +19,8 @@ export const defaultFields: FormField[] = [
     type: "date",
     required: true,
     order: 1,
+    options: [],
+    source: "public",
     isDefault: true
   }
 ];
