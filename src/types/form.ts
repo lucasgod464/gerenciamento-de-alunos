@@ -42,7 +42,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   isDefault: false
 });
 
-export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, "id" | "created_at"> => ({
   name: field.name,
   label: field.label,
   type: field.type,
