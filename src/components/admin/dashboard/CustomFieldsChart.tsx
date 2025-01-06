@@ -27,7 +27,8 @@ export const CustomFieldsChart = () => {
       if (!user?.companyId) return;
 
       try {
-        const [{ data: adminFields }, { data: publicFields }] = await Promise.all([
+        console.log("Carregando campos personalizados...");
+        const [{ data: adminFields, error: adminError }, { data: publicFields, error: publicError }] = await Promise.all([
           supabase
             .from('admin_form_fields')
             .select('*')
@@ -39,6 +40,12 @@ export const CustomFieldsChart = () => {
             .eq('company_id', user.companyId)
             .in('type', ['select', 'multiple'])
         ]);
+
+        if (adminError) throw adminError;
+        if (publicError) throw publicError;
+
+        console.log("Campos admin:", adminFields);
+        console.log("Campos públicos:", publicFields);
 
         const mappedAdminFields: CustomField[] = (adminFields || []).map(field => ({
           id: field.id,
@@ -64,7 +71,9 @@ export const CustomFieldsChart = () => {
           source: 'public'
         }));
 
-        setFields([...mappedAdminFields, ...mappedPublicFields]);
+        const allFields = [...mappedAdminFields, ...mappedPublicFields];
+        console.log("Campos mapeados:", allFields);
+        setFields(allFields);
       } catch (error) {
         console.error('Erro ao carregar campos:', error);
       }
@@ -79,10 +88,13 @@ export const CustomFieldsChart = () => {
       if (!user?.companyId) return;
 
       try {
-        const { data } = await supabase
+        console.log("Carregando alunos...");
+        const { data, error } = await supabase
           .from('students')
           .select('*')
           .eq('company_id', user.companyId);
+
+        if (error) throw error;
 
         if (data) {
           const mappedStudents = data.map(student => ({
@@ -97,6 +109,7 @@ export const CustomFieldsChart = () => {
             companyId: student.company_id,
             createdAt: student.created_at
           }));
+          console.log("Alunos mapeados:", mappedStudents);
           setStudents(mappedStudents);
         }
       } catch (error) {
@@ -110,6 +123,10 @@ export const CustomFieldsChart = () => {
   // Processar dados para o gráfico
   useEffect(() => {
     if (!selectedField || !students.length) return;
+
+    console.log("Processando dados para o gráfico...");
+    console.log("Campo selecionado:", selectedField);
+    console.log("Estudantes:", students);
 
     const selectedFieldData = fields.find(f => f.id === selectedField);
     if (!selectedFieldData) return;
@@ -135,6 +152,7 @@ export const CustomFieldsChart = () => {
       value
     }));
 
+    console.log("Dados do gráfico:", data);
     setChartData(data);
   }, [selectedField, students, fields]);
 
