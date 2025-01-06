@@ -32,9 +32,20 @@ export const CustomFieldsChart = () => {
 
         if (error) throw error;
 
-        setFields(formFields);
-        if (formFields.length > 0) {
-          setSelectedField(formFields[0].name);
+        const mappedFields = formFields.map(field => ({
+          id: field.id,
+          name: field.name,
+          label: field.label,
+          type: field.type as "select",
+          description: field.description || "",
+          required: field.required || false,
+          order: field.order,
+          options: field.options ? field.options.map(opt => String(opt)) : [],
+        }));
+
+        setFields(mappedFields);
+        if (mappedFields.length > 0) {
+          setSelectedField(mappedFields[0].name);
         }
       } catch (error) {
         console.error("Erro ao carregar campos:", error);
@@ -57,7 +68,20 @@ export const CustomFieldsChart = () => {
 
         if (error) throw error;
 
-        setStudents(studentsData);
+        const mappedStudents = studentsData.map(student => ({
+          id: student.id,
+          name: student.name,
+          birthDate: student.birth_date,
+          status: student.status ?? true,
+          email: student.email || "",
+          document: student.document || "",
+          address: student.address || "",
+          customFields: student.custom_fields as Record<string, any> || {},
+          companyId: student.company_id,
+          createdAt: student.created_at,
+        }));
+
+        setStudents(mappedStudents);
       } catch (error) {
         console.error("Erro ao carregar alunos:", error);
         toast({

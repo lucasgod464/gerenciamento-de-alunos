@@ -35,16 +35,16 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description,
   required: field.required,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(opt => String(opt)) : [],
+  options: field.options ? field.options.map(opt => String(opt)) : [],
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, "id" | "order">): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description,
   required: field.required,
-  order: field.order,
+  order: 0, // Será definido ao inserir
   options: field.options?.map(opt => opt as Json) || [],
   company_id: undefined,
 });
