@@ -50,5 +50,3 @@ export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'i
   custom_fields: student.customFields,
   company_id: student.companyId,
 });
-
-export const mapSupabaseStudentToStudent = mapSupabaseStudent;
