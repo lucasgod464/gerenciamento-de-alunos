@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,6 @@ export function useUsers() {
     try {
       console.log('Fetching users from database...');
       
-      // Primeiro, buscar os usuários com suas tags e salas autorizadas
       const { data: usersData, error: usersError } = await supabase
         .from('emails')
         .select(`
@@ -33,7 +32,6 @@ export function useUsers() {
 
       if (usersError) throw usersError;
 
-      // Em seguida, buscar as especializações para cada usuário
       const usersWithSpecializations = await Promise.all(
         usersData.map(async (user) => {
           const { data: specializationsData } = await supabase
@@ -94,6 +92,8 @@ export function useUsers() {
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
+      console.log('Dados a serem atualizados:', updatedUser);
+      
       const { error } = await supabase
         .from('emails')
         .update({
@@ -110,9 +110,13 @@ export function useUsers() {
 
       if (error) throw error;
 
+      // Atualiza o estado local imediatamente
       setUsers(prev => prev.map(user => 
         user.id === updatedUser.id ? updatedUser : user
       ));
+
+      // Recarrega os dados para garantir sincronização
+      await loadUsers();
 
       toast({
         title: "Usuário atualizado",
@@ -151,6 +155,33 @@ export function useUsers() {
       });
     }
   };
+
+  // Configurar listener para atualizações em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('emails-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'emails'
+        },
+        () => {
+          loadUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Carregar dados iniciais
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   return {
     users,
