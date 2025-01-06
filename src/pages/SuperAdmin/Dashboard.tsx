@@ -1,4 +1,7 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { DashboardStats } from "@/components/superadmin/dashboard/DashboardStats";
+import { RecentCompanies } from "@/components/superadmin/dashboard/RecentCompanies";
+import { CompaniesGrowthChart } from "@/components/superadmin/dashboard/CompaniesGrowthChart";
 
 const SuperAdminDashboard = () => {
   return (
@@ -9,6 +12,13 @@ const SuperAdminDashboard = () => {
           <p className="text-muted-foreground">
             Bem-vindo ao painel de super administrador
           </p>
+        </div>
+
+        <DashboardStats />
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <CompaniesGrowthChart />
+          <RecentCompanies />
         </div>
       </div>
     </DashboardLayout>
