@@ -68,13 +68,14 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <h3 className="font-medium">{field.label}</h3>
+                {field.required && <span className="text-sm text-red-500">*</span>}
                 {isSystemField && (
-                  <Badge variant="outline" className="bg-gray-100">
-                    Campo Padrão
-                  </Badge>
-                )}
-                {field.required && (
-                  <Badge variant="secondary">Obrigatório</Badge>
+                  <>
+                    <Badge variant="outline" className="bg-gray-100">
+                      Campo Padrão
+                    </Badge>
+                    <Lock className="h-4 w-4 text-gray-400" />
+                  </>
                 )}
               </div>
               {field.description && (
@@ -130,7 +131,48 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 };
 
 export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderFields }: FormPreviewProps) => {
-  const systemFields = ["nome_completo", "data_nascimento", "sala", "status"];
+  const systemFields = [
+    {
+      id: "nome_completo",
+      name: "nome_completo",
+      label: "Nome Completo",
+      type: "text",
+      required: true,
+      order: -4,
+      source: "system",
+      isDefault: true
+    },
+    {
+      id: "data_nascimento",
+      name: "data_nascimento",
+      label: "Data de Nascimento",
+      type: "date",
+      required: true,
+      order: -3,
+      source: "system",
+      isDefault: true
+    },
+    {
+      id: "sala",
+      name: "sala",
+      label: "Sala",
+      type: "select",
+      required: true,
+      order: -2,
+      source: "system",
+      isDefault: true
+    },
+    {
+      id: "status",
+      name: "status",
+      label: "Status",
+      type: "select",
+      required: true,
+      order: -1,
+      source: "system",
+      isDefault: true
+    }
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -157,6 +199,20 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
 
   return (
     <div className="space-y-4">
+      {/* Campos do Sistema */}
+      <div className="space-y-2">
+        {systemFields.map((field) => (
+          <SortableFieldCard
+            key={field.id}
+            field={field}
+            onDelete={onDeleteField}
+            onEdit={onEditField}
+            isSystemField={true}
+          />
+        ))}
+      </div>
+
+      {/* Campos Personalizados */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -172,11 +228,17 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
               field={field}
               onDelete={onDeleteField}
               onEdit={onEditField}
-              isSystemField={systemFields.includes(field.id)}
+              isSystemField={false}
             />
           ))}
         </SortableContext>
       </DndContext>
+
+      {fields.length === 0 && (
+        <p className="text-center text-muted-foreground py-8">
+          Nenhum campo personalizado adicionado. Clique em "Adicionar Campo" para começar.
+        </p>
+      )}
     </div>
   );
 };
