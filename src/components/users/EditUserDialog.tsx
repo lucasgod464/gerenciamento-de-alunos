@@ -16,14 +16,17 @@ export function EditUserDialog({
 }: EditUserDialogProps) {
   if (!user) return null;
 
+  const handleSuccess = (updatedUser: User) => {
+    console.log('Usuário atualizado, notificando componente pai:', updatedUser);
+    onUserUpdated(updatedUser);
+    onOpenChange(false);
+  };
+
   return (
     <UserFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      onSuccess={() => {
-        onUserUpdated(user);
-        onOpenChange(false);
-      }}
+      onSuccess={handleSuccess}
       title="Editar Usuário"
       defaultValues={{
         id: user.id,

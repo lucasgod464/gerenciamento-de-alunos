@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { userService } from "@/services/userService";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
@@ -28,12 +29,6 @@ export function useUsers() {
               id,
               name
             )
-          ),
-          user_specializations (
-            specializations (
-              id,
-              name
-            )
           )
         `);
 
@@ -43,7 +38,7 @@ export function useUsers() {
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
-        role: dbUser.access_level as any,
+        role: dbUser.access_level,
         companyId: dbUser.company_id,
         createdAt: dbUser.created_at,
         lastAccess: dbUser.updated_at,
@@ -75,33 +70,24 @@ export function useUsers() {
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
-      console.log('Atualizando usuário:', updatedUser);
+      setLoading(true);
+      console.log('Iniciando atualização do usuário:', updatedUser);
       
-      const { error } = await supabase
-        .from('emails')
-        .update({
-          name: updatedUser.name,
-          email: updatedUser.email,
-          access_level: updatedUser.accessLevel,
-          location: updatedUser.location,
-          specialization: updatedUser.specialization,
-          status: updatedUser.status,
-          address: updatedUser.address,
-        })
-        .eq('id', updatedUser.id);
-
-      if (error) throw error;
-
-      await loadUsers(); // Recarrega a lista após atualização bem-sucedida
+      await userService.updateUser(updatedUser);
+      
       toast.success('Usuário atualizado com sucesso');
+      await loadUsers(); // Recarrega a lista após atualização
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      setLoading(true);
       const { error } = await supabase
         .from('emails')
         .delete()
@@ -114,6 +100,8 @@ export function useUsers() {
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
       toast.error('Erro ao excluir usuário');
+    } finally {
+      setLoading(false);
     }
   };
 

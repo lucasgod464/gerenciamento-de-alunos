@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, mapDatabaseUser } from "@/types/user";
+import { toast } from "sonner";
 
 interface CreateUserData {
   email: string;
@@ -15,88 +16,94 @@ interface CreateUserData {
   selectedTags?: { id: string; name: string; color: string; }[];
 }
 
-const createUser = async (userData: CreateUserData) => {
-  try {
-    const { data, error } = await supabase
-      .from('emails')
-      .insert([
-        {
-          name: userData.name,
-          email: userData.email,
-          password: userData.password,
-          access_level: userData.accessLevel,
-          company_id: userData.companyId,
-          location: userData.location,
-          specialization: userData.specialization,
-          status: userData.status,
-        }
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-    
-    return mapDatabaseUser(data);
-  } catch (error) {
-    console.error('Error creating user:', error);
-    throw error;
-  }
-};
-
 export const userService = {
-  createUser,
   async updateUser(userData: User) {
     try {
-      const { data, error } = await supabase
+      console.log('Iniciando atualização do usuário:', userData);
+
+      // 1. Atualizar informações básicas do usuário
+      const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
         .update({
           name: userData.name,
           email: userData.email,
           access_level: userData.accessLevel,
-          company_id: userData.companyId,
-          location: userData.location,
-          specialization: userData.specialization,
+          location: userData.location || '',
+          specialization: userData.specialization || '',
           status: userData.status,
+          address: userData.address || '',
         })
         .eq('id', userData.id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (updateError) {
+        console.error('Erro ao atualizar informações básicas:', updateError);
+        throw updateError;
+      }
 
-      return data;
+      // 2. Atualizar tags
+      if (userData.tags) {
+        const { error: deleteTagsError } = await supabase
+          .from('user_tags')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (deleteTagsError) {
+          console.error('Erro ao deletar tags antigas:', deleteTagsError);
+          throw deleteTagsError;
+        }
+
+        if (userData.tags.length > 0) {
+          const { error: insertTagsError } = await supabase
+            .from('user_tags')
+            .insert(
+              userData.tags.map(tag => ({
+                user_id: userData.id,
+                tag_id: tag.id
+              }))
+            );
+
+          if (insertTagsError) {
+            console.error('Erro ao inserir novas tags:', insertTagsError);
+            throw insertTagsError;
+          }
+        }
+      }
+
+      // 3. Atualizar salas autorizadas
+      if (userData.authorizedRooms) {
+        const { error: deleteRoomsError } = await supabase
+          .from('user_rooms')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (deleteRoomsError) {
+          console.error('Erro ao deletar salas antigas:', deleteRoomsError);
+          throw deleteRoomsError;
+        }
+
+        if (userData.authorizedRooms.length > 0) {
+          const { error: insertRoomsError } = await supabase
+            .from('user_rooms')
+            .insert(
+              userData.authorizedRooms.map(room => ({
+                user_id: userData.id,
+                room_id: room.id
+              }))
+            );
+
+          if (insertRoomsError) {
+            console.error('Erro ao inserir novas salas:', insertRoomsError);
+            throw insertRoomsError;
+          }
+        }
+      }
+
+      console.log('Usuário atualizado com sucesso:', updatedUser);
+      return updatedUser;
     } catch (error) {
-      console.error('Error updating user:', error);
-      throw error;
-    }
-  },
-
-  async deleteUser(userId: string) {
-    try {
-      const { error } = await supabase
-        .from('emails')
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      throw error;
-    }
-  },
-
-  async fetchUsers(companyId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('emails')
-        .select('*')
-        .eq('company_id', companyId);
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Erro ao atualizar usuário:', error);
       throw error;
     }
   },
