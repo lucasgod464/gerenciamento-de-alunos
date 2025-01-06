@@ -44,21 +44,43 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       id: "nome_completo_preview",
       name: "nome_completo",
       label: "Nome Completo",
-      type: "text" as const,
+      type: "text",
       required: true,
-      order: -2,
-      source: "system" as const,
+      order: -3,
+      source: "system",
       isDefault: true
     },
     {
       id: "data_nascimento_preview",
       name: "data_nascimento",
       label: "Data de Nascimento",
-      type: "date" as const,
+      type: "date",
+      required: true,
+      order: -2,
+      source: "system",
+      isDefault: true
+    },
+    {
+      id: "sala_preview",
+      name: "sala",
+      label: "Seleção de Sala",
+      type: "select",
       required: true,
       order: -1,
-      source: "system" as const,
-      isDefault: true
+      source: "system",
+      isDefault: true,
+      options: []
+    },
+    {
+      id: "status_preview",
+      name: "status",
+      label: "Status do Aluno",
+      type: "select",
+      required: true,
+      order: 0,
+      source: "system",
+      isDefault: true,
+      options: ["Ativo", "Inativo"]
     }
   ];
 
@@ -82,7 +104,6 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
       
       if (oldIndex !== -1 && newIndex !== -1) {
         const newFields = arrayMove([...fields], oldIndex, newIndex);
-        // Atualiza a ordem dos campos
         const reorderedFields = newFields.map((field, index) => ({
           ...field,
           order: index
