@@ -28,8 +28,17 @@ export const useCustomFieldsData = (companyId?: string) => {
             .order('order')
         ]);
 
-        if (adminError) throw adminError;
-        if (publicError) throw publicError;
+        if (adminError) {
+          console.error("Erro ao carregar campos admin:", adminError);
+          throw adminError;
+        }
+        if (publicError) {
+          console.error("Erro ao carregar campos públicos:", publicError);
+          throw publicError;
+        }
+
+        console.log("Campos admin:", adminFields);
+        console.log("Campos públicos:", publicFields);
 
         const mappedAdminFields: FormField[] = (adminFields || []).map(field => ({
           id: field.id,
@@ -85,6 +94,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             companyId: student.company_id,
             createdAt: student.created_at
           }));
+          console.log("Alunos mapeados:", mappedStudents);
           setStudents(mappedStudents);
         }
       } catch (error) {

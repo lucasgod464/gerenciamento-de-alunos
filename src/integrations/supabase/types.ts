@@ -265,38 +265,6 @@ export type Database = {
           },
         ]
       }
-      dashboard_charts: {
-        Row: {
-          company_id: string
-          created_at: string
-          field_id: string
-          id: string
-          name: string
-        }
-        Insert: {
-          company_id: string
-          created_at?: string
-          field_id: string
-          id?: string
-          name: string
-        }
-        Update: {
-          company_id?: string
-          created_at?: string
-          field_id?: string
-          id?: string
-          name?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "dashboard_charts_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       emails: {
         Row: {
           access_level: Database["public"]["Enums"]["email_access_level"]
