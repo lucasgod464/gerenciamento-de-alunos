@@ -28,8 +28,14 @@ export const useCustomFieldsData = (companyId?: string) => {
             .order('order')
         ]);
 
-        if (adminError) throw adminError;
-        if (publicError) throw publicError;
+        if (adminError) {
+          console.error("Erro ao carregar campos admin:", adminError);
+          throw adminError;
+        }
+        if (publicError) {
+          console.error("Erro ao carregar campos públicos:", publicError);
+          throw publicError;
+        }
 
         console.log("Campos admin:", adminFields);
         console.log("Campos públicos:", publicFields);
@@ -84,7 +90,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
-            customFields: student.custom_fields as Record<string, any> || {},
+            customFields: student.custom_fields || {},
             companyId: student.company_id,
             createdAt: student.created_at
           }));
