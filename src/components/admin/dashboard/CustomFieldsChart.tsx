@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useAuth } from "@/hooks/useAuth";
-import { ChartPie, Save, Trash2, Plus, X } from "lucide-react";
+import { ChartPie, Save, Trash2, Plus, X, Pencil } from "lucide-react";
 import { useCustomFieldsData } from "./charts/useCustomFieldsData";
 import { useChartData } from "./charts/useChartData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -30,6 +31,8 @@ export const CustomFieldsChart = ({
 }: CustomFieldsChartProps) => {
   const [selectedFields, setSelectedFields] = useState<string[]>(savedFieldIds);
   const [mergeIdenticalValues, setMergeIdenticalValues] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [chartTitle, setChartTitle] = useState("Distribuição por Campos Personalizados");
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedFields, students, fields, mergeIdenticalValues);
@@ -50,7 +53,7 @@ export const CustomFieldsChart = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ChartPie className="h-5 w-5 text-muted-foreground" />
-            Distribuição por Campos Personalizados
+            {chartTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -68,7 +71,7 @@ export const CustomFieldsChart = ({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ChartPie className="h-5 w-5 text-muted-foreground" />
-            Distribuição por Campos Personalizados
+            {chartTitle}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -86,7 +89,27 @@ export const CustomFieldsChart = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <ChartPie className="h-5 w-5 text-muted-foreground" />
-            Distribuição por Campos Personalizados
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={chartTitle}
+                  onChange={(e) => setChartTitle(e.target.value)}
+                  className="max-w-[300px]"
+                  autoFocus
+                  onBlur={() => setIsEditingTitle(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      setIsEditingTitle(false);
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsEditingTitle(true)}>
+                {chartTitle}
+                <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
+              </div>
+            )}
           </CardTitle>
           <div className="flex gap-2">
             {showSaveButton && selectedFields.length > 0 && (
