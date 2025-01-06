@@ -14,6 +14,7 @@ export type Database = {
           company_id: string | null
           created_at: string
           description: string | null
+          form_type: string
           id: string
           label: string
           name: string
@@ -26,6 +27,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           description?: string | null
+          form_type?: string
           id?: string
           label: string
           name: string
@@ -38,6 +40,7 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           description?: string | null
+          form_type?: string
           id?: string
           label?: string
           name?: string
@@ -320,6 +323,7 @@ export type Database = {
           company_id: string
           created_at: string
           description: string | null
+          form_type: string
           id: string
           label: string
           name: string
@@ -332,6 +336,7 @@ export type Database = {
           company_id: string
           created_at?: string
           description?: string | null
+          form_type?: string
           id?: string
           label: string
           name: string
@@ -344,6 +349,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           description?: string | null
+          form_type?: string
           id?: string
           label?: string
           name?: string
