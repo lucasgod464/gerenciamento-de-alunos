@@ -1,34 +1,8 @@
-import { Button } from "@/components/ui/button";
 import { Student } from "@/types/student";
-import { Eye, Trash2, ArrowRightFromLine, Pencil } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { StudentForm } from "./StudentForm";
-import { useState } from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { ViewStudentButton } from "./student/actions/ViewStudentButton";
+import { EditStudentButton } from "./student/actions/EditStudentButton";
+import { TransferStudentButton } from "./student/actions/TransferStudentButton";
+import { DeleteStudentButton } from "./student/actions/DeleteStudentButton";
 
 interface StudentTableActionsProps {
   student: Student;
@@ -49,214 +23,18 @@ export function StudentTableActions({
   onTransferStudent,
   rooms,
 }: StudentTableActionsProps) {
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showTransferDialog, setShowTransferDialog] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState("");
-  const { toast } = useToast();
-
-  const handleEditSubmit = async (updatedStudent: Student) => {
-    try {
-      console.log("Atualizando aluno:", updatedStudent);
-
-      // Atualizar dados básicos do aluno
-      const { error: studentError } = await supabase
-        .from('students')
-        .update({
-          name: updatedStudent.name,
-          birth_date: updatedStudent.birthDate,
-          status: updatedStudent.status,
-          email: updatedStudent.email,
-          document: updatedStudent.document,
-          address: updatedStudent.address,
-          custom_fields: updatedStudent.customFields
-        })
-        .eq('id', updatedStudent.id);
-
-      if (studentError) throw studentError;
-
-      // Atualizar relação com a sala se necessário
-      if (updatedStudent.room) {
-        // Primeiro, remover qualquer relação existente
-        await supabase
-          .from('room_students')
-          .delete()
-          .eq('student_id', updatedStudent.id);
-
-        // Depois, criar a nova relação
-        const { error: roomError } = await supabase
-          .from('room_students')
-          .insert({
-            student_id: updatedStudent.id,
-            room_id: updatedStudent.room
-          });
-
-        if (roomError) throw roomError;
-      }
-
-      // Chamar o callback de atualização
-      await onEditClick(updatedStudent);
-      
-      // Fechar o modal
-      setShowEditDialog(false);
-      
-      toast({
-        title: "Sucesso",
-        description: "Aluno atualizado com sucesso!",
-      });
-    } catch (error) {
-      console.error('Erro ao atualizar aluno:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o aluno.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleTransfer = async () => {
-    if (selectedRoom && onTransferStudent) {
-      try {
-        await onTransferStudent(student.id, selectedRoom);
-        setShowTransferDialog(false);
-        setSelectedRoom("");
-        toast({
-          title: "Sucesso",
-          description: "Aluno transferido com sucesso!",
-        });
-      } catch (error) {
-        console.error('Erro ao transferir aluno:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível transferir o aluno.",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
   return (
-    <>
-      <div className="flex justify-end space-x-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="hover:bg-blue-50 hover:text-blue-600"
-                onClick={() => onInfoClick(student)}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Ver informações do aluno</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="hover:bg-green-50 hover:text-green-600"
-                onClick={() => setShowEditDialog(true)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Editar dados do aluno</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {showTransferOption && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="hover:bg-purple-50 hover:text-purple-600"
-                  onClick={() => setShowTransferDialog(true)}
-                >
-                  <ArrowRightFromLine className="mr-2 h-4 w-4" />
-                  Transferir
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Transferir aluno para uma sala</p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hover:bg-red-50 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Tem certeza que deseja excluir o aluno {student.name}? Esta ação não pode ser desfeita.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onDeleteClick(student.id)}>
-                  Confirmar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </TooltipProvider>
-      </div>
-
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar Aluno</DialogTitle>
-          </DialogHeader>
-          <StudentForm
-            initialData={student}
-            onSubmit={handleEditSubmit}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showTransferDialog} onOpenChange={setShowTransferDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Transferir Aluno</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Select value={selectedRoom} onValueChange={setSelectedRoom}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma sala" />
-              </SelectTrigger>
-              <SelectContent>
-                {rooms.map((room) => (
-                  <SelectItem key={room.id} value={room.id}>
-                    {room.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              className="w-full" 
-              onClick={handleTransfer}
-              disabled={!selectedRoom}
-            >
-              Confirmar Transferência
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    <div className="flex justify-end space-x-2">
+      <ViewStudentButton student={student} onView={onInfoClick} />
+      <EditStudentButton student={student} onEdit={onEditClick} />
+      {showTransferOption && (
+        <TransferStudentButton
+          student={student}
+          rooms={rooms}
+          onTransfer={onTransferStudent}
+        />
+      )}
+      <DeleteStudentButton student={student} onDelete={onDeleteClick} />
+    </div>
   );
 }
