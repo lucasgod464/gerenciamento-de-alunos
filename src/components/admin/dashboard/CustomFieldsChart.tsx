@@ -43,7 +43,7 @@ export const CustomFieldsChart = () => {
           </Select>
         </div>
 
-        {chartData.length > 0 && (
+        {chartData.length > 0 ? (
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -52,7 +52,7 @@ export const CustomFieldsChart = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  label={({ name, percentage }) => `${name} (${percentage}%)`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
@@ -66,7 +66,11 @@ export const CustomFieldsChart = () => {
               </PieChart>
             </ResponsiveContainer>
           </div>
-        )}
+        ) : selectedField ? (
+          <div className="text-center text-muted-foreground">
+            Nenhum dado disponível para este campo
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );

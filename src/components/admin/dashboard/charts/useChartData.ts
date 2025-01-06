@@ -20,6 +20,7 @@ export const useChartData = (
     if (!selectedFieldData) return;
 
     const valueCount: Record<string, number> = {};
+    let totalResponses = 0;
     
     students.forEach(student => {
       if (!student.customFields) return;
@@ -31,13 +32,18 @@ export const useChartData = (
       const values = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
       
       values.forEach(value => {
-        valueCount[value] = (valueCount[value] || 0) + 1;
+        if (value && value.trim() !== '') {
+          valueCount[value] = (valueCount[value] || 0) + 1;
+          totalResponses++;
+        }
       });
     });
 
+    // Calcular porcentagens e criar dados do gráfico
     const data = Object.entries(valueCount).map(([name, value]) => ({
       name,
-      value
+      value,
+      percentage: ((value / totalResponses) * 100).toFixed(1)
     }));
 
     console.log("Dados do gráfico:", data);
