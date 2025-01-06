@@ -18,10 +18,11 @@ export const ChartManager = () => {
   const companyId = useCompanyId();
   const [charts, setCharts] = useState<SavedChart[]>([]);
 
-  // Carregar gráficos salvos
   const { data: savedCharts } = useQuery({
     queryKey: ["dashboard-charts", companyId],
     queryFn: async () => {
+      if (!companyId) return [];
+      
       const { data, error } = await supabase
         .from("dashboard_charts")
         .select("*")
@@ -30,10 +31,19 @@ export const ChartManager = () => {
       if (error) throw error;
       return data as SavedChart[];
     },
+    enabled: !!companyId
   });
 
-  // Adicionar novo gráfico
   const handleAddChart = async (fieldId: string) => {
+    if (!companyId || !fieldId) {
+      toast({
+        title: "Erro",
+        description: "Selecione um campo para adicionar o gráfico.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("dashboard_charts")
@@ -65,7 +75,6 @@ export const ChartManager = () => {
     }
   };
 
-  // Remover gráfico
   const handleRemoveChart = async (chartId: string) => {
     try {
       const { error } = await supabase
@@ -112,7 +121,7 @@ export const ChartManager = () => {
             >
               <X className="h-4 w-4" />
             </Button>
-            <CustomFieldsChart />
+            <CustomFieldsChart selectedFieldId={chart.field_id} />
           </div>
         ))}
       </div>

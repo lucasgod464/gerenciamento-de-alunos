@@ -41,13 +41,13 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   source: field.form_type === 'admin' ? 'admin' : 'public'
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
+export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description || null,
   required: field.required,
-  order: field.order,
+  order: 0, // Será definido no momento da inserção
   options: field.options || [],
   company_id: undefined as any, // será definido no momento da inserção
   form_type: field.source === 'admin' ? 'admin' : 'enrollment'

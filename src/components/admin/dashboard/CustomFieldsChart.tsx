@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
@@ -9,11 +9,21 @@ import { useChartData } from "./charts/useChartData";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
-export const CustomFieldsChart = () => {
-  const [selectedField, setSelectedField] = useState<string>("");
+interface CustomFieldsChartProps {
+  selectedFieldId?: string;
+}
+
+export const CustomFieldsChart = ({ selectedFieldId }: CustomFieldsChartProps) => {
+  const [selectedField, setSelectedField] = useState<string>(selectedFieldId || "");
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedField, students, fields);
+
+  useEffect(() => {
+    if (selectedFieldId) {
+      setSelectedField(selectedFieldId);
+    }
+  }, [selectedFieldId]);
 
   if (isLoading) {
     return (
