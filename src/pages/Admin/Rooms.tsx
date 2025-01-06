@@ -79,12 +79,7 @@ export default function AdminRooms() {
           deleteDialogOpen={deleteDialogOpen}
           setDeleteDialogOpen={setDeleteDialogOpen}
           onSave={handleSave}
-          onDeleteConfirm={() => {
-            if (editingRoom) {
-              handleDeleteConfirm(editingRoom.id);
-              setDeleteDialogOpen(false);
-            }
-          }}
+          onDeleteConfirm={handleDeleteConfirm}
         />
       </div>
     </DashboardLayout>
