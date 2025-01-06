@@ -16,7 +16,9 @@ const Users = () => {
   const loadUsers = async () => {
     try {
       console.log('Fetching users from database...');
-      const { data, error } = await supabase
+      
+      // Primeiro, buscar os usuários com suas tags e salas autorizadas
+      const { data: usersData, error: usersError } = await supabase
         .from('emails')
         .select(`
           *,
@@ -32,19 +34,43 @@ const Users = () => {
               id,
               name
             )
-          ),
-          user_specializations (
-            specializations (
-              id,
-              name
-            )
           )
         `);
 
-      if (error) throw error;
+      if (usersError) throw usersError;
+
+      // Em seguida, buscar as especializações para cada usuário
+      const usersWithSpecializations = await Promise.all(
+        usersData.map(async (user) => {
+          const { data: specializationsData, error: specializationsError } = await supabase
+            .from('user_specializations')
+            .select(`
+              specializations (
+                id,
+                name
+              )
+            `)
+            .eq('user_id', user.id);
+
+          if (specializationsError) {
+            console.error('Error fetching specializations:', specializationsError);
+            return user;
+          }
+
+          const specializations = specializationsData
+            ?.map(item => item.specializations?.name)
+            .filter(Boolean);
+
+          return {
+            ...user,
+            specialization: specializations?.join(', ') || 'Não definido'
+          };
+        })
+      );
       
-      console.log('Users data received:', data);
-      const mappedUsers = data.map(dbUser => ({
+      console.log('Users data received:', usersWithSpecializations);
+      
+      const mappedUsers = usersWithSpecializations.map(dbUser => ({
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
@@ -55,7 +81,7 @@ const Users = () => {
         status: dbUser.status,
         accessLevel: dbUser.access_level,
         location: dbUser.location,
-        specialization: dbUser.user_specializations?.map(us => us.specializations.name).join(', ') || 'Não definido',
+        specialization: dbUser.specialization,
         address: dbUser.address,
         tags: dbUser.user_tags?.map(ut => ({
           id: ut.tags.id,
