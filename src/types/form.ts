@@ -12,7 +12,6 @@ export interface FormField {
   order: number;
   options?: string[];
   source: 'admin' | 'public' | 'system';
-  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {

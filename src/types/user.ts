@@ -19,41 +19,19 @@ export interface User {
   authorizedRooms?: { id: string; name: string; }[];
 }
 
-export interface SupabaseUser {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  company_id: string;
-  created_at: string;
-  last_access: string;
-  status: string;
-  access_level: AccessLevel;
-  location?: string;
-  specialization?: string;
-  address?: string;
-}
-
-export const mapSupabaseUser = (user: SupabaseUser): User => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  role: user.role as UserRole,
-  companyId: user.company_id,
-  createdAt: user.created_at,
-  lastAccess: user.last_access,
-  status: user.status as UserStatus,
-  accessLevel: user.access_level,
-  location: user.location,
-  specialization: user.specialization,
-  address: user.address,
-  tags: [],
-  authorizedRooms: []
+export const mapSupabaseUser = (data: any): User => ({
+  id: data.id,
+  name: data.name || '',
+  email: data.email,
+  role: data.role as UserRole,
+  companyId: data.company_id || null,
+  createdAt: data.created_at,
+  lastAccess: data.last_access || new Date().toISOString(),
+  status: data.status === 'active' ? 'active' : 'inactive',
+  accessLevel: data.access_level || 'Usuário Comum',
+  location: data.location,
+  specialization: data.specialization,
+  address: data.address,
+  tags: data.tags,
+  authorizedRooms: data.authorized_rooms
 });
-
-export interface CompanyFormData {
-  name: string;
-  document: string;
-  usersLimit: number;
-  roomsLimit: number;
-}
