@@ -49,6 +49,29 @@ export const AttendanceChart = () => {
     }
   });
 
+  const { data: stats = { totalStudents: 0, activeRooms: 0, attendanceRate: 0 } } = useQuery({
+    queryKey: ["attendance-stats", user?.companyId],
+    queryFn: async () => {
+      if (!user?.companyId) return { totalStudents: 0, activeRooms: 0, attendanceRate: 0 };
+
+      const [studentsResult, roomsResult, attendanceResult] = await Promise.all([
+        supabase.from("students").select("id").eq("company_id", user.companyId).eq("status", true),
+        supabase.from("rooms").select("id").eq("company_id", user.companyId).eq("status", true),
+        supabase.from("daily_attendance").select("status").eq("company_id", user.companyId)
+      ]);
+
+      const totalAttendances = attendanceResult.data?.length || 0;
+      const totalPresences = attendanceResult.data?.filter(a => a.status === 'present').length || 0;
+      const attendanceRate = totalAttendances > 0 ? (totalPresences / totalAttendances) * 100 : 0;
+
+      return {
+        totalStudents: studentsResult.data?.length || 0,
+        activeRooms: roomsResult.data?.length || 0,
+        attendanceRate
+      };
+    }
+  });
+
   const { data: attendanceData = [], isLoading, refetch } = useQuery({
     queryKey: ["attendance-stats", user?.companyId, selectedRoom, dateRange],
     queryFn: async () => {
