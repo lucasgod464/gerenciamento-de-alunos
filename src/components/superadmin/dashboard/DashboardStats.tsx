@@ -47,7 +47,7 @@ export const DashboardStats = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <DateFilter 
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
