@@ -16,17 +16,14 @@ export function EditUserDialog({
 }: EditUserDialogProps) {
   if (!user) return null;
 
-  const handleSuccess = (updatedUser: User) => {
-    console.log('Usuário atualizado:', updatedUser);
-    onUserUpdated(updatedUser);
-    onOpenChange(false);
-  };
-
   return (
     <UserFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      onSuccess={handleSuccess}
+      onSuccess={() => {
+        onUserUpdated(user);
+        onOpenChange(false);
+      }}
       title="Editar Usuário"
       defaultValues={{
         id: user.id,
@@ -35,9 +32,9 @@ export function EditUserDialog({
         specialization: user.specialization || '',
         location: user.location || '',
         status: user.status,
-        tags: user.tags || [],
+        tags: user.tags,
         accessLevel: user.accessLevel,
-        authorizedRooms: user.authorizedRooms || [],
+        authorizedRooms: user.authorizedRooms,
         address: user.address || ''
       }}
       isEditing
