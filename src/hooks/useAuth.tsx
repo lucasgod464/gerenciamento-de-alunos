@@ -63,12 +63,12 @@ export function useAuth(): UseAuthReturn {
             id: userData.id,
             name: userData.name || '',
             email: userData.email,
-            role: userData.access_level,
+            role: userData.access_level as UserRole,
             companyId: userData.company_id,
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
             status: userData.status as "active" | "inactive",
-            accessLevel: userData.access_level,
+            accessLevel: userData.access_level as UserRole,
             location: userData.location,
             specialization: userData.specialization,
             address: userData.address,
@@ -104,7 +104,7 @@ export function useAuth(): UseAuthReturn {
 
   const isCompanyMember = (companyId: string) => {
     if (!session?.user) return false;
-    if (session.user.role === "Admin") return true;
+    if (session.user.role === "SUPER_ADMIN") return true;
     return session.user.companyId === companyId;
   };
 

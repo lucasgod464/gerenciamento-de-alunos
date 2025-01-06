@@ -1,4 +1,4 @@
-export type UserRole = "Admin" | "Usuário Comum";
+export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 export type UserStatus = "active" | "inactive";
 
 export interface AuthUser {
@@ -60,7 +60,18 @@ export type Permission =
   | "admin";
 
 export const ROLE_PERMISSIONS = {
-  Admin: {
+  SUPER_ADMIN: {
+    canCreateCompany: true,
+    canCreateAdmin: true,
+    canCreateUser: true,
+    canViewAllCompanies: true,
+    canManageUsers: true,
+    canManageRooms: true,
+    canManageStudies: true,
+    canManageTags: true,
+    canManageSpecializations: true,
+  },
+  ADMIN: {
     canCreateCompany: false,
     canCreateAdmin: false,
     canCreateUser: true,
@@ -71,7 +82,7 @@ export const ROLE_PERMISSIONS = {
     canManageTags: true,
     canManageSpecializations: true,
   },
-  "Usuário Comum": {
+  USER: {
     canCreateCompany: false,
     canCreateAdmin: false,
     canCreateUser: false,
