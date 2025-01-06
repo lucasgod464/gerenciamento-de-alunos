@@ -4,8 +4,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import UserFormFields from "../UserFormFields";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 
 interface UserFormProps {
   onSuccess?: () => void;
@@ -42,13 +40,19 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         company_id: user?.companyId,
       };
 
+      console.log('Dados a serem atualizados:', userData);
+
       if (isEditing && defaultValues?.id) {
+        // Atualiza informações básicas do usuário
         const { error: updateError } = await supabase
           .from('emails')
           .update(userData)
           .eq('id', defaultValues.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Erro ao atualizar usuário:', updateError);
+          throw updateError;
+        }
 
         // Atualiza tags
         await supabase
@@ -124,26 +128,15 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Informações Básicas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações Básicas</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <UserFormFields
-            defaultValues={defaultValues}
-            onTagsChange={setSelectedTags}
-            onRoomsChange={setSelectedRooms}
-            onSpecializationsChange={setSelectedSpecializations}
-            isEditing={isEditing}
-          />
-        </CardContent>
-      </Card>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <UserFormFields
+        defaultValues={defaultValues}
+        onTagsChange={setSelectedTags}
+        onRoomsChange={setSelectedRooms}
+        onSpecializationsChange={setSelectedSpecializations}
+        isEditing={isEditing}
+      />
 
-      <Separator />
-
-      {/* Botões de Ação */}
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button
