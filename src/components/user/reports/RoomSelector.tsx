@@ -5,7 +5,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Room } from "@/types/room";
+
+interface Room {
+  id: string;
+  name: string;
+}
 
 interface RoomSelectorProps {
   rooms: Room[];

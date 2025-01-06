@@ -1,9 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { BarChart, Bar, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
+import { BarChart, Bar, YAxis, CartesianGrid, ResponsiveContainer, LabelList, Legend } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { DateFilter } from "@/components/superadmin/dashboard/DateFilter";
+import { useState } from "react";
+import { subDays } from "date-fns";
+import { RoomSelector } from "@/components/user/reports/RoomSelector";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 export const STATUS_COLORS = {
   presente: "#22c55e",
@@ -21,16 +27,45 @@ export const STATUS_LABELS = {
 
 export const AttendanceChart = () => {
   const { user } = useAuth();
+  const today = new Date();
+  const [selectedRoom, setSelectedRoom] = useState("all");
+  const [dateRange, setDateRange] = useState({
+    from: subDays(today, 29),
+    to: today
+  });
 
-  const { data: attendanceData = [], isLoading } = useQuery({
-    queryKey: ["attendance-stats", user?.companyId],
+  const { data: rooms = [] } = useQuery({
+    queryKey: ["rooms", user?.companyId],
     queryFn: async () => {
       if (!user?.companyId) return [];
 
-      const { data: attendance } = await supabase
+      const { data } = await supabase
+        .from("rooms")
+        .select("id, name")
+        .eq("company_id", user.companyId)
+        .eq("status", true);
+
+      return data || [];
+    }
+  });
+
+  const { data: attendanceData = [], isLoading, refetch } = useQuery({
+    queryKey: ["attendance-stats", user?.companyId, selectedRoom, dateRange],
+    queryFn: async () => {
+      if (!user?.companyId) return [];
+
+      let query = supabase
         .from("daily_attendance")
         .select("status")
-        .eq("company_id", user.companyId);
+        .eq("company_id", user.companyId)
+        .gte("date", dateRange.from.toISOString().split('T')[0])
+        .lte("date", dateRange.to.toISOString().split('T')[0]);
+
+      if (selectedRoom !== "all") {
+        query = query.eq("room_id", selectedRoom);
+      }
+
+      const { data: attendance } = await query;
 
       if (!attendance) return [];
 
@@ -39,12 +74,19 @@ export const AttendanceChart = () => {
         return acc;
       }, {});
 
-      return Object.entries(STATUS_LABELS).map(([key, label]) => ({
-        name: label,
-        value: totals[key] || 0
-      }));
+      return [{
+        name: "Total",
+        presente: totals["present"] || 0,
+        falta: totals["absent"] || 0,
+        atrasado: totals["late"] || 0,
+        justificado: totals["justified"] || 0
+      }];
     }
   });
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -69,6 +111,23 @@ export const AttendanceChart = () => {
           <Calendar className="h-5 w-5 text-muted-foreground" />
           Relatório de Presença
         </CardTitle>
+        <div className="flex flex-wrap gap-4 items-center justify-between mt-4">
+          <div className="flex gap-4 items-center flex-wrap">
+            <RoomSelector
+              rooms={rooms}
+              selectedRoom={selectedRoom}
+              onRoomChange={setSelectedRoom}
+            />
+            <DateFilter
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+            />
+            <Button variant="outline" onClick={handleRefresh}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
@@ -76,15 +135,24 @@ export const AttendanceChart = () => {
             <BarChart data={attendanceData}>
               <CartesianGrid strokeDasharray="3 3" />
               <YAxis />
-              <Legend />
+              <Legend 
+                formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] || value}
+              />
               {Object.entries(STATUS_COLORS).map(([status, color]) => (
                 <Bar
                   key={status}
-                  dataKey="value"
+                  dataKey={status}
                   fill={color}
-                  name={STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                  name={status}
                   radius={[4, 4, 0, 0]}
-                />
+                >
+                  <LabelList
+                    dataKey={status}
+                    position="center"
+                    fill="#fff"
+                    formatter={(value: number) => `${value} ${STATUS_LABELS[status as keyof typeof STATUS_LABELS]}`}
+                  />
+                </Bar>
               ))}
             </BarChart>
           </ResponsiveContainer>
