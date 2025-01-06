@@ -1,6 +1,20 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
+import { User, mapDatabaseUser } from "@/types/user";
 import { toast } from "sonner";
+
+interface CreateUserData {
+  email: string;
+  name: string;
+  password: string;
+  accessLevel: "Admin" | "Usuário Comum";
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status: string;
+  role: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+}
 
 export const userService = {
   async updateUser(userData: User) {

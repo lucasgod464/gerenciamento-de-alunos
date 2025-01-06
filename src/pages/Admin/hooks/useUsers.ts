@@ -29,12 +29,6 @@ export function useUsers() {
               id,
               name
             )
-          ),
-          user_specializations (
-            specializations (
-              id,
-              name
-            )
           )
         `);
 
@@ -44,7 +38,7 @@ export function useUsers() {
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
-        role: dbUser.access_level as "ADMIN" | "USER",
+        role: dbUser.access_level,
         companyId: dbUser.company_id,
         createdAt: dbUser.created_at,
         lastAccess: dbUser.updated_at,
@@ -81,14 +75,8 @@ export function useUsers() {
       
       await userService.updateUser(updatedUser);
       
-      // Atualiza o estado local imediatamente
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === updatedUser.id ? updatedUser : user
-        )
-      );
-      
       toast.success('Usuário atualizado com sucesso');
+      await loadUsers(); // Recarrega a lista após atualização
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
@@ -120,7 +108,7 @@ export function useUsers() {
   // Configurar listener para atualizações em tempo real
   useEffect(() => {
     const channel = supabase
-      .channel('users-changes')
+      .channel('emails-changes')
       .on(
         'postgres_changes',
         {
