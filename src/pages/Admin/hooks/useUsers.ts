@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import { updateUserData, deleteUser } from "./useUserOperations";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const { toast } = useToast();
 
   const loadUsers = async () => {
     try {
-      console.log('Fetching users from database...');
+      console.log('Buscando usuários do banco de dados...');
       
       const { data: usersData, error: usersError } = await supabase
         .from('emails')
@@ -32,34 +32,13 @@ export function useUsers() {
 
       if (usersError) throw usersError;
 
-      const usersWithSpecializations = await Promise.all(
-        usersData.map(async (user) => {
-          const { data: specializationsData } = await supabase
-            .from('user_specializations')
-            .select(`
-              specializations (
-                id,
-                name
-              )
-            `)
-            .eq('user_id', user.id);
-
-          const specializations = specializationsData?.map(s => s.specializations.name).join(', ') || '';
-          
-          return {
-            ...user,
-            specialization: specializations
-          };
-        })
-      );
+      console.log('Dados dos usuários recebidos:', usersData);
       
-      console.log('Users data received:', usersWithSpecializations);
-      
-      const mappedUsers = usersWithSpecializations.map(dbUser => ({
+      const mappedUsers = usersData.map(dbUser => ({
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
-        role: dbUser.access_level as "ADMIN" | "USER",
+        role: dbUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
         companyId: dbUser.company_id,
         createdAt: dbUser.created_at,
         lastAccess: dbUser.updated_at,
@@ -81,108 +60,35 @@ export function useUsers() {
 
       setUsers(mappedUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
-      toast({
-        title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
-        variant: "destructive",
-      });
+      console.error('Erro ao carregar usuários:', error);
+      toast.error("Erro ao carregar a lista de usuários");
     }
   };
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
-      console.log('Dados a serem atualizados:', updatedUser);
+      console.log('Atualizando usuário:', updatedUser);
       
-      const { error } = await supabase
-        .from('emails')
-        .update({
-          name: updatedUser.name,
-          email: updatedUser.email,
-          access_level: updatedUser.accessLevel,
-          company_id: updatedUser.companyId,
-          status: updatedUser.status,
-          location: updatedUser.location,
-          specialization: updatedUser.specialization,
-          address: updatedUser.address
-        })
-        .eq('id', updatedUser.id);
-
-      if (error) throw error;
-
-      // Atualiza tags
-      await supabase
-        .from('user_tags')
-        .delete()
-        .eq('user_id', updatedUser.id);
-
-      if (updatedUser.tags && updatedUser.tags.length > 0) {
-        await supabase
-          .from('user_tags')
-          .insert(updatedUser.tags.map(tag => ({
-            user_id: updatedUser.id,
-            tag_id: tag.id
-          })));
-      }
-
-      // Atualiza salas autorizadas
-      await supabase
-        .from('user_rooms')
-        .delete()
-        .eq('user_id', updatedUser.id);
-
-      if (updatedUser.authorizedRooms && updatedUser.authorizedRooms.length > 0) {
-        await supabase
-          .from('user_rooms')
-          .insert(updatedUser.authorizedRooms.map(room => ({
-            user_id: updatedUser.id,
-            room_id: room.id
-          })));
-      }
-
-      // Atualiza o estado local imediatamente
-      setUsers(prev => prev.map(user => 
-        user.id === updatedUser.id ? updatedUser : user
-      ));
-
-      // Recarrega os dados para garantir sincronização
+      await updateUserData(updatedUser);
+      
+      toast.success("Usuário atualizado com sucesso!");
+      
+      // Recarrega a lista de usuários para garantir dados atualizados
       await loadUsers();
-
-      toast({
-        title: "Usuário atualizado",
-        description: "As informações do usuário foram atualizadas com sucesso.",
-      });
     } catch (error) {
-      console.error('Error updating user:', error);
-      toast({
-        title: "Erro ao atualizar usuário",
-        description: "Não foi possível atualizar as informações do usuário.",
-        variant: "destructive",
-      });
+      console.error('Erro ao atualizar usuário:', error);
+      toast.error("Erro ao atualizar usuário");
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('emails')
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-
+      await deleteUser(userId);
       setUsers(prev => prev.filter(user => user.id !== userId));
-      toast({
-        title: "Usuário excluído",
-        description: "O usuário foi excluído com sucesso.",
-      });
+      toast.success("Usuário excluído com sucesso!");
     } catch (error) {
-      console.error('Error deleting user:', error);
-      toast({
-        title: "Erro ao excluir usuário",
-        description: "Não foi possível excluir o usuário.",
-        variant: "destructive",
-      });
+      console.error('Erro ao excluir usuário:', error);
+      toast.error("Erro ao excluir usuário");
     }
   };
 
