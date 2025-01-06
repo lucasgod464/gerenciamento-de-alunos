@@ -49,6 +49,40 @@ export const EnrollmentFormBuilder = () => {
     }
   };
 
+  const handleDeleteField = async (id: string) => {
+    try {
+      await deleteField(id);
+      toast({
+        title: "Campo removido",
+        description: "O campo foi removido com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao deletar campo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o campo. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReorderFields = async (reorderedFields: FormField[]) => {
+    try {
+      await reorderFields(reorderedFields);
+      toast({
+        title: "Campos reordenados",
+        description: "A ordem dos campos foi atualizada com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao reordenar campos:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reordenar os campos. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <EnrollmentFormHeader />
@@ -66,12 +100,12 @@ export const EnrollmentFormBuilder = () => {
           setEditingField(undefined);
           setIsAddingField(true);
         }}
-        onDeleteField={deleteField}
+        onDeleteField={handleDeleteField}
         onEditField={(field) => {
           setEditingField(field);
           setIsAddingField(true);
         }}
-        onReorderFields={reorderFields}
+        onReorderFields={handleReorderFields}
       />
 
       <AddFieldDialog
