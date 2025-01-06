@@ -1,163 +1,248 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "lucide-react";
-import { BarChart, Bar, YAxis, CartesianGrid, ResponsiveContainer, LabelList, Legend } from "recharts";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { DateFilter } from "@/components/superadmin/dashboard/DateFilter";
-import { useState } from "react";
-import { subDays } from "date-fns";
-import { RoomSelector } from "@/components/user/reports/RoomSelector";
+import { format, startOfDay, endOfDay, subDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Card, CardContent } from "@/components/ui/card";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
-
-export const STATUS_COLORS = {
-  presente: "#22c55e",
-  falta: "#ef4444",
-  atrasado: "#eab308",
-  justificado: "#3b82f6"
-};
-
-export const STATUS_LABELS = {
-  presente: "Presenças",
-  falta: "Faltas",
-  atrasado: "Atrasos",
-  justificado: "Justificados"
-};
+import { RefreshCcw, Users, Home, TrendingUp } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export const AttendanceChart = () => {
-  const { user } = useAuth();
   const today = new Date();
   const [selectedRoom, setSelectedRoom] = useState("all");
   const [dateRange, setDateRange] = useState({
     from: subDays(today, 29),
     to: today
   });
+  const { user } = useAuth();
 
+  // Buscar salas autorizadas
   const { data: rooms = [] } = useQuery({
     queryKey: ["rooms", user?.companyId],
     queryFn: async () => {
       if (!user?.companyId) return [];
-
-      const { data } = await supabase
+      
+      const { data, error } = await supabase
         .from("rooms")
         .select("id, name")
         .eq("company_id", user.companyId)
         .eq("status", true);
 
+      if (error) throw error;
       return data || [];
-    }
+    },
   });
 
-  const { data: attendanceData = [], isLoading, refetch } = useQuery({
-    queryKey: ["attendance-stats", user?.companyId, selectedRoom, dateRange],
+  // Buscar dados de presença
+  const { data: attendanceData = [], refetch: refetchAttendance } = useQuery({
+    queryKey: ["attendance-data", selectedRoom, dateRange],
     queryFn: async () => {
-      if (!user?.companyId) return [];
-
+      if (!user?.companyId || !dateRange.from || !dateRange.to) return [];
+      
+      const startDate = format(startOfDay(dateRange.from), 'yyyy-MM-dd');
+      const endDate = format(endOfDay(dateRange.to), 'yyyy-MM-dd');
+      
       let query = supabase
         .from("daily_attendance")
-        .select("status")
+        .select("*")
         .eq("company_id", user.companyId)
-        .gte("date", dateRange.from.toISOString().split('T')[0])
-        .lte("date", dateRange.to.toISOString().split('T')[0]);
+        .gte('date', startDate)
+        .lte('date', endDate);
 
       if (selectedRoom !== "all") {
         query = query.eq("room_id", selectedRoom);
       }
 
-      const { data: attendance } = await query;
+      const { data, error } = await query;
+      if (error) throw error;
 
-      if (!attendance) return [];
-
-      const totals = attendance.reduce((acc: Record<string, number>, curr) => {
-        acc[curr.status] = (acc[curr.status] || 0) + 1;
+      const groupedData = data.reduce((acc, curr) => {
+        const date = format(new Date(curr.date), 'dd/MM', { locale: ptBR });
+        if (!acc[date]) {
+          acc[date] = { presente: 0, falta: 0, atrasado: 0, justificado: 0 };
+        }
+        switch (curr.status) {
+          case 'present':
+            acc[date].presente++;
+            break;
+          case 'absent':
+            acc[date].falta++;
+            break;
+          case 'late':
+            acc[date].atrasado++;
+            break;
+          case 'justified':
+            acc[date].justificado++;
+            break;
+        }
         return acc;
       }, {});
 
-      return [{
-        name: "Total",
-        presente: totals["present"] || 0,
-        falta: totals["absent"] || 0,
-        atrasado: totals["late"] || 0,
-        justificado: totals["justified"] || 0
-      }];
+      return Object.entries(groupedData).map(([name, values]) => ({
+        name,
+        ...values
+      }));
+    },
+  });
+
+  // Buscar estatísticas gerais
+  const { data: stats = { totalStudents: 0, activeRooms: 0, attendanceRate: 0 } } = useQuery({
+    queryKey: ["attendance-stats", user?.companyId],
+    queryFn: async () => {
+      if (!user?.companyId) return { totalStudents: 0, activeRooms: 0, attendanceRate: 0 };
+
+      const [studentsResult, roomsResult, attendanceResult] = await Promise.all([
+        supabase
+          .from("students")
+          .select("id")
+          .eq("company_id", user.companyId)
+          .eq("status", true),
+        supabase
+          .from("rooms")
+          .select("id")
+          .eq("company_id", user.companyId)
+          .eq("status", true),
+        supabase
+          .from("daily_attendance")
+          .select("status")
+          .eq("company_id", user.companyId)
+      ]);
+
+      const totalAttendances = attendanceResult.data?.length || 0;
+      const totalPresences = attendanceResult.data?.filter(a => a.status === 'present').length || 0;
+      const attendanceRate = totalAttendances > 0 
+        ? (totalPresences / totalAttendances) * 100 
+        : 0;
+
+      return {
+        totalStudents: studentsResult.data?.length || 0,
+        activeRooms: roomsResult.data?.length || 0,
+        attendanceRate
+      };
     }
   });
 
   const handleRefresh = () => {
-    refetch();
+    refetchAttendance();
   };
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            Relatório de Presença
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
-          Carregando...
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-          Relatório de Presença
-        </CardTitle>
-        <div className="flex flex-wrap gap-4 items-center justify-between mt-4">
-          <div className="flex gap-4 items-center flex-wrap">
-            <RoomSelector
-              rooms={rooms}
-              selectedRoom={selectedRoom}
-              onRoomChange={setSelectedRoom}
-            />
-            <DateFilter
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Taxa de Presença
+                </p>
+                <h2 className="text-2xl font-bold">{stats.attendanceRate.toFixed(1)}%</h2>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Users className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Total de Alunos
+                </p>
+                <h2 className="text-2xl font-bold">{stats.totalStudents}</h2>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Home className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Salas Ativas
+                </p>
+                <h2 className="text-2xl font-bold">{stats.activeRooms}</h2>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <Select
+              value={selectedRoom}
+              onValueChange={setSelectedRoom}
+            >
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Selecione uma sala" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as salas</SelectItem>
+                {rooms.map((room) => (
+                  <SelectItem key={room.id} value={room.id}>
+                    {room.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <DatePickerWithRange
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
             />
-            <Button variant="outline" onClick={handleRefresh}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Atualizar
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleRefresh}
+              className="h-10 w-10"
+            >
+              <RefreshCcw className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={attendanceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <YAxis />
-              <Legend 
-                formatter={(value) => STATUS_LABELS[value as keyof typeof STATUS_LABELS] || value}
-              />
-              {Object.entries(STATUS_COLORS).map(([status, color]) => (
-                <Bar
-                  key={status}
-                  dataKey={status}
-                  fill={color}
-                  name={status}
-                  radius={[4, 4, 0, 0]}
-                >
-                  <LabelList
-                    dataKey={status}
-                    position="center"
-                    fill="#fff"
-                    formatter={(value: number) => `${value} ${STATUS_LABELS[status as keyof typeof STATUS_LABELS]}`}
-                  />
-                </Bar>
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={attendanceData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="presente" name="Presente" fill="#22c55e" />
+                <Bar dataKey="falta" name="Falta" fill="#ef4444" />
+                <Bar dataKey="atrasado" name="Atrasado" fill="#eab308" />
+                <Bar dataKey="justificado" name="Justificado" fill="#3b82f6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
