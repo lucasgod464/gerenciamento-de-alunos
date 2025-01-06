@@ -53,7 +53,7 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
 
   return (
     <div ref={setNodeRef} style={style} className="mb-4">
-      <Card className="p-4">
+      <Card className={`p-4 ${isSystemField ? 'bg-gray-50 border-dashed' : ''}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isSystemField && (
@@ -68,6 +68,11 @@ const SortableFieldCard = ({ field, onDelete, onEdit, isSystemField }: {
             <div className="space-y-1">
               <div className="flex items-center space-x-2">
                 <h3 className="font-medium">{field.label}</h3>
+                {isSystemField && (
+                  <Badge variant="outline" className="bg-gray-100">
+                    Campo Padrão
+                  </Badge>
+                )}
                 {field.required && (
                   <Badge variant="secondary">Obrigatório</Badge>
                 )}
