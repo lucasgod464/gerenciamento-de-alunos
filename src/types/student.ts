@@ -31,11 +31,11 @@ export const mapSupabaseStudent = (student: SupabaseStudent): Student => ({
   id: student.id,
   name: student.name,
   birthDate: student.birth_date,
-  status: student.status,
+  status: student.status ?? true,
   email: student.email || '',
   document: student.document || '',
   address: student.address || '',
-  customFields: student.custom_fields as Record<string, any> || {},
+  customFields: typeof student.custom_fields === 'object' ? student.custom_fields : {},
   companyId: student.company_id,
   createdAt: student.created_at,
 });
@@ -47,8 +47,6 @@ export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'i
   email: student.email,
   document: student.document,
   address: student.address,
-  custom_fields: student.customFields as Json,
+  custom_fields: student.customFields,
   company_id: student.companyId,
 });
-
-export const mapSupabaseStudentToStudent = mapSupabaseStudent;

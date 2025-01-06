@@ -29,13 +29,13 @@ export interface SupabaseFormField {
   form_type: 'admin' | 'enrollment';
 }
 
-export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
+export const mapSupabaseFormField = (field: any): FormField => ({
   id: field.id,
   name: field.name,
   label: field.label,
   type: field.type as FormFieldType,
   description: field.description || undefined,
-  required: field.required,
+  required: field.required || false,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : [],
   source: field.form_type === 'admin' ? 'admin' : 'public'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FormField } from "@/types/form";
-import { Student } from "@/types/student";
+import { Student, mapSupabaseStudent } from "@/types/student";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useCustomFieldsData = (companyId?: string) => {
@@ -82,18 +82,7 @@ export const useCustomFieldsData = (companyId?: string) => {
         if (error) throw error;
 
         if (data) {
-          const mappedStudents: Student[] = data.map(student => ({
-            id: student.id,
-            name: student.name,
-            birthDate: student.birth_date,
-            status: student.status ?? true,
-            email: student.email || '',
-            document: student.document || '',
-            address: student.address || '',
-            customFields: student.custom_fields || {},
-            companyId: student.company_id,
-            createdAt: student.created_at
-          }));
+          const mappedStudents = data.map(mapSupabaseStudent);
           console.log("Alunos mapeados:", mappedStudents);
           setStudents(mappedStudents);
         }
