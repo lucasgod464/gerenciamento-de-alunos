@@ -5,7 +5,7 @@ import { CustomFieldsChart } from "../CustomFieldsChart";
 import { useToast } from "@/hooks/use-toast";
 import { useCompanyId } from "@/components/form-builder/hooks/useCompanyId";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCustomFieldsData } from "./useCustomFieldsData";
 
@@ -20,8 +20,9 @@ export const ChartManager = () => {
   const companyId = useCompanyId();
   const [selectedField, setSelectedField] = useState<string>("");
   const { fields } = useCustomFieldsData(companyId);
+  const queryClient = useQueryClient();
 
-  const { data: savedCharts } = useQuery({
+  const { data: savedCharts = [] } = useQuery({
     queryKey: ["dashboard-charts", companyId],
     queryFn: async () => {
       if (!companyId) return [];
@@ -48,7 +49,7 @@ export const ChartManager = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("dashboard_charts")
         .insert([
           {
@@ -56,18 +57,17 @@ export const ChartManager = () => {
             field_id: selectedField,
             company_id: companyId,
           },
-        ])
-        .select()
-        .single();
+        ]);
 
       if (error) throw error;
+      
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-charts", companyId] });
       
       toast({
         title: "Gráfico adicionado",
         description: "O novo gráfico foi adicionado com sucesso.",
       });
 
-      // Limpar o campo selecionado após adicionar
       setSelectedField("");
     } catch (error) {
       console.error("Erro ao adicionar gráfico:", error);
@@ -87,6 +87,8 @@ export const ChartManager = () => {
         .eq("id", chartId);
 
       if (error) throw error;
+      
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-charts", companyId] });
       
       toast({
         title: "Gráfico removido",
