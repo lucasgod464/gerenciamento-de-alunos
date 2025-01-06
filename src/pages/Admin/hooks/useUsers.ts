@@ -3,15 +3,23 @@ import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { userService } from "@/services/userService";
+import { useAuth } from "@/hooks/useAuth";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const loadUsers = async () => {
     setLoading(true);
     try {
-      console.log('Carregando usuários do banco de dados...');
+      if (!user?.companyId) {
+        console.error('No company ID found for user');
+        setUsers([]);
+        return;
+      }
+
+      console.log('Carregando usuários do banco de dados para empresa:', user.companyId);
       
       const { data: usersData, error: usersError } = await supabase
         .from('emails')
@@ -30,9 +38,14 @@ export function useUsers() {
               name
             )
           )
-        `);
+        `)
+        .eq('company_id', user.companyId);
 
-      if (usersError) throw usersError;
+      if (usersError) {
+        console.error('Erro ao carregar usuários:', usersError);
+        toast.error('Erro ao carregar lista de usuários');
+        return;
+      }
 
       const mappedUsers = usersData.map(dbUser => ({
         id: dbUser.id,
@@ -76,7 +89,7 @@ export function useUsers() {
       await userService.updateUser(updatedUser);
       
       toast.success('Usuário atualizado com sucesso');
-      await loadUsers(); // Recarrega a lista após atualização
+      await loadUsers();
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
@@ -105,6 +118,12 @@ export function useUsers() {
     }
   };
 
+  useEffect(() => {
+    if (user?.companyId) {
+      loadUsers();
+    }
+  }, [user?.companyId]);
+
   // Configurar listener para atualizações em tempo real
   useEffect(() => {
     const channel = supabase
@@ -126,11 +145,6 @@ export function useUsers() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  // Carregar dados iniciais
-  useEffect(() => {
-    loadUsers();
   }, []);
 
   return {
