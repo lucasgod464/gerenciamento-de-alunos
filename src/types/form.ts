@@ -48,7 +48,7 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   type: field.type,
   description: field.description,
   required: field.required,
-  order: 0,
+  order: field.order,
   options: field.options || [],
   form_type: field.source === 'admin' ? 'admin' : 'enrollment'
 });
