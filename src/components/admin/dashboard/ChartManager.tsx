@@ -42,15 +42,15 @@ export const ChartManager = () => {
     setCharts(prev => [...prev, prev.length]);
   };
 
-  const handleSaveChart = async (fieldId: string, index: number) => {
+  const handleSaveChart = async (fieldIds: string[], index: number) => {
     try {
-      if (!user?.companyId || !fieldId) return;
+      if (!user?.companyId || !fieldIds.length) return;
 
       const { error } = await supabase
         .from("dashboard_charts")
         .insert({
           name: `Gráfico ${index + 1}`,
-          field_id: fieldId,
+          field_id: fieldIds.join(','),
           company_id: user.companyId
         });
 
@@ -99,13 +99,11 @@ export const ChartManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Grid container para os gráficos */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Gráficos salvos */}
         {savedCharts.map((chart) => (
           <div key={chart.id} className="w-full">
             <CustomFieldsChart
-              savedFieldId={chart.field_id}
+              savedFieldIds={chart.field_id.split(',')}
               onSave={() => {}}
               onRemove={() => handleRemoveChart(chart.id)}
               showRemoveButton
@@ -113,11 +111,10 @@ export const ChartManager = () => {
           </div>
         ))}
 
-        {/* Gráficos temporários */}
         {charts.map((index) => (
           <div key={index} className="w-full">
             <CustomFieldsChart
-              onSave={(fieldId) => handleSaveChart(fieldId, index)}
+              onSave={(fieldIds) => handleSaveChart(fieldIds, index)}
               showSaveButton
             />
           </div>

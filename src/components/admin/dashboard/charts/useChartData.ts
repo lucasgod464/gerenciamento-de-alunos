@@ -3,21 +3,21 @@ import { FormField } from "@/types/form";
 import { Student } from "@/types/student";
 
 export const useChartData = (
-  selectedField: string,
+  selectedFields: string[],
   students: Student[],
   fields: FormField[]
 ) => {
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!selectedField || !students.length) return;
+    if (!selectedFields.length || !students.length) return;
 
     console.log("Processando dados para o gráfico...");
-    console.log("Campo selecionado:", selectedField);
+    console.log("Campos selecionados:", selectedFields);
     console.log("Campos disponíveis:", fields);
 
-    const selectedFieldData = fields.find(f => f.id === selectedField);
-    if (!selectedFieldData) return;
+    const selectedFieldsData = fields.filter(f => selectedFields.includes(f.id));
+    if (!selectedFieldsData.length) return;
 
     const valueCount: Record<string, number> = {};
     let totalResponses = 0;
@@ -25,17 +25,21 @@ export const useChartData = (
     students.forEach(student => {
       if (!student.customFields) return;
       
-      const fieldValue = student.customFields[selectedField]?.value;
-      if (!fieldValue) return;
+      selectedFields.forEach(fieldId => {
+        const fieldValue = student.customFields[fieldId]?.value;
+        if (!fieldValue) return;
 
-      // Lidar com valores múltiplos (array) ou único
-      const values = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
-      
-      values.forEach(value => {
-        if (value && value.trim() !== '') {
-          valueCount[value] = (valueCount[value] || 0) + 1;
-          totalResponses++;
-        }
+        // Lidar com valores múltiplos (array) ou único
+        const values = Array.isArray(fieldValue) ? fieldValue : [fieldValue];
+        
+        values.forEach(value => {
+          if (value && value.trim() !== '') {
+            const field = selectedFieldsData.find(f => f.id === fieldId);
+            const label = field ? `${field.label}: ${value}` : value;
+            valueCount[label] = (valueCount[label] || 0) + 1;
+            totalResponses++;
+          }
+        });
       });
     });
 
@@ -48,7 +52,7 @@ export const useChartData = (
 
     console.log("Dados processados para o gráfico:", data);
     setChartData(data);
-  }, [selectedField, students, fields]);
+  }, [selectedFields, students, fields]);
 
   return chartData;
 };
