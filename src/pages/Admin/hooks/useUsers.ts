@@ -36,24 +36,22 @@ export function useUsers() {
       // Em seguida, buscar as especializações para cada usuário
       const usersWithSpecializations = await Promise.all(
         usersData.map(async (user) => {
-          try {
-            const { data: specializationsData } = await supabase
-              .from('specializations')
-              .select('id, name')
-              .innerJoin(
-                'user_specializations',
-                'specializations.id = user_specializations.specialization_id'
+          const { data: specializationsData } = await supabase
+            .from('user_specializations')
+            .select(`
+              specializations (
+                id,
+                name
               )
-              .eq('user_specializations.user_id', user.id);
+            `)
+            .eq('user_id', user.id);
 
-            return {
-              ...user,
-              specialization: specializationsData?.map(s => s.name).join(', ') || 'Não definido'
-            };
-          } catch (error) {
-            console.error('Error fetching specializations for user:', user.id, error);
-            return user;
-          }
+          const specializations = specializationsData?.map(s => s.specializations.name).join(', ') || '';
+          
+          return {
+            ...user,
+            specialization: specializations
+          };
         })
       );
       
