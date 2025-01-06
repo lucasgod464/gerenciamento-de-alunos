@@ -44,7 +44,7 @@ export const useCustomFieldsData = (companyId?: string) => {
           required: field.required || false,
           order: field.order,
           options: Array.isArray(field.options) ? field.options.map(String) : [],
-          source: 'admin'
+          source: 'admin' as const
         }));
 
         const mappedPublicFields: FormField[] = (publicFields || []).map(field => ({
@@ -56,7 +56,7 @@ export const useCustomFieldsData = (companyId?: string) => {
           required: field.required || false,
           order: field.order,
           options: Array.isArray(field.options) ? field.options.map(String) : [],
-          source: 'public'
+          source: 'public' as const
         }));
 
         const allFields = [...mappedAdminFields, ...mappedPublicFields];
@@ -88,7 +88,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
-            customFields: student.custom_fields || {},
+            customFields: student.custom_fields as Record<string, any> || {},
             companyId: student.company_id,
             createdAt: student.created_at
           }));
