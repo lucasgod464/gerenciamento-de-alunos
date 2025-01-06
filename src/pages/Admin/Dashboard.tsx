@@ -94,10 +94,9 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <AttendanceChart />
-          <ChartManager />
-        </div>
+        <AttendanceChart />
+        
+        <ChartManager />
       </div>
     </DashboardLayout>
   );
