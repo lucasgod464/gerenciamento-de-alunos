@@ -25,21 +25,19 @@ export function UserFormDialog({
 }: UserFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto py-4">
-          <UserForm
-            onSuccess={() => {
-              onSuccess?.();
-              onOpenChange(false);
-            }}
-            onCancel={() => onOpenChange(false)}
-            defaultValues={defaultValues}
-            isEditing={isEditing}
-          />
-        </div>
+        <UserForm
+          onSuccess={() => {
+            onSuccess?.();
+            onOpenChange(false);
+          }}
+          onCancel={() => onOpenChange(false)}
+          defaultValues={defaultValues}
+          isEditing={isEditing}
+        />
       </DialogContent>
     </Dialog>
   );
