@@ -35,7 +35,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options?.map(opt => String(opt)) || [],
+  options: Array.isArray(field.options) ? field.options.map(opt => String(opt)) : [],
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({

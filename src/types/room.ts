@@ -12,6 +12,7 @@ export interface Room {
   studyRoom: string;
   createdAt: string;
   students?: Student[];
+  companyName?: string; // Adicionado para suportar a visualização do superadmin
 }
 
 export interface SupabaseRoom {
@@ -38,6 +39,9 @@ export interface SupabaseRoom {
       created_at: string;
     };
   }[];
+  company?: {
+    name: string;
+  };
 }
 
 export const mapSupabaseRoomToRoom = (room: SupabaseRoom): Room => ({
@@ -51,4 +55,5 @@ export const mapSupabaseRoomToRoom = (room: SupabaseRoom): Room => ({
   studyRoom: room.study_room,
   createdAt: room.created_at,
   students: room.room_students?.map(rs => mapSupabaseStudent(rs.student)),
+  companyName: room.company?.name,
 });
