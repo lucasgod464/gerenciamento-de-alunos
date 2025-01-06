@@ -18,12 +18,19 @@ interface StudentFormProps {
 export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [formData, setFormData] = useState<Partial<Student>>(() => {
     if (initialData?.customFields) {
-      // Mapear os valores dos campos personalizados do formato armazenado para o formato do formulário
       const mappedCustomFields: Record<string, any> = {};
+      // Mapear os valores dos campos personalizados, considerando tanto o formato antigo quanto o novo
       Object.entries(initialData.customFields).forEach(([key, fieldData]) => {
-        if (typeof fieldData === 'object' && fieldData !== null && 'value' in fieldData) {
-          mappedCustomFields[key] = fieldData.value;
+        if (typeof fieldData === 'object' && fieldData !== null) {
+          // Se for um objeto com a propriedade 'value', use o valor
+          if ('value' in fieldData) {
+            mappedCustomFields[key] = fieldData.value;
+          } else {
+            // Se for um objeto mas sem 'value', use o objeto inteiro como valor
+            mappedCustomFields[key] = fieldData;
+          }
         } else {
+          // Se não for um objeto, use o valor diretamente
           mappedCustomFields[key] = fieldData;
         }
       });
@@ -77,6 +84,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   }, []);
 
   const handleCustomFieldChange = (field: FormField, value: any) => {
+    console.log('Campo alterado:', field.id, value); // Debug
     setFormData(prev => ({
       ...prev,
       customFields: {
@@ -120,6 +128,8 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         customFields: formattedCustomFields
       } as Student;
       
+      console.log('Dados do aluno a serem salvos:', studentData); // Debug
+      
       await onSubmit(studentData);
       setFormData({});
       toast({
@@ -139,6 +149,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const renderCustomField = (field: FormField) => {
     // Obter o valor atual do campo personalizado
     const currentValue = formData.customFields?.[field.id] || "";
+    console.log('Renderizando campo:', field.id, 'com valor:', currentValue); // Debug
 
     const commonProps = {
       key: field.id,
