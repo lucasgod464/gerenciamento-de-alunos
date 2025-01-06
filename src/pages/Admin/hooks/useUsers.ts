@@ -75,6 +75,8 @@ export function useUsers() {
 
   const handleUpdateUser = async (updatedUser: User) => {
     try {
+      console.log('Atualizando usuário:', updatedUser);
+      
       const { error } = await supabase
         .from('emails')
         .update({
@@ -126,8 +128,8 @@ export function useUsers() {
           schema: 'public',
           table: 'emails'
         },
-        () => {
-          console.log('Mudança detectada na tabela emails, recarregando dados...');
+        (payload) => {
+          console.log('Mudança detectada na tabela emails:', payload);
           loadUsers();
         }
       )

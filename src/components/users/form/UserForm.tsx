@@ -49,7 +49,10 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           .update(userData)
           .eq('id', defaultValues.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error('Erro ao atualizar usuário:', updateError);
+          throw updateError;
+        }
 
         // Atualiza tags
         await supabase
@@ -58,12 +61,14 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           .eq('user_id', defaultValues.id);
 
         if (selectedTags.length > 0) {
-          await supabase
+          const { error: tagsError } = await supabase
             .from('user_tags')
             .insert(selectedTags.map(tag => ({
               user_id: defaultValues.id,
               tag_id: tag.id
             })));
+
+          if (tagsError) throw tagsError;
         }
 
         // Atualiza salas autorizadas
@@ -73,12 +78,14 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           .eq('user_id', defaultValues.id);
 
         if (selectedRooms.length > 0) {
-          await supabase
+          const { error: roomsError } = await supabase
             .from('user_rooms')
             .insert(selectedRooms.map(roomId => ({
               user_id: defaultValues.id,
               room_id: roomId
             })));
+
+          if (roomsError) throw roomsError;
         }
 
         // Atualiza especializações
@@ -88,12 +95,14 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           .eq('user_id', defaultValues.id);
 
         if (selectedSpecializations.length > 0) {
-          await supabase
+          const { error: specsError } = await supabase
             .from('user_specializations')
             .insert(selectedSpecializations.map(specId => ({
               user_id: defaultValues.id,
               specialization_id: specId
             })));
+
+          if (specsError) throw specsError;
         }
 
         toast.success('Usuário atualizado com sucesso!');
