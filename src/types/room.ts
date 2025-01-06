@@ -58,5 +58,4 @@ export const mapSupabaseRoomToRoom = (room: SupabaseRoom): Room => ({
   companyName: room.company?.name
 });
 
-// Alias para manter compatibilidade
 export const mapSupabaseRoom = mapSupabaseRoomToRoom;

@@ -10,9 +10,8 @@ export interface FormField {
   description?: string;
   required: boolean;
   order: number;
-  options: string[];
+  options?: string[];
   source: 'admin' | 'public';
-  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -23,7 +22,7 @@ export interface SupabaseFormField {
   description?: string;
   required: boolean;
   order: number;
-  options: Json[];
+  options?: Json[];
   company_id?: string;
   created_at: string;
   form_type: 'admin' | 'enrollment';
@@ -37,9 +36,8 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description,
   required: field.required || false,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(String) : [],
-  source: field.form_type === 'admin' ? 'admin' : 'public',
-  isDefault: false
+  options: Array.isArray(field.options) ? field.options.map(String) : undefined,
+  source: field.form_type === 'admin' ? 'admin' : 'public'
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({

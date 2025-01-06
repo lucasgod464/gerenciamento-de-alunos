@@ -1,14 +1,15 @@
 export type AccessLevel = "Admin" | "Usuário Comum";
+export type UserRole = "SUPER_ADMIN" | "ADMIN" | "USER";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   companyId: string | null;
   createdAt: string | null;
   lastAccess: string | null;
-  status: string;
+  status: "active" | "inactive";
   accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
@@ -21,11 +22,11 @@ export interface DatabaseUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: UserRole;
   company_id: string | null;
   created_at: string | null;
   last_access: string | null;
-  status: string;
+  status: "active" | "inactive";
   access_level: AccessLevel;
   location?: string;
   specialization?: string;
