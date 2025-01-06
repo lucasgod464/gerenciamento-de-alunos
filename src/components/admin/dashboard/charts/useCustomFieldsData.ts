@@ -13,7 +13,6 @@ export const useCustomFieldsData = (companyId?: string) => {
       if (!companyId) return;
 
       try {
-        console.log("Carregando campos personalizados...");
         const [{ data: adminFields, error: adminError }, { data: publicFields, error: publicError }] = await Promise.all([
           supabase
             .from('admin_form_fields')
@@ -69,7 +68,6 @@ export const useCustomFieldsData = (companyId?: string) => {
       if (!companyId) return;
 
       try {
-        console.log("Carregando alunos...");
         const { data, error } = await supabase
           .from('students')
           .select('*')
@@ -86,7 +84,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
-            customFields: student.custom_fields as Record<string, any> || {},
+            customFields: student.custom_fields || {},
             companyId: student.company_id,
             createdAt: student.created_at
           }));

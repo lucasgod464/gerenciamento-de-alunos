@@ -14,7 +14,6 @@ export const useChartData = (
 
     console.log("Processando dados para o gráfico...");
     console.log("Campo selecionado:", selectedField);
-    console.log("Estudantes:", students);
 
     const selectedFieldData = fields.find(f => f.id === selectedField);
     if (!selectedFieldData) return;
@@ -23,9 +22,9 @@ export const useChartData = (
     let totalResponses = 0;
     
     students.forEach(student => {
-      if (!student.customFields) return;
+      if (!student.customFields || !student.customFields[selectedField]) return;
       
-      const fieldValue = student.customFields[selectedField]?.value;
+      const fieldValue = student.customFields[selectedField].value;
       if (!fieldValue) return;
 
       // Lidar com valores múltiplos (array) ou único
@@ -43,10 +42,10 @@ export const useChartData = (
     const data = Object.entries(valueCount).map(([name, value]) => ({
       name,
       value,
-      percentage: ((value / totalResponses) * 100).toFixed(1)
+      percentage: Number(((value / totalResponses) * 100).toFixed(1))
     }));
 
-    console.log("Dados do gráfico:", data);
+    console.log("Dados processados para o gráfico:", data);
     setChartData(data);
   }, [selectedField, students, fields]);
 

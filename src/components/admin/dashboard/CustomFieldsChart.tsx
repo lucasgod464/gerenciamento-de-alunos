@@ -15,8 +15,40 @@ export const CustomFieldsChart = () => {
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedField, students, fields);
 
-  if (isLoading || !fields.length) {
-    return null;
+  if (isLoading) {
+    return (
+      <Card className="col-span-3">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5 text-muted-foreground" />
+            Distribuição por Campo Personalizado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px]">
+            Carregando...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!fields.length) {
+    return (
+      <Card className="col-span-3">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5 text-muted-foreground" />
+            Distribuição por Campo Personalizado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            Nenhum campo personalizado encontrado
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -36,7 +68,7 @@ export const CustomFieldsChart = () => {
             <SelectContent>
               {fields.map((field) => (
                 <SelectItem key={field.id} value={field.id}>
-                  {field.label} ({field.source === 'admin' ? 'Admin' : 'Público'})
+                  {field.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -67,7 +99,7 @@ export const CustomFieldsChart = () => {
             </ResponsiveContainer>
           </div>
         ) : selectedField ? (
-          <div className="text-center text-muted-foreground">
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
             Nenhum dado disponível para este campo
           </div>
         ) : null}
