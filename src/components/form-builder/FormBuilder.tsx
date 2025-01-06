@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { FormField } from "@/types/form";
 import { AddFieldDialog } from "./AddFieldDialog";
 import { FormPreview } from "./FormPreview";
-import { useFormFields } from "./hooks/useFormFields";
+import { useFormFields } from "@/hooks/useFormFields";
 
 export const FormBuilder = () => {
   const {
