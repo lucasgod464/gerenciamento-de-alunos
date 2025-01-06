@@ -55,7 +55,6 @@ export const AddFieldDialog = ({ open, onClose, onAddField, editingField }: AddF
       required,
       name: label.toLowerCase().replace(/\s+/g, "_"),
       options: (type === "select" || type === "multiple") ? options : undefined,
-      source: 'public'
     });
     setLabel("");
     setDescription("");

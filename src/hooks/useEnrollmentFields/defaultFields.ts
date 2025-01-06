@@ -9,7 +9,7 @@ export const defaultFields: FormField[] = [
     required: true,
     order: 0,
     options: [],
-    source: "system",
+    source: "public",
     isDefault: true
   },
   {
@@ -20,7 +20,7 @@ export const defaultFields: FormField[] = [
     required: true,
     order: 1,
     options: [],
-    source: "system",
+    source: "public",
     isDefault: true
   }
 ];
