@@ -14,6 +14,14 @@ export const useRooms = () => {
     try {
       setLoading(true);
       
+      if (!user?.companyId) {
+        console.error('No company ID found for user');
+        setRooms([]);
+        return;
+      }
+
+      console.log('Fetching rooms for company:', user.companyId);
+      
       const { data: roomsData, error } = await supabase
         .from('rooms')
         .select(`
@@ -35,14 +43,24 @@ export const useRooms = () => {
               created_at
             )
           )
-        `);
+        `)
+        .eq('company_id', user.companyId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading rooms:', error);
+        toast({
+          title: "Erro ao carregar salas",
+          description: "Não foi possível carregar a lista de salas.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const formattedRooms = (roomsData as unknown as SupabaseRoom[]).map(room => 
         mapSupabaseRoomToRoom(room)
       );
 
+      console.log('Transformed rooms:', formattedRooms);
       setRooms(formattedRooms);
     } catch (error) {
       console.error('Error loading rooms:', error);
@@ -57,10 +75,10 @@ export const useRooms = () => {
   };
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.companyId) {
       loadRooms();
     }
-  }, [user?.id]);
+  }, [user?.companyId]);
 
   return {
     rooms,
