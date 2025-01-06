@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, Users2, DoorOpen, GraduationCap } from "lucide-react";
+import { Building2, Users2, DoorOpen } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -11,19 +11,16 @@ export function DashboardStats() {
         { count: companiesCount },
         { count: usersCount },
         { count: roomsCount },
-        { count: studentsCount },
       ] = await Promise.all([
         supabase.from("companies").select("*", { count: "exact", head: true }),
         supabase.from("emails").select("*", { count: "exact", head: true }),
         supabase.from("rooms").select("*", { count: "exact", head: true }),
-        supabase.from("students").select("*", { count: "exact", head: true }),
       ]);
 
       return {
         companies: companiesCount || 0,
         users: usersCount || 0,
         rooms: roomsCount || 0,
-        students: studentsCount || 0,
       };
     },
   });
@@ -50,17 +47,10 @@ export function DashboardStats() {
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
-    {
-      title: "Total de Alunos",
-      value: stats?.students || 0,
-      icon: GraduationCap,
-      color: "text-orange-600",
-      bgColor: "bg-orange-100",
-    },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {items.map((item) => (
         <Card key={item.title}>
           <CardContent className="p-6">
