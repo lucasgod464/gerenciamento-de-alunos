@@ -17,8 +17,9 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 interface CustomFieldsChartProps {
   savedFieldIds?: string[];
   mergeIdenticalValues?: boolean;
-  onSave?: (fieldIds: string[], mergeIdenticalValues: boolean) => void;
-  onUpdate?: (mergeIdenticalValues: boolean) => void;
+  customTitle?: string;
+  onSave?: (fieldIds: string[], mergeIdenticalValues: boolean, customTitle: string) => void;
+  onUpdate?: (mergeIdenticalValues: boolean, customTitle: string) => void;
   onRemove?: () => void;
   showSaveButton?: boolean;
   showRemoveButton?: boolean;
@@ -28,6 +29,7 @@ interface CustomFieldsChartProps {
 export const CustomFieldsChart = ({ 
   savedFieldIds = [],
   mergeIdenticalValues: initialMergeIdenticalValues = false,
+  customTitle: initialCustomTitle = "Clique aqui (nome personalizado)",
   onSave,
   onUpdate,
   onRemove,
@@ -38,7 +40,7 @@ export const CustomFieldsChart = ({
   const [selectedFields, setSelectedFields] = useState<string[]>(savedFieldIds);
   const [mergeIdenticalValues, setMergeIdenticalValues] = useState(initialMergeIdenticalValues);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [chartTitle, setChartTitle] = useState("Clique aqui (nome personalizado)");
+  const [chartTitle, setChartTitle] = useState(initialCustomTitle);
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedFields, students, fields, mergeIdenticalValues);
@@ -56,7 +58,14 @@ export const CustomFieldsChart = ({
   const handleMergeValuesChange = (checked: boolean) => {
     setMergeIdenticalValues(checked);
     if (showUpdateButton && onUpdate) {
-      onUpdate(checked);
+      onUpdate(checked, chartTitle);
+    }
+  };
+
+  const handleTitleChange = (newTitle: string) => {
+    setChartTitle(newTitle);
+    if (showUpdateButton && onUpdate) {
+      onUpdate(mergeIdenticalValues, newTitle);
     }
   };
 
@@ -109,10 +118,14 @@ export const CustomFieldsChart = ({
                   onChange={(e) => setChartTitle(e.target.value)}
                   className="max-w-[300px]"
                   autoFocus
-                  onBlur={() => setIsEditingTitle(false)}
+                  onBlur={() => {
+                    setIsEditingTitle(false);
+                    handleTitleChange(chartTitle);
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       setIsEditingTitle(false);
+                      handleTitleChange(chartTitle);
                     }
                   }}
                 />
@@ -131,7 +144,7 @@ export const CustomFieldsChart = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onSave?.(selectedFields, mergeIdenticalValues)}
+                onClick={() => onSave?.(selectedFields, mergeIdenticalValues, chartTitle)}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar

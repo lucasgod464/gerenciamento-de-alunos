@@ -13,6 +13,7 @@ type SavedChart = {
   field_id: string;
   company_id: string;
   merge_identical_values?: boolean;
+  custom_title?: string;
 };
 
 export const ChartManager = () => {
@@ -43,7 +44,7 @@ export const ChartManager = () => {
     setCharts(prev => [...prev, prev.length]);
   };
 
-  const handleSaveChart = async (fieldIds: string[], index: number, mergeIdenticalValues: boolean) => {
+  const handleSaveChart = async (fieldIds: string[], index: number, mergeIdenticalValues: boolean, customTitle: string) => {
     try {
       if (!user?.companyId || !fieldIds.length) {
         toast({
@@ -60,7 +61,8 @@ export const ChartManager = () => {
           name: `Gráfico ${index + 1}`,
           field_id: fieldIds.join(','),
           company_id: user.companyId,
-          merge_identical_values: mergeIdenticalValues
+          merge_identical_values: mergeIdenticalValues,
+          custom_title: customTitle
         });
 
       if (error) {
@@ -73,9 +75,7 @@ export const ChartManager = () => {
         return;
       }
 
-      // Remove o gráfico temporário após salvar com sucesso
       setCharts(prev => prev.filter(chartIndex => chartIndex !== index));
-
       await refetchCharts();
       
       toast({
@@ -92,11 +92,14 @@ export const ChartManager = () => {
     }
   };
 
-  const handleUpdateChart = async (chartId: string, mergeIdenticalValues: boolean) => {
+  const handleUpdateChart = async (chartId: string, mergeIdenticalValues: boolean, customTitle: string) => {
     try {
       const { error } = await supabase
         .from("dashboard_charts")
-        .update({ merge_identical_values: mergeIdenticalValues })
+        .update({ 
+          merge_identical_values: mergeIdenticalValues,
+          custom_title: customTitle
+        })
         .eq("id", chartId);
 
       if (error) {
@@ -166,8 +169,9 @@ export const ChartManager = () => {
             <CustomFieldsChart
               savedFieldIds={chart.field_id.split(',')}
               mergeIdenticalValues={chart.merge_identical_values}
+              customTitle={chart.custom_title}
               onSave={() => {}}
-              onUpdate={(mergeIdenticalValues) => handleUpdateChart(chart.id, mergeIdenticalValues)}
+              onUpdate={(mergeIdenticalValues, customTitle) => handleUpdateChart(chart.id, mergeIdenticalValues, customTitle)}
               onRemove={() => handleRemoveChart(chart.id)}
               showRemoveButton
               showUpdateButton
@@ -178,7 +182,7 @@ export const ChartManager = () => {
         {charts.map((index) => (
           <div key={index} className="w-full">
             <CustomFieldsChart
-              onSave={(fieldIds, mergeIdenticalValues) => handleSaveChart(fieldIds, index, mergeIdenticalValues)}
+              onSave={(fieldIds, mergeIdenticalValues, customTitle) => handleSaveChart(fieldIds, index, mergeIdenticalValues, customTitle)}
               showSaveButton
             />
           </div>
