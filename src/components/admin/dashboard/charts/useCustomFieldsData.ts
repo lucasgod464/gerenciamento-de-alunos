@@ -76,7 +76,7 @@ export const useCustomFieldsData = (companyId?: string) => {
         if (error) throw error;
 
         if (data) {
-          const mappedStudents = data.map(student => ({
+          const mappedStudents: Student[] = data.map(student => ({
             id: student.id,
             name: student.name,
             birthDate: student.birth_date,
@@ -84,7 +84,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
-            customFields: student.custom_fields || {},
+            customFields: student.custom_fields as Record<string, any> || {},
             companyId: student.company_id,
             createdAt: student.created_at
           }));

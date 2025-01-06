@@ -47,6 +47,6 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options?.map(opt => opt as Json) || [],
+  options: field.options || [],
   company_id: undefined,
 });
