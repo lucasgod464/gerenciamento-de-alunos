@@ -1,59 +1,65 @@
-import { Room } from "@/types/room";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, Home, Ban } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card"
+import { DoorClosed, DoorOpen, Door } from "lucide-react"
+import { Room } from "@/types/room"
 
 interface RoomStatsProps {
-  rooms: Room[];
+  rooms: Room[]
 }
 
-export function RoomStats({ rooms = [] }: RoomStatsProps) {
-  const totalRooms = rooms?.length || 0;
-  const activeRooms = rooms?.filter(room => room.status).length || 0;
-  const inactiveRooms = totalRooms - activeRooms;
+export function RoomStats({ rooms }: RoomStatsProps) {
+  const totalRooms = rooms.length
+  const activeRooms = rooms.filter(room => room.status).length
+  const inactiveRooms = rooms.filter(room => !room.status).length
 
   return (
-    <div className="grid gap-3 md:grid-cols-3">
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
+    <div className="grid gap-3 md:grid-cols-3 mb-6">
+      <Card>
+        <CardContent className="flex items-center justify-center py-4">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-full">
-              <Home className="w-5 h-5 text-blue-600" />
+              <Door className="w-5 h-5 text-blue-600" />
             </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Total de Salas
-            </h3>
-            <p className="text-3xl font-bold text-blue-600">{totalRooms}</p>
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Total de Salas
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">{totalRooms}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
+      <Card>
+        <CardContent className="flex items-center justify-center py-4">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-green-100 rounded-full">
-              <Users className="w-5 h-5 text-green-600" />
+              <DoorOpen className="w-5 h-5 text-green-600" />
             </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Salas Ativas
-            </h3>
-            <p className="text-3xl font-bold text-green-600">{activeRooms}</p>
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Salas Ativas
+              </h3>
+              <p className="text-2xl font-bold text-green-600">{activeRooms}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="hover:shadow-lg transition-shadow duration-200">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center space-y-1.5">
+      <Card>
+        <CardContent className="flex items-center justify-center py-4">
+          <div className="flex items-center gap-3">
             <div className="p-2 bg-red-100 rounded-full">
-              <Ban className="w-5 h-5 text-red-600" />
+              <DoorClosed className="w-5 h-5 text-red-600" />
             </div>
-            <h3 className="text-base font-medium text-muted-foreground">
-              Salas Desativadas
-            </h3>
-            <p className="text-3xl font-bold text-red-600">{inactiveRooms}</p>
+            <div className="flex flex-col">
+              <h3 className="text-sm font-medium text-muted-foreground">
+                Salas Inativas
+              </h3>
+              <p className="text-2xl font-bold text-red-600">{inactiveRooms}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
