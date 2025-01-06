@@ -12,6 +12,7 @@ type SavedChart = {
   name: string;
   field_id: string;
   company_id: string;
+  merge_identical_values?: boolean;
 };
 
 export const ChartManager = () => {
@@ -42,7 +43,7 @@ export const ChartManager = () => {
     setCharts(prev => [...prev, prev.length]);
   };
 
-  const handleSaveChart = async (fieldIds: string[], index: number) => {
+  const handleSaveChart = async (fieldIds: string[], index: number, mergeIdenticalValues: boolean) => {
     try {
       if (!user?.companyId || !fieldIds.length) {
         toast({
@@ -58,7 +59,8 @@ export const ChartManager = () => {
         .insert({
           name: `Gráfico ${index + 1}`,
           field_id: fieldIds.join(','),
-          company_id: user.companyId
+          company_id: user.companyId,
+          merge_identical_values: mergeIdenticalValues
         });
 
       if (error) {
@@ -84,6 +86,39 @@ export const ChartManager = () => {
       console.error("Erro ao salvar gráfico:", error);
       toast({
         title: "Erro ao salvar",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateChart = async (chartId: string, mergeIdenticalValues: boolean) => {
+    try {
+      const { error } = await supabase
+        .from("dashboard_charts")
+        .update({ merge_identical_values: mergeIdenticalValues })
+        .eq("id", chartId);
+
+      if (error) {
+        console.error("Erro ao atualizar gráfico:", error);
+        toast({
+          title: "Erro ao atualizar",
+          description: "Não foi possível atualizar o gráfico. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await refetchCharts();
+      
+      toast({
+        title: "Gráfico atualizado",
+        description: "As configurações do gráfico foram atualizadas com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar gráfico:", error);
+      toast({
+        title: "Erro ao atualizar",
         description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
@@ -130,9 +165,12 @@ export const ChartManager = () => {
           <div key={chart.id} className="w-full">
             <CustomFieldsChart
               savedFieldIds={chart.field_id.split(',')}
+              mergeIdenticalValues={chart.merge_identical_values}
               onSave={() => {}}
+              onUpdate={(mergeIdenticalValues) => handleUpdateChart(chart.id, mergeIdenticalValues)}
               onRemove={() => handleRemoveChart(chart.id)}
               showRemoveButton
+              showUpdateButton
             />
           </div>
         ))}
@@ -140,7 +178,7 @@ export const ChartManager = () => {
         {charts.map((index) => (
           <div key={index} className="w-full">
             <CustomFieldsChart
-              onSave={(fieldIds) => handleSaveChart(fieldIds, index)}
+              onSave={(fieldIds, mergeIdenticalValues) => handleSaveChart(fieldIds, index, mergeIdenticalValues)}
               showSaveButton
             />
           </div>

@@ -16,21 +16,27 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 interface CustomFieldsChartProps {
   savedFieldIds?: string[];
-  onSave?: (fieldIds: string[]) => void;
+  mergeIdenticalValues?: boolean;
+  onSave?: (fieldIds: string[], mergeIdenticalValues: boolean) => void;
+  onUpdate?: (mergeIdenticalValues: boolean) => void;
   onRemove?: () => void;
   showSaveButton?: boolean;
   showRemoveButton?: boolean;
+  showUpdateButton?: boolean;
 }
 
 export const CustomFieldsChart = ({ 
   savedFieldIds = [],
+  mergeIdenticalValues: initialMergeIdenticalValues = false,
   onSave,
+  onUpdate,
   onRemove,
   showSaveButton,
-  showRemoveButton 
+  showRemoveButton,
+  showUpdateButton
 }: CustomFieldsChartProps) => {
   const [selectedFields, setSelectedFields] = useState<string[]>(savedFieldIds);
-  const [mergeIdenticalValues, setMergeIdenticalValues] = useState(false);
+  const [mergeIdenticalValues, setMergeIdenticalValues] = useState(initialMergeIdenticalValues);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [chartTitle, setChartTitle] = useState("Distribuição por Campos Personalizados");
   const { user } = useAuth();
@@ -45,6 +51,13 @@ export const CustomFieldsChart = ({
 
   const handleRemoveField = (fieldId: string) => {
     setSelectedFields(prev => prev.filter(id => id !== fieldId));
+  };
+
+  const handleMergeValuesChange = (checked: boolean) => {
+    setMergeIdenticalValues(checked);
+    if (showUpdateButton && onUpdate) {
+      onUpdate(checked);
+    }
   };
 
   if (isLoading) {
@@ -116,7 +129,7 @@ export const CustomFieldsChart = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onSave?.(selectedFields)}
+                onClick={() => onSave?.(selectedFields, mergeIdenticalValues)}
               >
                 <Save className="h-4 w-4 mr-2" />
                 Salvar
@@ -181,7 +194,7 @@ export const CustomFieldsChart = ({
               <Switch
                 id="merge-values"
                 checked={mergeIdenticalValues}
-                onCheckedChange={setMergeIdenticalValues}
+                onCheckedChange={handleMergeValuesChange}
               />
               <Label htmlFor="merge-values">
                 Somar valores idênticos

@@ -271,6 +271,7 @@ export type Database = {
           created_at: string
           field_id: string
           id: string
+          merge_identical_values: boolean | null
           name: string
         }
         Insert: {
@@ -278,6 +279,7 @@ export type Database = {
           created_at?: string
           field_id: string
           id?: string
+          merge_identical_values?: boolean | null
           name: string
         }
         Update: {
@@ -285,6 +287,7 @@ export type Database = {
           created_at?: string
           field_id?: string
           id?: string
+          merge_identical_values?: boolean | null
           name?: string
         }
         Relationships: [
