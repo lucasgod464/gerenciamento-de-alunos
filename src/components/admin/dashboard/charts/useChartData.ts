@@ -5,7 +5,8 @@ import { Student } from "@/types/student";
 export const useChartData = (
   selectedFields: string[],
   students: Student[],
-  fields: FormField[]
+  fields: FormField[],
+  mergeIdenticalValues: boolean = false
 ) => {
   const [chartData, setChartData] = useState<any[]>([]);
 
@@ -15,6 +16,7 @@ export const useChartData = (
     console.log("Processando dados para o gráfico...");
     console.log("Campos selecionados:", selectedFields);
     console.log("Campos disponíveis:", fields);
+    console.log("Mesclar valores idênticos:", mergeIdenticalValues);
 
     const selectedFieldsData = fields.filter(f => selectedFields.includes(f.id));
     if (!selectedFieldsData.length) return;
@@ -35,7 +37,10 @@ export const useChartData = (
         values.forEach(value => {
           if (value && value.trim() !== '') {
             const field = selectedFieldsData.find(f => f.id === fieldId);
-            const label = field ? `${field.label}: ${value}` : value;
+            // Se mergeIdenticalValues for true, usa apenas o valor sem o prefixo do campo
+            const label = mergeIdenticalValues 
+              ? value.trim()
+              : field ? `${field.label}: ${value}` : value;
             valueCount[label] = (valueCount[label] || 0) + 1;
             totalResponses++;
           }
@@ -52,7 +57,7 @@ export const useChartData = (
 
     console.log("Dados processados para o gráfico:", data);
     setChartData(data);
-  }, [selectedFields, students, fields]);
+  }, [selectedFields, students, fields, mergeIdenticalValues]);
 
   return chartData;
 };

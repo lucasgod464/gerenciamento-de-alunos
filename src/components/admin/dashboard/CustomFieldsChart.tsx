@@ -8,6 +8,8 @@ import { useCustomFieldsData } from "./charts/useCustomFieldsData";
 import { useChartData } from "./charts/useChartData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -27,9 +29,10 @@ export const CustomFieldsChart = ({
   showRemoveButton 
 }: CustomFieldsChartProps) => {
   const [selectedFields, setSelectedFields] = useState<string[]>(savedFieldIds);
+  const [mergeIdenticalValues, setMergeIdenticalValues] = useState(false);
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
-  const chartData = useChartData(selectedFields, students, fields);
+  const chartData = useChartData(selectedFields, students, fields, mergeIdenticalValues);
 
   const handleAddField = (fieldId: string) => {
     if (!selectedFields.includes(fieldId)) {
@@ -149,6 +152,19 @@ export const CustomFieldsChart = ({
               </SelectContent>
             </Select>
           </div>
+
+          {selectedFields.length > 1 && (
+            <div className="flex items-center space-x-2 mb-4">
+              <Switch
+                id="merge-values"
+                checked={mergeIdenticalValues}
+                onCheckedChange={setMergeIdenticalValues}
+              />
+              <Label htmlFor="merge-values">
+                Somar valores idênticos
+              </Label>
+            </div>
+          )}
 
           {chartData.length > 0 ? (
             <div className="h-[300px]">
