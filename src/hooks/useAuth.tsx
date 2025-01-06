@@ -49,19 +49,53 @@ export function useAuth(): UseAuthReturn {
     console.log("Attempting login for:", email);
 
     try {
+      // Primeiro, tenta encontrar o usuário na tabela users (para super admin)
+      const { data: superAdminData, error: superAdminError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      console.log("Super admin check:", { superAdminData, superAdminError });
+
+      if (superAdminData && superAdminData.password === password) {
+        const response: AuthResponse = {
+          user: {
+            id: superAdminData.id,
+            name: superAdminData.name,
+            email: superAdminData.email,
+            role: "SUPER_ADMIN" as UserRole,
+            companyId: superAdminData.company_id,
+            createdAt: superAdminData.created_at,
+            lastAccess: new Date().toISOString(),
+            status: "active",
+            accessLevel: "SUPER_ADMIN" as UserRole,
+            location: null,
+            specialization: null,
+            address: null
+          },
+          token: "super-admin-token"
+        };
+
+        localStorage.setItem("session", JSON.stringify(response));
+        await refetch();
+        return response;
+      }
+
+      // Se não encontrar como super admin, procura na tabela emails
       const { data: userData, error: userError } = await supabase
         .from('emails')
         .select('*')
         .eq('email', email)
         .single();
 
-      console.log("Email login response:", { userData, userError });
+      console.log("Regular user check:", { userData, userError });
 
       if (userData && userData.password === password) {
         const response: AuthResponse = {
           user: {
             id: userData.id,
-            name: userData.name || '',
+            name: userData.name,
             email: userData.email,
             role: userData.access_level as UserRole,
             companyId: userData.company_id,
@@ -71,8 +105,7 @@ export function useAuth(): UseAuthReturn {
             accessLevel: userData.access_level as UserRole,
             location: userData.location,
             specialization: userData.specialization,
-            address: userData.address,
-            profilePicture: userData.profile_picture
+            address: userData.address
           },
           token: `${userData.access_level.toLowerCase()}-token`
         };
