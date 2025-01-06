@@ -3,9 +3,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { TagSelectionFields } from "../fields/TagSelectionFields";
-import { RoomSelectionFields } from "../fields/RoomSelectionFields";
-import { SpecializationSelectionFields } from "../fields/SpecializationSelectionFields";
 import UserFormFields from "../UserFormFields";
 
 interface UserFormProps {
@@ -120,16 +117,18 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <UserFormFields
-        defaultValues={defaultValues}
-        onTagsChange={setSelectedTags}
-        onRoomsChange={setSelectedRooms}
-        onSpecializationsChange={setSelectedSpecializations}
-        isEditing={isEditing}
-      />
+    <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      <div className="flex-1">
+        <UserFormFields
+          defaultValues={defaultValues}
+          onTagsChange={setSelectedTags}
+          onRoomsChange={setSelectedRooms}
+          onSpecializationsChange={setSelectedSpecializations}
+          isEditing={isEditing}
+        />
+      </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 pt-4 mt-4 border-t">
         {onCancel && (
           <Button
             type="button"
