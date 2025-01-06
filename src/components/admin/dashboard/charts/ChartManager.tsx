@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCompanyId } from "@/components/form-builder/hooks/useCompanyId";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCustomFieldsData } from "./useCustomFieldsData";
 
 interface SavedChart {
   id: string;
@@ -16,7 +18,8 @@ interface SavedChart {
 export const ChartManager = () => {
   const { toast } = useToast();
   const companyId = useCompanyId();
-  const [charts, setCharts] = useState<SavedChart[]>([]);
+  const [selectedField, setSelectedField] = useState<string>("");
+  const { fields } = useCustomFieldsData(companyId);
 
   const { data: savedCharts } = useQuery({
     queryKey: ["dashboard-charts", companyId],
@@ -34,8 +37,8 @@ export const ChartManager = () => {
     enabled: !!companyId
   });
 
-  const handleAddChart = async (fieldId: string) => {
-    if (!companyId || !fieldId) {
+  const handleAddChart = async () => {
+    if (!companyId || !selectedField) {
       toast({
         title: "Erro",
         description: "Selecione um campo para adicionar o gráfico.",
@@ -50,7 +53,7 @@ export const ChartManager = () => {
         .insert([
           {
             name: "Distribuição por Campo Personalizado",
-            field_id: fieldId,
+            field_id: selectedField,
             company_id: companyId,
           },
         ])
@@ -58,13 +61,14 @@ export const ChartManager = () => {
         .single();
 
       if (error) throw error;
-
-      setCharts((prev) => [...prev, data as SavedChart]);
       
       toast({
         title: "Gráfico adicionado",
         description: "O novo gráfico foi adicionado com sucesso.",
       });
+
+      // Limpar o campo selecionado após adicionar
+      setSelectedField("");
     } catch (error) {
       console.error("Erro ao adicionar gráfico:", error);
       toast({
@@ -83,8 +87,6 @@ export const ChartManager = () => {
         .eq("id", chartId);
 
       if (error) throw error;
-
-      setCharts((prev) => prev.filter((chart) => chart.id !== chartId));
       
       toast({
         title: "Gráfico removido",
@@ -102,12 +104,26 @@ export const ChartManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <h2 className="text-lg font-semibold">Gráficos Personalizados</h2>
-        <Button onClick={() => handleAddChart("")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar Gráfico
-        </Button>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center">
+          <Select value={selectedField} onValueChange={setSelectedField}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="Selecione um campo" />
+            </SelectTrigger>
+            <SelectContent>
+              {fields.map((field) => (
+                <SelectItem key={field.id} value={field.id}>
+                  {field.label} ({field.source === 'admin' ? 'Admin' : 'Público'})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleAddChart}>
+            <Plus className="mr-2 h-4 w-4" />
+            Adicionar Gráfico
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
