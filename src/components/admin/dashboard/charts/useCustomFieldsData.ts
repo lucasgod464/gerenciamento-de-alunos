@@ -59,9 +59,7 @@ export const useCustomFieldsData = (companyId?: string) => {
           source: 'public' as const
         }));
 
-        const allFields = [...mappedAdminFields, ...mappedPublicFields];
-        console.log("Campos mapeados:", allFields);
-        setFields(allFields);
+        setFields([...mappedAdminFields, ...mappedPublicFields]);
       } catch (error) {
         console.error('Erro ao carregar campos:', error);
       }
@@ -84,7 +82,7 @@ export const useCustomFieldsData = (companyId?: string) => {
             id: student.id,
             name: student.name,
             birthDate: student.birth_date,
-            status: student.status,
+            status: student.status ?? true,
             email: student.email || '',
             document: student.document || '',
             address: student.address || '',
