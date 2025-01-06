@@ -118,8 +118,14 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     }
   };
 
+  // Verifica se o aluno tem campos do formulário público
   const hasPublicFields = Object.keys(formData.customFields || {}).some(key => 
     enrollmentFields.find(field => field.id === key)
+  );
+
+  // Verifica se o aluno tem campos do formulário administrativo
+  const hasAdminFields = Object.keys(formData.customFields || {}).some(key => 
+    customFields.find(field => field.id === key)
   );
 
   return (
@@ -130,14 +136,16 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         rooms={rooms}
       />
 
+      {/* Mostra campos administrativos apenas se o aluno não tiver campos do formulário público */}
       <CustomFieldsSection
         title="Campos Administrativos"
         fields={customFields}
         currentValues={formData.customFields || {}}
         onFieldChange={handleCustomFieldChange}
-        show={customFields.length > 0}
+        show={customFields.length > 0 && !hasPublicFields}
       />
 
+      {/* Mostra campos do formulário público apenas se o aluno tiver campos do formulário público */}
       <CustomFieldsSection
         title="Campos do Formulário Público"
         fields={enrollmentFields}
