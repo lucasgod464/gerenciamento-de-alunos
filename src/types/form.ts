@@ -11,7 +11,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  source: 'admin' | 'public';
+  source: 'admin' | 'public' | 'system';
   isDefault?: boolean;
 }
 

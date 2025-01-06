@@ -1,5 +1,21 @@
 import { FormField } from "@/types/form";
-import { EnrollmentFieldCard } from "./EnrollmentFieldCard";
+import { Card } from "@/components/ui/card";
+import { Lock } from "lucide-react";
+import { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,24 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
-import { Card } from "@/components/ui/card";
-import { Lock } from "lucide-react";
+import { EnrollmentFieldCard } from "@/components/enrollment/EnrollmentFieldCard";
 
 interface FormPreviewProps {
   fields: FormField[];
@@ -74,7 +73,7 @@ export const FormPreview = ({ fields, onDeleteField, onEditField, onReorderField
     })
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = (event: any) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
