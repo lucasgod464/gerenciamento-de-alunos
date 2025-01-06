@@ -54,7 +54,10 @@ export const ChartManager = () => {
           company_id: user.companyId
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao salvar gráfico:", error);
+        throw error;
+      }
 
       await refetchCharts();
       
@@ -62,7 +65,7 @@ export const ChartManager = () => {
         title: "Gráfico salvo",
         description: "O gráfico foi salvo com sucesso e estará disponível no próximo acesso.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar gráfico:", error);
       toast({
         title: "Erro ao salvar",
@@ -79,7 +82,10 @@ export const ChartManager = () => {
         .delete()
         .eq("id", chartId);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao remover gráfico:", error);
+        throw error;
+      }
 
       await refetchCharts();
       
@@ -87,7 +93,7 @@ export const ChartManager = () => {
         title: "Gráfico removido",
         description: "O gráfico foi removido com sucesso.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao remover gráfico:", error);
       toast({
         title: "Erro ao remover",
