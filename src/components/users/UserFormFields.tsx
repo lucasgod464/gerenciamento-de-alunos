@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MapPin } from "lucide-react";
 import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
@@ -19,12 +18,11 @@ export interface UserFormFieldsProps {
     name?: string;
     email?: string;
     specialization?: string;
-    location?: string;
     status?: string;
-    tags?: { id: string; name: string; color: string; }[];
     accessLevel?: AccessLevel;
     authorizedRooms?: { id: string; name: string; }[];
     address?: string;
+    tags?: { id: string; name: string; color: string; }[];
   };
   onTagsChange?: (tags: { id: string; name: string; color: string; }[]) => void;
   onRoomsChange?: (rooms: string[]) => void;
@@ -106,30 +104,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="location">Local</Label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            id="location"
-            name="location"
-            defaultValue={defaultValues.location}
-            className="pl-9"
-            placeholder="Digite o local..."
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Endereço</Label>
-        <Input
-          id="address"
-          name="address"
-          defaultValue={defaultValues.address}
-          placeholder="Digite o endereço completo..."
-        />
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="accessLevel">Nível de Acesso</Label>
         <Select name="accessLevel" defaultValue={defaultValues.accessLevel}>
           <SelectTrigger>
@@ -155,6 +129,22 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
         </Select>
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor="address">Endereço</Label>
+        <Input
+          id="address"
+          name="address"
+          defaultValue={defaultValues.address}
+          placeholder="Digite o endereço completo..."
+        />
+      </div>
+
+      <RoomSelectionFields
+        selectedRooms={selectedRooms}
+        onRoomToggle={handleRoomToggle}
+        defaultValues={defaultValues}
+      />
+
       <TagSelectionFields
         selectedTags={selectedTags}
         onTagToggle={handleTagToggle}
@@ -164,12 +154,6 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
       <SpecializationSelectionFields
         selectedSpecializations={selectedSpecializations}
         onSpecializationToggle={handleSpecializationToggle}
-        defaultValues={defaultValues}
-      />
-
-      <RoomSelectionFields
-        selectedRooms={selectedRooms}
-        onRoomToggle={handleRoomToggle}
         defaultValues={defaultValues}
       />
     </div>
