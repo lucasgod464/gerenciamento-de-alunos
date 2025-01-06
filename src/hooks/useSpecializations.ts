@@ -1,14 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { specializationService } from "@/services/specializations";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export function useSpecializations() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const { data: specializations = [], isLoading, error } = useQuery({
-    queryKey: ['specializations'],
-    queryFn: specializationService.getSpecializations,
+    queryKey: ['specializations', user?.companyId],
+    queryFn: () => specializationService.getSpecializations(user?.companyId),
+    enabled: !!user?.companyId,
   });
 
   const createMutation = useMutation({

@@ -2,10 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Specialization } from "@/types/specialization";
 
 export const specializationService = {
-  async getSpecializations() {
+  async getSpecializations(companyId?: string) {
+    if (!companyId) {
+      console.error('Company ID is required to fetch specializations');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('specializations')
       .select('*')
+      .eq('company_id', companyId)
       .order('name');
     
     if (error) {
