@@ -31,7 +31,8 @@ export const useFormFields = () => {
         description: field.description || "",
         required: field.required || false,
         order: field.order,
-        options: Array.isArray(field.options) ? field.options.map(String) : undefined,
+        options: Array.isArray(field.options) ? field.options.map(String) : [],
+        source: 'admin' as const
       }));
 
       setFields(mappedFields);

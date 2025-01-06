@@ -17,8 +17,9 @@ export const useFieldOperations = () => {
           type: field.type,
           description: field.description,
           required: field.required,
-          options: field.options,
+          options: field.options || [],
           company_id: companyId,
+          order: 0, // será atualizado após a inserção
           form_type: 'admin'
         }])
         .select()
@@ -34,7 +35,8 @@ export const useFieldOperations = () => {
         description: data.description || "",
         required: data.required || false,
         order: data.order,
-        options: Array.isArray(data.options) ? data.options : undefined,
+        options: Array.isArray(data.options) ? data.options.map(String) : [],
+        source: 'admin' as const
       };
     } catch (error) {
       console.error("Error adding field:", error);
@@ -57,7 +59,7 @@ export const useFieldOperations = () => {
           type: field.type,
           description: field.description,
           required: field.required,
-          options: field.options,
+          options: field.options || [],
           order: field.order,
           company_id: companyId
         })
@@ -82,7 +84,8 @@ export const useFieldOperations = () => {
       const { error } = await supabase
         .from('admin_form_fields')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', companyId);
 
       if (error) throw error;
     } catch (error) {
