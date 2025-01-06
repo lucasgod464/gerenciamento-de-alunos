@@ -2,9 +2,6 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { DashboardStats } from "@/components/superadmin/dashboard/DashboardStats";
 import { RecentCompanies } from "@/components/superadmin/dashboard/RecentCompanies";
 import { CompaniesGrowthChart } from "@/components/superadmin/dashboard/CompaniesGrowthChart";
-import { StorageUsageChart } from "@/components/superadmin/dashboard/StorageUsageChart";
-import { ActiveUsersChart } from "@/components/superadmin/dashboard/ActiveUsersChart";
-import { CompanyLocationsMap } from "@/components/superadmin/dashboard/CompanyLocationsMap";
 
 const SuperAdminDashboard = () => {
   return (
@@ -19,19 +16,10 @@ const SuperAdminDashboard = () => {
 
         <DashboardStats />
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <CompaniesGrowthChart />
-          <StorageUsageChart />
-        </div>
-
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <ActiveUsersChart />
-          </div>
+          <CompaniesGrowthChart />
           <RecentCompanies />
         </div>
-
-        <CompanyLocationsMap />
       </div>
     </DashboardLayout>
   );
