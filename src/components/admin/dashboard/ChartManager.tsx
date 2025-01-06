@@ -44,7 +44,14 @@ export const ChartManager = () => {
 
   const handleSaveChart = async (fieldIds: string[], index: number) => {
     try {
-      if (!user?.companyId || !fieldIds.length) return;
+      if (!user?.companyId || !fieldIds.length) {
+        toast({
+          title: "Erro ao salvar",
+          description: "Selecione pelo menos um campo para salvar o gráfico.",
+          variant: "destructive",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from("dashboard_charts")
@@ -56,7 +63,12 @@ export const ChartManager = () => {
 
       if (error) {
         console.error("Erro ao salvar gráfico:", error);
-        throw error;
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar o gráfico. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
       }
 
       await refetchCharts();
@@ -65,11 +77,11 @@ export const ChartManager = () => {
         title: "Gráfico salvo",
         description: "O gráfico foi salvo com sucesso e estará disponível no próximo acesso.",
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao salvar gráfico:", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar o gráfico. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -84,7 +96,12 @@ export const ChartManager = () => {
 
       if (error) {
         console.error("Erro ao remover gráfico:", error);
-        throw error;
+        toast({
+          title: "Erro ao remover",
+          description: "Não foi possível remover o gráfico. Tente novamente.",
+          variant: "destructive",
+        });
+        return;
       }
 
       await refetchCharts();
@@ -93,11 +110,11 @@ export const ChartManager = () => {
         title: "Gráfico removido",
         description: "O gráfico foi removido com sucesso.",
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro ao remover gráfico:", error);
       toast({
         title: "Erro ao remover",
-        description: "Não foi possível remover o gráfico. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Tente novamente.",
         variant: "destructive",
       });
     }
