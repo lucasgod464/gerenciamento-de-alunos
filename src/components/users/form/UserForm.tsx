@@ -1,31 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TagSelectionFields } from "../fields/TagSelectionFields";
 import { RoomSelectionFields } from "../fields/RoomSelectionFields";
 import { SpecializationSelectionFields } from "../fields/SpecializationSelectionFields";
+import UserFormFields from "../UserFormFields";
 
 interface UserFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
   isEditing?: boolean;
-  defaultValues?: {
-    id?: string;
-    name?: string;
-    email?: string;
-    location?: string;
-    address?: string;
-    specialization?: string;
-    accessLevel?: string;
-    status?: string;
-    tags?: { id: string; name: string; color: string; }[];
-    authorizedRooms?: { id: string; name: string; }[];
-  };
+  defaultValues?: any;
 }
 
 export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: UserFormProps) {
@@ -35,7 +22,7 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
     defaultValues?.tags || []
   );
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    defaultValues?.authorizedRooms?.map(room => room.id) || []
+    defaultValues?.authorizedRooms?.map((room: any) => room.id) || []
   );
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
@@ -51,28 +38,78 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         location: formData.get('location') as string,
         address: formData.get('address') as string,
         specialization: formData.get('specialization') as string,
-        access_level: formData.get('accessLevel') as string,
+        access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum",
         status: formData.get('status') as string,
         company_id: user?.companyId,
         password: '123456', // Senha padrão para novos usuários
       };
 
+      console.log('Dados a serem atualizados:', userData);
+
       if (isEditing && defaultValues?.id) {
-        const { error } = await supabase
+        // Atualiza informações básicas do usuário
+        const { error: updateError } = await supabase
           .from('emails')
           .update(userData)
           .eq('id', defaultValues.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
+
+        // Atualiza tags
+        await supabase
+          .from('user_tags')
+          .delete()
+          .eq('user_id', defaultValues.id);
+
+        if (selectedTags.length > 0) {
+          await supabase
+            .from('user_tags')
+            .insert(selectedTags.map(tag => ({
+              user_id: defaultValues.id,
+              tag_id: tag.id
+            })));
+        }
+
+        // Atualiza salas autorizadas
+        await supabase
+          .from('user_rooms')
+          .delete()
+          .eq('user_id', defaultValues.id);
+
+        if (selectedRooms.length > 0) {
+          await supabase
+            .from('user_rooms')
+            .insert(selectedRooms.map(roomId => ({
+              user_id: defaultValues.id,
+              room_id: roomId
+            })));
+        }
+
+        // Atualiza especializações
+        await supabase
+          .from('user_specializations')
+          .delete()
+          .eq('user_id', defaultValues.id);
+
+        if (selectedSpecializations.length > 0) {
+          await supabase
+            .from('user_specializations')
+            .insert(selectedSpecializations.map(specId => ({
+              user_id: defaultValues.id,
+              specialization_id: specId
+            })));
+        }
+
+        toast.success('Usuário atualizado com sucesso!');
       } else {
         const { error } = await supabase
           .from('emails')
           .insert([userData]);
 
         if (error) throw error;
+        toast.success('Usuário criado com sucesso!');
       }
 
-      toast.success(isEditing ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
       onSuccess?.();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
@@ -84,104 +121,12 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome Completo</Label>
-        <Input
-          id="name"
-          name="name"
-          defaultValue={defaultValues?.name}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          defaultValue={defaultValues?.email}
-          required
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="location">Local</Label>
-        <Input
-          id="location"
-          name="location"
-          defaultValue={defaultValues?.location}
-          placeholder="Digite o local..."
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address">Endereço</Label>
-        <Input
-          id="address"
-          name="address"
-          defaultValue={defaultValues?.address}
-          placeholder="Digite o endereço completo..."
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="accessLevel">Nível de Acesso</Label>
-        <Select name="accessLevel" defaultValue={defaultValues?.accessLevel || "Usuário Comum"}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o nível de acesso" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Admin">Admin</SelectItem>
-            <SelectItem value="Usuário Comum">Usuário Comum</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="status">Status</Label>
-        <Select name="status" defaultValue={defaultValues?.status || "active"}>
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Ativo</SelectItem>
-            <SelectItem value="inactive">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <TagSelectionFields
-        selectedTags={selectedTags}
-        onTagToggle={(tag) => {
-          const newSelectedTags = selectedTags.some(t => t.id === tag.id)
-            ? selectedTags.filter(t => t.id !== tag.id)
-            : [...selectedTags, tag];
-          setSelectedTags(newSelectedTags);
-        }}
+      <UserFormFields
         defaultValues={defaultValues}
-      />
-
-      <SpecializationSelectionFields
-        selectedSpecializations={selectedSpecializations}
-        onSpecializationToggle={(specializationId) => {
-          const newSelectedSpecializations = selectedSpecializations.includes(specializationId)
-            ? selectedSpecializations.filter(id => id !== specializationId)
-            : [...selectedSpecializations, specializationId];
-          setSelectedSpecializations(newSelectedSpecializations);
-        }}
-        defaultValues={defaultValues}
-      />
-
-      <RoomSelectionFields
-        selectedRooms={selectedRooms}
-        onRoomToggle={(roomId) => {
-          const newSelectedRooms = selectedRooms.includes(roomId)
-            ? selectedRooms.filter(id => id !== roomId)
-            : [...selectedRooms, roomId];
-          setSelectedRooms(newSelectedRooms);
-        }}
-        defaultValues={defaultValues}
+        onTagsChange={setSelectedTags}
+        onRoomsChange={setSelectedRooms}
+        onSpecializationsChange={setSelectedSpecializations}
+        isEditing={isEditing}
       />
 
       <div className="flex justify-end gap-2">
