@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, Home, Ban } from "lucide-react";
+import { AttendanceChart } from "@/components/admin/dashboard/AttendanceChart";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -93,7 +94,8 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <AttendanceChart />
           <ChartManager />
         </div>
       </div>
