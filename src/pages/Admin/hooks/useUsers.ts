@@ -59,11 +59,11 @@ export function useUsers() {
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
-        role: dbUser.access_level,
+        role: dbUser.access_level as "ADMIN" | "USER",
         companyId: dbUser.company_id,
         createdAt: dbUser.created_at,
         lastAccess: dbUser.updated_at,
-        status: dbUser.status,
+        status: dbUser.status as "active" | "inactive",
         accessLevel: dbUser.access_level,
         location: dbUser.location,
         specialization: dbUser.specialization,
@@ -109,6 +109,36 @@ export function useUsers() {
         .eq('id', updatedUser.id);
 
       if (error) throw error;
+
+      // Atualiza tags
+      await supabase
+        .from('user_tags')
+        .delete()
+        .eq('user_id', updatedUser.id);
+
+      if (updatedUser.tags && updatedUser.tags.length > 0) {
+        await supabase
+          .from('user_tags')
+          .insert(updatedUser.tags.map(tag => ({
+            user_id: updatedUser.id,
+            tag_id: tag.id
+          })));
+      }
+
+      // Atualiza salas autorizadas
+      await supabase
+        .from('user_rooms')
+        .delete()
+        .eq('user_id', updatedUser.id);
+
+      if (updatedUser.authorizedRooms && updatedUser.authorizedRooms.length > 0) {
+        await supabase
+          .from('user_rooms')
+          .insert(updatedUser.authorizedRooms.map(room => ({
+            user_id: updatedUser.id,
+            room_id: room.id
+          })));
+      }
 
       // Atualiza o estado local imediatamente
       setUsers(prev => prev.map(user => 
