@@ -32,6 +32,7 @@ export function SpecializationSelectionFields({
     const loadSpecializations = async () => {
       if (!currentUser?.companyId) return;
 
+      console.log('Carregando especializações...');
       const { data: specializationsData, error } = await supabase
         .from('specializations')
         .select('*')
@@ -40,10 +41,11 @@ export function SpecializationSelectionFields({
         .order('name');
 
       if (error) {
-        console.error('Error loading specializations:', error);
+        console.error('Erro ao carregar especializações:', error);
         return;
       }
 
+      console.log('Especializações carregadas:', specializationsData);
       setSpecializations(specializationsData);
     };
 
@@ -55,22 +57,24 @@ export function SpecializationSelectionFields({
     const loadUserSpecializations = async () => {
       if (!defaultValues?.id) return;
 
+      console.log('Carregando especializações do usuário:', defaultValues.id);
       const { data, error } = await supabase
         .from('user_specializations')
         .select('specialization_id')
         .eq('user_id', defaultValues.id);
 
       if (error) {
-        console.error('Error loading user specializations:', error);
+        console.error('Erro ao carregar especializações do usuário:', error);
         return;
       }
 
+      console.log('Especializações do usuário carregadas:', data);
       const specializationIds = data.map(item => item.specialization_id);
       specializationIds.forEach(id => onSpecializationToggle(id));
     };
 
     loadUserSpecializations();
-  }, [defaultValues?.id, onSpecializationToggle]);
+  }, [defaultValues?.id]);
 
   const filteredSpecializations = specializations.filter(spec =>
     spec.name.toLowerCase().includes(searchTerm.toLowerCase())

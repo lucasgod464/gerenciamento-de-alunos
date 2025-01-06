@@ -18,7 +18,7 @@ export function useUserUpdate() {
 
     try {
       setLoading(true);
-      console.log('Updating user with specializations:', selectedSpecializations);
+      console.log('Atualizando usuário com especializações:', selectedSpecializations);
 
       const updateData = {
         name: formData.get('name')?.toString() || '',
@@ -56,19 +56,19 @@ export function useUserUpdate() {
       }
 
       // Update specializations
-      console.log('Deleting existing specializations for user:', user.id);
+      console.log('Deletando especializações existentes para o usuário:', user.id);
       const { error: deleteSpecError } = await supabase
         .from('user_specializations')
         .delete()
         .eq('user_id', user.id);
 
       if (deleteSpecError) {
-        console.error('Error deleting specializations:', deleteSpecError);
+        console.error('Erro ao deletar especializações:', deleteSpecError);
         throw deleteSpecError;
       }
 
       if (selectedSpecializations.length > 0) {
-        console.log('Inserting new specializations:', selectedSpecializations);
+        console.log('Inserindo novas especializações:', selectedSpecializations);
         const { error: insertSpecError } = await supabase
           .from('user_specializations')
           .insert(
@@ -79,7 +79,7 @@ export function useUserUpdate() {
           );
 
         if (insertSpecError) {
-          console.error('Error inserting specializations:', insertSpecError);
+          console.error('Erro ao inserir especializações:', insertSpecError);
           throw insertSpecError;
         }
       }
@@ -129,7 +129,7 @@ export function useUserUpdate() {
 
       return updatedUserData;
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Erro ao atualizar usuário:', error);
       toast({
         title: "Erro ao atualizar usuário",
         description: "Ocorreu um erro ao atualizar as informações do usuário.",
