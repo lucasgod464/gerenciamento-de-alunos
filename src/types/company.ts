@@ -12,7 +12,7 @@ export interface Company {
   createdAt: string;
   publicFolderPath: string;
   storageUsed: number;
-  enrollmentFormUrl?: string;
+  enrollmentFormUrl?: string | null;
 }
 
 export interface SupabaseCompany {
@@ -27,7 +27,7 @@ export interface SupabaseCompany {
   created_at: string;
   public_folder_path: string;
   storage_used: number;
-  enrollment_form_url?: string;
+  enrollment_form_url: string | null;
 }
 
 export const mapSupabaseCompany = (company: SupabaseCompany): Company => ({
