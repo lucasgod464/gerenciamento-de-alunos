@@ -5,7 +5,6 @@ import { UserStats } from "@/components/users/UserStats";
 import { RoomStats } from "@/components/rooms/RoomStats";
 import { StudyStats } from "@/components/studies/StudyStats";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
-import { CustomFieldsChart } from "@/components/admin/dashboard/CustomFieldsChart";
 import { Room } from "@/types/room";
 
 const AdminDashboard = () => {
@@ -63,13 +62,6 @@ const AdminDashboard = () => {
           <UserStats totalUsers={stats.totalUsers} activeUsers={stats.activeUsers} />
           <RoomStats rooms={rooms} totalRooms={stats.totalRooms} activeRooms={stats.activeRooms} />
           <StudyStats totalStudies={stats.totalStudies} activeStudies={stats.activeStudies} />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="col-span-2">
-            <h2 className="text-xl font-semibold mb-4">Análise de Campos Personalizados</h2>
-            <CustomFieldsChart />
-          </div>
         </div>
 
         <DashboardTabs />
