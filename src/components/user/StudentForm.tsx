@@ -3,12 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Student } from "@/types/student";
 import { FormField } from "@/types/form";
 import { supabase } from "@/integrations/supabase/client";
-import { CustomTextField } from "./student/form-fields/CustomTextField";
-import { CustomPhoneField } from "./student/form-fields/CustomPhoneField";
-import { CustomSelectField } from "./student/form-fields/CustomSelectField";
-import { CustomMultipleField } from "./student/form-fields/CustomMultipleField";
 import { useToast } from "@/hooks/use-toast";
 import { BasicInfoFields } from "./student/form/BasicInfoFields";
+import { CustomFieldsSection } from "./student/form/CustomFieldsSection";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -34,20 +31,14 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   useEffect(() => {
     const loadAllFields = async () => {
       try {
-        // Carregar campos administrativos
-        const { data: adminFields } = await supabase
-          .from('admin_form_fields')
-          .select('*')
-          .order('order');
-        
-        // Carregar campos do formulário público
-        const { data: publicFields } = await supabase
-          .from('enrollment_form_fields')
-          .select('*')
-          .order('order');
+        const [{ data: adminFields }, { data: publicFields }, { data: roomsData }] = await Promise.all([
+          supabase.from('admin_form_fields').select('*').order('order'),
+          supabase.from('enrollment_form_fields').select('*').order('order'),
+          supabase.from('rooms').select('id, name').eq('status', true)
+        ]);
         
         if (adminFields) {
-          const mappedAdminFields = adminFields.map(field => ({
+          setCustomFields(adminFields.map(field => ({
             id: field.id,
             name: field.name,
             label: field.label,
@@ -56,12 +47,11 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             required: field.required || false,
             order: field.order,
             options: field.options as string[] | undefined,
-          }));
-          setCustomFields(mappedAdminFields);
+          })));
         }
 
         if (publicFields) {
-          const mappedPublicFields = publicFields.map(field => ({
+          setEnrollmentFields(publicFields.map(field => ({
             id: field.id,
             name: field.name,
             label: field.label,
@@ -70,27 +60,18 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             required: field.required || false,
             order: field.order,
             options: field.options as string[] | undefined,
-          }));
-          setEnrollmentFields(mappedPublicFields);
+          })));
+        }
+
+        if (roomsData) {
+          setRooms(roomsData);
         }
       } catch (error) {
         console.error('Erro ao carregar campos:', error);
       }
     };
 
-    const loadRooms = async () => {
-      const { data: roomsData } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('status', true);
-      
-      if (roomsData) {
-        setRooms(roomsData);
-      }
-    };
-
     loadAllFields();
-    loadRooms();
   }, []);
 
   const handleCustomFieldChange = (field: FormField, value: any) => {
@@ -137,68 +118,39 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     }
   };
 
-  const renderCustomField = (field: FormField) => {
-    const currentValue = formData.customFields?.[field.id]?.value || "";
-
-    const commonProps = {
-      key: field.id,
-      field: field,
-      value: currentValue,
-      onChange: (newValue: any) => handleCustomFieldChange(field, newValue)
-    };
-
-    switch (field.type) {
-      case "text":
-      case "email":
-        return <CustomTextField {...commonProps} />;
-      case "tel":
-        return <CustomPhoneField {...commonProps} />;
-      case "select":
-        return <CustomSelectField {...commonProps} />;
-      case "multiple":
-        return <CustomMultipleField {...commonProps} />;
-      default:
-        return null;
-    }
-  };
+  const hasPublicFields = Object.keys(formData.customFields || {}).some(key => 
+    enrollmentFields.find(field => field.id === key)
+  );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-4">
       <BasicInfoFields 
         formData={formData}
         setFormData={setFormData}
         rooms={rooms}
       />
 
-      {/* Campos administrativos */}
-      {customFields.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Campos Administrativos</h3>
-          {customFields.map((field) => (
-            <div key={`field-wrapper-${field.id}`}>
-              {renderCustomField(field)}
-            </div>
-          ))}
-        </div>
-      )}
+      <CustomFieldsSection
+        title="Campos Administrativos"
+        fields={customFields}
+        currentValues={formData.customFields || {}}
+        onFieldChange={handleCustomFieldChange}
+        show={customFields.length > 0}
+      />
 
-      {/* Campos do formulário público */}
-      {enrollmentFields.length > 0 && Object.keys(formData.customFields || {}).some(key => 
-        enrollmentFields.find(field => field.id === key)
-      ) && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Campos do Formulário Público</h3>
-          {enrollmentFields.map((field) => (
-            <div key={`field-wrapper-${field.id}`}>
-              {renderCustomField(field)}
-            </div>
-          ))}
-        </div>
-      )}
+      <CustomFieldsSection
+        title="Campos do Formulário Público"
+        fields={enrollmentFields}
+        currentValues={formData.customFields || {}}
+        onFieldChange={handleCustomFieldChange}
+        show={enrollmentFields.length > 0 && hasPublicFields}
+      />
 
-      <Button type="submit" className="w-full">
-        {initialData ? "Salvar Alterações" : "Adicionar Aluno"}
-      </Button>
+      <div className="sticky bottom-0 bg-white py-4 border-t mt-4">
+        <Button type="submit" className="w-full">
+          {initialData ? "Salvar Alterações" : "Adicionar Aluno"}
+        </Button>
+      </div>
     </form>
   );
 };
