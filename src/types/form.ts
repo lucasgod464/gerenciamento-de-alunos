@@ -48,10 +48,9 @@ export const mapFormFieldToSupabase = (field: Omit<FormField, 'id' | 'order'>): 
   type: field.type,
   description: field.description,
   required: field.required,
-  order: 0, // Será definido ao inserir
-  options: field.options,
+  order: 0,
+  options: field.options || [],
   form_type: field.source === 'admin' ? 'admin' : 'enrollment'
 });
 
-// Re-exportando o tipo para compatibilidade
-export type FieldType = FormFieldType;
+export type { FormFieldType as FieldType };

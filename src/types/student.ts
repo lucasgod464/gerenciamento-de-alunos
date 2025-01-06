@@ -51,5 +51,4 @@ export const mapStudentToSupabase = (student: Student): Omit<SupabaseStudent, 'i
   company_id: student.companyId,
 });
 
-// Exportando a mesma função com nome alternativo para compatibilidade
 export const mapSupabaseStudentToStudent = mapSupabaseStudent;
