@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { useAuth } from "@/hooks/useAuth";
-import { ChartPie, Save, Trash2, Plus, X, Pencil } from "lucide-react";
+import { ChartPie, Save, Trash2, Plus, X } from "lucide-react";
 import { useCustomFieldsData } from "./charts/useCustomFieldsData";
 import { useChartData } from "./charts/useChartData";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ export const CustomFieldsChart = ({
   const [selectedFields, setSelectedFields] = useState<string[]>(savedFieldIds);
   const [mergeIdenticalValues, setMergeIdenticalValues] = useState(initialMergeIdenticalValues);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [chartTitle, setChartTitle] = useState("Distribuição por Campos Personalizados");
+  const [chartTitle, setChartTitle] = useState("Clique aqui (nome personalizado)");
   const { user } = useAuth();
   const { fields, students, isLoading } = useCustomFieldsData(user?.companyId);
   const chartData = useChartData(selectedFields, students, fields, mergeIdenticalValues);
@@ -118,9 +118,11 @@ export const CustomFieldsChart = ({
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsEditingTitle(true)}>
+              <div 
+                className="cursor-pointer" 
+                onClick={() => setIsEditingTitle(true)}
+              >
                 {chartTitle}
-                <Pencil className="h-4 w-4 text-muted-foreground hover:text-primary" />
               </div>
             )}
           </CardTitle>
