@@ -36,7 +36,14 @@ export interface AuthResponse {
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
-  SUPER_ADMIN: [],
-  ADMIN: [],
+  SUPER_ADMIN: [
+    { id: '1', name: 'canCreateCompany', description: 'Pode criar empresas' },
+    { id: '2', name: 'canCreateAdmin', description: 'Pode criar administradores' },
+    { id: '3', name: 'canViewAllCompanies', description: 'Pode ver todas as empresas' }
+  ],
+  ADMIN: [
+    { id: '4', name: 'canManageUsers', description: 'Pode gerenciar usuários' },
+    { id: '5', name: 'canManageRooms', description: 'Pode gerenciar salas' }
+  ],
   USER: []
 };
