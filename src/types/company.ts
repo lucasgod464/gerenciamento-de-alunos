@@ -1,4 +1,4 @@
-export type CompanyStatus = 'Ativa' | 'Inativa' | 'Pendente';
+export type CompanyStatus = 'Ativa' | 'Inativa' | 'Suspensa';
 
 export interface Company {
   id: string;
@@ -20,5 +20,19 @@ export interface CompanyFormData {
   document: string;
   usersLimit: number;
   roomsLimit: number;
-  status: CompanyStatus;
 }
+
+export const mapSupabaseCompany = (data: any): Company => ({
+  id: data.id,
+  name: data.name,
+  document: data.document,
+  usersLimit: data.users_limit,
+  currentUsers: data.current_users,
+  roomsLimit: data.rooms_limit,
+  currentRooms: data.current_rooms,
+  status: data.status as CompanyStatus,
+  createdAt: data.created_at,
+  publicFolderPath: data.public_folder_path,
+  storageUsed: data.storage_used,
+  enrollmentFormUrl: data.enrollment_form_url
+});

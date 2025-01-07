@@ -43,8 +43,7 @@ export const useEnrollmentFields = () => {
       const newField = {
         ...mapFormFieldToSupabase(field as FormField),
         order: fields.length,
-        company_id: user.companyId,
-        form_type: 'public' // Garantindo que form_type seja sempre definido
+        company_id: user.companyId
       };
 
       const { data, error } = await supabase
@@ -59,6 +58,30 @@ export const useEnrollmentFields = () => {
       setFields(prev => [...prev, mappedField]);
     } catch (error) {
       console.error("Erro ao adicionar campo:", error);
+      throw error;
+    }
+  };
+
+  const updateField = async (updatedField: FormField) => {
+    try {
+      if (!user?.companyId) throw new Error("Empresa não encontrada");
+
+      const { error } = await supabase
+        .from('enrollment_form_fields')
+        .update({
+          ...mapFormFieldToSupabase(updatedField),
+          company_id: user.companyId
+        })
+        .eq('id', updatedField.id)
+        .eq('company_id', user.companyId);
+
+      if (error) throw error;
+
+      setFields(prev => prev.map(field => 
+        field.id === updatedField.id ? updatedField : field
+      ));
+    } catch (error) {
+      console.error("Erro ao atualizar campo:", error);
       throw error;
     }
   };
@@ -80,40 +103,15 @@ export const useEnrollmentFields = () => {
     }
   };
 
-  const updateField = async (updatedField: FormField) => {
-    try {
-      if (!user?.companyId) throw new Error("Empresa não encontrada");
-
-      const { error } = await supabase
-        .from('enrollment_form_fields')
-        .update({
-          ...mapFormFieldToSupabase(updatedField),
-          company_id: user.companyId,
-          form_type: 'public' // Garantindo que form_type seja sempre definido
-        })
-        .eq('id', updatedField.id)
-        .eq('company_id', user.companyId);
-
-      if (error) throw error;
-
-      setFields(prev => prev.map(field => 
-        field.id === updatedField.id ? updatedField : field
-      ));
-    } catch (error) {
-      console.error("Erro ao atualizar campo:", error);
-      throw error;
-    }
-  };
-
   const reorderFields = async (reorderedFields: FormField[]) => {
     try {
       if (!user?.companyId) throw new Error("Empresa não encontrada");
 
       const updates = reorderedFields.map((field, index) => ({
+        id: field.id,
         ...mapFormFieldToSupabase(field),
         order: index,
-        company_id: user.companyId,
-        form_type: 'public' // Garantindo que form_type seja sempre definido
+        company_id: user.companyId
       }));
 
       const { error } = await supabase
