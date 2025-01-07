@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User, mapDatabaseUser } from "@/types/user";
+import { User } from "@/types/user";
 import { toast } from "sonner";
 
 interface CreateUserData {
@@ -14,6 +14,7 @@ interface CreateUserData {
   role: string;
   selectedRooms?: string[];
   selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
 }
 
 export const userService = {
@@ -44,15 +45,10 @@ export const userService = {
 
       // 2. Atualizar tags
       if (userData.tags) {
-        const { error: deleteTagsError } = await supabase
+        await supabase
           .from('user_tags')
           .delete()
           .eq('user_id', userData.id);
-
-        if (deleteTagsError) {
-          console.error('Erro ao deletar tags antigas:', deleteTagsError);
-          throw deleteTagsError;
-        }
 
         if (userData.tags.length > 0) {
           const { error: insertTagsError } = await supabase
@@ -64,24 +60,16 @@ export const userService = {
               }))
             );
 
-          if (insertTagsError) {
-            console.error('Erro ao inserir novas tags:', insertTagsError);
-            throw insertTagsError;
-          }
+          if (insertTagsError) throw insertTagsError;
         }
       }
 
       // 3. Atualizar salas autorizadas
       if (userData.authorizedRooms) {
-        const { error: deleteRoomsError } = await supabase
+        await supabase
           .from('user_rooms')
           .delete()
           .eq('user_id', userData.id);
-
-        if (deleteRoomsError) {
-          console.error('Erro ao deletar salas antigas:', deleteRoomsError);
-          throw deleteRoomsError;
-        }
 
         if (userData.authorizedRooms.length > 0) {
           const { error: insertRoomsError } = await supabase
@@ -93,18 +81,104 @@ export const userService = {
               }))
             );
 
-          if (insertRoomsError) {
-            console.error('Erro ao inserir novas salas:', insertRoomsError);
-            throw insertRoomsError;
-          }
+          if (insertRoomsError) throw insertRoomsError;
         }
       }
 
-      console.log('Usuário atualizado com sucesso:', updatedUser);
+      // 4. Atualizar especializações
+      if (userData.specializations) {
+        await supabase
+          .from('user_specializations')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.specializations.length > 0) {
+          const { error: insertSpecsError } = await supabase
+            .from('user_specializations')
+            .insert(
+              userData.specializations.map(spec => ({
+                user_id: userData.id,
+                specialization_id: spec.id
+              }))
+            );
+
+          if (insertSpecsError) throw insertSpecsError;
+        }
+      }
+
       return updatedUser;
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       throw error;
     }
   },
+
+  async createUser(userData: CreateUserData) {
+    try {
+      // 1. Criar usuário
+      const { data: newUser, error: createError } = await supabase
+        .from('emails')
+        .insert([{
+          name: userData.name,
+          email: userData.email,
+          password: userData.password,
+          access_level: userData.accessLevel,
+          company_id: userData.companyId,
+          location: userData.location,
+          specialization: userData.specialization,
+          status: userData.status
+        }])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // 2. Adicionar salas autorizadas
+      if (userData.selectedRooms?.length) {
+        const { error: roomsError } = await supabase
+          .from('user_rooms')
+          .insert(
+            userData.selectedRooms.map(roomId => ({
+              user_id: newUser.id,
+              room_id: roomId
+            }))
+          );
+
+        if (roomsError) throw roomsError;
+      }
+
+      // 3. Adicionar tags
+      if (userData.selectedTags?.length) {
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(
+            userData.selectedTags.map(tag => ({
+              user_id: newUser.id,
+              tag_id: tag.id
+            }))
+          );
+
+        if (tagsError) throw tagsError;
+      }
+
+      // 4. Adicionar especializações
+      if (userData.selectedSpecializations?.length) {
+        const { error: specsError } = await supabase
+          .from('user_specializations')
+          .insert(
+            userData.selectedSpecializations.map(specId => ({
+              user_id: newUser.id,
+              specialization_id: specId
+            }))
+          );
+
+        if (specsError) throw specsError;
+      }
+
+      return newUser;
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      throw error;
+    }
+  }
 };
