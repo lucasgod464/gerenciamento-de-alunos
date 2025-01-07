@@ -98,8 +98,10 @@ export function useUsers() {
       
       await userService.updateUser(updatedUser);
       
+      // Recarrega a lista após atualização para garantir dados sincronizados
+      await loadUsers();
+      
       toast.success('Usuário atualizado com sucesso');
-      await loadUsers(); // Recarrega a lista após atualização
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
@@ -137,12 +139,6 @@ export function useUsers() {
     }
   };
 
-  useEffect(() => {
-    if (user?.companyId) {
-      loadUsers();
-    }
-  }, [user?.companyId]);
-
   // Configurar listener para atualizações em tempo real
   useEffect(() => {
     const channel = supabase
@@ -165,6 +161,12 @@ export function useUsers() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.companyId) {
+      loadUsers();
+    }
+  }, [user?.companyId]);
 
   return {
     users,
