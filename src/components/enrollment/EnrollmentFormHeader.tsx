@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { v4 as uuidv4 } from 'uuid';
 
 export const EnrollmentFormHeader = () => {
   const [enrollmentUrl, setEnrollmentUrl] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -35,6 +37,33 @@ export const EnrollmentFormHeader = () => {
 
     loadCompanyUrl();
   }, [user?.companyId]);
+
+  const generateFormUrl = async () => {
+    if (!user?.companyId) {
+      toast.error("Empresa não encontrada.");
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const uniqueUrl = uuidv4();
+      
+      const { error } = await supabase
+        .from('companies')
+        .update({ enrollment_form_url: uniqueUrl })
+        .eq('id', user.companyId);
+
+      if (error) throw error;
+
+      setEnrollmentUrl(`${window.location.origin}/enrollment/${uniqueUrl}`);
+      toast.success("Link do formulário gerado com sucesso!");
+    } catch (error) {
+      console.error("Error generating form URL:", error);
+      toast.error("Não foi possível gerar o link do formulário.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const copyLink = () => {
     if (!enrollmentUrl) {
@@ -72,9 +101,18 @@ export const EnrollmentFormHeader = () => {
           <code className="text-sm flex-1 break-all">
             {enrollmentUrl || "URL do formulário não configurada"}
           </code>
-          <Button variant="secondary" onClick={copyLink} disabled={!enrollmentUrl}>
-            Copiar Link
-          </Button>
+          {!enrollmentUrl ? (
+            <Button 
+              onClick={generateFormUrl} 
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Gerando..." : "Gerar Link do Formulário"}
+            </Button>
+          ) : (
+            <Button variant="secondary" onClick={copyLink}>
+              Copiar Link
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
