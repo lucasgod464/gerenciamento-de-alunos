@@ -1,6 +1,12 @@
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'USER';
+export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
 export type UserStatus = 'active' | 'inactive';
 export type UserAccessLevel = 'Admin' | 'Usuário Comum';
+
+export interface Permission {
+  id: string;
+  name: string;
+  description: string;
+}
 
 export interface AuthUser {
   id: string;
@@ -17,54 +23,20 @@ export interface AuthUser {
   specializations?: { id: string; name: string }[];
 }
 
+export interface User extends AuthUser {
+  password?: string;
+  location?: string;
+  specialization?: string;
+  address?: string;
+}
+
 export interface AuthResponse {
   user: AuthUser;
   token: string;
 }
 
-export type Permission = 
-  | 'canCreateCompany'
-  | 'canCreateAdmin'
-  | 'canCreateUser'
-  | 'canViewAllCompanies'
-  | 'canManageUsers'
-  | 'canManageRooms'
-  | 'canManageStudies'
-  | 'canManageTags'
-  | 'canManageSpecializations';
-
-export const ROLE_PERMISSIONS = {
-  SUPER_ADMIN: {
-    canCreateCompany: true,
-    canCreateAdmin: true,
-    canCreateUser: true,
-    canViewAllCompanies: true,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  ADMIN: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: true,
-    canViewAllCompanies: false,
-    canManageUsers: true,
-    canManageRooms: true,
-    canManageStudies: true,
-    canManageTags: true,
-    canManageSpecializations: true,
-  },
-  USER: {
-    canCreateCompany: false,
-    canCreateAdmin: false,
-    canCreateUser: false,
-    canViewAllCompanies: false,
-    canManageUsers: false,
-    canManageRooms: false,
-    canManageStudies: false,
-    canManageTags: false,
-    canManageSpecializations: false,
-  },
-} as const;
+export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
+  SUPER_ADMIN: [],
+  ADMIN: [],
+  USER: []
+};
