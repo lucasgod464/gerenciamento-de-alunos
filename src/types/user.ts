@@ -17,6 +17,7 @@ export interface User {
   address?: string;
   tags?: { id: string; name: string; color: string; }[];
   authorizedRooms?: { id: string; name: string; }[];
+  specializations?: { id: string; name: string; }[];
 }
 
 export const mapSupabaseUser = (data: any): User => ({
@@ -33,5 +34,6 @@ export const mapSupabaseUser = (data: any): User => ({
   specialization: data.specialization,
   address: data.address,
   tags: data.tags,
-  authorizedRooms: data.authorized_rooms
+  authorizedRooms: data.authorized_rooms,
+  specializations: data.specializations
 });

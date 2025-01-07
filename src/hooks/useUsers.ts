@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User } from "@/types/user";
+import { User, UserRole } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { userService } from "@/services/userService";
@@ -53,15 +53,15 @@ export function useUsers() {
         return;
       }
 
-      const mappedUsers = usersData.map(dbUser => ({
+      const mappedUsers: User[] = usersData.map(dbUser => ({
         id: dbUser.id,
         name: dbUser.name,
         email: dbUser.email,
-        role: dbUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        role: dbUser.access_level === 'Admin' ? 'ADMIN' as UserRole : 'USER' as UserRole,
         companyId: dbUser.company_id,
         createdAt: dbUser.created_at,
         lastAccess: dbUser.updated_at,
-        status: dbUser.status as "active" | "inactive",
+        status: dbUser.status === 'active' ? 'active' : 'inactive',
         accessLevel: dbUser.access_level,
         location: dbUser.location || '',
         specialization: dbUser.specialization || '',
