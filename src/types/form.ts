@@ -1,5 +1,6 @@
+import { Json } from "@/integrations/supabase/types";
+
 export type FormFieldType = 'text' | 'number' | 'email' | 'tel' | 'select' | 'multiple' | 'date' | 'textarea';
-export type FormFieldSource = 'admin' | 'public' | 'system';
 
 export interface FormField {
   id: string;
@@ -10,8 +11,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  source: FormFieldSource;
-  isDefault?: boolean;
+  source: 'admin' | 'public' | 'system';
 }
 
 export interface SupabaseFormField {
@@ -22,7 +22,7 @@ export interface SupabaseFormField {
   description?: string;
   required: boolean;
   order: number;
-  options: Json[];
+  options?: Json[];
   company_id?: string;
   created_at: string;
   form_type: 'admin' | 'enrollment';
@@ -37,8 +37,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required || false,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : undefined,
-  source: field.form_type === 'admin' ? 'admin' : 'public',
-  isDefault: false
+  source: field.form_type === 'admin' ? 'admin' : 'public'
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
@@ -48,6 +47,8 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options ? field.options.map(opt => opt as Json) : [],
+  options: field.options || [],
   form_type: field.source === 'admin' ? 'admin' : 'enrollment'
 });
+
+export type { FormFieldType as FieldType };
