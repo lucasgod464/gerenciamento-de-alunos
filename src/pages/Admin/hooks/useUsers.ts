@@ -15,6 +15,7 @@ export function useUsers() {
     }
 
     try {
+      console.log('Carregando usuários...');
       const { data: emailsData, error: emailsError } = await supabase
         .from('emails')
         .select(`
@@ -63,18 +64,21 @@ export function useUsers() {
 
       setUsers(mappedUsers);
     } catch (error) {
-      console.error('Error loading users:', error);
+      console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
     }
   };
 
   const handleUpdateUser = async (userData: Partial<User>) => {
-    if (!userData.id) {
-      console.error('User ID is required for update');
+    if (!userData || !userData.id) {
+      console.error('Dados do usuário ou ID não fornecidos');
+      toast.error('Dados do usuário inválidos');
       return;
     }
 
     try {
+      console.log('Atualizando usuário:', userData);
+
       // Atualizar informações básicas do usuário
       const { error: updateError } = await supabase
         .from('emails')
@@ -151,7 +155,7 @@ export function useUsers() {
       await loadUsers(); // Recarregar lista após atualização
       toast.success('Usuário atualizado com sucesso');
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
     }
   };
@@ -176,7 +180,7 @@ export function useUsers() {
       setUsers(prev => prev.filter(user => user.id !== userId));
       toast.success('Usuário excluído com sucesso');
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Erro ao excluir usuário:', error);
       toast.error('Erro ao excluir usuário');
     }
   };
