@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { User, CreateUserData } from "@/types/user";
+import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { userService } from "@/services/userService";
 import { useAuth } from "@/hooks/useAuth";
 
 export function useUsers() {
@@ -10,10 +9,13 @@ export function useUsers() {
   const { user: currentUser } = useAuth();
 
   const loadUsers = async () => {
-    if (!currentUser?.companyId) return;
+    if (!currentUser?.companyId) {
+      console.error('No company ID found');
+      return;
+    }
 
     try {
-      const { data, error } = await supabase
+      const { data: emailsData, error: emailsError } = await supabase
         .from('emails')
         .select(`
           *,
@@ -39,9 +41,9 @@ export function useUsers() {
         `)
         .eq('company_id', currentUser.companyId);
 
-      if (error) throw error;
+      if (emailsError) throw emailsError;
 
-      const mappedUsers = data?.map(user => ({
+      const mappedUsers: User[] = emailsData.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
@@ -57,7 +59,7 @@ export function useUsers() {
         tags: user.user_tags?.map(ut => ut.tags) || [],
         authorizedRooms: user.user_rooms?.map(ur => ur.rooms) || [],
         specializations: user.user_specializations?.map(us => us.specializations) || []
-      })) || [];
+      }));
 
       setUsers(mappedUsers);
     } catch (error) {
@@ -67,24 +69,87 @@ export function useUsers() {
   };
 
   const handleUpdateUser = async (userData: Partial<User>) => {
-    if (!userData.id) return;
+    if (!userData.id) {
+      console.error('User ID is required for update');
+      return;
+    }
 
     try {
-      const updatedUser = await userService.updateUser({
-        ...userData,
-        id: userData.id,
-        companyId: currentUser?.companyId || '',
-        role: userData.role || 'USER',
-        status: userData.status || 'active'
-      } as User);
+      // Atualizar informações básicas do usuário
+      const { error: updateError } = await supabase
+        .from('emails')
+        .update({
+          name: userData.name,
+          email: userData.email,
+          access_level: userData.accessLevel,
+          location: userData.location || '',
+          specialization: userData.specialization || '',
+          status: userData.status,
+          address: userData.address || ''
+        })
+        .eq('id', userData.id);
 
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === updatedUser.id ? updatedUser : user
-        )
-      );
+      if (updateError) throw updateError;
 
-      toast.success('Usuário atualizado com sucesso!');
+      // Atualizar tags
+      if (userData.tags) {
+        await supabase
+          .from('user_tags')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.tags.length > 0) {
+          await supabase
+            .from('user_tags')
+            .insert(
+              userData.tags.map(tag => ({
+                user_id: userData.id,
+                tag_id: tag.id
+              }))
+            );
+        }
+      }
+
+      // Atualizar salas autorizadas
+      if (userData.authorizedRooms) {
+        await supabase
+          .from('user_rooms')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.authorizedRooms.length > 0) {
+          await supabase
+            .from('user_rooms')
+            .insert(
+              userData.authorizedRooms.map(room => ({
+                user_id: userData.id,
+                room_id: room.id
+              }))
+            );
+        }
+      }
+
+      // Atualizar especializações
+      if (userData.specializations) {
+        await supabase
+          .from('user_specializations')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.specializations.length > 0) {
+          await supabase
+            .from('user_specializations')
+            .insert(
+              userData.specializations.map(spec => ({
+                user_id: userData.id,
+                specialization_id: spec.id
+              }))
+            );
+        }
+      }
+
+      await loadUsers(); // Recarregar lista após atualização
+      toast.success('Usuário atualizado com sucesso');
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Erro ao atualizar usuário');
@@ -108,8 +173,8 @@ export function useUsers() {
 
       if (error) throw error;
 
-      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-      toast.success('Usuário excluído com sucesso!');
+      setUsers(prev => prev.filter(user => user.id !== userId));
+      toast.success('Usuário excluído com sucesso');
     } catch (error) {
       console.error('Error deleting user:', error);
       toast.error('Erro ao excluir usuário');

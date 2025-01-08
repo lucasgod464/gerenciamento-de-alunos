@@ -1,6 +1,4 @@
-import { Json } from "@/integrations/supabase/types";
-
-export type FieldType = 'text' | 'number' | 'date' | 'select' | 'multiple' | 'phone';
+export type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'date' | 'select' | 'multiple';
 
 export interface FormField {
   id: string;
@@ -11,7 +9,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  source: 'admin' | 'public' | 'system';
+  source: 'admin' | 'enrollment';
   isDefault?: boolean;
 }
 
@@ -20,10 +18,10 @@ export interface SupabaseFormField {
   name: string;
   label: string;
   type: string;
-  description: string;
+  description: string | null;
   required: boolean;
   order: number;
-  options: Json[];
+  options: string[];
   company_id: string;
   created_at: string;
   form_type: string;
@@ -34,22 +32,22 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description,
-  required: field.required || false,
+  description: field.description || "",
+  required: field.required,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(String) : undefined,
-  source: field.form_type === 'admin' ? 'admin' : 'public',
-  isDefault: false
+  options: Array.isArray(field.options) ? field.options.map(String) : [],
+  source: field.form_type as 'admin' | 'enrollment'
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'created_at'> => ({
+  id: field.id,
   name: field.name,
   label: field.label,
   type: field.type,
-  description: field.description || '',
+  description: field.description || null,
   required: field.required,
   order: field.order,
-  options: field.options ? field.options.map(opt => opt as Json) : [],
-  company_id: '',
-  form_type: field.source === 'admin' ? 'admin' : 'public'
+  options: field.options || [],
+  company_id: '', // Será preenchido no momento da inserção
+  form_type: field.source
 });
