@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
 import { UserFormDialog } from "./dialog/UserFormDialog";
+import { toast } from "sonner";
 
 interface CreateUserDialogProps {
   onUserCreated?: () => void;
@@ -9,6 +10,12 @@ interface CreateUserDialogProps {
 
 export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
+
+  const handleSuccess = () => {
+    toast.success('Usuário criado com sucesso!');
+    setOpen(false);
+    onUserCreated?.();
+  };
 
   return (
     <>
@@ -20,7 +27,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       <UserFormDialog
         open={open}
         onOpenChange={setOpen}
-        onSuccess={onUserCreated}
+        onSuccess={handleSuccess}
         title="Novo Usuário"
       />
     </>

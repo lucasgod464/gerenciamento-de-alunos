@@ -1,26 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
-
-interface CreateUserData {
-  name: string;
-  email: string;
-  password: string;
-  accessLevel: "Admin" | "Usuário Comum";
-  companyId: string;
-  location?: string;
-  specialization?: string;
-  status: string;
-  selectedRooms?: string[];
-  selectedTags?: { id: string; name: string; color: string; }[];
-  selectedSpecializations?: string[];
-}
+import { User, CreateUserData } from "@/types/user";
 
 export const userService = {
   async updateUser(userData: User) {
     try {
       console.log('Iniciando atualização do usuário:', userData);
 
-      // 1. Atualizar informações básicas do usuário
       const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
         .update({
@@ -36,22 +21,16 @@ export const userService = {
         .select()
         .single();
 
-      if (updateError) {
-        console.error('Erro ao atualizar informações básicas:', updateError);
-        throw updateError;
-      }
+      if (updateError) throw updateError;
 
-      // 2. Atualizar tags
       if (userData.tags) {
-        const { error: deleteTagsError } = await supabase
+        await supabase
           .from('user_tags')
           .delete()
           .eq('user_id', userData.id);
 
-        if (deleteTagsError) throw deleteTagsError;
-
         if (userData.tags.length > 0) {
-          const { error: insertTagsError } = await supabase
+          await supabase
             .from('user_tags')
             .insert(
               userData.tags.map(tag => ({
@@ -59,22 +38,17 @@ export const userService = {
                 tag_id: tag.id
               }))
             );
-
-          if (insertTagsError) throw insertTagsError;
         }
       }
 
-      // 3. Atualizar salas autorizadas
       if (userData.authorizedRooms) {
-        const { error: deleteRoomsError } = await supabase
+        await supabase
           .from('user_rooms')
           .delete()
           .eq('user_id', userData.id);
 
-        if (deleteRoomsError) throw deleteRoomsError;
-
         if (userData.authorizedRooms.length > 0) {
-          const { error: insertRoomsError } = await supabase
+          await supabase
             .from('user_rooms')
             .insert(
               userData.authorizedRooms.map(room => ({
@@ -82,22 +56,17 @@ export const userService = {
                 room_id: room.id
               }))
             );
-
-          if (insertRoomsError) throw insertRoomsError;
         }
       }
 
-      // 4. Atualizar especializações
       if (userData.specializations) {
-        const { error: deleteSpecsError } = await supabase
+        await supabase
           .from('user_specializations')
           .delete()
           .eq('user_id', userData.id);
 
-        if (deleteSpecsError) throw deleteSpecsError;
-
         if (userData.specializations.length > 0) {
-          const { error: insertSpecsError } = await supabase
+          await supabase
             .from('user_specializations')
             .insert(
               userData.specializations.map(spec => ({
@@ -105,8 +74,6 @@ export const userService = {
                 specialization_id: spec.id
               }))
             );
-
-          if (insertSpecsError) throw insertSpecsError;
         }
       }
 
@@ -121,7 +88,6 @@ export const userService = {
     try {
       console.log('Iniciando criação do usuário:', userData);
       
-      // 1. Criar usuário
       const { data: newUser, error: createError } = await supabase
         .from('emails')
         .insert([{
@@ -132,18 +98,15 @@ export const userService = {
           company_id: userData.companyId,
           location: userData.location,
           specialization: userData.specialization,
-          status: userData.status
+          status: userData.status,
+          address: userData.address
         }])
         .select()
         .single();
 
       if (createError) throw createError;
 
-      console.log('Usuário criado:', newUser);
-
-      // 2. Adicionar salas autorizadas
       if (userData.selectedRooms?.length) {
-        console.log('Adicionando salas:', userData.selectedRooms);
         const { error: roomsError } = await supabase
           .from('user_rooms')
           .insert(
@@ -156,9 +119,7 @@ export const userService = {
         if (roomsError) throw roomsError;
       }
 
-      // 3. Adicionar tags
       if (userData.selectedTags?.length) {
-        console.log('Adicionando tags:', userData.selectedTags);
         const { error: tagsError } = await supabase
           .from('user_tags')
           .insert(
@@ -171,9 +132,7 @@ export const userService = {
         if (tagsError) throw tagsError;
       }
 
-      // 4. Adicionar especializações
       if (userData.selectedSpecializations?.length) {
-        console.log('Adicionando especializações:', userData.selectedSpecializations);
         const { error: specsError } = await supabase
           .from('user_specializations')
           .insert(

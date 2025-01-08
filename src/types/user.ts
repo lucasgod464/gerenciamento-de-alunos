@@ -20,20 +20,35 @@ export interface User {
   specializations?: { id: string; name: string; }[];
 }
 
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  accessLevel: AccessLevel;
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
+  address?: string;
+}
+
 export const mapSupabaseUser = (data: any): User => ({
   id: data.id,
   name: data.name || '',
   email: data.email,
-  role: data.role as UserRole,
-  companyId: data.company_id || null,
+  role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
+  companyId: data.company_id,
   createdAt: data.created_at,
-  lastAccess: data.last_access || new Date().toISOString(),
+  lastAccess: data.updated_at,
   status: data.status === 'active' ? 'active' : 'inactive',
   accessLevel: data.access_level || 'Usuário Comum',
-  location: data.location,
-  specialization: data.specialization,
-  address: data.address,
-  tags: data.tags,
-  authorizedRooms: data.authorized_rooms,
-  specializations: data.specializations
+  location: data.location || '',
+  specialization: data.specialization || '',
+  address: data.address || '',
+  tags: data.tags || [],
+  authorizedRooms: data.authorizedRooms || [],
+  specializations: data.specializations || []
 });
