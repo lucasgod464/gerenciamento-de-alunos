@@ -20,6 +20,22 @@ export interface User {
   specializations?: { id: string; name: string; }[];
 }
 
+export interface CreateUserData {
+  email: string;
+  name: string;
+  password: string;
+  role: UserRole;
+  accessLevel: AccessLevel;
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status: UserStatus;
+  address?: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
+}
+
 export interface UserResponse {
   id: string;
   name: string;
@@ -51,21 +67,6 @@ export interface UserResponse {
       name: string;
     };
   }[];
-}
-
-export interface CreateUserData {
-  email: string;
-  name: string;
-  password: string;
-  accessLevel: AccessLevel;
-  companyId: string;
-  location?: string;
-  specialization?: string;
-  status: UserStatus;
-  address?: string;
-  selectedRooms?: string[];
-  selectedTags?: { id: string; name: string; color: string; }[];
-  selectedSpecializations?: string[];
 }
 
 export const mapSupabaseUser = (data: UserResponse): User => ({
