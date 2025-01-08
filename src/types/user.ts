@@ -1,6 +1,6 @@
 export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
 export type UserStatus = 'active' | 'inactive';
-export type AccessLevel = 'Admin' | 'Usuário Comum';
+export type UserAccessLevel = 'Admin' | 'Usuário Comum';
 
 export interface User {
   id: string;
@@ -11,39 +11,49 @@ export interface User {
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: AccessLevel;
+  accessLevel: UserAccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
-  tags?: { id: string; name: string; color: string; }[];
-  authorizedRooms?: { id: string; name: string; }[];
-  specializations?: { id: string; name: string; }[];
+  tags: Array<{
+    id: string;
+    name: string;
+    color: string;
+  }>;
+  authorizedRooms: Array<{
+    id: string;
+    name: string;
+  }>;
+  specializations: Array<{
+    id: string;
+    name: string;
+  }>;
 }
 
 export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  accessLevel: AccessLevel;
+  role: UserRole;
   companyId: string;
+  accessLevel: UserAccessLevel;
   location?: string;
   specialization?: string;
-  status: string;
-  selectedRooms?: string[];
-  selectedTags?: { id: string; name: string; color: string; }[];
-  selectedSpecializations?: string[];
   address?: string;
+  selectedRooms?: string[];
+  selectedTags?: string[];
+  selectedSpecializations?: string[];
 }
 
 export const mapSupabaseUser = (data: any): User => ({
   id: data.id,
-  name: data.name || '',
+  name: data.name,
   email: data.email,
-  role: data.access_level === 'Admin' ? 'ADMIN' : 'USER',
+  role: data.role === 'Admin' ? 'ADMIN' : 'USER',
   companyId: data.company_id,
   createdAt: data.created_at,
-  lastAccess: data.updated_at,
-  status: data.status === 'active' ? 'active' : 'inactive',
+  lastAccess: data.last_access,
+  status: data.status === true ? 'active' : 'inactive',
   accessLevel: data.access_level || 'Usuário Comum',
   location: data.location || '',
   specialization: data.specialization || '',

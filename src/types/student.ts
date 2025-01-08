@@ -11,6 +11,7 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
+  room?: string;
 }
 
 export const mapSupabaseStudent = (data: any): Student => ({
@@ -23,5 +24,6 @@ export const mapSupabaseStudent = (data: any): Student => ({
   address: data.address,
   customFields: data.custom_fields || {},
   companyId: data.company_id,
-  createdAt: data.created_at
+  createdAt: data.created_at,
+  room: data.room
 });
