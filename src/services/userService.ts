@@ -1,118 +1,130 @@
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/user";
-import { toast } from "sonner";
-
-interface CreateUserData {
-  email: string;
-  name: string;
-  password: string;
-  accessLevel: "Admin" | "Usuário Comum";
-  companyId: string;
-  location?: string;
-  specialization?: string;
-  status: string;
-  role: string;
-  selectedRooms?: string[];
-  selectedTags?: { id: string; name: string; color: string; }[];
-  selectedSpecializations?: string[];
-}
+import { User, CreateUserData, UserResponse, mapSupabaseUser } from "@/types/user";
 
 export const userService = {
   async updateUser(userData: User) {
     try {
       console.log('Iniciando atualização do usuário:', userData);
 
-      // 1. Atualizar informações básicas do usuário
-      const { data: updatedUser, error: updateError } = await supabase
-        .from('emails')
-        .update({
-          name: userData.name,
-          email: userData.email,
-          access_level: userData.accessLevel,
-          location: userData.location || '',
-          specialization: userData.specialization || '',
-          status: userData.status,
-          address: userData.address || '',
-        })
-        .eq('id', userData.id)
-        .select()
-        .single();
+      const updatePromises = [];
 
-      if (updateError) {
-        console.error('Erro ao atualizar informações básicas:', updateError);
-        throw updateError;
-      }
+      // 1. Atualizar informações básicas do usuário
+      updatePromises.push(
+        supabase
+          .from('emails')
+          .update({
+            name: userData.name,
+            email: userData.email,
+            access_level: userData.accessLevel,
+            location: userData.location || '',
+            specialization: userData.specialization || '',
+            status: userData.status,
+            address: userData.address || '',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', userData.id)
+      );
 
       // 2. Atualizar tags
-      if (userData.tags) {
-        const { error: deleteTagsError } = await supabase
-          .from('user_tags')
-          .delete()
-          .eq('user_id', userData.id);
-
-        if (deleteTagsError) throw deleteTagsError;
-
-        if (userData.tags.length > 0) {
-          const { error: insertTagsError } = await supabase
+      if (userData.tags !== undefined) {
+        updatePromises.push(
+          supabase
             .from('user_tags')
-            .insert(
-              userData.tags.map(tag => ({
-                user_id: userData.id,
-                tag_id: tag.id
-              }))
-            );
-
-          if (insertTagsError) throw insertTagsError;
-        }
+            .delete()
+            .eq('user_id', userData.id)
+            .then(() => {
+              if (userData.tags && userData.tags.length > 0) {
+                return supabase
+                  .from('user_tags')
+                  .insert(
+                    userData.tags.map(tag => ({
+                      user_id: userData.id,
+                      tag_id: tag.id
+                    }))
+                  );
+              }
+            })
+        );
       }
 
       // 3. Atualizar salas autorizadas
-      if (userData.authorizedRooms) {
-        const { error: deleteRoomsError } = await supabase
-          .from('user_rooms')
-          .delete()
-          .eq('user_id', userData.id);
-
-        if (deleteRoomsError) throw deleteRoomsError;
-
-        if (userData.authorizedRooms.length > 0) {
-          const { error: insertRoomsError } = await supabase
+      if (userData.authorizedRooms !== undefined) {
+        updatePromises.push(
+          supabase
             .from('user_rooms')
-            .insert(
-              userData.authorizedRooms.map(room => ({
-                user_id: userData.id,
-                room_id: room.id
-              }))
-            );
-
-          if (insertRoomsError) throw insertRoomsError;
-        }
+            .delete()
+            .eq('user_id', userData.id)
+            .then(() => {
+              if (userData.authorizedRooms && userData.authorizedRooms.length > 0) {
+                return supabase
+                  .from('user_rooms')
+                  .insert(
+                    userData.authorizedRooms.map(room => ({
+                      user_id: userData.id,
+                      room_id: room.id
+                    }))
+                  );
+              }
+            })
+        );
       }
 
       // 4. Atualizar especializações
-      if (userData.specializations) {
-        const { error: deleteSpecsError } = await supabase
-          .from('user_specializations')
-          .delete()
-          .eq('user_id', userData.id);
-
-        if (deleteSpecsError) throw deleteSpecsError;
-
-        if (userData.specializations.length > 0) {
-          const { error: insertSpecsError } = await supabase
+      if (userData.specializations !== undefined) {
+        updatePromises.push(
+          supabase
             .from('user_specializations')
-            .insert(
-              userData.specializations.map(spec => ({
-                user_id: userData.id,
-                specialization_id: spec.id
-              }))
-            );
-
-          if (insertSpecsError) throw insertSpecsError;
-        }
+            .delete()
+            .eq('user_id', userData.id)
+            .then(() => {
+              if (userData.specializations && userData.specializations.length > 0) {
+                return supabase
+                  .from('user_specializations')
+                  .insert(
+                    userData.specializations.map(spec => ({
+                      user_id: userData.id,
+                      specialization_id: spec.id
+                    }))
+                  );
+              }
+            })
+        );
       }
 
-      return updatedUser;
+      // Executar todas as operações em paralelo
+      await Promise.all(updatePromises);
+
+      // Buscar usuário atualizado com todas as relações
+      const { data: updatedUser, error: fetchError } = await supabase
+        .from('emails')
+        .select(`
+          *,
+          user_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          ),
+          user_rooms (
+            rooms (
+              id,
+              name
+            )
+          ),
+          user_specializations (
+            specializations (
+              id,
+              name
+            )
+          )
+        `)
+        .eq('id', userData.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      return mapSupabaseUser(updatedUser as UserResponse);
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       throw error;
@@ -134,61 +146,94 @@ export const userService = {
           company_id: userData.companyId,
           location: userData.location,
           specialization: userData.specialization,
-          status: userData.status
+          status: userData.status,
+          address: userData.address,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }])
-        .select()
+        .select('*')
         .single();
 
       if (createError) throw createError;
 
-      console.log('Usuário criado:', newUser);
+      const insertPromises = [];
 
       // 2. Adicionar salas autorizadas
       if (userData.selectedRooms?.length) {
-        console.log('Adicionando salas:', userData.selectedRooms);
-        const { error: roomsError } = await supabase
-          .from('user_rooms')
-          .insert(
-            userData.selectedRooms.map(roomId => ({
-              user_id: newUser.id,
-              room_id: roomId
-            }))
-          );
-
-        if (roomsError) throw roomsError;
+        insertPromises.push(
+          supabase
+            .from('user_rooms')
+            .insert(
+              userData.selectedRooms.map(roomId => ({
+                user_id: newUser.id,
+                room_id: roomId
+              }))
+            )
+        );
       }
 
       // 3. Adicionar tags
       if (userData.selectedTags?.length) {
-        console.log('Adicionando tags:', userData.selectedTags);
-        const { error: tagsError } = await supabase
-          .from('user_tags')
-          .insert(
-            userData.selectedTags.map(tag => ({
-              user_id: newUser.id,
-              tag_id: tag.id
-            }))
-          );
-
-        if (tagsError) throw tagsError;
+        insertPromises.push(
+          supabase
+            .from('user_tags')
+            .insert(
+              userData.selectedTags.map(tag => ({
+                user_id: newUser.id,
+                tag_id: tag.id
+              }))
+            )
+        );
       }
 
       // 4. Adicionar especializações
       if (userData.selectedSpecializations?.length) {
-        console.log('Adicionando especializações:', userData.selectedSpecializations);
-        const { error: specsError } = await supabase
-          .from('user_specializations')
-          .insert(
-            userData.selectedSpecializations.map(specId => ({
-              user_id: newUser.id,
-              specialization_id: specId
-            }))
-          );
-
-        if (specsError) throw specsError;
+        insertPromises.push(
+          supabase
+            .from('user_specializations')
+            .insert(
+              userData.selectedSpecializations.map(specId => ({
+                user_id: newUser.id,
+                specialization_id: specId
+              }))
+            )
+        );
       }
 
-      return newUser;
+      // Executar todas as inserções em paralelo
+      await Promise.all(insertPromises);
+
+      // Buscar usuário criado com todas as relações
+      const { data: createdUser, error: fetchError } = await supabase
+        .from('emails')
+        .select(`
+          *,
+          user_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          ),
+          user_rooms (
+            rooms (
+              id,
+              name
+            )
+          ),
+          user_specializations (
+            specializations (
+              id,
+              name
+            )
+          )
+        `)
+        .eq('id', newUser.id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      return mapSupabaseUser(createdUser as UserResponse);
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
       throw error;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User } from "@/types/user";
+import { User, UserResponse, mapSupabaseUser } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { userService } from "@/services/userService";
@@ -37,6 +37,12 @@ export function useUsers() {
               id,
               name
             )
+          ),
+          user_specializations (
+            specializations (
+              id,
+              name
+            )
           )
         `)
         .eq('company_id', user.companyId);
@@ -47,30 +53,7 @@ export function useUsers() {
         return;
       }
 
-      const mappedUsers = usersData.map(dbUser => ({
-        id: dbUser.id,
-        name: dbUser.name,
-        email: dbUser.email,
-        role: dbUser.access_level,
-        companyId: dbUser.company_id,
-        createdAt: dbUser.created_at,
-        lastAccess: dbUser.updated_at,
-        status: dbUser.status as "active" | "inactive",
-        accessLevel: dbUser.access_level,
-        location: dbUser.location || '',
-        specialization: dbUser.specialization || '',
-        address: dbUser.address || '',
-        tags: dbUser.user_tags?.map(ut => ({
-          id: ut.tags.id,
-          name: ut.tags.name,
-          color: ut.tags.color
-        })) || [],
-        authorizedRooms: dbUser.user_rooms?.map(ur => ({
-          id: ur.rooms.id,
-          name: ur.rooms.name
-        })) || []
-      }));
-
+      const mappedUsers = usersData.map(dbUser => mapSupabaseUser(dbUser as UserResponse));
       console.log('Usuários carregados:', mappedUsers);
       setUsers(mappedUsers);
     } catch (error) {
@@ -86,10 +69,16 @@ export function useUsers() {
       setLoading(true);
       console.log('Iniciando atualização do usuário:', updatedUser);
       
-      await userService.updateUser(updatedUser);
+      const updatedUserData = await userService.updateUser(updatedUser);
+      
+      // Atualizar estado local imediatamente
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === updatedUserData.id ? updatedUserData : user
+        )
+      );
       
       toast.success('Usuário atualizado com sucesso');
-      await loadUsers();
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
       toast.error('Erro ao atualizar usuário');
@@ -98,9 +87,37 @@ export function useUsers() {
     }
   };
 
+  const handleCreateUser = async (userData: CreateUserData) => {
+    try {
+      setLoading(true);
+      const newUser = await userService.createUser(userData);
+      
+      // Adicionar novo usuário ao estado local
+      setUsers(prevUsers => [...prevUsers, newUser]);
+      
+      toast.success('Usuário criado com sucesso');
+      return newUser;
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      toast.error('Erro ao criar usuário');
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDeleteUser = async (userId: string) => {
     try {
       setLoading(true);
+      
+      // Primeiro remove as relações
+      await Promise.all([
+        supabase.from('user_tags').delete().eq('user_id', userId),
+        supabase.from('user_rooms').delete().eq('user_id', userId),
+        supabase.from('user_specializations').delete().eq('user_id', userId)
+      ]);
+
+      // Depois remove o usuário
       const { error } = await supabase
         .from('emails')
         .delete()
@@ -108,6 +125,7 @@ export function useUsers() {
 
       if (error) throw error;
 
+      // Atualizar estado local imediatamente
       setUsers(prev => prev.filter(user => user.id !== userId));
       toast.success('Usuário excluído com sucesso');
     } catch (error) {
@@ -118,14 +136,10 @@ export function useUsers() {
     }
   };
 
-  useEffect(() => {
-    if (user?.companyId) {
-      loadUsers();
-    }
-  }, [user?.companyId]);
-
   // Configurar listener para atualizações em tempo real
   useEffect(() => {
+    if (!user?.companyId) return;
+
     const channel = supabase
       .channel('emails-changes')
       .on(
@@ -133,11 +147,63 @@ export function useUsers() {
         {
           event: '*',
           schema: 'public',
-          table: 'emails'
+          table: 'emails',
+          filter: `company_id=eq.${user.companyId}`
         },
-        (payload) => {
+        async (payload) => {
           console.log('Mudança detectada na tabela emails:', payload);
-          loadUsers();
+          
+          // Buscar dados completos do usuário afetado
+          const { data: userData, error } = await supabase
+            .from('emails')
+            .select(`
+              *,
+              user_tags (
+                tags (
+                  id,
+                  name,
+                  color
+                )
+              ),
+              user_rooms (
+                rooms (
+                  id,
+                  name
+                )
+              ),
+              user_specializations (
+                specializations (
+                  id,
+                  name
+                )
+              )
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (error) {
+            console.error('Erro ao buscar dados atualizados:', error);
+            return;
+          }
+
+          const mappedUser = mapSupabaseUser(userData as UserResponse);
+
+          // Atualizar estado local baseado no tipo de evento
+          switch (payload.eventType) {
+            case 'INSERT':
+              setUsers(prev => [...prev, mappedUser]);
+              break;
+            case 'UPDATE':
+              setUsers(prev => 
+                prev.map(user => 
+                  user.id === mappedUser.id ? mappedUser : user
+                )
+              );
+              break;
+            case 'DELETE':
+              setUsers(prev => prev.filter(user => user.id !== payload.old.id));
+              break;
+          }
         }
       )
       .subscribe();
@@ -145,13 +211,20 @@ export function useUsers() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user?.companyId]);
+
+  useEffect(() => {
+    if (user?.companyId) {
+      loadUsers();
+    }
+  }, [user?.companyId]);
 
   return {
     users,
     loading,
     loadUsers,
     handleUpdateUser,
-    handleDeleteUser
+    handleDeleteUser,
+    handleCreateUser
   };
 }
