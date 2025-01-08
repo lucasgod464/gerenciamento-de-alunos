@@ -1,4 +1,5 @@
 export type FieldType = 'text' | 'email' | 'tel' | 'textarea' | 'date' | 'select' | 'multiple';
+export type FormSource = 'admin' | 'enrollment' | 'public';
 
 export interface FormField {
   id: string;
@@ -9,7 +10,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  source: 'admin' | 'enrollment';
+  source: FormSource;
   isDefault?: boolean;
 }
 
@@ -36,7 +37,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : [],
-  source: field.form_type as 'admin' | 'enrollment'
+  source: field.form_type as FormSource
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'created_at'> => ({
