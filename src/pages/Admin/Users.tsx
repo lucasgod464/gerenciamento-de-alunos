@@ -27,6 +27,10 @@ const Users = () => {
   const activeUsers = users.filter(user => user.status === 'active').length;
   const inactiveUsers = users.filter(user => user.status === 'inactive').length;
 
+  const handleUserUpdate = async (userData: Partial<User>) => {
+    await handleUpdateUser(userData);
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="max-w-6xl mx-auto space-y-4">
@@ -50,7 +54,7 @@ const Users = () => {
         />
         <UserList 
           users={filteredUsers}
-          onUpdateUser={handleUpdateUser}
+          onUpdateUser={handleUserUpdate}
           onDeleteUser={handleDeleteUser}
         />
       </div>

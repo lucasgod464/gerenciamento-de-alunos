@@ -4,112 +4,136 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { userService } from "@/services/userService";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
 
-export function useUsers() {
+export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user: currentUser } = useAuth();
+  const { toast } = useToast();
 
   const loadUsers = async () => {
-    setLoading(true);
-    try {
-      if (!user?.companyId) {
-        console.error('No company ID found for user');
-        setUsers([]);
-        return;
-      }
+    if (!currentUser?.companyId) return;
 
-      console.log('Carregando usuários do banco de dados para empresa:', user.companyId);
-      
-      const { data: usersData, error: usersError } = await supabase
-        .from('emails')
+    try {
+      const { data, error } = await supabase
+        .from('users')
         .select(`
           *,
-          user_tags (
-            tags (
-              id,
-              name,
-              color
-            )
-          ),
-          user_rooms (
-            rooms (
-              id,
-              name
-            )
-          ),
-          user_specializations (
-            specializations (
-              id,
-              name
-            )
-          )
+          user_tags (tag_id),
+          user_rooms (room_id),
+          user_specializations (specialization_id)
         `)
-        .eq('company_id', user.companyId);
+        .eq('company_id', currentUser.companyId);
 
-      if (usersError) {
-        console.error('Erro ao carregar usuários:', usersError);
-        toast.error('Erro ao carregar lista de usuários');
-        return;
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Ocorreu um erro ao carregar a lista de usuários.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateUser = async (userData: Partial<User>) => {
+    if (!userData.id) return;
+
+    try {
+      // 1. Atualiza informações básicas do usuário
+      const { error: userError } = await supabase
+        .from('users')
+        .update({
+          name: userData.name,
+          email: userData.email,
+          status: userData.status,
+          // ... outros campos básicos
+        })
+        .eq('id', userData.id);
+
+      if (userError) throw userError;
+
+      // 2. Atualiza tags
+      if (userData.tags) {
+        await supabase
+          .from('user_tags')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.tags.length > 0) {
+          await supabase
+            .from('user_tags')
+            .insert(userData.tags.map(tagId => ({
+              user_id: userData.id,
+              tag_id: tagId
+            })));
+        }
       }
 
-      const mappedUsers = usersData.map(dbUser => mapSupabaseUser(dbUser as UserResponse));
-      console.log('Usuários carregados:', mappedUsers);
-      setUsers(mappedUsers);
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-      toast.error('Erro ao carregar lista de usuários');
-    } finally {
-      setLoading(false);
-    }
-  };
+      // 3. Atualiza salas
+      if (userData.rooms) {
+        await supabase
+          .from('user_rooms')
+          .delete()
+          .eq('user_id', userData.id);
 
-  const handleUpdateUser = async (updatedUser: User) => {
-    try {
-      setLoading(true);
-      console.log('Iniciando atualização do usuário:', updatedUser);
-      
-      const updatedUserData = await userService.updateUser(updatedUser);
-      
-      // Atualizar estado local imediatamente
+        if (userData.rooms.length > 0) {
+          await supabase
+            .from('user_rooms')
+            .insert(userData.rooms.map(roomId => ({
+              user_id: userData.id,
+              room_id: roomId
+            })));
+        }
+      }
+
+      // 4. Atualiza especializações
+      if (userData.specializations) {
+        await supabase
+          .from('user_specializations')
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.specializations.length > 0) {
+          await supabase
+            .from('user_specializations')
+            .insert(userData.specializations.map(specId => ({
+              user_id: userData.id,
+              specialization_id: specId
+            })));
+        }
+      }
+
+      // 5. Atualiza o estado local imediatamente
       setUsers(prevUsers => 
         prevUsers.map(user => 
-          user.id === updatedUserData.id ? updatedUserData : user
+          user.id === userData.id 
+            ? { ...user, ...userData }
+            : user
         )
       );
-      
-      toast.success('Usuário atualizado com sucesso');
-    } catch (error) {
-      console.error('Erro ao atualizar usuário:', error);
-      toast.error('Erro ao atualizar usuário');
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleCreateUser = async (userData: CreateUserData) => {
-    try {
-      setLoading(true);
-      const newUser = await userService.createUser(userData);
-      
-      // Adicionar novo usuário ao estado local
-      setUsers(prevUsers => [...prevUsers, newUser]);
-      
-      toast.success('Usuário criado com sucesso');
-      return newUser;
+      toast({
+        title: "Sucesso",
+        description: "Usuário atualizado com sucesso!",
+      });
+
+      // 6. Recarrega os dados para garantir sincronização
+      await loadUsers();
+
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
-      toast.error('Erro ao criar usuário');
-      throw error;
-    } finally {
-      setLoading(false);
+      console.error('Error updating user:', error);
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: "Ocorreu um erro ao atualizar o usuário.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      setLoading(true);
-      
       // Primeiro remove as relações
       await Promise.all([
         supabase.from('user_tags').delete().eq('user_id', userId),
@@ -119,112 +143,39 @@ export function useUsers() {
 
       // Depois remove o usuário
       const { error } = await supabase
-        .from('emails')
+        .from('users')
         .delete()
         .eq('id', userId);
 
       if (error) throw error;
 
-      // Atualizar estado local imediatamente
-      setUsers(prev => prev.filter(user => user.id !== userId));
-      toast.success('Usuário excluído com sucesso');
+      // Atualiza o estado local
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+
+      toast({
+        title: "Sucesso",
+        description: "Usuário excluído com sucesso!",
+      });
     } catch (error) {
-      console.error('Erro ao excluir usuário:', error);
-      toast.error('Erro ao excluir usuário');
-    } finally {
-      setLoading(false);
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: "Ocorreu um erro ao excluir o usuário.",
+        variant: "destructive",
+      });
     }
   };
 
-  // Configurar listener para atualizações em tempo real
   useEffect(() => {
-    if (!user?.companyId) return;
-
-    const channel = supabase
-      .channel('emails-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'emails',
-          filter: `company_id=eq.${user.companyId}`
-        },
-        async (payload) => {
-          console.log('Mudança detectada na tabela emails:', payload);
-          
-          // Buscar dados completos do usuário afetado
-          const { data: userData, error } = await supabase
-            .from('emails')
-            .select(`
-              *,
-              user_tags (
-                tags (
-                  id,
-                  name,
-                  color
-                )
-              ),
-              user_rooms (
-                rooms (
-                  id,
-                  name
-                )
-              ),
-              user_specializations (
-                specializations (
-                  id,
-                  name
-                )
-              )
-            `)
-            .eq('id', payload.new.id)
-            .single();
-
-          if (error) {
-            console.error('Erro ao buscar dados atualizados:', error);
-            return;
-          }
-
-          const mappedUser = mapSupabaseUser(userData as UserResponse);
-
-          // Atualizar estado local baseado no tipo de evento
-          switch (payload.eventType) {
-            case 'INSERT':
-              setUsers(prev => [...prev, mappedUser]);
-              break;
-            case 'UPDATE':
-              setUsers(prev => 
-                prev.map(user => 
-                  user.id === mappedUser.id ? mappedUser : user
-                )
-              );
-              break;
-            case 'DELETE':
-              setUsers(prev => prev.filter(user => user.id !== payload.old.id));
-              break;
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.companyId]);
-
-  useEffect(() => {
-    if (user?.companyId) {
+    if (currentUser?.companyId) {
       loadUsers();
     }
-  }, [user?.companyId]);
+  }, [currentUser?.companyId]);
 
   return {
     users,
-    loading,
     loadUsers,
     handleUpdateUser,
-    handleDeleteUser,
-    handleCreateUser
+    handleDeleteUser
   };
-}
+};
