@@ -35,7 +35,6 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         location: formData.get('location') as string,
         address: formData.get('address') as string,
         specialization: formData.get('specialization') as string,
-        access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum" || "Usuário Comum", // Valor padrão definido
         status: formData.get('status') as string || 'active',
         company_id: user?.companyId,
       };
