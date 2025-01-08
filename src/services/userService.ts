@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, CreateUserData } from "@/types/user";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export const userService = {
   async createUser(userData: CreateUserData): Promise<User | null> {
@@ -13,11 +13,7 @@ export const userService = {
         .single();
 
       if (existingUser) {
-        toast({
-          title: "Erro",
-          description: "Este email já está em uso",
-          variant: "destructive",
-        });
+        toast.error('Este email já está em uso');
         return null;
       }
 
@@ -33,9 +29,30 @@ export const userService = {
           location: userData.location || '',
           specialization: userData.specialization || '',
           address: userData.address || '',
-          status: 'active'
+          status: userData.status || 'active'
         }])
-        .select()
+        .select(`
+          *,
+          user_tags (
+            tags (
+              id,
+              name,
+              color
+            )
+          ),
+          user_rooms (
+            rooms (
+              id,
+              name
+            )
+          ),
+          user_specializations (
+            specializations (
+              id,
+              name
+            )
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -70,24 +87,19 @@ export const userService = {
         await supabase.from('user_specializations').insert(specInserts);
       }
 
-      toast({
-        title: "Sucesso",
-        description: "Usuário criado com sucesso",
-      });
-
       return {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
-        role: userData.role,
-        companyId: userData.companyId,
+        role: newUser.access_level === 'Admin' ? 'ADMIN' : 'USER',
+        companyId: newUser.company_id,
         createdAt: newUser.created_at,
-        lastAccess: newUser.last_access,
+        lastAccess: newUser.updated_at || newUser.created_at,
         status: 'active',
-        accessLevel: userData.accessLevel,
-        location: userData.location || '',
-        specialization: userData.specialization || '',
-        address: userData.address || '',
+        accessLevel: newUser.access_level,
+        location: newUser.location || '',
+        specialization: newUser.specialization || '',
+        address: newUser.address || '',
         tags: [],
         authorizedRooms: [],
         specializations: []
@@ -95,19 +107,13 @@ export const userService = {
 
     } catch (error) {
       console.error('Erro ao criar usuário:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível criar o usuário",
-        variant: "destructive",
-      });
+      toast.error('Não foi possível criar o usuário');
       return null;
     }
   },
 
   async updateUser(userData: User) {
     try {
-      console.log('Iniciando atualização do usuário:', userData);
-
       const { data: updatedUser, error: updateError } = await supabase
         .from('emails')
         .update({
