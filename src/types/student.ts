@@ -11,7 +11,6 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
-  room?: string; // Adicionando campo opcional room
 }
 
 export const mapSupabaseStudent = (data: any): Student => ({
@@ -24,6 +23,5 @@ export const mapSupabaseStudent = (data: any): Student => ({
   address: data.address,
   customFields: data.custom_fields || {},
   companyId: data.company_id,
-  createdAt: data.created_at,
-  room: data.room // Mapeando o campo room
+  createdAt: data.created_at
 });
