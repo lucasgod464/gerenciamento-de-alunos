@@ -14,3 +14,10 @@ export interface Company {
   storageUsed: number;
   enrollmentFormUrl?: string;
 }
+
+export interface CompanyFormData {
+  name: string;
+  document: string;
+  usersLimit: number;
+  roomsLimit: number;
+}
