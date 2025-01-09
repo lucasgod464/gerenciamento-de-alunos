@@ -21,15 +21,6 @@ export interface User {
   specializations?: { id: string; name: string }[];
 }
 
-export interface CreateUserData {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  companyId: string;
-  accessLevel: AccessLevel;
-}
-
 export interface UserResponse {
   id: string;
   name: string;
@@ -40,10 +31,45 @@ export interface UserResponse {
   updated_at: string;
   last_access: string;
   status: string;
-  access_level: string;
+  access_level: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
+  user_tags?: {
+    tags: {
+      id: string;
+      name: string;
+      color: string;
+    };
+  }[];
+  user_rooms?: {
+    rooms: {
+      id: string;
+      name: string;
+    };
+  }[];
+  user_specializations?: {
+    specializations: {
+      id: string;
+      name: string;
+    };
+  }[];
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  companyId: string;
+  accessLevel: AccessLevel;
+  location?: string;
+  specialization?: string;
+  status?: string;
+  address?: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string }[];
+  selectedSpecializations?: string[];
 }
 
 export const mapSupabaseUser = (data: UserResponse): User => ({
@@ -56,8 +82,11 @@ export const mapSupabaseUser = (data: UserResponse): User => ({
   updatedAt: data.updated_at,
   lastAccess: data.last_access,
   status: data.status as UserStatus,
-  accessLevel: data.access_level as AccessLevel,
+  accessLevel: data.access_level,
   location: data.location,
   specialization: data.specialization,
-  address: data.address
+  address: data.address,
+  tags: data.user_tags?.map(ut => ut.tags) || [],
+  authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
+  specializations: data.user_specializations?.map(us => us.specializations) || []
 });

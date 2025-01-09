@@ -91,10 +91,8 @@ export const userService = {
         );
       }
 
-      // Executar todas as operações em paralelo
       await Promise.all(updatePromises);
 
-      // Buscar usuário atualizado com todas as relações
       const { data: updatedUser, error: fetchError } = await supabase
         .from('emails')
         .select(`
@@ -144,14 +142,14 @@ export const userService = {
           password: userData.password,
           access_level: userData.accessLevel,
           company_id: userData.companyId,
-          location: userData.location,
-          specialization: userData.specialization,
-          status: userData.status,
-          address: userData.address,
+          location: userData.location || '',
+          specialization: userData.specialization || '',
+          status: userData.status || 'active',
+          address: userData.address || '',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }])
-        .select('*')
+        .select()
         .single();
 
       if (createError) throw createError;
