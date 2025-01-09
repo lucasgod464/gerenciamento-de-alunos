@@ -1,3 +1,5 @@
+import { Json } from "@/types/supabase";
+
 export interface Student {
   id: string;
   name: string;
@@ -12,7 +14,7 @@ export interface Student {
   room?: string;
 }
 
-interface SupabaseStudent {
+export interface SupabaseStudent {
   id: string;
   name: string;
   birth_date: string;
