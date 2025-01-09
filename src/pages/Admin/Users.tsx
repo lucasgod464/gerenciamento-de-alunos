@@ -1,11 +1,10 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
+import { useState, useEffect } from "react";
+import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { UserList } from "@/components/users/UserList";
-import { useState } from "react";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { UserStats } from "@/components/users/UserStats";
 import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types/user";
-import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
@@ -24,8 +23,8 @@ const Users = () => {
           schema: 'public',
           table: 'emails'
         },
-        () => {
-          console.log('Mudança detectada na tabela emails, recarregando dados...');
+        (payload) => {
+          console.log('Mudança detectada na tabela emails:', payload);
           loadUsers();
         }
       )
@@ -38,10 +37,12 @@ const Users = () => {
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
-                         user.email.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && user.status === 'active') ||
-                         (statusFilter === 'inactive' && user.status === 'inactive');
+      user.email.toLowerCase().includes(search.toLowerCase()) ||
+      (user.location || '').toLowerCase().includes(search.toLowerCase()) ||
+      (user.specialization || '').toLowerCase().includes(search.toLowerCase());
+
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -55,33 +56,32 @@ const Users = () => {
   };
 
   return (
-    <DashboardLayout role="admin">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
-          <p className="text-muted-foreground">
-            Gerencie os usuários do sistema
-          </p>
-        </div>
-        <UserStats 
-          totalUsers={totalUsers}
-          activeUsers={activeUsers}
-          inactiveUsers={inactiveUsers}
-        />
+    <div className="space-y-4">
+      <h1 className="text-2xl font-bold">Usuários</h1>
+      <p className="text-muted-foreground">Gerencie os usuários do sistema</p>
+
+      <UserStats
+        totalUsers={totalUsers}
+        activeUsers={activeUsers}
+        inactiveUsers={inactiveUsers}
+      />
+
+      <div className="flex justify-between items-center gap-4">
         <UsersFilters
           search={search}
           onSearchChange={setSearch}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
-          onUserCreated={loadUsers}
         />
-        <UserList 
-          users={filteredUsers}
-          onUpdateUser={handleUserUpdate}
-          onDeleteUser={handleDeleteUser}
-        />
+        <CreateUserDialog onUserCreated={loadUsers} />
       </div>
-    </DashboardLayout>
+
+      <UserList
+        users={filteredUsers}
+        onUserUpdate={handleUserUpdate}
+        onUserDelete={handleDeleteUser}
+      />
+    </div>
   );
 };
 
