@@ -45,6 +45,7 @@ export function useUsers() {
       if (emailsError) throw emailsError;
 
       const mappedUsers = emailsData.map(user => mapSupabaseUser(user as UserResponse));
+      console.log('Usuários carregados:', mappedUsers);
       setUsers(mappedUsers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -60,6 +61,9 @@ export function useUsers() {
     }
 
     try {
+      console.log('Iniciando atualização do usuário:', userData);
+
+      // Atualizar informações básicas
       const { error: updateError } = await supabase
         .from('emails')
         .update({
@@ -75,7 +79,64 @@ export function useUsers() {
 
       if (updateError) throw updateError;
 
-      await loadUsers();
+      // Atualizar tags
+      await supabase
+        .from('user_tags')
+        .delete()
+        .eq('user_id', userData.id);
+
+      if (userData.tags && userData.tags.length > 0) {
+        const { error: tagsError } = await supabase
+          .from('user_tags')
+          .insert(
+            userData.tags.map(tag => ({
+              user_id: userData.id,
+              tag_id: tag.id
+            }))
+          );
+
+        if (tagsError) throw tagsError;
+      }
+
+      // Atualizar salas autorizadas
+      await supabase
+        .from('user_rooms')
+        .delete()
+        .eq('user_id', userData.id);
+
+      if (userData.authorizedRooms && userData.authorizedRooms.length > 0) {
+        const { error: roomsError } = await supabase
+          .from('user_rooms')
+          .insert(
+            userData.authorizedRooms.map(room => ({
+              user_id: userData.id,
+              room_id: room.id
+            }))
+          );
+
+        if (roomsError) throw roomsError;
+      }
+
+      // Atualizar especializações
+      await supabase
+        .from('user_specializations')
+        .delete()
+        .eq('user_id', userData.id);
+
+      if (userData.specializations && userData.specializations.length > 0) {
+        const { error: specsError } = await supabase
+          .from('user_specializations')
+          .insert(
+            userData.specializations.map(spec => ({
+              user_id: userData.id,
+              specialization_id: spec.id
+            }))
+          );
+
+        if (specsError) throw specsError;
+      }
+
+      await loadUsers(); // Recarregar lista após atualização
       toast.success('Usuário atualizado com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
@@ -85,6 +146,14 @@ export function useUsers() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
+      // Primeiro remove as relações
+      await Promise.all([
+        supabase.from('user_tags').delete().eq('user_id', userId),
+        supabase.from('user_rooms').delete().eq('user_id', userId),
+        supabase.from('user_specializations').delete().eq('user_id', userId)
+      ]);
+
+      // Depois remove o usuário
       const { error } = await supabase
         .from('emails')
         .delete()

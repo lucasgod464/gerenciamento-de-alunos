@@ -5,11 +5,36 @@ import { UsersFilters } from "@/components/users/UsersFilters";
 import { UserStats } from "@/components/users/UserStats";
 import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types/user";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
   const { users, loadUsers, handleUpdateUser, handleDeleteUser } = useUsers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Implementar escuta de mudanças em tempo real
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'emails'
+        },
+        () => {
+          console.log('Mudança detectada na tabela emails, recarregando dados...');
+          loadUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadUsers]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -25,6 +50,7 @@ const Users = () => {
   const inactiveUsers = users.filter(user => user.status === 'inactive').length;
 
   const handleUserUpdate = async (userData: User) => {
+    console.log('Atualizando usuário:', userData);
     await handleUpdateUser(userData);
   };
 
