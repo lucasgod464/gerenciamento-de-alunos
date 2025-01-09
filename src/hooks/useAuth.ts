@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import { AuthUser, AuthResponse, UserRole, ROLE_PERMISSIONS } from "@/types/auth";
+import { AuthResponse, UserRole, AuthUser } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { ROLE_PERMISSIONS } from "@/types/auth";
 
 export function useAuth() {
   const { data: session, refetch } = useQuery({
@@ -57,6 +58,7 @@ export function useAuth() {
             email: userData.email,
             role: userData.role as UserRole,
             companyId: userData.company_id || null,
+            accessLevel: userData.access_level || 'Usuário Comum',
             createdAt: userData.created_at,
             lastAccess: new Date().toISOString(),
             status: userData.status ? 'active' : 'inactive',
