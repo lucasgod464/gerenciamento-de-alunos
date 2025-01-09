@@ -1,18 +1,15 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { UserStats } from "@/components/users/UserStats";
-import { useUsers } from "./hooks/useUsers";
+import { useUsers } from "@/hooks/useUsers";
+import { User } from "@/types/user";
 
 const Users = () => {
   const { users, loadUsers, handleUpdateUser, handleDeleteUser } = useUsers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -27,7 +24,7 @@ const Users = () => {
   const activeUsers = users.filter(user => user.status === 'active').length;
   const inactiveUsers = users.filter(user => user.status === 'inactive').length;
 
-  const handleUserUpdate = async (userData: Partial<User>) => {
+  const handleUserUpdate = async (userData: User) => {
     await handleUpdateUser(userData);
   };
 
