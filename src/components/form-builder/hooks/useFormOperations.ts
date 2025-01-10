@@ -32,6 +32,8 @@ export const useFormOperations = () => {
 
       if (error) throw error;
 
+      if (!data) throw new Error("No data returned from update");
+
       return {
         id: data.id,
         name: data.name,
@@ -40,7 +42,7 @@ export const useFormOperations = () => {
         description: data.description || "",
         required: data.required || false,
         order: data.order,
-        options: Array.isArray(data.options) ? data.options : undefined,
+        options: Array.isArray(data.options) ? data.options.map(String) : [],
         source: 'admin' as const
       };
     } catch (error) {
@@ -73,6 +75,8 @@ export const useFormOperations = () => {
 
       if (error) throw error;
 
+      if (!data) throw new Error("No data returned from insert");
+
       return {
         id: data.id,
         name: data.name,
@@ -81,7 +85,7 @@ export const useFormOperations = () => {
         description: data.description || "",
         required: data.required || false,
         order: data.order,
-        options: Array.isArray(data.options) ? data.options : undefined,
+        options: Array.isArray(data.options) ? data.options.map(String) : [],
         source: 'admin' as const
       };
     } catch (error) {
