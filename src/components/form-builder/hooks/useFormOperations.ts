@@ -1,12 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
 import { FormField } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
+import { useCompanyId } from "./useCompanyId";
 
 export const useFormOperations = () => {
   const { toast } = useToast();
+  const companyId = useCompanyId();
 
   const updateField = async (field: FormField): Promise<FormField> => {
     try {
+      if (!companyId) {
+        throw new Error("Company ID not found");
+      }
+
       const { data, error } = await supabase
         .from('admin_form_fields')
         .update({
@@ -17,8 +23,10 @@ export const useFormOperations = () => {
           required: field.required,
           options: field.options || null,
           order: field.order,
+          company_id: companyId
         })
         .eq('id', field.id)
+        .eq('company_id', companyId)
         .select()
         .single();
 
@@ -33,6 +41,7 @@ export const useFormOperations = () => {
         required: data.required || false,
         order: data.order,
         options: Array.isArray(data.options) ? data.options : undefined,
+        source: 'admin' as const
       };
     } catch (error) {
       console.error('Error updating field:', error);
@@ -42,6 +51,10 @@ export const useFormOperations = () => {
 
   const addField = async (field: Omit<FormField, "id" | "order">, order: number): Promise<FormField> => {
     try {
+      if (!companyId) {
+        throw new Error("Company ID not found");
+      }
+
       const { data, error } = await supabase
         .from('admin_form_fields')
         .insert([{
@@ -52,6 +65,8 @@ export const useFormOperations = () => {
           required: field.required,
           options: field.options || null,
           order,
+          company_id: companyId,
+          form_type: 'admin'
         }])
         .select()
         .single();
@@ -67,6 +82,7 @@ export const useFormOperations = () => {
         required: data.required || false,
         order: data.order,
         options: Array.isArray(data.options) ? data.options : undefined,
+        source: 'admin' as const
       };
     } catch (error) {
       console.error('Error adding field:', error);
@@ -76,10 +92,15 @@ export const useFormOperations = () => {
 
   const deleteField = async (id: string) => {
     try {
+      if (!companyId) {
+        throw new Error("Company ID not found");
+      }
+
       const { error } = await supabase
         .from('admin_form_fields')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('company_id', companyId);
 
       if (error) throw error;
     } catch (error) {

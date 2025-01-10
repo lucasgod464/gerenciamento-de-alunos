@@ -3,6 +3,7 @@ import { FormField } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useFormOperations } from "./useFormOperations";
+import { useCompanyId } from "./useCompanyId";
 
 export const useFormBuilder = () => {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -10,12 +11,19 @@ export const useFormBuilder = () => {
   const [editingField, setEditingField] = useState<FormField | null>(null);
   const { toast } = useToast();
   const { updateField, addField, deleteField } = useFormOperations();
+  const companyId = useCompanyId();
 
   const loadFields = async () => {
     try {
+      if (!companyId) {
+        console.error("Company ID not found");
+        return;
+      }
+
       const { data: customFields, error } = await supabase
         .from('admin_form_fields')
         .select('*')
+        .eq('company_id', companyId)
         .order('order');
 
       if (error) throw error;
@@ -30,6 +38,7 @@ export const useFormBuilder = () => {
           required: field.required || false,
           order: field.order,
           options: Array.isArray(field.options) ? field.options : undefined,
+          source: 'admin' as const
         }));
         setFields(mappedFields);
       }
@@ -106,8 +115,10 @@ export const useFormBuilder = () => {
   };
 
   useEffect(() => {
-    loadFields();
-  }, []);
+    if (companyId) {
+      loadFields();
+    }
+  }, [companyId]);
 
   return {
     fields,
