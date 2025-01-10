@@ -9,6 +9,8 @@ export type FieldType =
   | "select" 
   | "multiple";
 
+export type FieldSource = "admin" | "enrollment";
+
 export interface FormField {
   id: string;
   name: string;
@@ -18,7 +20,7 @@ export interface FormField {
   required: boolean;
   order: number;
   options?: string[];
-  source: "admin" | "enrollment";
+  source: FieldSource;
   isDefault?: boolean;
 }
 
@@ -45,11 +47,11 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : undefined,
-  source: field.form_type as "admin" | "enrollment",
+  source: field.form_type as FieldSource,
   isDefault: false
 });
 
-export const mapFormFieldToSupabase = (field: Omit<FormField, "id">): Omit<SupabaseFormField, "id" | "created_at"> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
   name: field.name,
   label: field.label,
   type: field.type,
