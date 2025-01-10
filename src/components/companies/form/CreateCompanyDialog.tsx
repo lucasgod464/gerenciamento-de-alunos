@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { Company } from "@/types/company"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void
@@ -32,16 +33,33 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
       const newCompany = {
         name: formData.get("name") as string,
         document: formData.get("document") as string || "",
-        usersLimit: Number(formData.get("usersLimit")) || 5,
-        currentUsers: 0,
-        roomsLimit: Number(formData.get("roomsLimit")) || 5,
-        currentRooms: 0,
+        users_limit: Number(formData.get("usersLimit")) || 5,
+        current_users: 0,
+        rooms_limit: Number(formData.get("roomsLimit")) || 5,
+        current_rooms: 0,
         status: "Ativa" as const,
-        publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
-        storageUsed: 0,
+        public_folder_path: `/storage/${Math.random().toString(36).substr(2, 9)}`,
+        storage_used: 0,
       }
 
       console.log("Tentando criar empresa:", newCompany)
+      
+      // Inserir no Supabase
+      const { data, error } = await supabase
+        .from('companies')
+        .insert([newCompany])
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      if (!data) {
+        throw new Error("Não foi possível criar a empresa")
+      }
+
+      console.log("Empresa criada com sucesso:", data)
       
       await onCompanyCreated(newCompany)
       setOpen(false)
