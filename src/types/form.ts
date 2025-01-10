@@ -1,3 +1,5 @@
+import { Json } from "./supabase";
+
 export type FieldType = 
   | "text" 
   | "email" 
@@ -17,6 +19,7 @@ export interface FormField {
   order: number;
   options?: string[];
   source: "admin" | "enrollment";
+  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -42,5 +45,18 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required,
   order: field.order,
   options: Array.isArray(field.options) ? field.options : undefined,
-  source: field.form_type as "admin" | "enrollment"
+  source: field.form_type as "admin" | "enrollment",
+  isDefault: false
+});
+
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
+  name: field.name,
+  label: field.label,
+  type: field.type,
+  description: field.description,
+  required: field.required,
+  order: field.order,
+  options: field.options || [],
+  company_id: "", // Será preenchido no momento da inserção
+  form_type: field.source
 });
