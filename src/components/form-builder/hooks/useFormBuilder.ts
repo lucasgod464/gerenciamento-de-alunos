@@ -2,15 +2,15 @@ import { useState, useEffect } from "react";
 import { FormField } from "@/types/form";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useFormOperations } from "./useFormOperations";
+import { useFieldOperations } from "./useFieldOperations";
 import { useCompanyId } from "./useCompanyId";
 
 export const useFormBuilder = () => {
+  const { toast } = useToast();
   const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
-  const { toast } = useToast();
-  const { updateField, addField, deleteField } = useFormOperations();
+  const { addField, updateField, deleteField } = useFieldOperations();
   const companyId = useCompanyId();
 
   const loadFields = async () => {
@@ -28,22 +28,21 @@ export const useFormBuilder = () => {
 
       if (error) throw error;
 
-      if (customFields) {
-        const mappedFields = customFields.map(field => ({
-          id: field.id,
-          name: field.name,
-          label: field.label,
-          type: field.type as FormField['type'],
-          description: field.description || "",
-          required: field.required || false,
-          order: field.order,
-          options: Array.isArray(field.options) ? field.options : undefined,
-          source: 'admin' as const
-        }));
-        setFields(mappedFields);
-      }
+      const mappedFields = customFields.map(field => ({
+        id: field.id,
+        name: field.name,
+        label: field.label,
+        type: field.type as FormField['type'],
+        description: field.description || "",
+        required: field.required || false,
+        order: field.order,
+        options: Array.isArray(field.options) ? field.options : undefined,
+        source: 'admin' as const
+      }));
+
+      setFields(mappedFields);
     } catch (error) {
-      console.error("Error loading form fields:", error);
+      console.error("Error loading fields:", error);
       toast({
         title: "Erro ao carregar campos",
         description: "Não foi possível carregar os campos do formulário.",
@@ -54,7 +53,16 @@ export const useFormBuilder = () => {
 
   const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
-      const newField = await addField(field, fields.length);
+      if (!companyId) {
+        toast({
+          title: "Erro ao adicionar campo",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const newField = await addField({ ...field, company_id: companyId }, fields.length);
       setFields(prev => [...prev, newField]);
       setIsAddingField(false);
       
@@ -74,7 +82,16 @@ export const useFormBuilder = () => {
 
   const handleUpdateField = async (field: FormField) => {
     try {
-      const updatedField = await updateField(field);
+      if (!companyId) {
+        toast({
+          title: "Erro ao atualizar campo",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updatedField = await updateField({ ...field, company_id: companyId });
       setFields(prev => prev.map(f => 
         f.id === field.id ? updatedField : f
       ));
