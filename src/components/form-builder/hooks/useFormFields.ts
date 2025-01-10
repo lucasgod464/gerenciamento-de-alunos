@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { FormField } from "@/types/form";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useFieldOperations } from "./useFieldOperations";
+import { useToast } from "@/hooks/use-toast";
 import { useCompanyId } from "./useCompanyId";
 
 export const useFormFields = () => {
@@ -10,11 +9,15 @@ export const useFormFields = () => {
   const [fields, setFields] = useState<FormField[]>([]);
   const [isAddingField, setIsAddingField] = useState(false);
   const [editingField, setEditingField] = useState<FormField | null>(null);
-  const { addField, updateField, deleteField } = useFieldOperations();
   const companyId = useCompanyId();
 
   const loadFields = async () => {
     try {
+      if (!companyId) {
+        console.error("Company ID not found");
+        return;
+      }
+
       const { data: customFields, error } = await supabase
         .from('admin_form_fields')
         .select('*')
@@ -23,7 +26,7 @@ export const useFormFields = () => {
 
       if (error) throw error;
 
-      const mappedFields = customFields.map(field => ({
+      const mappedFields = (customFields || []).map(field => ({
         id: field.id,
         name: field.name,
         label: field.label,
@@ -48,25 +51,93 @@ export const useFormFields = () => {
 
   const handleAddField = async (field: Omit<FormField, "id" | "order">) => {
     try {
-      const newField = await addField(field);
-      setFields(prev => [...prev, newField]);
-      setIsAddingField(false);
-      
-      toast({
-        title: "Campo adicionado",
-        description: "O novo campo foi adicionado com sucesso.",
-      });
+      if (!companyId) {
+        toast({
+          title: "Erro ao adicionar campo",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('admin_form_fields')
+        .insert([{
+          name: field.name,
+          label: field.label,
+          type: field.type,
+          description: field.description,
+          required: field.required,
+          options: field.options || [],
+          order: fields.length,
+          company_id: companyId,
+          form_type: 'admin'
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        const newField: FormField = {
+          id: data.id,
+          name: data.name,
+          label: data.label,
+          type: data.type as FormField['type'],
+          description: data.description || "",
+          required: data.required || false,
+          order: data.order,
+          options: Array.isArray(data.options) ? data.options.map(String) : [],
+          source: 'admin'
+        };
+
+        setFields(prev => [...prev, newField]);
+        setIsAddingField(false);
+        
+        toast({
+          title: "Campo adicionado",
+          description: "O novo campo foi adicionado com sucesso.",
+        });
+      }
     } catch (error) {
       console.error("Error adding field:", error);
+      toast({
+        title: "Erro ao adicionar campo",
+        description: "Não foi possível adicionar o campo.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleUpdateField = async (field: FormField) => {
     try {
-      const updatedField = await updateField(field);
-      setFields(prev => prev.map(f => 
-        f.id === field.id ? updatedField : f
-      ));
+      if (!companyId) {
+        toast({
+          title: "Erro ao atualizar campo",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .update({
+          name: field.name,
+          label: field.label,
+          type: field.type,
+          description: field.description,
+          required: field.required,
+          options: field.options || [],
+          order: field.order,
+          company_id: companyId
+        })
+        .eq('id', field.id)
+        .eq('company_id', companyId);
+
+      if (error) throw error;
+
+      setFields(prev => prev.map(f => f.id === field.id ? field : f));
       setEditingField(null);
       setIsAddingField(false);
 
@@ -76,12 +147,33 @@ export const useFormFields = () => {
       });
     } catch (error) {
       console.error("Error updating field:", error);
+      toast({
+        title: "Erro ao atualizar campo",
+        description: "Não foi possível atualizar o campo.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteField = async (id: string) => {
     try {
-      await deleteField(id);
+      if (!companyId) {
+        toast({
+          title: "Erro ao remover campo",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .delete()
+        .eq('id', id)
+        .eq('company_id', companyId);
+
+      if (error) throw error;
+
       setFields(prev => prev.filter(field => field.id !== id));
       
       toast({
@@ -90,6 +182,45 @@ export const useFormFields = () => {
       });
     } catch (error) {
       console.error("Error deleting field:", error);
+      toast({
+        title: "Erro ao remover campo",
+        description: "Não foi possível remover o campo.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReorderFields = async (reorderedFields: FormField[]) => {
+    try {
+      if (!companyId) {
+        toast({
+          title: "Erro ao reordenar campos",
+          description: "ID da empresa não encontrado.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updates = reorderedFields.map((field, index) => ({
+        id: field.id,
+        order: index,
+        company_id: companyId
+      }));
+
+      const { error } = await supabase
+        .from('admin_form_fields')
+        .upsert(updates);
+
+      if (error) throw error;
+
+      setFields(reorderedFields);
+    } catch (error) {
+      console.error("Error reordering fields:", error);
+      toast({
+        title: "Erro ao reordenar campos",
+        description: "Não foi possível reordenar os campos.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -112,5 +243,6 @@ export const useFormFields = () => {
     },
     handleUpdateField,
     handleDeleteField,
+    handleReorderFields,
   };
 };
