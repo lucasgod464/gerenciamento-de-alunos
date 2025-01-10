@@ -40,8 +40,22 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => {
     description: field.description,
     required: field.required,
     order: field.order,
-    options: Array.isArray(field.options) ? field.options : [],
+    options: Array.isArray(field.options) ? field.options.map(String) : [],
     source: field.form_type as FormFieldSource,
     isDefault: false
+  };
+};
+
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => {
+  return {
+    name: field.name,
+    label: field.label,
+    type: field.type,
+    description: field.description,
+    required: field.required,
+    order: field.order,
+    options: field.options || [],
+    company_id: "", // Será preenchido no momento da inserção
+    form_type: field.source
   };
 };

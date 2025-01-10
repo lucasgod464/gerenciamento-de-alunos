@@ -16,15 +16,15 @@ export interface User {
   specialization?: string;
   address?: string;
   updatedAt: string;
-  tags?: { id: string; name: string; color: string }[];
-  authorizedRooms?: { id: string; name: string }[];
-  specializations?: { id: string; name: string }[];
+  tags: { id: string; name: string; color: string }[];
+  authorizedRooms: { id: string; name: string }[];
+  specializations: { id: string; name: string }[];
 }
 
 export interface UserResponse {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: string;
   company_id: string;
   created_at: string;
@@ -88,23 +88,4 @@ export const mapSupabaseUser = (data: UserResponse): User => ({
   tags: data.user_tags?.map(ut => ut.tags) || [],
   authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
   specializations: data.user_specializations?.map(us => us.specializations) || []
-});
-
-export const mapUserResponse = (response: UserResponse): User => ({
-  id: response.id,
-  email: response.email,
-  name: response.name,
-  role: response.role as UserRole,
-  companyId: response.company_id,
-  createdAt: response.created_at,
-  lastAccess: response.last_access,
-  status: response.status ? "active" : "inactive",
-  accessLevel: response.access_level,
-  location: response.location,
-  specialization: response.specialization,
-  address: response.address,
-  updatedAt: response.updated_at,
-  tags: response.user_tags?.map(ut => ut.tags) || [],
-  authorizedRooms: response.user_rooms?.map(ur => ur.rooms) || [],
-  specializations: response.user_specializations?.map(us => us.specializations) || []
 });
