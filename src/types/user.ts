@@ -66,7 +66,22 @@ export interface UserResponse {
   }>;
 }
 
-export const mapUserResponse = (data: UserResponse): User => ({
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  accessLevel: AccessLevel;
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status?: UserStatus;
+  address?: string;
+  selectedRooms?: string[];
+  selectedTags?: Array<{ id: string; name: string; color: string }>;
+  selectedSpecializations?: string[];
+}
+
+export const mapSupabaseUser = (data: UserResponse): User => ({
   id: data.id,
   name: data.name,
   email: data.email,
@@ -84,3 +99,6 @@ export const mapUserResponse = (data: UserResponse): User => ({
   authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
   specializations: data.user_specializations?.map(us => us.specializations) || []
 });
+
+// Re-export mapUserResponse como mapSupabaseUser para manter compatibilidade
+export { mapSupabaseUser as mapUserResponse };
