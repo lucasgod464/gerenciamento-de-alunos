@@ -89,3 +89,5 @@ export const mapSupabaseUser = (data: UserResponse): User => ({
   authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
   specializations: data.user_specializations?.map(us => us.specializations) || []
 });
+
+export type { AccessLevel } from '@/types/user';

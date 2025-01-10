@@ -25,7 +25,7 @@ export interface SupabaseFormField {
   description?: string;
   required: boolean;
   order: number;
-  options: string[];
+  options: Json;
   company_id: string;
   created_at: string;
   form_type: string;
