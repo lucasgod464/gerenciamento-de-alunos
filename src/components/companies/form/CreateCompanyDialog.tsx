@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { useToast } from "@/components/ui/use-toast"
-import { Company, CompanyFormData } from "@/types/company"
+import { Company } from "@/types/company"
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void
@@ -19,7 +18,6 @@ interface CreateCompanyDialogProps {
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
   const [open, setOpen] = useState(false)
-  const { toast } = useToast()
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -37,8 +35,12 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
       storageUsed: 0,
     }
     
-    onCompanyCreated(newCompany)
-    setOpen(false)
+    try {
+      onCompanyCreated(newCompany)
+      setOpen(false)
+    } catch (error) {
+      console.error("Erro ao criar empresa:", error)
+    }
   }
 
   return (

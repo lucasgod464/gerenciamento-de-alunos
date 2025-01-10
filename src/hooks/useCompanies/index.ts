@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { fetchCompanies } from "./queries"
 import { createCompany, updateCompany, deleteCompany } from "./mutations"
 import { Company } from "@/types/company"
@@ -22,6 +22,13 @@ export function useCompanies() {
         description: "A empresa foi criada com sucesso.",
       })
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao criar empresa",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   })
 
   const updateMutation = useMutation({
@@ -33,6 +40,13 @@ export function useCompanies() {
         description: "A empresa foi atualizada com sucesso.",
       })
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar empresa",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   })
 
   const deleteMutation = useMutation({
@@ -44,6 +58,13 @@ export function useCompanies() {
         description: "A empresa foi deletada com sucesso.",
       })
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao deletar empresa",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   })
 
   return {
