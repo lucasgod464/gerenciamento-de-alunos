@@ -11,7 +11,7 @@ export interface Student {
   customFields?: Record<string, any>;
   companyId: string;
   createdAt: string;
-  room?: string;
+  room?: string | null;
 }
 
 export interface SupabaseStudent {
@@ -35,7 +35,9 @@ export const mapSupabaseStudent = (data: SupabaseStudent): Student => ({
   email: data.email,
   document: data.document,
   address: data.address,
-  customFields: data.custom_fields,
+  customFields: typeof data.custom_fields === 'string' 
+    ? JSON.parse(data.custom_fields) 
+    : data.custom_fields || {},
   companyId: data.company_id,
   createdAt: data.created_at
 });
