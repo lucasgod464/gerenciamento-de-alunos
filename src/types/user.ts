@@ -35,7 +35,60 @@ export interface UserResponse {
   specialization?: string;
   address?: string;
   updated_at: string;
+  user_tags?: {
+    tags: {
+      id: string;
+      name: string;
+      color: string;
+    };
+  }[];
+  user_rooms?: {
+    rooms: {
+      id: string;
+      name: string;
+    };
+  }[];
+  user_specializations?: {
+    specializations: {
+      id: string;
+      name: string;
+    };
+  }[];
 }
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  accessLevel: UserAccessLevel;
+  companyId: string;
+  location?: string;
+  specialization?: string;
+  status?: UserStatus;
+  address?: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string }[];
+  selectedSpecializations?: string[];
+}
+
+export const mapSupabaseUser = (data: UserResponse): User => ({
+  id: data.id,
+  name: data.name,
+  email: data.email,
+  role: data.role as UserRole,
+  companyId: data.company_id,
+  createdAt: data.created_at,
+  lastAccess: data.last_access,
+  status: data.status ? "active" : "inactive",
+  accessLevel: data.access_level,
+  location: data.location,
+  specialization: data.specialization,
+  address: data.address,
+  updatedAt: data.updated_at,
+  tags: data.user_tags?.map(ut => ut.tags) || [],
+  authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
+  specializations: data.user_specializations?.map(us => us.specializations) || []
+});
 
 export const mapUserResponse = (response: UserResponse): User => ({
   id: response.id,
@@ -50,5 +103,8 @@ export const mapUserResponse = (response: UserResponse): User => ({
   location: response.location,
   specialization: response.specialization,
   address: response.address,
-  updatedAt: response.updated_at
+  updatedAt: response.updated_at,
+  tags: response.user_tags?.map(ut => ut.tags) || [],
+  authorizedRooms: response.user_rooms?.map(ur => ur.rooms) || [],
+  specializations: response.user_specializations?.map(us => us.specializations) || []
 });
