@@ -23,16 +23,18 @@ export function EditUserDialog({
   const handleSuccess = async (updatedUser: User) => {
     try {
       console.log('Usuário atualizado, notificando componente pai:', updatedUser);
+      
+      // Primeiro atualiza o estado local
       onUserUpdated(updatedUser);
+      
+      // Recarrega a lista de usuários
+      await loadUsers();
       
       // Mostra mensagem de sucesso com toast
       toast({
         title: "Usuário atualizado com sucesso!",
         description: "As informações foram salvas e a lista será atualizada.",
       });
-
-      // Recarrega a lista de usuários
-      await loadUsers();
       
       // Fecha o diálogo
       onOpenChange(false);

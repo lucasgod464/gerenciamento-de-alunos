@@ -4,6 +4,7 @@ import { UserTableRow } from "./UserTableRow";
 import { EditUserDialog } from "./EditUserDialog";
 import { UserInfoDialog } from "./UserInfoDialog";
 import { useState } from "react";
+import { useUsers } from "@/hooks/useUsers";
 
 interface UserListProps {
   users: User[];
@@ -15,14 +16,16 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [viewingUser, setViewingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { loadUsers } = useUsers();
 
-  const handleStatusChange = (id: string, checked: boolean) => {
+  const handleStatusChange = async (id: string, checked: boolean) => {
     const user = users.find((u) => u.id === id);
     if (user) {
       onUpdateUser({
         ...user,
         status: checked ? "active" : "inactive",
       });
+      await loadUsers(); // Recarrega a lista após mudança de status
     }
   };
 
@@ -31,9 +34,10 @@ export function UserList({ users, onUpdateUser, onDeleteUser }: UserListProps) {
     setIsEditDialogOpen(true);
   };
 
-  const handleUserUpdate = (updatedUser: User) => {
+  const handleUserUpdate = async (updatedUser: User) => {
     onUpdateUser(updatedUser);
     setIsEditDialogOpen(false);
+    await loadUsers(); // Recarrega a lista após atualização
   };
 
   const handleViewClick = (user: User) => {
