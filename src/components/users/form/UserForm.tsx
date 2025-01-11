@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import UserFormFields from "../UserFormFields";
+import { useUsers } from "@/hooks/useUsers";
 
 interface UserFormProps {
   onSuccess?: () => void;
@@ -14,6 +15,7 @@ interface UserFormProps {
 
 export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: UserFormProps) {
   const { user } = useAuth();
+  const { loadUsers } = useUsers();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<{ id: string; name: string; color: string; }[]>(
     defaultValues?.tags || []
@@ -21,7 +23,9 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
     defaultValues?.authorizedRooms?.map((room: any) => room.id) || []
   );
-  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
+  const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>(
+    defaultValues?.specializations?.map((spec: any) => spec.id) || []
+  );
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,7 +44,12 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         company_id: user?.companyId,
       };
 
-      console.log('Dados a serem atualizados:', userData);
+      console.log('Dados a serem salvos:', {
+        ...userData,
+        selectedTags,
+        selectedRooms,
+        selectedSpecializations
+      });
 
       if (isEditing && defaultValues?.id) {
         // Atualiza informações básicas do usuário
@@ -49,10 +58,7 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           .update(userData)
           .eq('id', defaultValues.id);
 
-        if (updateError) {
-          console.error('Erro ao atualizar usuário:', updateError);
-          throw updateError;
-        }
+        if (updateError) throw updateError;
 
         // Atualiza tags
         await supabase
@@ -107,22 +113,65 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        const { error } = await supabase
+        // Cria novo usuário
+        const { data: newUser, error } = await supabase
           .from('emails')
           .insert([{
             ...userData,
             password: '123456', // Senha padrão para novos usuários
-          }]);
+          }])
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Insere tags
+        if (selectedTags.length > 0) {
+          const { error: tagsError } = await supabase
+            .from('user_tags')
+            .insert(selectedTags.map(tag => ({
+              user_id: newUser.id,
+              tag_id: tag.id
+            })));
+
+          if (tagsError) throw tagsError;
+        }
+
+        // Insere salas autorizadas
+        if (selectedRooms.length > 0) {
+          const { error: roomsError } = await supabase
+            .from('user_rooms')
+            .insert(selectedRooms.map(roomId => ({
+              user_id: newUser.id,
+              room_id: roomId
+            })));
+
+          if (roomsError) throw roomsError;
+        }
+
+        // Insere especializações
+        if (selectedSpecializations.length > 0) {
+          const { error: specsError } = await supabase
+            .from('user_specializations')
+            .insert(selectedSpecializations.map(specId => ({
+              user_id: newUser.id,
+              specialization_id: specId
+            })));
+
+          if (specsError) throw specsError;
+        }
+
         toast.success('Usuário criado com sucesso!');
       }
 
+      // Recarrega a lista de usuários após a operação
+      await loadUsers();
+      
+      setIsLoading(false);
       onSuccess?.();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
       toast.error('Erro ao salvar usuário');
-    } finally {
       setIsLoading(false);
     }
   };
