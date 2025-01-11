@@ -1,7 +1,7 @@
 import { UserFormDialog } from "./dialog/UserFormDialog";
 import { User } from "@/types/user";
 import { useUsers } from "@/hooks/useUsers";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -26,9 +26,9 @@ export function EditUserDialog({
       onUserUpdated(updatedUser);
       
       // Mostra mensagem de sucesso com toast
-      toast.success("Usuário atualizado com sucesso!", {
+      toast({
+        title: "Usuário atualizado com sucesso!",
         description: "As informações foram salvas e a lista será atualizada.",
-        duration: 4000,
       });
 
       // Recarrega a lista de usuários
@@ -38,8 +38,10 @@ export function EditUserDialog({
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
-      toast.error("Erro ao atualizar usuário", {
+      toast({
+        title: "Erro ao atualizar usuário",
         description: "Tente novamente em alguns instantes.",
+        variant: "destructive",
       });
     }
   };
