@@ -1,5 +1,6 @@
 import { UserFormDialog } from "./dialog/UserFormDialog";
 import { User } from "@/types/user";
+import { useUsers } from "@/hooks/useUsers";
 
 interface EditUserDialogProps {
   open: boolean;
@@ -14,11 +15,14 @@ export function EditUserDialog({
   onUserUpdated,
   user
 }: EditUserDialogProps) {
+  const { loadUsers } = useUsers();
+
   if (!user) return null;
 
-  const handleSuccess = (updatedUser: User) => {
+  const handleSuccess = async (updatedUser: User) => {
     console.log('Usuário atualizado, notificando componente pai:', updatedUser);
     onUserUpdated(updatedUser);
+    await loadUsers(); // Recarrega a lista de usuários após a atualização
     onOpenChange(false);
   };
 
