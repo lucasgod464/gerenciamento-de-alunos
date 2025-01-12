@@ -1,3 +1,5 @@
+import { Json } from "./supabase";
+
 export interface Student {
   id: string;
   name: string;

@@ -100,5 +100,4 @@ export const mapSupabaseUser = (data: UserResponse): User => ({
   specializations: data.user_specializations?.map(us => us.specializations) || []
 });
 
-// Re-export mapUserResponse como mapSupabaseUser para manter compatibilidade
 export { mapSupabaseUser as mapUserResponse };

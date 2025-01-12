@@ -9,7 +9,7 @@ export type FieldType =
   | "select" 
   | "multiple";
 
-export type FieldSource = "admin" | "enrollment";
+export type FieldSource = "admin" | "public" | "enrollment";
 
 export interface FormField {
   id: string;
@@ -47,7 +47,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   required: field.required,
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : undefined,
-  source: field.form_type as FieldSource,
+  source: field.form_type === 'enrollment' ? 'enrollment' : field.form_type === 'admin' ? 'admin' : 'public',
   isDefault: false
 });
 
@@ -60,5 +60,5 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   order: field.order,
   options: field.options || null,
   company_id: "", // Será preenchido no momento da inserção
-  form_type: field.source
+  form_type: field.source === 'enrollment' ? 'enrollment' : field.source === 'admin' ? 'admin' : 'public'
 });
