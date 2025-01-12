@@ -1,11 +1,10 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { UserList } from "@/components/users/UserList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UsersFilters } from "@/components/users/UsersFilters";
 import { UserStats } from "@/components/users/UserStats";
 import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types/user";
-import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Users = () => {
