@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { User, UserResponse, mapSupabaseUser } from "@/types/user";
+import { useState, useCallback } from "react";
+import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,7 +8,7 @@ export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const { user: currentUser } = useAuth();
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     if (!currentUser?.companyId) {
       console.error('No company ID found');
       return;
@@ -44,20 +44,37 @@ export function useUsers() {
 
       if (emailsError) throw emailsError;
 
-      const mappedUsers = emailsData.map(user => mapSupabaseUser(user as UserResponse));
+      const mappedUsers = emailsData.map(user => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: "USER",
+        companyId: user.company_id,
+        createdAt: user.created_at,
+        updatedAt: user.updated_at,
+        lastAccess: user.updated_at,
+        status: user.status === 'active' ? 'active' : 'inactive',
+        accessLevel: user.access_level,
+        location: user.location || '',
+        address: user.address || '',
+        specialization: user.specialization || '',
+        tags: user.user_tags?.map(ut => ut.tags) || [],
+        authorizedRooms: user.user_rooms?.map(ur => ur.rooms) || [],
+        specializations: user.user_specializations?.map(us => us.specializations) || []
+      }));
+
       console.log('Usuários carregados:', mappedUsers);
       setUsers(mappedUsers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
     }
-  };
+  }, [currentUser?.companyId]);
 
   const handleUpdateUser = async (userData: User) => {
     try {
       console.log('Atualizando usuário:', userData);
       
-      // Atualizar informações básicas
       const { error: updateError } = await supabase
         .from('emails')
         .update({
@@ -67,20 +84,21 @@ export function useUsers() {
           location: userData.location || '',
           specialization: userData.specialization || '',
           status: userData.status,
-          address: userData.address || ''
+          address: userData.address || '',
+          updated_at: new Date().toISOString()
         })
         .eq('id', userData.id);
 
       if (updateError) throw updateError;
 
-      // Atualizar tags
+      // Atualiza tags
       await supabase
         .from('user_tags')
         .delete()
         .eq('user_id', userData.id);
 
-      if (userData.tags && userData.tags.length > 0) {
-        const { error: tagsError } = await supabase
+      if (userData.tags.length > 0) {
+        await supabase
           .from('user_tags')
           .insert(
             userData.tags.map(tag => ({
@@ -88,18 +106,16 @@ export function useUsers() {
               tag_id: tag.id
             }))
           );
-
-        if (tagsError) throw tagsError;
       }
 
-      // Atualizar salas autorizadas
+      // Atualiza salas autorizadas
       await supabase
         .from('user_rooms')
         .delete()
         .eq('user_id', userData.id);
 
-      if (userData.authorizedRooms && userData.authorizedRooms.length > 0) {
-        const { error: roomsError } = await supabase
+      if (userData.authorizedRooms.length > 0) {
+        await supabase
           .from('user_rooms')
           .insert(
             userData.authorizedRooms.map(room => ({
@@ -107,18 +123,16 @@ export function useUsers() {
               room_id: room.id
             }))
           );
-
-        if (roomsError) throw roomsError;
       }
 
-      // Atualizar especializações
+      // Atualiza especializações
       await supabase
         .from('user_specializations')
         .delete()
         .eq('user_id', userData.id);
 
-      if (userData.specializations && userData.specializations.length > 0) {
-        const { error: specsError } = await supabase
+      if (userData.specializations.length > 0) {
+        await supabase
           .from('user_specializations')
           .insert(
             userData.specializations.map(spec => ({
@@ -126,11 +140,9 @@ export function useUsers() {
               specialization_id: spec.id
             }))
           );
-
-        if (specsError) throw specsError;
       }
 
-      await loadUsers(); // Recarregar lista após atualização
+      await loadUsers(); // Recarrega a lista após atualização
       toast.success('Usuário atualizado com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);
@@ -162,12 +174,6 @@ export function useUsers() {
       toast.error('Erro ao excluir usuário');
     }
   };
-
-  useEffect(() => {
-    if (currentUser?.companyId) {
-      loadUsers();
-    }
-  }, [currentUser?.companyId]);
 
   return {
     users,

@@ -24,19 +24,22 @@ const Users = () => {
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Escuta todos os eventos (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'emails',
           filter: `company_id=eq.${currentUser.companyId}`
         },
         async (payload) => {
           console.log('Mudança detectada:', payload);
-          await loadUsers();
+          await loadUsers(); // Recarrega a lista quando houver qualquer mudança
         }
       )
       .subscribe((status) => {
         console.log('Status da inscrição:', status);
       });
+
+    // Faz o carregamento inicial
+    loadUsers();
 
     return () => {
       console.log('Removendo listener...');
