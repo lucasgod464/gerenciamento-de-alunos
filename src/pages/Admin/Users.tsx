@@ -14,23 +14,28 @@ const Users = () => {
 
   // Implementar escuta de mudanças em tempo real
   useEffect(() => {
+    console.log('Configurando listener de mudanças em tempo real...');
+    
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: '*', // Escuta todos os eventos (INSERT, UPDATE, DELETE)
           schema: 'public',
           table: 'emails'
         },
-        () => {
-          console.log('Mudança detectada na tabela emails, recarregando dados...');
-          loadUsers();
+        async (payload) => {
+          console.log('Mudança detectada:', payload);
+          await loadUsers(); // Recarrega a lista quando houver qualquer mudança
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Status da inscrição:', status);
+      });
 
     return () => {
+      console.log('Removendo listener...');
       supabase.removeChannel(channel);
     };
   }, [loadUsers]);
@@ -47,11 +52,6 @@ const Users = () => {
   const totalUsers = users.length;
   const activeUsers = users.filter(user => user.status === 'active').length;
   const inactiveUsers = users.filter(user => user.status === 'inactive').length;
-
-  const handleUserUpdate = async (userData: User) => {
-    console.log('Atualizando usuário:', userData);
-    await handleUpdateUser(userData);
-  };
 
   return (
     <DashboardLayout role="admin">
@@ -76,7 +76,7 @@ const Users = () => {
         />
         <UserList 
           users={filteredUsers}
-          onUpdateUser={handleUserUpdate}
+          onUpdateUser={handleUpdateUser}
           onDeleteUser={handleDeleteUser}
         />
       </div>
