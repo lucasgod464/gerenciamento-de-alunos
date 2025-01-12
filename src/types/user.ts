@@ -1,6 +1,6 @@
-export type UserRole = "ADMIN" | "USER";
-export type UserStatus = "active" | "inactive";
-export type AccessLevel = "Admin" | "Usuário Comum";
+export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
+export type UserStatus = 'active' | 'inactive';
+export type UserAccessLevel = 'Admin' | 'Usuário Comum';
 
 export interface User {
   id: string;
@@ -12,23 +12,13 @@ export interface User {
   updatedAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: AccessLevel;
+  accessLevel: UserAccessLevel;
   location?: string;
-  address?: string;
   specialization?: string;
-  tags: Array<{
-    id: string;
-    name: string;
-    color: string;
-  }>;
-  authorizedRooms: Array<{
-    id: string;
-    name: string;
-  }>;
-  specializations: Array<{
-    id: string;
-    name: string;
-  }>;
+  address?: string;
+  tags?: { id: string; name: string; color: string; }[];
+  authorizedRooms?: { id: string; name: string; }[];
+  specializations?: { id: string; name: string; }[];
 }
 
 export interface UserResponse {
@@ -41,43 +31,19 @@ export interface UserResponse {
   updated_at: string;
   last_access: string;
   status: string;
-  access_level: AccessLevel;
+  access_level: UserAccessLevel;
   location?: string;
-  address?: string;
   specialization?: string;
-  user_tags?: Array<{
-    tags: {
-      id: string;
-      name: string;
-      color: string;
-    };
-  }>;
-  user_rooms?: Array<{
-    rooms: {
-      id: string;
-      name: string;
-    };
-  }>;
-  user_specializations?: Array<{
-    specializations: {
-      id: string;
-      name: string;
-    };
-  }>;
+  address?: string;
+  user_tags?: { tags: { id: string; name: string; color: string; } }[];
+  user_rooms?: { rooms: { id: string; name: string; } }[];
+  user_specializations?: { specializations: { id: string; name: string; } }[];
 }
 
-export interface CreateUserData {
-  name: string;
-  email: string;
+export interface CreateUserData extends Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'lastAccess'> {
   password: string;
-  accessLevel: AccessLevel;
-  companyId: string;
-  location?: string;
-  specialization?: string;
-  status?: UserStatus;
-  address?: string;
   selectedRooms?: string[];
-  selectedTags?: Array<{ id: string; name: string; color: string }>;
+  selectedTags?: { id: string; name: string; color: string; }[];
   selectedSpecializations?: string[];
 }
 
@@ -93,11 +59,9 @@ export const mapSupabaseUser = (data: UserResponse): User => ({
   status: data.status as UserStatus,
   accessLevel: data.access_level,
   location: data.location,
-  address: data.address,
   specialization: data.specialization,
+  address: data.address,
   tags: data.user_tags?.map(ut => ut.tags) || [],
   authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
   specializations: data.user_specializations?.map(us => us.specializations) || []
 });
-
-export { mapSupabaseUser as mapUserResponse };
