@@ -54,15 +54,9 @@ export function useUsers() {
   };
 
   const handleUpdateUser = async (userData: User) => {
-    if (!userData || !userData.id) {
-      console.error('Dados do usuário ou ID não fornecidos');
-      toast.error('Dados do usuário inválidos');
-      return;
-    }
-
     try {
-      console.log('Iniciando atualização do usuário:', userData);
-
+      console.log('Atualizando usuário:', userData);
+      
       // Atualizar informações básicas
       const { error: updateError } = await supabase
         .from('emails')

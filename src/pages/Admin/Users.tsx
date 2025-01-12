@@ -16,18 +16,23 @@ const Users = () => {
   useEffect(() => {
     console.log('Configurando listener de mudanças em tempo real...');
     
+    // Primeiro, vamos garantir que a tabela emails tenha REPLICA IDENTITY FULL
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('user-changes')
       .on(
         'postgres_changes',
         {
           event: '*', // Escuta todos os eventos (INSERT, UPDATE, DELETE)
           schema: 'public',
-          table: 'emails'
+          table: 'emails',
+          filter: `company_id=eq.${users[0]?.companyId}`
         },
         async (payload) => {
           console.log('Mudança detectada:', payload);
-          await loadUsers(); // Recarrega a lista quando houver qualquer mudança
+          if (payload.eventType === 'UPDATE') {
+            console.log('Usuário atualizado, recarregando lista...');
+            await loadUsers(); // Recarrega a lista quando houver qualquer mudança
+          }
         }
       )
       .subscribe((status) => {
@@ -38,7 +43,7 @@ const Users = () => {
       console.log('Removendo listener...');
       supabase.removeChannel(channel);
     };
-  }, [loadUsers]);
+  }, [loadUsers, users]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
