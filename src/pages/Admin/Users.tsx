@@ -6,33 +6,32 @@ import { UserStats } from "@/components/users/UserStats";
 import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const Users = () => {
+  const { user: currentUser } = useAuth();
   const { users, loadUsers, handleUpdateUser, handleDeleteUser } = useUsers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Implementar escuta de mudanças em tempo real
   useEffect(() => {
+    if (!currentUser?.companyId) return;
+
     console.log('Configurando listener de mudanças em tempo real...');
     
-    // Primeiro, vamos garantir que a tabela emails tenha REPLICA IDENTITY FULL
     const channel = supabase
       .channel('user-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Escuta todos os eventos (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'emails',
-          filter: `company_id=eq.${users[0]?.companyId}`
+          filter: `company_id=eq.${currentUser.companyId}`
         },
         async (payload) => {
           console.log('Mudança detectada:', payload);
-          if (payload.eventType === 'UPDATE') {
-            console.log('Usuário atualizado, recarregando lista...');
-            await loadUsers(); // Recarrega a lista quando houver qualquer mudança
-          }
+          await loadUsers();
         }
       )
       .subscribe((status) => {
@@ -43,7 +42,7 @@ const Users = () => {
       console.log('Removendo listener...');
       supabase.removeChannel(channel);
     };
-  }, [loadUsers, users]);
+  }, [currentUser?.companyId, loadUsers]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
