@@ -26,16 +26,18 @@ export function UserFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <UserForm
-          onSuccess={handleSuccess}
-          onCancel={() => onOpenChange(false)}
-          defaultValues={defaultValues}
-          isEditing={isEditing}
-        />
+        <div className="pb-6">
+          <UserForm
+            onSuccess={handleSuccess}
+            onCancel={() => onOpenChange(false)}
+            defaultValues={defaultValues}
+            isEditing={isEditing}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
