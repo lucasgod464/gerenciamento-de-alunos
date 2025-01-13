@@ -22,6 +22,10 @@ export function EditUserDialog({
 
   const handleSuccess = async (updatedUser: User) => {
     try {
+      if (!updatedUser) {
+        throw new Error('Dados do usuário não fornecidos');
+      }
+
       console.log('Usuário atualizado, notificando componente pai:', updatedUser);
       
       // Primeiro atualiza o estado local

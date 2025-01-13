@@ -1,17 +1,13 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { User } from "@/types/user";
 import { UserForm } from "../form/UserForm";
 
 interface UserFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess: (user: User) => void;
   title: string;
-  defaultValues?: any;
+  defaultValues?: Partial<User>;
   isEditing?: boolean;
 }
 
@@ -23,17 +19,19 @@ export function UserFormDialog({
   defaultValues,
   isEditing
 }: UserFormDialogProps) {
+  const handleSuccess = (updatedUser: User) => {
+    console.log('UserFormDialog recebeu usuário atualizado:', updatedUser);
+    onSuccess(updatedUser);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <UserForm
-          onSuccess={() => {
-            onSuccess?.();
-            onOpenChange(false);
-          }}
+          onSuccess={handleSuccess}
           onCancel={() => onOpenChange(false)}
           defaultValues={defaultValues}
           isEditing={isEditing}
