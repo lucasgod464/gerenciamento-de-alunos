@@ -37,6 +37,7 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
       const userData = {
         name: formData.get('name') as string,
         email: formData.get('email') as string,
+        password: formData.get('password') as string || Math.random().toString(36).slice(-8), // Gera senha aleatória se não fornecida
         location: formData.get('location') as string || '',
         address: formData.get('address') as string || '',
         specialization: formData.get('specialization') as string || '',
@@ -56,7 +57,15 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
         // Atualiza informações básicas do usuário
         const { error: updateError } = await supabase
           .from('emails')
-          .update(userData)
+          .update({
+            name: userData.name,
+            email: userData.email,
+            access_level: userData.access_level,
+            location: userData.location || '',
+            specialization: userData.specialization || '',
+            status: userData.status,
+            address: userData.address || ''
+          })
           .eq('id', defaultValues.id);
 
         if (updateError) throw updateError;
