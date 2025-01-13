@@ -1,7 +1,12 @@
 import { supabase } from "@/integrations/supabase/client"
 import { Company, mapCompanyToSupabase, mapSupabaseCompany } from "@/types/company"
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 export async function createCompany(newCompany: Omit<Company, "id" | "createdAt">) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   console.log("Criando nova empresa:", newCompany)
   
   try {
@@ -27,6 +32,12 @@ export async function createCompany(newCompany: Omit<Company, "id" | "createdAt"
     if (!data) {
       throw new Error("Não foi possível criar a empresa. Dados não retornados.")
     }
+
+    queryClient.invalidateQueries({ queryKey: ["companies"] });
+    toast({
+      title: "Empresa criada",
+      description: `A empresa ${newCompany.name} foi criada com sucesso.`,
+    });
 
     return mapSupabaseCompany({
       ...data,
@@ -93,6 +104,9 @@ export async function updateCompany(company: Company) {
 }
 
 export async function deleteCompany(id: string) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   console.log("Deletando empresa:", id)
   
   try {
@@ -107,6 +121,12 @@ export async function deleteCompany(id: string) {
         ? "Você não tem permissão para deletar esta empresa"
         : "Erro ao deletar empresa. Por favor, tente novamente.")
     }
+
+    queryClient.invalidateQueries({ queryKey: ["companies"] });
+    toast({
+      title: "Empresa deletada",
+      description: "A empresa foi deletada com sucesso.",
+    });
 
     return id
   } catch (error) {

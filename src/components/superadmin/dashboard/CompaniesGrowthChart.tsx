@@ -2,15 +2,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DateRange } from "@/types/attendance";
 
-export function CompaniesGrowthChart() {
-  const { data: chartData = [] } = useQuery({
-    queryKey: ["companies-growth"],
+interface CompaniesGrowthData {
+  month: string;
+  total: number;
+}
+
+interface CompaniesGrowthChartProps {
+  dateRange: DateRange;
+}
+
+export const CompaniesGrowthChart = ({ dateRange }: CompaniesGrowthChartProps) => {
+  const { data: chartData = [], isLoading } = useQuery({
+    queryKey: ["companies-growth", dateRange],
     queryFn: async () => {
       const months = Array.from({ length: 6 }, (_, i) => {
-        const date = subMonths(new Date(), i);
+        const date = subMonths(dateRange.to, i);
         return {
           start: startOfMonth(date).toISOString(),
           end: endOfMonth(date).toISOString(),
@@ -35,7 +45,21 @@ export function CompaniesGrowthChart() {
 
       return companiesData;
     },
+    enabled: !!dateRange.from && !!dateRange.to
   });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Crescimento de Empresas</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
+          Carregando...
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="col-span-2">
@@ -62,4 +86,4 @@ export function CompaniesGrowthChart() {
       </CardContent>
     </Card>
   );
-}
+};

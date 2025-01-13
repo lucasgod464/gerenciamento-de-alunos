@@ -1,12 +1,14 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompanies } from "@/hooks/useCompanies";
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const { user: currentUser } = useAuth();
+  const { companies } = useCompanies();
 
   const loadUsers = useCallback(async () => {
     if (!currentUser?.companyId) {
@@ -44,11 +46,11 @@ export function useUsers() {
 
       if (emailsError) throw emailsError;
 
-      const mappedUsers = emailsData.map(user => ({
+      const mappedUsers: User[] = emailsData.map(user => ({
         id: user.id,
         name: user.name,
         email: user.email,
-        role: "USER",
+        role: user.access_level === 'Admin' ? 'ADMIN' : 'USER',
         companyId: user.company_id,
         createdAt: user.created_at,
         updatedAt: user.updated_at,
@@ -56,22 +58,27 @@ export function useUsers() {
         status: user.status === 'active' ? 'active' : 'inactive',
         accessLevel: user.access_level,
         location: user.location || '',
-        address: user.address || '',
         specialization: user.specialization || '',
+        address: user.address || '',
         tags: user.user_tags?.map(ut => ut.tags) || [],
         authorizedRooms: user.user_rooms?.map(ur => ur.rooms) || [],
         specializations: user.user_specializations?.map(us => us.specializations) || []
       }));
 
-      console.log('Usuários carregados:', mappedUsers);
       setUsers(mappedUsers);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
       toast.error('Erro ao carregar lista de usuários');
     }
-  }, [currentUser?.companyId]);
+  }, [currentUser?.companyId, companies]);
 
-  const handleUpdateUser = async (userData: User) => {
+  const handleUpdateUser = async (userData: Partial<User>) => {
+    if (!userData || !userData.id) {
+      console.error('Dados do usuário ou ID não fornecidos');
+      toast.error('Dados do usuário inválidos');
+      return;
+    }
+
     try {
       console.log('Atualizando usuário:', userData);
       
@@ -91,58 +98,64 @@ export function useUsers() {
 
       if (updateError) throw updateError;
 
-      // Atualiza tags
-      await supabase
-        .from('user_tags')
-        .delete()
-        .eq('user_id', userData.id);
-
-      if (userData.tags.length > 0) {
+      // Atualizar tags
+      if (userData.tags) {
         await supabase
           .from('user_tags')
-          .insert(
-            userData.tags.map(tag => ({
-              user_id: userData.id,
-              tag_id: tag.id
-            }))
-          );
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.tags.length > 0) {
+          await supabase
+            .from('user_tags')
+            .insert(
+              userData.tags.map(tag => ({
+                user_id: userData.id,
+                tag_id: tag.id
+              }))
+            );
+        }
       }
 
-      // Atualiza salas autorizadas
-      await supabase
-        .from('user_rooms')
-        .delete()
-        .eq('user_id', userData.id);
-
-      if (userData.authorizedRooms.length > 0) {
+      // Atualizar salas autorizadas
+      if (userData.authorizedRooms) {
         await supabase
           .from('user_rooms')
-          .insert(
-            userData.authorizedRooms.map(room => ({
-              user_id: userData.id,
-              room_id: room.id
-            }))
-          );
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.authorizedRooms.length > 0) {
+          await supabase
+            .from('user_rooms')
+            .insert(
+              userData.authorizedRooms.map(room => ({
+                user_id: userData.id,
+                room_id: room.id
+              }))
+            );
+        }
       }
 
-      // Atualiza especializações
-      await supabase
-        .from('user_specializations')
-        .delete()
-        .eq('user_id', userData.id);
-
-      if (userData.specializations.length > 0) {
+      // Atualizar especializações
+      if (userData.specializations) {
         await supabase
           .from('user_specializations')
-          .insert(
-            userData.specializations.map(spec => ({
-              user_id: userData.id,
-              specialization_id: spec.id
-            }))
-          );
+          .delete()
+          .eq('user_id', userData.id);
+
+        if (userData.specializations.length > 0) {
+          await supabase
+            .from('user_specializations')
+            .insert(
+              userData.specializations.map(spec => ({
+                user_id: userData.id,
+                specialization_id: spec.id
+              }))
+            );
+        }
       }
 
-      await loadUsers(); // Recarrega a lista após atualização
+      await loadUsers(); // Recarregar lista após atualização
       toast.success('Usuário atualizado com sucesso');
     } catch (error) {
       console.error('Erro ao atualizar usuário:', error);

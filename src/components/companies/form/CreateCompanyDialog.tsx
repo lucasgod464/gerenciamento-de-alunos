@@ -13,12 +13,14 @@ import { useState } from "react"
 import { Company } from "@/types/company"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { useCompanies } from "@/hooks/useCompanies";
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
+  const { companies } = useCompanies();
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()

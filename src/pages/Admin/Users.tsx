@@ -7,9 +7,11 @@ import { useUsers } from "@/hooks/useUsers";
 import { User } from "@/types/user";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompanies } from "@/hooks/useCompanies";
 
 const Users = () => {
   const { user: currentUser } = useAuth();
+  const { companies } = useCompanies();
   const { users, loadUsers, handleUpdateUser, handleDeleteUser } = useUsers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -60,6 +62,23 @@ const Users = () => {
   const activeUsers = users.filter(user => user.status === 'active').length;
   const inactiveUsers = users.filter(user => user.status === 'inactive').length;
 
+  const handleUserCreated = async () => {
+    try {
+      const company = companies.find(c => c.id === currentUser?.companyId);
+      if (company && company.currentUsers >= company.usersLimit) {
+        throw new Error("Limite de usuários atingido para esta empresa.");
+      }
+      await loadUsers();
+    } catch (error: any) {
+      console.error("Erro ao criar usuário:", error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <DashboardLayout role="admin">
       <div className="max-w-6xl mx-auto space-y-4">
@@ -79,7 +98,7 @@ const Users = () => {
           onSearchChange={setSearch}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
-          onUserCreated={loadUsers}
+          onUserCreated={handleUserCreated}
         />
         <UserList 
           users={filteredUsers}

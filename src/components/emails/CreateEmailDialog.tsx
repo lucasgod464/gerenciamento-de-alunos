@@ -7,12 +7,14 @@ import { useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { CompanySelect } from "./form/CompanySelect";
+import { useCompanies } from "@/hooks/useCompanies";
 
 interface CreateEmailDialogProps {
   onEmailCreated: (email: Email) => void;
 }
 
 export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
+  const { companies } = useCompanies();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,6 +26,11 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
 
   const createEmail = useMutation({
     mutationFn: async (newEmail: Omit<Email, "id" | "createdAt" | "updatedAt" | "company">) => {
+      const company = companies.find(c => c.id === newEmail.companyId);
+      if (company && company.currentUsers >= company.usersLimit) {
+        throw new Error("Limite de usuários atingido para esta empresa.");
+      }
+
       const { data, error } = await supabase
         .from('emails')
         .insert([{
@@ -57,11 +64,11 @@ export function CreateEmailDialog({ onEmailCreated }: CreateEmailDialogProps) {
       });
       resetForm();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error creating email:', error);
       toast({
         title: "Erro ao criar",
-        description: "Ocorreu um erro ao criar o email.",
+        description: error.message,
         variant: "destructive",
       });
     },
