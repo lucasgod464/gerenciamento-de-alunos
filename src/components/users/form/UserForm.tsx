@@ -5,12 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import UserFormFields from "../UserFormFields";
 import { useUsers } from "@/hooks/useUsers";
+import { User } from "@/types/user";
 
 interface UserFormProps {
-  onSuccess?: () => void;
+  onSuccess: (user: User) => void;
   onCancel?: () => void;
   isEditing?: boolean;
-  defaultValues?: any;
+  defaultValues?: Partial<User>;
 }
 
 export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: UserFormProps) {
@@ -21,10 +22,10 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
     defaultValues?.tags || []
   );
   const [selectedRooms, setSelectedRooms] = useState<string[]>(
-    defaultValues?.authorizedRooms?.map((room: any) => room.id) || []
+    defaultValues?.authorizedRooms?.map((room) => room.id) || []
   );
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>(
-    defaultValues?.specializations?.map((spec: any) => spec.id) || []
+    defaultValues?.specializations?.map((spec) => spec.id) || []
   );
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -36,11 +37,11 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
       const userData = {
         name: formData.get('name') as string,
         email: formData.get('email') as string,
-        location: formData.get('location') as string,
-        address: formData.get('address') as string,
-        specialization: formData.get('specialization') as string,
+        location: formData.get('location') as string || '',
+        address: formData.get('address') as string || '',
+        specialization: formData.get('specialization') as string || '',
         access_level: formData.get('accessLevel') as "Admin" | "Usuário Comum",
-        status: formData.get('status') as string,
+        status: formData.get('status') as string || 'active',
         company_id: user?.companyId,
       };
 
@@ -111,64 +112,63 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           if (specsError) throw specsError;
         }
 
-        toast.success('Usuário atualizado com sucesso!');
-      } else {
-        // Cria novo usuário
-        const { data: newUser, error } = await supabase
+        // Busca o usuário atualizado com todas as relações
+        const { data: updatedUser, error: fetchError } = await supabase
           .from('emails')
-          .insert([{
-            ...userData,
-            password: '123456', // Senha padrão para novos usuários
-          }])
-          .select()
+          .select(`
+            *,
+            user_tags (
+              tags (
+                id,
+                name,
+                color
+              )
+            ),
+            user_rooms (
+              rooms (
+                id,
+                name
+              )
+            ),
+            user_specializations (
+              specializations (
+                id,
+                name
+              )
+            )
+          `)
+          .eq('id', defaultValues.id)
           .single();
 
-        if (error) throw error;
+        if (fetchError) throw fetchError;
 
-        // Insere tags
-        if (selectedTags.length > 0) {
-          const { error: tagsError } = await supabase
-            .from('user_tags')
-            .insert(selectedTags.map(tag => ({
-              user_id: newUser.id,
-              tag_id: tag.id
-            })));
+        const mappedUser: User = {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: "USER",
+          companyId: updatedUser.company_id,
+          createdAt: updatedUser.created_at,
+          updatedAt: updatedUser.updated_at,
+          lastAccess: updatedUser.updated_at,
+          status: updatedUser.status === 'active' ? 'active' : 'inactive',
+          accessLevel: updatedUser.access_level,
+          location: updatedUser.location || '',
+          address: updatedUser.address || '',
+          specialization: updatedUser.specialization || '',
+          tags: updatedUser.user_tags?.map(ut => ut.tags) || [],
+          authorizedRooms: updatedUser.user_rooms?.map(ur => ur.rooms) || [],
+          specializations: updatedUser.user_specializations?.map(us => us.specializations) || []
+        };
 
-          if (tagsError) throw tagsError;
-        }
-
-        // Insere salas autorizadas
-        if (selectedRooms.length > 0) {
-          const { error: roomsError } = await supabase
-            .from('user_rooms')
-            .insert(selectedRooms.map(roomId => ({
-              user_id: newUser.id,
-              room_id: roomId
-            })));
-
-          if (roomsError) throw roomsError;
-        }
-
-        // Insere especializações
-        if (selectedSpecializations.length > 0) {
-          const { error: specsError } = await supabase
-            .from('user_specializations')
-            .insert(selectedSpecializations.map(specId => ({
-              user_id: newUser.id,
-              specialization_id: specId
-            })));
-
-          if (specsError) throw specsError;
-        }
-
-        toast.success('Usuário criado com sucesso!');
+        onSuccess(mappedUser);
+        toast.success('Usuário atualizado com sucesso!');
       }
 
       // Recarrega a lista de usuários após a operação
       await loadUsers();
       
       setIsLoading(false);
-      onSuccess?.();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
       toast.error('Erro ao salvar usuário');
