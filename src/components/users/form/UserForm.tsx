@@ -121,7 +121,6 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
           if (specsError) throw specsError;
         }
 
-        // Busca o usuário atualizado com todas as relações
         const { data: updatedUser, error: fetchError } = await supabase
           .from('emails')
           .select(`
@@ -245,6 +244,7 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
         onSuccess(mappedNewUser);
         toast.success('Usuário criado com sucesso!');
+        if (onCancel) onCancel(); // Fecha o modal após criar o usuário com sucesso
       }
 
       // Recarrega a lista de usuários após a operação
