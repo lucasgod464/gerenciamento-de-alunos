@@ -142,6 +142,8 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
         if (fetchError) throw fetchError;
 
+        if (!updatedUser) throw new Error('Usuário não encontrado após atualização');
+
         const mappedUser: User = {
           id: updatedUser.id,
           name: updatedUser.name,
@@ -163,6 +165,77 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
         onSuccess(mappedUser);
         toast.success('Usuário atualizado com sucesso!');
+      } else {
+        // Criar novo usuário
+        const { data: newUser, error: createError } = await supabase
+          .from('emails')
+          .insert([userData])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        if (!newUser) throw new Error('Erro ao criar usuário');
+
+        // Adiciona tags, salas e especializações para o novo usuário
+        const promises = [];
+
+        if (selectedTags.length > 0) {
+          promises.push(
+            supabase
+              .from('user_tags')
+              .insert(selectedTags.map(tag => ({
+                user_id: newUser.id,
+                tag_id: tag.id
+              })))
+          );
+        }
+
+        if (selectedRooms.length > 0) {
+          promises.push(
+            supabase
+              .from('user_rooms')
+              .insert(selectedRooms.map(roomId => ({
+                user_id: newUser.id,
+                room_id: roomId
+              })))
+          );
+        }
+
+        if (selectedSpecializations.length > 0) {
+          promises.push(
+            supabase
+              .from('user_specializations')
+              .insert(selectedSpecializations.map(specId => ({
+                user_id: newUser.id,
+                specialization_id: specId
+              })))
+          );
+        }
+
+        await Promise.all(promises);
+
+        const mappedNewUser: User = {
+          id: newUser.id,
+          name: newUser.name,
+          email: newUser.email,
+          role: "USER",
+          companyId: newUser.company_id,
+          createdAt: newUser.created_at,
+          updatedAt: newUser.created_at,
+          lastAccess: newUser.created_at,
+          status: newUser.status === 'active' ? 'active' : 'inactive',
+          accessLevel: newUser.access_level,
+          location: newUser.location || '',
+          address: newUser.address || '',
+          specialization: newUser.specialization || '',
+          tags: selectedTags,
+          authorizedRooms: [],
+          specializations: []
+        };
+
+        onSuccess(mappedNewUser);
+        toast.success('Usuário criado com sucesso!');
       }
 
       // Recarrega a lista de usuários após a operação
