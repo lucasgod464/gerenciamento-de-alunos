@@ -9,48 +9,17 @@ import { useAuth } from "@/hooks/useAuth";
 import { AttendanceList } from "./AttendanceList";
 import { formatDate } from "@/utils/dateUtils";
 import { StudentDetailsDialog } from "../student/StudentDetailsDialog";
-
-interface Room {
-  id: string;
-  name: string;
-}
+import { useUserRooms } from "@/hooks/useUserRooms";
 
 export const AttendanceControl = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedRoom, setSelectedRoom] = useState<string>("");
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const { rooms, isLoading } = useUserRooms();
   const [isStarted, setIsStarted] = useState(false);
   const [hasAttendance, setHasAttendance] = useState(false);
   const [showStudentDetails, setShowStudentDetails] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // Busca as salas disponíveis
-  useEffect(() => {
-    const fetchRooms = async () => {
-      if (!user?.companyId) return;
-      
-      const { data, error } = await supabase
-        .from('rooms')
-        .select('id, name')
-        .eq('company_id', user.companyId)
-        .eq('status', true);
-
-      if (error) {
-        console.error('Erro ao buscar salas:', error);
-        toast({
-          title: "Erro ao carregar salas",
-          description: "Não foi possível carregar a lista de salas.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      setRooms(data || []);
-    };
-
-    fetchRooms();
-  }, [user?.companyId, toast]);
 
   // Verifica se já existe chamada para a data e sala selecionadas
   useEffect(() => {
@@ -86,7 +55,7 @@ export const AttendanceControl = () => {
   }, [selectedDate, selectedRoom, user?.companyId, toast]);
 
   const handleStartAttendance = async () => {
-    if (!user?.companyId) return;
+    if (!user?.companyId || !selectedRoom) return; // Added check for selectedRoom
 
     if (isStarted) {
       try {
@@ -121,6 +90,16 @@ export const AttendanceControl = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-center text-muted-foreground">
+          Carregando...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -145,16 +124,20 @@ export const AttendanceControl = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
-                <Select value={selectedRoom} onValueChange={setSelectedRoom}>
+                <Select value={selectedRoom} onValueChange={setSelectedRoom} disabled={isStarted}>
                   <SelectTrigger className="bg-white">
                     <SelectValue placeholder="Selecione uma sala" />
                   </SelectTrigger>
                   <SelectContent>
-                    {rooms.map((room) => (
+                    {rooms.length > 0 ? rooms.map((room) => (
                       <SelectItem key={room.id} value={room.id}>
                         {room.name}
                       </SelectItem>
-                    ))}
+                    )) : (
+                      <SelectItem value="" disabled>
+                        Nenhuma sala disponível
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

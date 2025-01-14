@@ -15,12 +15,13 @@ interface RoomSelectorProps {
   rooms: Room[];
   selectedRoom: string;
   onRoomChange: (roomId: string) => void;
+  className?: string;
 }
 
-export const RoomSelector = ({ rooms, selectedRoom, onRoomChange }: RoomSelectorProps) => {
+export const RoomSelector = ({ rooms, selectedRoom, onRoomChange, className }: RoomSelectorProps) => {
   return (
-    <Select value={selectedRoom} onValueChange={onRoomChange}>
-      <SelectTrigger className="w-[180px]">
+    <Select value={selectedRoom} onValueChange={onRoomChange} className={className}>
+      <SelectTrigger>
         <SelectValue placeholder="Selecionar Sala" />
       </SelectTrigger>
       <SelectContent>

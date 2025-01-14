@@ -42,7 +42,7 @@ export const RoomSelect = ({ value, onChange, required = false }: RoomSelectProp
         // Transform and filter the data to get only active rooms
         const authorizedRooms = data
           .map(item => ({
-            id: item.rooms.id,
+            id: item.room_id, // Corrected field name here
             name: item.rooms.name
           }))
           .filter(room => room.id && room.name); // Ensure we have valid room data
