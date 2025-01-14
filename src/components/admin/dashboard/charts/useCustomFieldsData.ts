@@ -37,9 +37,6 @@ export const useCustomFieldsData = (companyId?: string) => {
           throw publicError;
         }
 
-        console.log("Campos admin:", adminFields);
-        console.log("Campos públicos:", publicFields);
-
         const mappedAdminFields: FormField[] = (adminFields || []).map(field => ({
           id: field.id,
           name: field.name,
@@ -82,7 +79,12 @@ export const useCustomFieldsData = (companyId?: string) => {
         if (error) throw error;
 
         if (data) {
-          const mappedStudents = data.map(mapSupabaseStudent);
+          const mappedStudents = data.map(student => ({
+            ...mapSupabaseStudent(student),
+            customFields: typeof student.custom_fields === 'string' 
+              ? JSON.parse(student.custom_fields) 
+              : student.custom_fields || {}
+          }));
           console.log("Alunos mapeados:", mappedStudents);
           setStudents(mappedStudents);
         }
