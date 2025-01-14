@@ -30,7 +30,7 @@ export function UserRooms() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 p-4"> {/* Added padding */}
       {rooms.map((room) => (
         <RoomCard key={room.id} room={room} />
       ))}

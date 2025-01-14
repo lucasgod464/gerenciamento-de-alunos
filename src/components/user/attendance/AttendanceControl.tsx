@@ -105,16 +105,14 @@ export const AttendanceControl = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="bg-white shadow-sm">
           <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Data</h3>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border bg-white"
-                />
-              </div>
+            <div className="flex flex-col items-center space-y-2"> {/* Changed to flex-col and added space-y-2 */}
+              <h3 className="font-medium text-gray-700">Data</h3>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                className="rounded-md border bg-white"
+              />
             </div>
           </CardContent>
         </Card>
