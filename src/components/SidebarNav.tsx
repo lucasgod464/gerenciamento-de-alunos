@@ -85,14 +85,14 @@ export const SidebarNav = ({ role }: SidebarNavProps) => {
             key={link.href}
             to={link.href}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
               location.pathname === link.href
                 ? "bg-gray-100 text-gray-900"
                 : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             )}
           >
-            <Icon className="h-4 w-4" />
-            <span>{link.title}</span>
+            <Icon className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{link.title}</span>
           </Link>
         );
       })}

@@ -5,16 +5,16 @@ import { Users, ClipboardCheck, BarChart } from "lucide-react";
 const UserDashboard = () => {
   return (
     <DashboardLayout role="user">
-      <div className="space-y-6">
+      <div className="space-y-6 p-4">
         <div>
-          <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl md:text-2xl font-bold mb-2">Dashboard</h1>
+          <p className="text-sm md:text-base text-muted-foreground">
             Bem-vindo ao seu painel de controle
           </p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Total de Alunos
@@ -29,7 +29,7 @@ const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Presenças Hoje
@@ -44,7 +44,7 @@ const UserDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="w-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Relatórios
