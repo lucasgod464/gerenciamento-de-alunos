@@ -32,9 +32,20 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     const loadAllFields = async () => {
       try {
         const [{ data: adminFields }, { data: publicFields }, { data: roomsData }] = await Promise.all([
-          supabase.from('admin_form_fields').select('*').order('order'),
-          supabase.from('enrollment_form_fields').select('*').order('order'),
-          supabase.from('rooms').select('id, name').eq('status', true)
+          supabase
+            .from('admin_form_fields')
+            .select('*')
+            .eq('form_type', 'admin')
+            .order('order'),
+          supabase
+            .from('enrollment_form_fields')
+            .select('*')
+            .eq('form_type', 'enrollment')
+            .order('order'),
+          supabase
+            .from('rooms')
+            .select('id, name')
+            .eq('status', true)
         ]);
         
         if (adminFields) {
@@ -47,6 +58,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             required: field.required || false,
             order: field.order,
             options: field.options as string[] | undefined,
+            source: 'admin' as const
           })));
         }
 
@@ -60,6 +72,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
             required: field.required || false,
             order: field.order,
             options: field.options as string[] | undefined,
+            source: 'public' as const
           })));
         }
 
@@ -123,11 +136,6 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     enrollmentFields.find(field => field.id === key)
   );
 
-  // Verifica se o aluno tem campos do formulário administrativo
-  const hasAdminFields = Object.keys(formData.customFields || {}).some(key => 
-    customFields.find(field => field.id === key)
-  );
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-4">
       <BasicInfoFields 
@@ -147,7 +155,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
 
       {/* Mostra campos do formulário público apenas se o aluno tiver campos do formulário público */}
       <CustomFieldsSection
-        title="Campos do Formulário Público"
+        title="Campos do Formulário Online"
         fields={enrollmentFields}
         currentValues={formData.customFields || {}}
         onFieldChange={handleCustomFieldChange}

@@ -18,12 +18,14 @@ export const useCustomFieldsData = (companyId?: string) => {
             .from('admin_form_fields')
             .select('*')
             .eq('company_id', companyId)
+            .eq('form_type', 'admin')
             .in('type', ['select', 'multiple'])
             .order('order'),
           supabase
             .from('enrollment_form_fields')
             .select('*')
             .eq('company_id', companyId)
+            .eq('form_type', 'enrollment')
             .in('type', ['select', 'multiple'])
             .order('order')
         ]);
