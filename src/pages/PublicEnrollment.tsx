@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function PublicEnrollment() {
   const [fields, setFields] = useState<FormField[]>([]);
@@ -156,15 +157,15 @@ export function PublicEnrollment() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-4 px-4 sm:py-12 sm:px-6 lg:px-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-left text-2xl font-bold">
+          <CardTitle className="text-left text-xl sm:text-2xl font-bold">
             Formulário de Inscrição
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="nome_completo" className="text-left block">
                 Nome Completo
@@ -270,37 +271,39 @@ export function PublicEnrollment() {
                   )}
 
                   {field.type === "multiple" && (
-                    <div className="space-y-2">
-                      {field.options?.map((option) => (
-                        <div key={option} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${field.name}-${option}`}
-                            checked={multipleSelections[field.name]?.includes(option)}
-                            onCheckedChange={(checked) => {
-                              setMultipleSelections(prev => {
-                                const current = prev[field.name] || [];
-                                if (checked) {
-                                  return {
-                                    ...prev,
-                                    [field.name]: [...current, option]
-                                  };
-                                } else {
-                                  return {
-                                    ...prev,
-                                    [field.name]: current.filter(item => item !== option)
-                                  };
-                                }
-                              });
-                            }}
-                          />
-                          <label
-                            htmlFor={`${field.name}-${option}`}
-                            className="text-sm font-medium leading-none"
-                          >
-                            {option}
-                          </label>
-                        </div>
-                      ))}
+                    <div className="space-y-2 p-4 bg-gray-50 rounded-md">
+                      <ScrollArea className="h-48 w-full rounded-md">
+                        {field.options?.map((option) => (
+                          <div key={option} className="flex items-center space-x-2 p-2">
+                            <Checkbox
+                              id={`${field.name}-${option}`}
+                              checked={multipleSelections[field.name]?.includes(option)}
+                              onCheckedChange={(checked) => {
+                                setMultipleSelections(prev => {
+                                  const current = prev[field.name] || [];
+                                  if (checked) {
+                                    return {
+                                      ...prev,
+                                      [field.name]: [...current, option]
+                                    };
+                                  } else {
+                                    return {
+                                      ...prev,
+                                      [field.name]: current.filter(item => item !== option)
+                                    };
+                                  }
+                                });
+                              }}
+                            />
+                            <label
+                              htmlFor={`${field.name}-${option}`}
+                              className="text-sm font-medium leading-none"
+                            >
+                              {option}
+                            </label>
+                          </div>
+                        ))}
+                      </ScrollArea>
                     </div>
                   )}
 
@@ -312,12 +315,14 @@ export function PublicEnrollment() {
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
                       </SelectTrigger>
-                      <SelectContent>
-                        {field.options?.map(option => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="max-h-[200px]">
+                        <ScrollArea className="h-[200px]">
+                          {field.options?.map(option => (
+                            <SelectItem key={option} value={option} className="cursor-pointer">
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
                       </SelectContent>
                     </Select>
                   )}
