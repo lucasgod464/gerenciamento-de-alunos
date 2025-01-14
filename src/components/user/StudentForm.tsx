@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BasicInfoFields } from "./student/form/BasicInfoFields";
 import { CustomFieldsSection } from "./student/form/CustomFieldsSection";
+import { useAuth } from "@/hooks/useAuth";
 
 interface StudentFormProps {
   initialData?: Partial<Student>;
@@ -27,24 +28,30 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
   const [enrollmentFields, setEnrollmentFields] = useState<FormField[]>([]);
   const [rooms, setRooms] = useState<{ id: string; name: string }[]>([]);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     const loadAllFields = async () => {
+      if (!user?.companyId) return;
+
       try {
         const [{ data: adminFields }, { data: publicFields }, { data: roomsData }] = await Promise.all([
           supabase
             .from('admin_form_fields')
             .select('*')
+            .eq('company_id', user.companyId)
             .eq('form_type', 'admin')
             .order('order'),
           supabase
             .from('enrollment_form_fields')
             .select('*')
+            .eq('company_id', user.companyId)
             .eq('form_type', 'enrollment')
             .order('order'),
           supabase
             .from('rooms')
             .select('id, name')
+            .eq('company_id', user.companyId)
             .eq('status', true)
         ]);
         
@@ -85,7 +92,7 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
     };
 
     loadAllFields();
-  }, []);
+  }, [user?.companyId]);
 
   const handleCustomFieldChange = (field: FormField, value: any) => {
     setFormData(prev => ({
@@ -144,23 +151,27 @@ export const StudentForm = ({ initialData, onSubmit }: StudentFormProps) => {
         rooms={rooms}
       />
 
-      {/* Mostra campos administrativos apenas se o aluno não tiver campos do formulário público */}
-      <CustomFieldsSection
-        title="Campos Administrativos"
-        fields={customFields}
-        currentValues={formData.customFields || {}}
-        onFieldChange={handleCustomFieldChange}
-        show={customFields.length > 0 && !hasPublicFields}
-      />
+      {/* Mostra campos administrativos apenas se houver campos configurados */}
+      {customFields.length > 0 && !hasPublicFields && (
+        <CustomFieldsSection
+          title="Campos Administrativos"
+          fields={customFields}
+          currentValues={formData.customFields || {}}
+          onFieldChange={handleCustomFieldChange}
+          show={true}
+        />
+      )}
 
-      {/* Mostra campos do formulário público apenas se o aluno tiver campos do formulário público */}
-      <CustomFieldsSection
-        title="Campos do Formulário Online"
-        fields={enrollmentFields}
-        currentValues={formData.customFields || {}}
-        onFieldChange={handleCustomFieldChange}
-        show={enrollmentFields.length > 0 && hasPublicFields}
-      />
+      {/* Mostra campos do formulário público apenas se houver campos configurados */}
+      {enrollmentFields.length > 0 && hasPublicFields && (
+        <CustomFieldsSection
+          title="Campos do Formulário Online"
+          fields={enrollmentFields}
+          currentValues={formData.customFields || {}}
+          onFieldChange={handleCustomFieldChange}
+          show={true}
+        />
+      )}
 
       <div className="sticky bottom-0 bg-white py-4 border-t mt-4">
         <Button type="submit" className="w-full">
