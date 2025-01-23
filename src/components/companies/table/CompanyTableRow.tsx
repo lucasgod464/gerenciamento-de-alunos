@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Company } from "@/types/company"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -54,6 +54,14 @@ export function CompanyTableRow({
     toast({
       title: "Status atualizado",
       description: `A empresa ${company.name} foi ${updatedCompany.status === "Ativa" ? "ativada" : "desativada"}.`,
+    })
+  }
+
+  const handleDelete = () => {
+    onDelete(company.id)
+    toast({
+      title: "Empresa excluída",
+      description: `A empresa ${company.name} foi excluída com sucesso.`,
     })
   }
 
@@ -162,7 +170,7 @@ export function CompanyTableRow({
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => onDelete(company.id)}
+                  onClick={handleDelete}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   Excluir
