@@ -97,26 +97,26 @@ export async function deleteCompany(id: string) {
   
   try {
     // Primeiro verificamos se existem usuários vinculados
-    const { data: users, error: usersError } = await supabase
+    const { count: usersCount, error: usersError } = await supabase
       .from("emails")
-      .select("id")
+      .select("*", { count: 'exact', head: true })
       .eq("company_id", id);
 
     if (usersError) throw usersError;
     
-    if (users && users.length > 0) {
+    if (usersCount && usersCount > 0) {
       throw new Error("Não é possível excluir esta empresa pois existem usuários vinculados. Remova todos os usuários primeiro.");
     }
 
     // Depois verificamos se existem salas vinculadas
-    const { data: rooms, error: roomsError } = await supabase
+    const { count: roomsCount, error: roomsError } = await supabase
       .from("rooms")
-      .select("id")
+      .select("*", { count: 'exact', head: true })
       .eq("company_id", id);
 
     if (roomsError) throw roomsError;
     
-    if (rooms && rooms.length > 0) {
+    if (roomsCount && roomsCount > 0) {
       throw new Error("Não é possível excluir esta empresa pois existem salas vinculadas. Remova todas as salas primeiro.");
     }
 
