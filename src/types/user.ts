@@ -1,6 +1,6 @@
 export type UserRole = 'ADMIN' | 'USER' | 'SUPER_ADMIN';
 export type UserStatus = 'active' | 'inactive';
-export type UserAccessLevel = 'Admin' | 'Usuário Comum';
+export type AccessLevel = 'Admin' | 'Usuário Comum';
 
 export interface User {
   id: string;
@@ -12,7 +12,7 @@ export interface User {
   updatedAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: UserAccessLevel;
+  accessLevel: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
@@ -31,7 +31,7 @@ export interface UserResponse {
   updated_at: string;
   last_access: string;
   status: string;
-  access_level: UserAccessLevel;
+  access_level: AccessLevel;
   location?: string;
   specialization?: string;
   address?: string;
