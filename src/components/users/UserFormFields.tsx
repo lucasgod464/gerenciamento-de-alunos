@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,10 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AccessLevel } from "@/types/user";
 import { RoomSelectionFields } from "./fields/RoomSelectionFields";
 import { TagSelectionFields } from "./fields/TagSelectionFields";
 import { SpecializationSelectionFields } from "./fields/SpecializationSelectionFields";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 export interface UserFormFieldsProps {
   defaultValues?: {
@@ -19,7 +20,7 @@ export interface UserFormFieldsProps {
     email?: string;
     specialization?: string;
     status?: string;
-    accessLevel?: AccessLevel;
+    accessLevel?: string;
     authorizedRooms?: { id: string; name: string; }[];
     address?: string;
     tags?: { id: string; name: string; color: string; }[];
@@ -44,14 +45,7 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
     defaultValues.authorizedRooms?.map(room => room.id) || []
   );
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (defaultValues.authorizedRooms) {
-      const roomIds = defaultValues.authorizedRooms.map(room => room.id);
-      setSelectedRooms(roomIds);
-      onRoomsChange?.(roomIds);
-    }
-  }, [defaultValues.authorizedRooms]);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleTagToggle = (tag: { id: string; name: string; color: string; }) => {
     const newSelectedTags = selectedTags.some(t => t.id === tag.id)
@@ -101,6 +95,34 @@ const UserFormFields: React.FC<UserFormFieldsProps> = ({
           defaultValue={defaultValues.email}
           required
         />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="password">
+          {isEditing ? "Nova Senha (opcional)" : "Senha"}
+        </Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder={isEditing ? "Digite para alterar a senha" : "Digite a senha"}
+            required={!isEditing}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-gray-500" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-500" />
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-2">

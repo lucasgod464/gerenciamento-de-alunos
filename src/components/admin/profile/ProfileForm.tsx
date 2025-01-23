@@ -1,8 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Save } from "lucide-react";
+import { Mail, Lock, KeyRound } from "lucide-react";
 
 interface ProfileFormProps {
   email: string;
@@ -28,68 +27,79 @@ export const ProfileForm = ({
   onSubmit,
 }: ProfileFormProps) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Informações de Conta</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Informações da Conta</h3>
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={onEmailChange}
-              required
-            />
+            <div className="relative">
+              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={onEmailChange}
+                className="pl-10"
+                placeholder="seu@email.com"
+              />
+            </div>
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-4">
-            <h3 className="text-sm font-medium">Alterar Senha</h3>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <Label htmlFor="currentPassword" className="text-xs">Senha Atual</Label>
-                <Input
-                  id="currentPassword"
-                  type="password"
-                  value={currentPassword}
-                  onChange={onCurrentPasswordChange}
-                  required
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="newPassword" className="text-xs">Nova Senha</Label>
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={newPassword}
-                  onChange={onNewPasswordChange}
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="confirmPassword" className="text-xs">Confirmar Nova Senha</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={onConfirmPasswordChange}
-                  className="mt-1"
-                />
-              </div>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Alterar Senha</h3>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Senha Atual</Label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="currentPassword"
+                type="password"
+                value={currentPassword}
+                onChange={onCurrentPasswordChange}
+                className="pl-10"
+              />
             </div>
           </div>
 
-          <Button type="submit" className="w-full gap-2">
-            <Save className="w-4 h-4" />
-            Salvar Alterações
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">Nova Senha</Label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={onNewPasswordChange}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={onConfirmPasswordChange}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="submit" className="w-full md:w-auto">
+          Salvar Alterações
+        </Button>
+      </div>
+    </form>
   );
 };

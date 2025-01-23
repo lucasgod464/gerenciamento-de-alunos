@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { RoomFormFields } from "./RoomFormFields";
 import { Room } from "@/types/room";
+import { useToast } from "@/hooks/use-toast";
 
 interface RoomDialogProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface RoomDialogProps {
 }
 
 export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDialogProps) {
+  const { toast } = useToast();
   const [room, setRoom] = useState<Partial<Room>>(
     editingRoom || {
       name: "",
@@ -51,6 +53,14 @@ export function RoomDialog({ isOpen, onOpenChange, onSave, editingRoom }: RoomDi
   };
 
   const handleSave = () => {
+    if (!room.category) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, selecione ou crie uma categoria para a sala.",
+        variant: "destructive",
+      });
+      return;
+    }
     onSave(room);
     onOpenChange(false);
   };

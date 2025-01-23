@@ -34,10 +34,12 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
     try {
       const formData = new FormData(event.currentTarget);
+      const password = formData.get('password') as string;
+      
       const userData = {
         name: formData.get('name') as string,
         email: formData.get('email') as string,
-        password: formData.get('password') as string || Math.random().toString(36).slice(-8), // Gera senha aleatória se não fornecida
+        password: password || undefined, // Só inclui a senha se foi fornecida
         location: formData.get('location') as string || '',
         address: formData.get('address') as string || '',
         specialization: formData.get('specialization') as string || '',
@@ -55,17 +57,14 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
       if (isEditing && defaultValues?.id) {
         // Atualiza informações básicas do usuário
+        const updateData = { ...userData };
+        if (!password) {
+          delete updateData.password; // Remove o campo password se estiver vazio
+        }
+
         const { error: updateError } = await supabase
           .from('emails')
-          .update({
-            name: userData.name,
-            email: userData.email,
-            access_level: userData.access_level,
-            location: userData.location || '',
-            specialization: userData.specialization || '',
-            status: userData.status,
-            address: userData.address || ''
-          })
+          .update(updateData)
           .eq('id', defaultValues.id);
 
         if (updateError) throw updateError;
@@ -244,10 +243,9 @@ export function UserForm({ onSuccess, onCancel, isEditing, defaultValues }: User
 
         onSuccess(mappedNewUser);
         toast.success('Usuário criado com sucesso!');
-        if (onCancel) onCancel(); // Fecha o modal após criar o usuário com sucesso
+        if (onCancel) onCancel();
       }
 
-      // Recarrega a lista de usuários após a operação
       await loadUsers();
       
       setIsLoading(false);
