@@ -127,15 +127,20 @@ export const AdminProfile = () => {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <Card className="border-none shadow-sm">
-        <CardContent className="p-6">
-          <ProfileHeader
-            name={user.name}
-            avatarUrl={avatarUrl}
-            onImageUpload={handleImageUpload}
-          />
-        </CardContent>
-      </Card>
+      <div className="flex justify-between items-start">
+        <Card className="border-none shadow-sm flex-1">
+          <CardContent className="p-6">
+            <ProfileHeader
+              name={user.name}
+              avatarUrl={avatarUrl}
+              onImageUpload={handleImageUpload}
+            />
+          </CardContent>
+        </Card>
+        <div className="ml-4">
+          <LogoutButton />
+        </div>
+      </div>
 
       <Card className="border-none shadow-sm">
         <CardContent className="p-6">
@@ -152,10 +157,6 @@ export const AdminProfile = () => {
           />
         </CardContent>
       </Card>
-
-      <div className="flex justify-end">
-        <LogoutButton />
-      </div>
     </div>
   );
 };
