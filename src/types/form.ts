@@ -22,6 +22,7 @@ export interface FormField {
   options?: string[];
   source: FieldSource;
   form_type?: string;
+  isDefault?: boolean;
 }
 
 export interface SupabaseFormField {
@@ -48,7 +49,8 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   order: field.order,
   options: Array.isArray(field.options) ? field.options.map(String) : undefined,
   source: field.form_type === 'enrollment' ? 'enrollment' : field.form_type === 'admin' ? 'admin' : 'public',
-  form_type: field.form_type
+  form_type: field.form_type,
+  isDefault: false
 });
 
 export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
