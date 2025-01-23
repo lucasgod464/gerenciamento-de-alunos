@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProfileHeader } from "./profile/ProfileHeader";
 import { ProfileForm } from "./profile/ProfileForm";
 import { LogoutButton } from "./profile/LogoutButton";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const AdminProfile = () => {
   const { user } = useAuth();
@@ -125,24 +126,36 @@ export const AdminProfile = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <ProfileHeader
-        name={user.name}
-        avatarUrl={avatarUrl}
-        onImageUpload={handleImageUpload}
-      />
-      <ProfileForm
-        email={email}
-        currentPassword={currentPassword}
-        newPassword={newPassword}
-        confirmPassword={confirmPassword}
-        onEmailChange={(e) => setEmail(e.target.value)}
-        onCurrentPasswordChange={(e) => setCurrentPassword(e.target.value)}
-        onNewPasswordChange={(e) => setNewPassword(e.target.value)}
-        onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
-        onSubmit={handleUpdateProfile}
-      />
-      <LogoutButton />
+    <div className="max-w-3xl mx-auto space-y-6">
+      <Card className="border-none shadow-sm">
+        <CardContent className="p-6">
+          <ProfileHeader
+            name={user.name}
+            avatarUrl={avatarUrl}
+            onImageUpload={handleImageUpload}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="border-none shadow-sm">
+        <CardContent className="p-6">
+          <ProfileForm
+            email={email}
+            currentPassword={currentPassword}
+            newPassword={newPassword}
+            confirmPassword={confirmPassword}
+            onEmailChange={(e) => setEmail(e.target.value)}
+            onCurrentPasswordChange={(e) => setCurrentPassword(e.target.value)}
+            onNewPasswordChange={(e) => setNewPassword(e.target.value)}
+            onConfirmPasswordChange={(e) => setConfirmPassword(e.target.value)}
+            onSubmit={handleUpdateProfile}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <LogoutButton />
+      </div>
     </div>
   );
 };

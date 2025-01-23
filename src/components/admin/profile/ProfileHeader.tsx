@@ -12,30 +12,30 @@ interface ProfileHeaderProps {
 
 export const ProfileHeader = ({ name, avatarUrl, onImageUpload }: ProfileHeaderProps) => {
   return (
-    <div className="flex items-center space-x-4 mb-6">
-      <Avatar className="h-20 w-20">
-        <AvatarImage src={avatarUrl} />
-        <AvatarFallback>{name?.substring(0, 2).toUpperCase()}</AvatarFallback>
-      </Avatar>
-      <div>
-        <h2 className="text-2xl font-bold">{name}</h2>
-        <div className="mt-2">
-          <Input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            id="avatar-upload"
-            onChange={onImageUpload}
-          />
-          <Label htmlFor="avatar-upload">
-            <Button variant="outline" size="sm" asChild>
-              <span>
-                <Camera className="mr-2 h-4 w-4" />
-                Alterar Foto
-              </span>
-            </Button>
-          </Label>
-        </div>
+    <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+      <div className="relative group">
+        <Avatar className="h-24 w-24 md:h-32 md:w-32">
+          <AvatarImage src={avatarUrl} className="object-cover" />
+          <AvatarFallback className="text-lg">{name?.substring(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <Input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          id="avatar-upload"
+          onChange={onImageUpload}
+        />
+        <Label 
+          htmlFor="avatar-upload"
+          className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-lg cursor-pointer
+                   transition-transform transform group-hover:scale-110"
+        >
+          <Camera className="h-4 w-4 text-gray-600" />
+        </Label>
+      </div>
+      <div className="text-center md:text-left">
+        <h2 className="text-2xl font-bold text-gray-900">{name}</h2>
+        <p className="text-sm text-gray-500 mt-1">Administrador</p>
       </div>
     </div>
   );
