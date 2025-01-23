@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client"
 import { Company, mapCompanyToSupabase, mapSupabaseCompany } from "@/types/company"
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast"
+import { useQueryClient } from "@tanstack/react-query"
 
 export async function createCompany(newCompany: Omit<Company, "id" | "createdAt">) {
   const queryClient = useQueryClient();
@@ -104,33 +104,39 @@ export async function updateCompany(company: Company) {
 }
 
 export async function deleteCompany(id: string) {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   console.log("Deletando empresa:", id)
   
   try {
+    // Primeiro verificamos se existem usuários ou salas vinculados
+    const { data: usersCount } = await supabase
+      .from("emails")
+      .select("id", { count: 'exact' })
+      .eq("company_id", id);
+
+    const { data: roomsCount } = await supabase
+      .from("rooms")
+      .select("id", { count: 'exact' })
+      .eq("company_id", id);
+
+    if ((usersCount && usersCount.length > 0) || (roomsCount && roomsCount.length > 0)) {
+      throw new Error("Não é possível excluir uma empresa que possui usuários ou salas vinculados");
+    }
+
     const { error } = await supabase
       .from("companies")
       .delete()
-      .eq("id", id)
+      .eq("id", id);
 
     if (error) {
-      console.error("Erro ao deletar empresa:", error)
+      console.error("Erro ao deletar empresa:", error);
       throw new Error(error.message === "new row violates row-level security policy" 
         ? "Você não tem permissão para deletar esta empresa"
-        : "Erro ao deletar empresa. Por favor, tente novamente.")
+        : "Erro ao deletar empresa. Por favor, tente novamente.");
     }
 
-    queryClient.invalidateQueries({ queryKey: ["companies"] });
-    toast({
-      title: "Empresa deletada",
-      description: "A empresa foi deletada com sucesso.",
-    });
-
-    return id
+    return id;
   } catch (error) {
-    console.error("Erro ao deletar empresa:", error)
-    throw error
+    console.error("Erro ao deletar empresa:", error);
+    throw error;
   }
 }

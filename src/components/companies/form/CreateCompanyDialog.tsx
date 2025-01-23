@@ -10,17 +10,17 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
-import { Company } from "@/types/company"
-import { useToast } from "@/components/ui/use-toast"
+import { Company, mapCompanyToSupabase } from "@/types/company"
+import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { useCompanies } from "@/hooks/useCompanies";
+import { useCompanies } from "@/hooks/useCompanies"
 
 interface CreateCompanyDialogProps {
   onCompanyCreated: (company: Omit<Company, "id" | "createdAt">) => void
 }
 
 export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogProps) {
-  const { companies } = useCompanies();
+  const { companies } = useCompanies()
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -32,24 +32,25 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
     try {
       const formData = new FormData(event.currentTarget)
       
-      const newCompany = {
+      const newCompany: Omit<Company, "id" | "createdAt"> = {
         name: formData.get("name") as string,
         document: formData.get("document") as string || "",
-        users_limit: Number(formData.get("usersLimit")) || 5,
-        current_users: 0,
-        rooms_limit: Number(formData.get("roomsLimit")) || 5,
-        current_rooms: 0,
-        status: "Ativa" as const,
-        public_folder_path: `/storage/${Math.random().toString(36).substr(2, 9)}`,
-        storage_used: 0,
+        usersLimit: Number(formData.get("usersLimit")) || 5,
+        currentUsers: 0,
+        roomsLimit: Number(formData.get("roomsLimit")) || 5,
+        currentRooms: 0,
+        status: "Ativa",
+        publicFolderPath: `/storage/${Math.random().toString(36).substr(2, 9)}`,
+        storageUsed: 0,
       }
 
       console.log("Tentando criar empresa:", newCompany)
       
-      // Inserir no Supabase
+      const supabaseCompany = mapCompanyToSupabase(newCompany)
+      
       const { data, error } = await supabase
         .from('companies')
-        .insert([newCompany])
+        .insert([supabaseCompany])
         .select()
         .single()
 
@@ -93,7 +94,7 @@ export function CreateCompanyDialog({ onCompanyCreated }: CreateCompanyDialogPro
             Preencha os dados abaixo para criar uma nova empresa no sistema.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Empresa</Label>
             <Input
