@@ -96,7 +96,23 @@ export async function deleteCompany(id: string) {
   console.log("Deletando empresa:", id)
   
   try {
-    // Primeiro deletamos todas as especializações vinculadas
+    // Primeiro deletamos os campos de formulário de inscrição
+    const { error: deleteEnrollmentFieldsError } = await supabase
+      .from("enrollment_form_fields")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteEnrollmentFieldsError) throw deleteEnrollmentFieldsError
+
+    // Depois deletamos os campos de formulário administrativo
+    const { error: deleteAdminFieldsError } = await supabase
+      .from("admin_form_fields")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteAdminFieldsError) throw deleteAdminFieldsError
+
+    // Deletamos todas as especializações vinculadas
     const { error: deleteSpecializationsError } = await supabase
       .from("specializations")
       .delete()
@@ -104,7 +120,7 @@ export async function deleteCompany(id: string) {
 
     if (deleteSpecializationsError) throw deleteSpecializationsError
 
-    // Depois deletamos todos os usuários vinculados
+    // Deletamos todos os usuários vinculados
     const { error: deleteEmailsError } = await supabase
       .from("emails")
       .delete()
@@ -112,7 +128,7 @@ export async function deleteCompany(id: string) {
 
     if (deleteEmailsError) throw deleteEmailsError
 
-    // Depois deletamos todas as salas vinculadas
+    // Deletamos todas as salas vinculadas
     const { error: deleteRoomsError } = await supabase
       .from("rooms")
       .delete()
