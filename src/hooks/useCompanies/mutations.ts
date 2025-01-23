@@ -96,7 +96,15 @@ export async function deleteCompany(id: string) {
   console.log("Deletando empresa:", id)
   
   try {
-    // Primeiro deletamos todos os usuários vinculados
+    // Primeiro deletamos todas as especializações vinculadas
+    const { error: deleteSpecializationsError } = await supabase
+      .from("specializations")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteSpecializationsError) throw deleteSpecializationsError
+
+    // Depois deletamos todos os usuários vinculados
     const { error: deleteEmailsError } = await supabase
       .from("emails")
       .delete()
