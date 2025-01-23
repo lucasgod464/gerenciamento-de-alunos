@@ -33,6 +33,22 @@ export interface UserResponse {
   status: string;
 }
 
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  companyId: string;
+  status: UserStatus;
+  accessLevel: UserAccessLevel;
+  location?: string;
+  address?: string;
+  specialization?: string;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
+}
+
 export const mapUserResponse = (data: any): User => ({
   id: data.id,
   name: data.name,

@@ -1,17 +1,16 @@
-import { Json } from "./supabase";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Student {
   id: string;
   name: string;
   birthDate: string;
   status: boolean;
-  email?: string;
-  document?: string;
-  address?: string;
+  email: string | null;
+  document: string | null;
+  address: string | null;
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
-  room?: string | null;
 }
 
 export interface SupabaseStudent {
@@ -19,25 +18,23 @@ export interface SupabaseStudent {
   name: string;
   birth_date: string;
   status: boolean;
-  email?: string;
-  document?: string;
-  address?: string;
+  email: string | null;
+  document: string | null;
+  address: string | null;
   custom_fields: Record<string, any>;
   company_id: string;
   created_at: string;
 }
 
-export const mapSupabaseStudent = (data: SupabaseStudent): Student => ({
-  id: data.id,
-  name: data.name,
-  birthDate: data.birth_date,
-  status: data.status,
-  email: data.email || '',
-  document: data.document || '',
-  address: data.address || '',
-  customFields: typeof data.custom_fields === 'string' 
-    ? JSON.parse(data.custom_fields) 
-    : data.custom_fields || {},
-  companyId: data.company_id,
-  createdAt: data.created_at
+export const mapSupabaseStudent = (student: SupabaseStudent): Student => ({
+  id: student.id,
+  name: student.name,
+  birthDate: student.birth_date,
+  status: student.status,
+  email: student.email,
+  document: student.document,
+  address: student.address,
+  customFields: student.custom_fields || {},
+  companyId: student.company_id,
+  createdAt: student.created_at
 });
