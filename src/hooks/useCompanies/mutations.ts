@@ -1,12 +1,7 @@
 import { supabase } from "@/integrations/supabase/client"
 import { Company, mapCompanyToSupabase, mapSupabaseCompany } from "@/types/company"
-import { useToast } from "@/hooks/use-toast"
-import { useQueryClient } from "@tanstack/react-query"
 
 export async function createCompany(newCompany: Omit<Company, "id" | "createdAt">) {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
   console.log("Criando nova empresa:", newCompany)
   
   try {
@@ -32,12 +27,6 @@ export async function createCompany(newCompany: Omit<Company, "id" | "createdAt"
     if (!data) {
       throw new Error("Não foi possível criar a empresa. Dados não retornados.")
     }
-
-    queryClient.invalidateQueries({ queryKey: ["companies"] });
-    toast({
-      title: "Empresa criada",
-      description: `A empresa ${newCompany.name} foi criada com sucesso.`,
-    });
 
     return mapSupabaseCompany({
       ...data,
@@ -107,29 +96,39 @@ export async function deleteCompany(id: string) {
   console.log("Deletando empresa:", id)
   
   try {
-    // Primeiro verificamos se existem usuários ou salas vinculados
-    const { data: usersCount } = await supabase
+    // Primeiro verificamos se existem usuários vinculados
+    const { data: users, error: usersError } = await supabase
       .from("emails")
-      .select("id", { count: 'exact' })
+      .select("id")
       .eq("company_id", id);
 
-    const { data: roomsCount } = await supabase
-      .from("rooms")
-      .select("id", { count: 'exact' })
-      .eq("company_id", id);
-
-    if ((usersCount && usersCount.length > 0) || (roomsCount && roomsCount.length > 0)) {
-      throw new Error("Não é possível excluir uma empresa que possui usuários ou salas vinculados");
+    if (usersError) throw usersError;
+    
+    if (users && users.length > 0) {
+      throw new Error("Não é possível excluir esta empresa pois existem usuários vinculados. Remova todos os usuários primeiro.");
     }
 
-    const { error } = await supabase
+    // Depois verificamos se existem salas vinculadas
+    const { data: rooms, error: roomsError } = await supabase
+      .from("rooms")
+      .select("id")
+      .eq("company_id", id);
+
+    if (roomsError) throw roomsError;
+    
+    if (rooms && rooms.length > 0) {
+      throw new Error("Não é possível excluir esta empresa pois existem salas vinculadas. Remova todas as salas primeiro.");
+    }
+
+    // Se não houver dependências, podemos excluir a empresa
+    const { error: deleteError } = await supabase
       .from("companies")
       .delete()
       .eq("id", id);
 
-    if (error) {
-      console.error("Erro ao deletar empresa:", error);
-      throw new Error(error.message === "new row violates row-level security policy" 
+    if (deleteError) {
+      console.error("Erro ao deletar empresa:", deleteError);
+      throw new Error(deleteError.message === "new row violates row-level security policy" 
         ? "Você não tem permissão para deletar esta empresa"
         : "Erro ao deletar empresa. Por favor, tente novamente.");
     }
