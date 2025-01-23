@@ -1,13 +1,35 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DoorOpen, Users, Calendar, MapPin } from "lucide-react";
+import { DoorOpen, Users, Calendar, MapPin, Tag } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Room } from "@/types/room";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RoomCardProps {
   room: Room;
 }
 
 export function RoomCard({ room }: RoomCardProps) {
+  const [categoryName, setCategoryName] = useState("");
+
+  useEffect(() => {
+    const fetchCategory = async () => {
+      if (room.category) {
+        const { data, error } = await supabase
+          .from('categories')
+          .select('name')
+          .eq('id', room.category)
+          .single();
+
+        if (!error && data) {
+          setCategoryName(data.name);
+        }
+      }
+    };
+
+    fetchCategory();
+  }, [room.category]);
+
   const getStudentCount = () => {
     return room.students?.length || 0;
   };
@@ -49,6 +71,13 @@ export function RoomCard({ room }: RoomCardProps) {
               />
             </div>
           </div>
+
+          {categoryName && (
+            <div className="flex items-center gap-2">
+              <Tag className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm">{categoryName}</span>
+            </div>
+          )}
 
           {room.schedule && (
             <div className="flex items-center gap-2">
