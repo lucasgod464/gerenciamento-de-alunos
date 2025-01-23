@@ -96,46 +96,62 @@ export async function deleteCompany(id: string) {
   console.log("Deletando empresa:", id)
   
   try {
-    // Primeiro verificamos se existem usuários vinculados
-    const { count: usersCount, error: usersError } = await supabase
+    // Primeiro deletamos todos os usuários vinculados
+    const { error: deleteEmailsError } = await supabase
       .from("emails")
-      .select("*", { count: 'exact', head: true })
-      .eq("company_id", id);
+      .delete()
+      .eq("company_id", id)
 
-    if (usersError) throw usersError;
-    
-    if (usersCount && usersCount > 0) {
-      throw new Error("Não é possível excluir esta empresa pois existem usuários vinculados. Remova todos os usuários primeiro.");
-    }
+    if (deleteEmailsError) throw deleteEmailsError
 
-    // Depois verificamos se existem salas vinculadas
-    const { count: roomsCount, error: roomsError } = await supabase
+    // Depois deletamos todas as salas vinculadas
+    const { error: deleteRoomsError } = await supabase
       .from("rooms")
-      .select("*", { count: 'exact', head: true })
-      .eq("company_id", id);
+      .delete()
+      .eq("company_id", id)
 
-    if (roomsError) throw roomsError;
-    
-    if (roomsCount && roomsCount > 0) {
-      throw new Error("Não é possível excluir esta empresa pois existem salas vinculadas. Remova todas as salas primeiro.");
-    }
+    if (deleteRoomsError) throw deleteRoomsError
 
-    // Se não houver dependências, podemos excluir a empresa
-    const { error: deleteError } = await supabase
+    // Deletamos todas as categorias vinculadas
+    const { error: deleteCategoriesError } = await supabase
+      .from("categories")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteCategoriesError) throw deleteCategoriesError
+
+    // Deletamos todas as tags vinculadas
+    const { error: deleteTagsError } = await supabase
+      .from("tags")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteTagsError) throw deleteTagsError
+
+    // Deletamos todos os estudantes vinculados
+    const { error: deleteStudentsError } = await supabase
+      .from("students")
+      .delete()
+      .eq("company_id", id)
+
+    if (deleteStudentsError) throw deleteStudentsError
+
+    // Finalmente deletamos a empresa
+    const { error: deleteCompanyError } = await supabase
       .from("companies")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
 
-    if (deleteError) {
-      console.error("Erro ao deletar empresa:", deleteError);
-      throw new Error(deleteError.message === "new row violates row-level security policy" 
+    if (deleteCompanyError) {
+      console.error("Erro ao deletar empresa:", deleteCompanyError)
+      throw new Error(deleteCompanyError.message === "new row violates row-level security policy" 
         ? "Você não tem permissão para deletar esta empresa"
-        : "Erro ao deletar empresa. Por favor, tente novamente.");
+        : "Erro ao deletar empresa. Por favor, tente novamente.")
     }
 
-    return id;
+    return id
   } catch (error) {
-    console.error("Erro ao deletar empresa:", error);
-    throw error;
+    console.error("Erro ao deletar empresa:", error)
+    throw error
   }
 }
