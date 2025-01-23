@@ -5,14 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileForm } from "./ProfileForm";
 import { SecuritySettings } from "./SecuritySettings";
-import { NotificationSettings } from "./NotificationSettings";
 
 export const UserProfile = () => {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false
-  });
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -123,10 +118,6 @@ export const UserProfile = () => {
         <SecuritySettings
           formData={formData}
           onInputChange={handleInputChange}
-        />
-        <NotificationSettings
-          notifications={notifications}
-          setNotifications={setNotifications}
         />
       </div>
     </div>
