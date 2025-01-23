@@ -22,7 +22,6 @@ export interface FormField {
   options?: string[];
   source: FieldSource;
   form_type?: string;
-  isDefault?: boolean; // Adicionando esta propriedade opcional
 }
 
 export interface SupabaseFormField {

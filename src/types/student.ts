@@ -32,9 +32,9 @@ export const mapSupabaseStudent = (data: SupabaseStudent): Student => ({
   name: data.name,
   birthDate: data.birth_date,
   status: data.status,
-  email: data.email,
-  document: data.document,
-  address: data.address,
+  email: data.email || '',
+  document: data.document || '',
+  address: data.address || '',
   customFields: typeof data.custom_fields === 'string' 
     ? JSON.parse(data.custom_fields) 
     : data.custom_fields || {},
