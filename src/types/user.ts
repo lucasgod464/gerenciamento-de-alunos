@@ -9,52 +9,61 @@ export interface User {
   role: UserRole;
   companyId: string;
   createdAt: string;
-  updatedAt: string;
   lastAccess: string;
   status: UserStatus;
   accessLevel: UserAccessLevel;
   location?: string;
   address?: string;
   specialization?: string;
-  tags: { id: string; name: string; color: string; }[];
-  authorizedRooms: { id: string; name: string; }[];
-  specializations: { id: string; name: string; }[];
+  updatedAt: string;
+  tags?: { id: string; name: string; color: string; }[];
+  authorizedRooms?: { id: string; name: string; }[];
+  specializations?: { id: string; name: string; }[];
 }
 
 export interface UserResponse {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: string;
   company_id: string;
   created_at: string;
-  updated_at: string;
   last_access: string;
-  status: string;
   access_level: UserAccessLevel;
+  status: string;
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  companyId: string;
+  status: UserStatus;
+  accessLevel: UserAccessLevel;
   location?: string;
   address?: string;
   specialization?: string;
-  user_tags?: { tags: { id: string; name: string; color: string; }; }[];
-  user_rooms?: { rooms: { id: string; name: string; }; }[];
-  user_specializations?: { specializations: { id: string; name: string; }; }[];
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
 }
 
-export const mapUserResponse = (data: UserResponse): User => ({
+export const mapUserResponse = (data: any): User => ({
   id: data.id,
   name: data.name,
   email: data.email,
   role: data.role as UserRole,
   companyId: data.company_id,
   createdAt: data.created_at,
-  updatedAt: data.updated_at,
   lastAccess: data.last_access,
-  status: data.status as UserStatus,
+  status: data.status === 'active' ? 'active' : 'inactive',
   accessLevel: data.access_level,
   location: data.location,
   address: data.address,
   specialization: data.specialization,
-  tags: data.user_tags?.map(ut => ut.tags) || [],
-  authorizedRooms: data.user_rooms?.map(ur => ur.rooms) || [],
-  specializations: data.user_specializations?.map(us => us.specializations) || []
+  updatedAt: data.updated_at || data.created_at,
+  tags: data.tags,
+  authorizedRooms: data.authorized_rooms,
+  specializations: data.specializations
 });
