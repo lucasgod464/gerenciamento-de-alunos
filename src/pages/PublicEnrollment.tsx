@@ -160,7 +160,7 @@ export function PublicEnrollment() {
     <div className="min-h-screen bg-gray-50 py-4 px-4 sm:py-12 sm:px-6 lg:px-8">
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
-          <CardTitle className="text-left text-xl sm:text-2xl font-bold">
+          <CardTitle className="text-left text-xl sm:text-2xl font-bold notranslate">
             Formulário de Inscrição
           </CardTitle>
         </CardHeader>
@@ -205,7 +205,7 @@ export function PublicEnrollment() {
 
               return (
                 <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.name} className="text-left block">
+                  <Label htmlFor={field.name} className="text-left block notranslate">
                     {field.label}
                     {field.required && <span className="text-red-500 ml-1">*</span>}
                   </Label>
@@ -216,7 +216,7 @@ export function PublicEnrollment() {
                       type="text"
                       {...register(field.name, { required: field.required })}
                       placeholder={`Digite ${field.label.toLowerCase()}`}
-                      className="w-full"
+                      className="w-full notranslate"
                     />
                   )}
 
@@ -232,7 +232,7 @@ export function PublicEnrollment() {
                         }
                       })}
                       placeholder="Digite seu email"
-                      className="w-full"
+                      className="w-full notranslate"
                     />
                   )}
 
@@ -248,7 +248,7 @@ export function PublicEnrollment() {
                         }
                       })}
                       placeholder="Digite seu telefone"
-                      className="w-full"
+                      className="w-full notranslate"
                     />
                   )}
 
@@ -271,7 +271,7 @@ export function PublicEnrollment() {
                   )}
 
                   {field.type === "multiple" && (
-                    <div className="space-y-2 p-4 bg-gray-50 rounded-md">
+                    <div className="space-y-2 p-4 bg-gray-50 rounded-md notranslate">
                       <ScrollArea className="h-48 w-full rounded-md">
                         {field.options?.map((option) => (
                           <div key={option} className="flex items-center space-x-2 p-2">
@@ -297,7 +297,7 @@ export function PublicEnrollment() {
                             />
                             <label
                               htmlFor={`${field.name}-${option}`}
-                              className="text-sm font-medium leading-none"
+                              className="text-sm font-medium leading-none notranslate"
                             >
                               {option}
                             </label>
@@ -312,13 +312,13 @@ export function PublicEnrollment() {
                       onValueChange={(value) => setValue(field.name, value)}
                       {...register(field.name, { required: field.required })}
                     >
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full notranslate">
                         <SelectValue placeholder={`Selecione ${field.label.toLowerCase()}`} />
                       </SelectTrigger>
-                      <SelectContent className="max-h-[200px]">
+                      <SelectContent className="notranslate">
                         <ScrollArea className="h-[200px]">
                           {field.options?.map(option => (
-                            <SelectItem key={option} value={option} className="cursor-pointer">
+                            <SelectItem key={option} value={option} className="cursor-pointer notranslate">
                               {option}
                             </SelectItem>
                           ))}
@@ -328,7 +328,7 @@ export function PublicEnrollment() {
                   )}
                   
                   {errors[field.name] && (
-                    <p className="text-sm text-red-500">
+                    <p className="text-sm text-red-500 notranslate">
                       {typeof errors[field.name]?.message === 'string' 
                         ? errors[field.name]?.message 
                         : "Este campo é obrigatório"}
@@ -340,7 +340,7 @@ export function PublicEnrollment() {
             
             <Button 
               type="submit" 
-              className="w-full"
+              className="w-full notranslate"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
