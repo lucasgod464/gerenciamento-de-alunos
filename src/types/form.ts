@@ -1,6 +1,6 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type FieldType = "text" | "number" | "date" | "select" | "multiple" | "phone";
+export type FieldType = "text" | "number" | "date" | "select" | "multiple" | "phone" | "email" | "tel" | "textarea";
 export type FieldSource = "admin" | "enrollment" | "public";
 
 export interface FormField {

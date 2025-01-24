@@ -67,3 +67,15 @@ export const mapUserResponse = (data: any): User => ({
   authorizedRooms: data.authorized_rooms,
   specializations: data.specializations
 });
+
+export const mapSupabaseUser = (data: any): UserResponse => ({
+  id: data.id,
+  email: data.email,
+  name: data.name,
+  role: data.role,
+  company_id: data.company_id,
+  created_at: data.created_at,
+  last_access: data.last_access || data.created_at,
+  access_level: data.access_level,
+  status: data.status
+});
