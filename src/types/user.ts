@@ -1,6 +1,6 @@
 export type UserRole = "ADMIN" | "USER";
 export type UserStatus = "active" | "inactive";
-export type UserAccessLevel = "Admin" | "Usuário Comum";
+export type AccessLevel = "Admin" | "Usuário Comum";
 
 export interface User {
   id: string;
@@ -11,7 +11,7 @@ export interface User {
   createdAt: string;
   lastAccess: string;
   status: UserStatus;
-  accessLevel: UserAccessLevel;
+  accessLevel: AccessLevel;
   location?: string;
   address?: string;
   specialization?: string;
@@ -21,61 +21,50 @@ export interface User {
   specializations?: { id: string; name: string; }[];
 }
 
-export interface UserResponse {
+export interface SupabaseUser {
   id: string;
-  email: string;
   name: string;
+  email: string;
   role: string;
   company_id: string;
   created_at: string;
   last_access: string;
-  access_level: UserAccessLevel;
-  status: string;
-}
-
-export interface CreateUserData {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  companyId: string;
-  status: UserStatus;
-  accessLevel: UserAccessLevel;
+  status: boolean;
+  access_level: AccessLevel;
   location?: string;
   address?: string;
   specialization?: string;
-  selectedRooms?: string[];
-  selectedTags?: { id: string; name: string; color: string; }[];
-  selectedSpecializations?: string[];
+  updated_at: string;
 }
 
-export const mapUserResponse = (data: any): User => ({
-  id: data.id,
-  name: data.name,
-  email: data.email,
-  role: data.role as UserRole,
-  companyId: data.company_id,
-  createdAt: data.created_at,
-  lastAccess: data.last_access,
-  status: data.status === 'active' ? 'active' : 'inactive',
-  accessLevel: data.access_level,
-  location: data.location,
-  address: data.address,
-  specialization: data.specialization,
-  updatedAt: data.updated_at || data.created_at,
-  tags: data.tags,
-  authorizedRooms: data.authorized_rooms,
-  specializations: data.specializations
+export const mapSupabaseUser = (user: SupabaseUser): User => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role as UserRole,
+  companyId: user.company_id,
+  createdAt: user.created_at,
+  lastAccess: user.last_access,
+  status: user.status ? "active" : "inactive",
+  accessLevel: user.access_level,
+  location: user.location,
+  address: user.address,
+  specialization: user.specialization,
+  updatedAt: user.updated_at,
 });
 
-export const mapSupabaseUser = (data: any): UserResponse => ({
-  id: data.id,
-  email: data.email,
-  name: data.name,
-  role: data.role,
-  company_id: data.company_id,
-  created_at: data.created_at,
-  last_access: data.last_access || data.created_at,
-  access_level: data.access_level,
-  status: data.status
-});
+export interface AuthUser extends User {
+  accessToken?: string;
+  refreshToken?: string;
+}
+
+export interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  company_id: string;
+  created_at: string;
+  last_access: string;
+  status: boolean;
+}
