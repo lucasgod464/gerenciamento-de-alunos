@@ -103,13 +103,6 @@ export const AttendanceControl = () => {
     <div className="space-y-4">
       <Card className="bg-white shadow-sm">
         <CardContent className="p-6">
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Controle de Presença</h1>
-            <p className="text-gray-500 mt-1">
-              Gerencie a presença dos alunos de forma simples e eficiente
-            </p>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
               <h3 className="font-medium text-gray-700 mb-2">Data</h3>
