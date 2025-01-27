@@ -42,22 +42,13 @@ export const CategoryColumn = ({
     });
   };
 
-  const handleDeleteConfirm = async () => {
-    try {
-      await onDelete();
-      setIsDeleteDialogOpen(false);
-      toast({
-        title: "Categoria excluída",
-        description: "A categoria foi excluída com sucesso.",
-      });
-    } catch (error) {
-      console.error('Error deleting category:', error);
-      toast({
-        title: "Erro ao excluir categoria",
-        description: "Ocorreu um erro ao excluir a categoria.",
-        variant: "destructive",
-      });
-    }
+  const handleDeleteConfirm = () => {
+    onDelete();
+    setIsDeleteDialogOpen(false);
+    toast({
+      title: "Categoria excluída",
+      description: "A categoria foi excluída com sucesso.",
+    });
   };
 
   const toggleRoomSelection = (roomId: string) => {
