@@ -101,10 +101,30 @@ export const AttendanceControl = () => {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4">
-        <Card className="bg-white shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-col space-y-4">
+      <Card className="bg-white shadow-sm">
+        <CardContent className="p-6">
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Controle de Presença</h1>
+            <p className="text-gray-500 mt-1">
+              Gerencie a presença dos alunos de forma simples e eficiente
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-700 mb-2">Data</h3>
+              <div className="flex justify-center bg-white rounded-lg border p-2">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  className="rounded-md"
+                  disabled={isStarted}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
               <div className="space-y-2">
                 <h3 className="font-medium text-gray-700">Sala</h3>
                 <Select value={selectedRoom} onValueChange={setSelectedRoom} disabled={isStarted}>
@@ -125,22 +145,9 @@ export const AttendanceControl = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="font-medium text-gray-700">Data</h3>
-                <div className="flex justify-center bg-white rounded-lg border p-2">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
-                    className="rounded-md"
-                    disabled={isStarted}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2 pt-2">
+              <div className="flex flex-col gap-2 mt-4">
                 <Button 
-                  className="w-full"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium"
                   onClick={handleStartAttendance}
                   disabled={!selectedRoom || !selectedDate}
                   size="lg"
@@ -149,7 +156,7 @@ export const AttendanceControl = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full py-6 text-lg"
                   onClick={() => setShowStudentDetails(true)}
                   size="lg"
                 >
@@ -157,22 +164,22 @@ export const AttendanceControl = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isStarted && (
+        <Card className="bg-white shadow-sm">
+          <CardContent className="p-4">
+            <AttendanceList
+              date={selectedDate}
+              roomId={selectedRoom}
+              companyId={user?.companyId || ''}
+              onAttendanceSaved={() => setHasAttendance(true)}
+            />
           </CardContent>
         </Card>
-
-        {isStarted && (
-          <Card className="bg-white shadow-sm">
-            <CardContent className="p-4">
-              <AttendanceList
-                date={selectedDate}
-                roomId={selectedRoom}
-                companyId={user?.companyId || ''}
-                onAttendanceSaved={() => setHasAttendance(true)}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      )}
 
       <StudentDetailsDialog
         open={showStudentDetails}
