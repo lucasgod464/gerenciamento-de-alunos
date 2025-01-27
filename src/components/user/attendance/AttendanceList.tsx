@@ -19,7 +19,6 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const [observations, setObservations] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // Carregar observações existentes quando a data ou sala mudar
   useEffect(() => {
     const loadObservations = async () => {
       try {
@@ -87,37 +86,46 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const handleSave = async () => {
     try {
       const formattedDate = formatDate(date);
-      
-      // Primeiro, salvamos todas as presenças
+      const batch = [];
+
+      // Preparar todas as presenças para atualização
       for (const student of students) {
         if (!student.status) continue;
 
+        batch.push({
+          date: formattedDate,
+          student_id: student.id,
+          status: student.status,
+          company_id: companyId,
+          room_id: roomId
+        });
+      }
+
+      // Atualizar presenças em uma única operação
+      if (batch.length > 0) {
         const { error: attendanceError } = await supabase
           .from('daily_attendance')
-          .upsert({
-            date: formattedDate,
-            student_id: student.id,
-            status: student.status,
-            company_id: companyId,
-            room_id: roomId
-          });
-          
+          .upsert(batch);
+
         if (attendanceError) throw attendanceError;
       }
-      
-      // Depois, salvamos as observações
-      for (const [studentId, text] of Object.entries(observations)) {
-        if (!text.trim()) continue; // Pula observações vazias
-        
+
+      // Preparar observações para atualização
+      const observationBatch = Object.entries(observations)
+        .filter(([_, text]) => text.trim())
+        .map(([studentId, text]) => ({
+          date: formattedDate,
+          text,
+          company_id: companyId,
+          student_id: studentId
+        }));
+
+      // Atualizar observações em uma única operação
+      if (observationBatch.length > 0) {
         const { error: observationError } = await supabase
           .from('daily_observations')
-          .upsert({
-            date: formattedDate,
-            text,
-            company_id: companyId,
-            student_id: studentId
-          });
-          
+          .upsert(observationBatch);
+
         if (observationError) throw observationError;
       }
 
