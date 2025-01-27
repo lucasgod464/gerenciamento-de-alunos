@@ -444,7 +444,7 @@ export type Database = {
       }
       rooms: {
         Row: {
-          category: string
+          category: string | null
           company_id: string | null
           created_at: string
           id: string
@@ -455,7 +455,7 @@ export type Database = {
           study_room: string | null
         }
         Insert: {
-          category: string
+          category?: string | null
           company_id?: string | null
           created_at?: string
           id?: string
@@ -466,7 +466,7 @@ export type Database = {
           study_room?: string | null
         }
         Update: {
-          category?: string
+          category?: string | null
           company_id?: string | null
           created_at?: string
           id?: string
