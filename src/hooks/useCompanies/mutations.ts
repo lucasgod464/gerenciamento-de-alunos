@@ -25,9 +25,13 @@ export async function updateCompany(company: Company) {
 }
 
 export async function deleteCompany(id: string) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .rpc('delete_company_cascade', { company_id: id })
 
-  if (error) throw error
-  return data
+  if (error) {
+    console.error("Erro ao deletar empresa:", error)
+    throw error
+  }
+  
+  return true
 }
