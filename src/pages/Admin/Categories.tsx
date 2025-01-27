@@ -22,7 +22,6 @@ const Categories = () => {
     if (!currentUser?.companyId) return;
     fetchCategories();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('categories-changes')
       .on(
@@ -140,11 +139,13 @@ const Categories = () => {
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', categoryId);
+        .eq('id', categoryId)
+        .throwOnError();
 
       if (error) throw error;
 
-      fetchCategories();
+      await fetchCategories();
+      
       toast({
         title: "Categoria excluída",
         description: "A categoria foi excluída com sucesso.",
@@ -153,7 +154,7 @@ const Categories = () => {
       console.error('Error deleting category:', error);
       toast({
         title: "Erro ao excluir categoria",
-        description: "Ocorreu um erro ao excluir a categoria.",
+        description: "Ocorreu um erro ao excluir a categoria. Verifique se não existem salas vinculadas a ela.",
         variant: "destructive",
       });
     }
