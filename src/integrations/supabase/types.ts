@@ -800,6 +800,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_company_cascade: {
+        Args: {
+          company_id: string
+        }
+        Returns: undefined
+      }
       verify_login: {
         Args: {
           p_email: string
