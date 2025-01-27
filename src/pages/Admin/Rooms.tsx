@@ -1,41 +1,95 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { RoomTable } from "@/components/rooms/RoomTable";
-import { RoomDialog } from "@/components/rooms/RoomDialog";
-import { RoomFilters } from "@/components/rooms/RoomFilters";
-import { useRooms } from "@/hooks/useRooms";
+import { useState } from "react";
 import { Room } from "@/types/room";
+import { RoomFilters } from "@/components/rooms/RoomFilters";
+import { RoomDialog } from "@/components/rooms/RoomDialog";
+import { RoomTable } from "@/components/rooms/RoomTable";
+import { useRooms } from "@/hooks/useRooms";
+import { useToast } from "@/hooks/use-toast";
 
-const AdminRooms = () => {
-  const { rooms, loading, handleSave, handleDeleteConfirm } = useRooms();
+export default function Rooms() {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<Partial<Room> | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<boolean | null>(null);
+  const { rooms, loading, addRoom, updateRoom, deleteRoom } = useRooms();
+  const { toast } = useToast();
 
-  const handleDelete = (id: string) => {
-    handleDeleteConfirm(id);
+  const handleSaveRoom = async (roomData: Partial<Room>) => {
+    try {
+      if (editingRoom) {
+        await updateRoom({ ...editingRoom, ...roomData });
+        toast({
+          title: "Sala atualizada",
+          description: "A sala foi atualizada com sucesso.",
+        });
+      } else {
+        await addRoom(roomData);
+        toast({
+          title: "Sala adicionada",
+          description: "A nova sala foi adicionada com sucesso.",
+        });
+      }
+      setIsDialogOpen(false);
+      setEditingRoom(null);
+    } catch (error) {
+      console.error("Erro ao salvar sala:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar a sala.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditRoom = async (room: Room) => {
+    setEditingRoom(room);
+    setIsDialogOpen(true);
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      await deleteRoom(roomId);
+      toast({
+        title: "Sala removida",
+        description: "A sala foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir sala:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao excluir a sala.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddRoom = () => {
+    setEditingRoom(null);
+    setIsDialogOpen(true);
   };
 
   return (
-    <DashboardLayout role="admin">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">Salas</h1>
-          <p className="text-muted-foreground">
-            Gerencie as salas da sua escola
-          </p>
-        </div>
+    <div className="space-y-4 p-8">
+      <RoomFilters
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        onAddRoom={handleAddRoom}
+      />
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <RoomFilters />
-          <RoomDialog onSave={handleSave} />
-        </div>
+      <RoomDialog
+        isOpen={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        editingRoom={editingRoom}
+        onSave={handleSaveRoom}
+      />
 
-        <RoomTable 
-          rooms={rooms} 
-          loading={loading}
-          onDelete={handleDelete}
-          onEdit={handleSave}
-        />
-      </div>
-    </DashboardLayout>
+      <RoomTable
+        rooms={rooms}
+        onDelete={handleDeleteRoom}
+        onEdit={handleEditRoom}
+      />
+    </div>
   );
-};
-
-export default AdminRooms;
+}
