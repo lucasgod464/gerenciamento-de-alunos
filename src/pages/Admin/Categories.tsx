@@ -136,36 +136,27 @@ const Categories = () => {
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
-      // Primeiro, verificar se existem salas vinculadas
-      const { data: rooms, error: roomsError } = await supabase
+      // Primeiro, atualizar todas as salas vinculadas para uma categoria padrão ou null
+      const { error: updateRoomsError } = await supabase
         .from('rooms')
-        .select('id')
+        .update({ category: null })
         .eq('category', categoryId);
 
-      if (roomsError) throw roomsError;
+      if (updateRoomsError) throw updateRoomsError;
 
-      if (rooms && rooms.length > 0) {
-        toast({
-          title: "Não é possível excluir a categoria",
-          description: "Existem salas vinculadas a esta categoria. Remova as salas primeiro.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Se não houver salas, prosseguir com a exclusão
-      const { error } = await supabase
+      // Depois, excluir a categoria
+      const { error: deleteCategoryError } = await supabase
         .from('categories')
         .delete()
         .eq('id', categoryId);
 
-      if (error) throw error;
+      if (deleteCategoryError) throw deleteCategoryError;
 
       await fetchCategories();
       
       toast({
         title: "Categoria excluída",
-        description: "A categoria foi excluída com sucesso.",
+        description: "A categoria e suas vinculações foram removidas com sucesso.",
       });
     } catch (error) {
       console.error('Error deleting category:', error);
