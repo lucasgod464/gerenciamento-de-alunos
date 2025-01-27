@@ -5,32 +5,27 @@ import { RoomDialog } from "@/components/rooms/RoomDialog";
 import { RoomTable } from "@/components/rooms/RoomTable";
 import { useRooms } from "@/hooks/useRooms";
 import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 export default function Rooms() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingRoom, setEditingRoom] = useState<Partial<Room> | null>(null);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<boolean | null>(null);
-  const { rooms, loading, addRoom, updateRoom, deleteRoom } = useRooms();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { rooms, loading, handleSave, handleDeleteConfirm } = useRooms();
   const { toast } = useToast();
 
   const handleSaveRoom = async (roomData: Partial<Room>) => {
     try {
-      if (editingRoom) {
-        await updateRoom({ ...editingRoom, ...roomData });
-        toast({
-          title: "Sala atualizada",
-          description: "A sala foi atualizada com sucesso.",
-        });
-      } else {
-        await addRoom(roomData);
-        toast({
-          title: "Sala adicionada",
-          description: "A nova sala foi adicionada com sucesso.",
-        });
-      }
+      await handleSave(roomData);
       setIsDialogOpen(false);
       setEditingRoom(null);
+      toast({
+        title: editingRoom ? "Sala atualizada" : "Sala adicionada",
+        description: editingRoom 
+          ? "A sala foi atualizada com sucesso."
+          : "A nova sala foi adicionada com sucesso.",
+      });
     } catch (error) {
       console.error("Erro ao salvar sala:", error);
       toast({
@@ -41,14 +36,14 @@ export default function Rooms() {
     }
   };
 
-  const handleEditRoom = async (room: Room) => {
+  const handleEditRoom = (room: Room) => {
     setEditingRoom(room);
     setIsDialogOpen(true);
   };
 
   const handleDeleteRoom = async (roomId: string) => {
     try {
-      await deleteRoom(roomId);
+      await handleDeleteConfirm(roomId);
       toast({
         title: "Sala removida",
         description: "A sala foi removida com sucesso.",
@@ -69,27 +64,29 @@ export default function Rooms() {
   };
 
   return (
-    <div className="space-y-4 p-8">
-      <RoomFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
-        onAddRoom={handleAddRoom}
-      />
+    <DashboardLayout role="admin">
+      <div className="space-y-4 p-8">
+        <RoomFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onAddRoom={handleAddRoom}
+        />
 
-      <RoomDialog
-        isOpen={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        editingRoom={editingRoom}
-        onSave={handleSaveRoom}
-      />
+        <RoomDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+          editingRoom={editingRoom}
+          onSave={handleSaveRoom}
+        />
 
-      <RoomTable
-        rooms={rooms}
-        onDelete={handleDeleteRoom}
-        onEdit={handleEditRoom}
-      />
-    </div>
+        <RoomTable
+          rooms={rooms}
+          onDelete={handleDeleteRoom}
+          onEdit={handleEditRoom}
+        />
+      </div>
+    </DashboardLayout>
   );
 }
