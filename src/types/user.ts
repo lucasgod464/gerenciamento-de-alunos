@@ -70,3 +70,12 @@ export interface UserResponse {
   access_level: AccessLevel;
   updated_at: string;
 }
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  companyId: string;
+  accessLevel: AccessLevel;
+}
