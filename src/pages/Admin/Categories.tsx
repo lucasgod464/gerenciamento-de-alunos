@@ -136,11 +136,28 @@ const Categories = () => {
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
+      // Primeiro, verificar se existem salas vinculadas
+      const { data: rooms, error: roomsError } = await supabase
+        .from('rooms')
+        .select('id')
+        .eq('category', categoryId);
+
+      if (roomsError) throw roomsError;
+
+      if (rooms && rooms.length > 0) {
+        toast({
+          title: "Não é possível excluir a categoria",
+          description: "Existem salas vinculadas a esta categoria. Remova as salas primeiro.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Se não houver salas, prosseguir com a exclusão
       const { error } = await supabase
         .from('categories')
         .delete()
-        .eq('id', categoryId)
-        .throwOnError();
+        .eq('id', categoryId);
 
       if (error) throw error;
 
@@ -154,7 +171,7 @@ const Categories = () => {
       console.error('Error deleting category:', error);
       toast({
         title: "Erro ao excluir categoria",
-        description: "Ocorreu um erro ao excluir a categoria. Verifique se não existem salas vinculadas a ela.",
+        description: "Ocorreu um erro ao excluir a categoria. Tente novamente mais tarde.",
         variant: "destructive",
       });
     }
