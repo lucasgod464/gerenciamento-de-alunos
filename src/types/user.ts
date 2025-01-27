@@ -67,4 +67,6 @@ export interface UserResponse {
   created_at: string;
   last_access: string;
   status: boolean;
+  access_level: AccessLevel;
+  updated_at: string;
 }
