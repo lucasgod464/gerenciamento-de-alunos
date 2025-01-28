@@ -22,7 +22,7 @@ export interface SupabaseStudent {
   email: string | null;
   document: string | null;
   address: string | null;
-  custom_fields: Record<string, any>;
+  custom_fields: Json;
   company_id: string;
   created_at: string;
 }
@@ -40,7 +40,7 @@ export const mapSupabaseStudent = (student: SupabaseStudent): Student => {
     email: student.email,
     document: student.document,
     address: student.address,
-    customFields,
+    customFields: typeof customFields === 'object' ? customFields : {},
     companyId: student.company_id,
     createdAt: student.created_at
   };

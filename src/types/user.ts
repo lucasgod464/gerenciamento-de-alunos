@@ -25,9 +25,8 @@ export interface CreateUserData {
   name: string;
   email: string;
   password: string;
-  role: UserRole;
-  companyId: string;
   accessLevel: AccessLevel;
+  companyId: string;
   location?: string;
   address?: string;
   specialization?: string;
@@ -63,13 +62,13 @@ export const mapSupabaseUser = (user: UserResponse): User => ({
   role: user.role === "ADMIN" ? "ADMIN" : "USER",
   companyId: user.company_id,
   createdAt: user.created_at,
+  updatedAt: user.updated_at,
   lastAccess: user.last_access,
   status: user.status ? "active" : "inactive",
   accessLevel: user.access_level,
   location: user.location,
   address: user.address,
   specialization: user.specialization,
-  updatedAt: user.updated_at,
   tags: user.user_tags?.map(ut => ut.tags) || [],
   authorizedRooms: user.user_rooms?.map(ur => ur.rooms) || [],
   specializations: user.user_specializations?.map(us => us.specializations) || []
