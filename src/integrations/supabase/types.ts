@@ -802,7 +802,7 @@ export type Database = {
     Functions: {
       delete_company_cascade: {
         Args: {
-          company_id: string
+          target_company_id: string
         }
         Returns: undefined
       }
