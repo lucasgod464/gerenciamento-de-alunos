@@ -21,7 +21,23 @@ export interface User {
   specializations?: { id: string; name: string; }[];
 }
 
-export interface SupabaseUser {
+export interface CreateUserData {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  companyId: string;
+  accessLevel: AccessLevel;
+  location?: string;
+  address?: string;
+  specialization?: string;
+  status?: UserStatus;
+  selectedRooms?: string[];
+  selectedTags?: { id: string; name: string; color: string; }[];
+  selectedSpecializations?: string[];
+}
+
+export interface UserResponse {
   id: string;
   name: string;
   email: string;
@@ -37,7 +53,7 @@ export interface SupabaseUser {
   updated_at: string;
 }
 
-export const mapSupabaseUser = (user: SupabaseUser): User => ({
+export const mapSupabaseUser = (user: UserResponse): User => ({
   id: user.id,
   name: user.name,
   email: user.email,
@@ -50,32 +66,5 @@ export const mapSupabaseUser = (user: SupabaseUser): User => ({
   location: user.location,
   address: user.address,
   specialization: user.specialization,
-  updatedAt: user.updated_at,
+  updatedAt: user.updated_at
 });
-
-export interface AuthUser extends User {
-  accessToken?: string;
-  refreshToken?: string;
-}
-
-export interface UserResponse {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  company_id: string;
-  created_at: string;
-  last_access: string;
-  status: boolean;
-  access_level: AccessLevel;
-  updated_at: string;
-}
-
-export interface CreateUserData {
-  name: string;
-  email: string;
-  password: string;
-  role: UserRole;
-  companyId: string;
-  accessLevel: AccessLevel;
-}
