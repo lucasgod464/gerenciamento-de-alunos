@@ -36,7 +36,7 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   description: field.description || "",
   required: field.required,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(String) : undefined,
+  options: Array.isArray(field.options) ? field.options.map(String) : [],
   source: field.form_type as FieldSource,
   isDefault: false
 });

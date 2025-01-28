@@ -11,7 +11,7 @@ export interface Student {
   customFields: Record<string, any>;
   companyId: string;
   createdAt: string;
-  room?: string;
+  room?: string | null;
 }
 
 export interface SupabaseStudent {

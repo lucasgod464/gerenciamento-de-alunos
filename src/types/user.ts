@@ -9,13 +9,13 @@ export interface User {
   role: UserRole;
   companyId: string;
   createdAt: string;
+  updatedAt: string;
   lastAccess: string;
   status: UserStatus;
   accessLevel: AccessLevel;
   location?: string;
   address?: string;
   specialization?: string;
-  updatedAt: string;
   tags?: { id: string; name: string; color: string; }[];
   authorizedRooms?: { id: string; name: string; }[];
   specializations?: { id: string; name: string; }[];
@@ -47,17 +47,20 @@ export interface UserResponse {
   last_access: string;
   status: boolean;
   access_level: AccessLevel;
+  updated_at: string;
   location?: string;
   address?: string;
   specialization?: string;
-  updated_at: string;
+  user_tags?: { tags: { id: string; name: string; color: string; } }[];
+  user_rooms?: { rooms: { id: string; name: string; } }[];
+  user_specializations?: { specializations: { id: string; name: string; } }[];
 }
 
 export const mapSupabaseUser = (user: UserResponse): User => ({
   id: user.id,
   name: user.name,
   email: user.email,
-  role: user.role as UserRole,
+  role: user.role === "ADMIN" ? "ADMIN" : "USER",
   companyId: user.company_id,
   createdAt: user.created_at,
   lastAccess: user.last_access,
@@ -66,5 +69,8 @@ export const mapSupabaseUser = (user: UserResponse): User => ({
   location: user.location,
   address: user.address,
   specialization: user.specialization,
-  updatedAt: user.updated_at
+  updatedAt: user.updated_at,
+  tags: user.user_tags?.map(ut => ut.tags) || [],
+  authorizedRooms: user.user_rooms?.map(ur => ur.rooms) || [],
+  specializations: user.user_specializations?.map(us => us.specializations) || []
 });
