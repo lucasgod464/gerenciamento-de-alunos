@@ -6,7 +6,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Link } from "lucide-react";
+import { Copy, Link, Power } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const EnrollmentFormHeader = () => {
   const [formUrl, setFormUrl] = useState("");
@@ -113,55 +114,65 @@ export const EnrollmentFormHeader = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Link do Formulário</h2>
-          <p className="text-muted-foreground">
-            Gere e compartilhe o link do formulário de inscrição
-          </p>
-        </div>
+    <Card>
+      <CardContent className="pt-6">
         {formUrl ? (
-          <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="form-status"
-                checked={isEnabled}
-                onCheckedChange={toggleFormStatus}
-              />
-              <Label htmlFor="form-status">
-                {isEnabled ? "Ativado" : "Desativado"}
-              </Label>
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold">Link do Formulário</h3>
+                <p className="text-sm text-muted-foreground">
+                  Compartilhe este link com os interessados em se inscrever
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="form-status"
+                    checked={isEnabled}
+                    onCheckedChange={toggleFormStatus}
+                  />
+                  <Label htmlFor="form-status" className="flex items-center gap-2">
+                    <Power className="h-4 w-4" />
+                    {isEnabled ? "Ativado" : "Desativado"}
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  value={`${window.location.origin}/enrollment/${formUrl}`}
+                  readOnly
+                  className="bg-muted font-mono text-sm"
+                />
+                <Button variant="outline" onClick={copyToClipboard} className="shrink-0">
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className={`text-sm ${isEnabled ? 'text-green-600' : 'text-yellow-600'}`}>
+                {isEnabled 
+                  ? "O formulário está ativo e pode receber inscrições"
+                  : "O formulário está desativado e não pode receber inscrições"}
+              </p>
             </div>
           </div>
         ) : (
-          <Button onClick={generateFormUrl}>
-            <Link className="mr-2 h-4 w-4" />
-            Gerar Link
-          </Button>
-        )}
-      </div>
-
-      {formUrl && (
-        <div className="flex flex-col gap-2">
-          <Label>Link do Formulário</Label>
-          <div className="flex gap-2">
-            <Input
-              value={`${window.location.origin}/enrollment/${formUrl}`}
-              readOnly
-              className="bg-muted"
-            />
-            <Button variant="outline" onClick={copyToClipboard}>
-              <Copy className="h-4 w-4" />
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Gerar Link do Formulário</h3>
+              <p className="text-sm text-muted-foreground">
+                Clique no botão abaixo para gerar um link único para o formulário de inscrição
+              </p>
+            </div>
+            <Button onClick={generateFormUrl} className="w-full sm:w-auto">
+              <Link className="mr-2 h-4 w-4" />
+              Gerar Link
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
-            {isEnabled 
-              ? "O formulário está ativo e pode receber inscrições."
-              : "O formulário está desativado e não pode receber inscrições."}
-          </p>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
