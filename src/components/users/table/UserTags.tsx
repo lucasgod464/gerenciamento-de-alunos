@@ -1,5 +1,11 @@
 import { Tag as TagIcon } from "lucide-react";
 import { User } from "@/types/user";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface UserTagsProps {
   user: User;
@@ -13,11 +19,21 @@ export function UserTags({ user }: UserTagsProps) {
   return (
     <div className="flex gap-1">
       {user.tags.map((tag) => (
-        <TagIcon
-          key={tag.id}
-          className="h-4 w-4"
-          style={{ color: tag.color }}
-        />
+        <TooltipProvider key={tag.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="cursor-pointer">
+                <TagIcon
+                  className="h-4 w-4"
+                  style={{ color: tag.color }}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tag.name}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ))}
     </div>
   );
