@@ -85,9 +85,9 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
   };
 
   return (
-    <div className={cn("flex flex-col md:flex-row items-center gap-2", className)}>
+    <div className={cn("flex flex-col space-y-4 w-full", className)}>
       <Select defaultValue="last30days" onValueChange={handlePresetChange}>
-        <SelectTrigger className="w-[220px]"> {/* Aumentei o tamanho aqui */}
+        <SelectTrigger className="w-full md:w-[220px]">
           <SelectValue placeholder="Período predefinido" />
         </SelectTrigger>
         <SelectContent>
@@ -103,63 +103,65 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
         </SelectContent>
       </Select>
 
-      <div className="flex gap-2 mt-2 md:mt-0">
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={handlePreviousPeriod}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
+      <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-2 w-full">
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handlePreviousPeriod}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal w-[280px]",
-                !dateRange && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "dd/MM/yyyy")} -{" "}
-                    {format(dateRange.to, "dd/MM/yyyy")}
-                  </>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "justify-start text-left font-normal w-full md:w-[280px]",
+                  !dateRange && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateRange?.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "dd/MM/yyyy")} -{" "}
+                      {format(dateRange.to, "dd/MM/yyyy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "dd/MM/yyyy")
+                  )
                 ) : (
-                  format(dateRange.from, "dd/MM/yyyy")
-                )
-              ) : (
-                <span>Selecione um período</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={(range) => {
-                if (range?.from && range?.to) {
-                  onDateRangeChange(range);
-                }
-              }}
-              numberOfMonths={2}
-              locale={ptBR}
-            />
-          </PopoverContent>
-        </Popover>
+                  <span>Selecione um período</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange?.from}
+                selected={dateRange}
+                onSelect={(range) => {
+                  if (range?.from && range?.to) {
+                    onDateRangeChange(range as DateRange);
+                  }
+                }}
+                numberOfMonths={1}
+                locale={ptBR}
+              />
+            </PopoverContent>
+          </Popover>
 
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={handleNextPeriod}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={handleNextPeriod}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
