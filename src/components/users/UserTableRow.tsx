@@ -56,24 +56,31 @@ export function UserTableRow({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-2">
-                {isAdmin ? (
-                  <div className="flex items-center gap-2">
-                    <UserCog className="h-4 w-4 text-blue-600" />
-                    <span className="font-medium text-blue-700">{user.name}</span>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                  {isAdmin ? (
+                    <>
+                      <UserCog className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-blue-700">{user.name}</span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="h-4 w-4 text-gray-500" />
+                      <span className="text-gray-700">{user.name}</span>
+                    </>
+                  )}
+                </div>
+                <div className="mt-1">
+                  {isAdmin ? (
                     <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
                       Administrador
                     </Badge>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-700">{user.name}</span>
+                  ) : (
                     <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200">
                       Usuário
                     </Badge>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </TooltipTrigger>
             <TooltipContent>
