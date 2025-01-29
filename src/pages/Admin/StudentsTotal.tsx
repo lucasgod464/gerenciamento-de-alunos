@@ -196,40 +196,22 @@ const StudentsTotal = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Total de Alunos</h1>
-            <p className="text-muted-foreground mt-1">
-              Visualize e gerencie todos os alunos cadastrados
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
-              <p className="text-sm text-muted-foreground">Total de Alunos</p>
-              <p className="text-2xl font-bold">{students.length}</p>
-            </div>
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
-              <p className="text-sm text-muted-foreground">Com Sala</p>
-              <p className="text-2xl font-bold">{studentsWithRoom.length}</p>
-            </div>
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
-              <p className="text-sm text-muted-foreground">Sem Sala</p>
-              <p className="text-2xl font-bold">{studentsWithoutRoom.length}</p>
-            </div>
-          </div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Total de Alunos</h1>
+          <p className="text-muted-foreground">
+            Visualize e gerencie todos os alunos cadastrados
+          </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <StudentColumns
-            studentsWithoutRoom={studentsWithoutRoom}
-            studentsWithRoom={studentsWithRoom}
-            rooms={rooms}
-            onDeleteStudent={handleDeleteStudent}
-            onTransferStudent={handleTransferStudent}
-            onUpdateStudent={handleUpdateStudent}
-          />
-        </div>
+        <StudentColumns
+          studentsWithoutRoom={studentsWithoutRoom}
+          studentsWithRoom={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={handleDeleteStudent}
+          onTransferStudent={handleTransferStudent}
+          onUpdateStudent={handleUpdateStudent}
+        />
       </div>
     </DashboardLayout>
   );

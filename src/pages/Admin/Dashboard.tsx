@@ -42,7 +42,7 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout role="admin">
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold mb-2">Dashboard do Administrador</h1>
           <p className="text-muted-foreground">
@@ -94,10 +94,9 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid gap-6">
-          <AttendanceChart />
-          <ChartManager />
-        </div>
+        <AttendanceChart />
+        
+        <ChartManager />
       </div>
     </DashboardLayout>
   );
