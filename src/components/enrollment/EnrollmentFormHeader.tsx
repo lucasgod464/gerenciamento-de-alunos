@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
+import { LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -85,14 +85,6 @@ export const EnrollmentFormHeader = () => {
               Compartilhe este link para receber inscrições
             </CardDescription>
           </div>
-          {enrollmentUrl && (
-            <Button asChild>
-              <Link to={enrollmentUrl.replace(window.location.origin, '')} target="_blank">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visualizar Formulário
-              </Link>
-            </Button>
-          )}
         </div>
       </CardHeader>
       <CardContent>
