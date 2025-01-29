@@ -1,6 +1,5 @@
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { EnrollmentFormBuilder } from "@/components/enrollment/EnrollmentFormBuilder";
-import { EnrollmentFormHeader } from "@/components/enrollment/EnrollmentFormHeader";
 import { Separator } from "@/components/ui/separator";
 
 const AdminEnrollment = () => {
@@ -15,11 +14,7 @@ const AdminEnrollment = () => {
         </div>
 
         <div className="grid gap-8">
-          <div className="space-y-6">
-            <EnrollmentFormHeader />
-            <Separator className="my-6" />
-            <EnrollmentFormBuilder />
-          </div>
+          <EnrollmentFormBuilder />
         </div>
       </div>
     </DashboardLayout>
