@@ -166,8 +166,8 @@ export const EnrollmentFormHeader = () => {
               </div>
               <p className={`text-sm ${isEnabled ? 'text-green-600' : 'text-yellow-600'}`}>
                 {isEnabled 
-                  ? "O formulário está ativo e pode receber inscrições"
-                  : "O formulário está desativado e não pode receber inscrições"}
+                  ? "O formulário está ativo e pode receber inscrições."
+                  : "O formulário está desativado e não pode receber inscrições."}
               </p>
             </div>
           </div>
