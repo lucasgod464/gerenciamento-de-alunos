@@ -1,7 +1,8 @@
 import { Json } from "@/integrations/supabase/types";
 
 export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
-export type FieldSource = "admin" | "public" | "enrollment";
+export type FieldSource = "admin" | "public" | "enrollment" | "system";
+export type FormType = "admin" | "enrollment";
 
 export interface FormField {
   id: string;
@@ -13,6 +14,7 @@ export interface FormField {
   order: number;
   options?: string[];
   source: FieldSource;
+  form_type?: FormType;
   isDefault?: boolean;
 }
 
@@ -27,7 +29,7 @@ export interface SupabaseFormField {
   options?: Json;
   company_id?: string;
   created_at?: string;
-  form_type: string;
+  form_type: FormType;
 }
 
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
@@ -43,7 +45,8 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
     : typeof field.options === 'string' 
       ? [field.options]
       : [],
-  source: field.form_type as FieldSource,
+  source: field.form_type === 'admin' ? 'admin' : 'enrollment',
+  form_type: field.form_type,
   isDefault: false
 });
 
@@ -55,5 +58,5 @@ export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField
   required: field.required,
   order: field.order,
   options: field.options || [],
-  form_type: field.source
+  form_type: field.form_type || 'admin'
 });
