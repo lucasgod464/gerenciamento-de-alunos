@@ -205,31 +205,29 @@ const StudentsTotal = () => {
             </p>
           </div>
           <div className="flex gap-4">
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
+            <div className="border rounded-lg px-4 py-3">
               <p className="text-sm text-muted-foreground">Total de Alunos</p>
               <p className="text-2xl font-bold">{students.length}</p>
             </div>
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
+            <div className="border rounded-lg px-4 py-3">
               <p className="text-sm text-muted-foreground">Com Sala</p>
               <p className="text-2xl font-bold">{studentsWithRoom.length}</p>
             </div>
-            <div className="bg-white rounded-lg px-4 py-3 shadow-sm">
+            <div className="border rounded-lg px-4 py-3">
               <p className="text-sm text-muted-foreground">Sem Sala</p>
               <p className="text-2xl font-bold">{studentsWithoutRoom.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow">
-          <StudentColumns
-            studentsWithoutRoom={studentsWithoutRoom}
-            studentsWithRoom={studentsWithRoom}
-            rooms={rooms}
-            onDeleteStudent={handleDeleteStudent}
-            onTransferStudent={handleTransferStudent}
-            onUpdateStudent={handleUpdateStudent}
-          />
-        </div>
+        <StudentColumns
+          studentsWithoutRoom={studentsWithoutRoom}
+          studentsWithRoom={studentsWithRoom}
+          rooms={rooms}
+          onDeleteStudent={handleDeleteStudent}
+          onTransferStudent={handleTransferStudent}
+          onUpdateStudent={handleUpdateStudent}
+        />
       </div>
     </DashboardLayout>
   );
