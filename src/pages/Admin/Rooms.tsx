@@ -66,6 +66,13 @@ export default function Rooms() {
   return (
     <DashboardLayout role="admin">
       <div className="space-y-4 p-8">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold tracking-tight">Gerenciamento de Salas</h1>
+          <p className="text-muted-foreground">
+            Gerencie todas as salas da sua instituição, adicione novas salas ou edite as existentes.
+          </p>
+        </div>
+
         <RoomFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
