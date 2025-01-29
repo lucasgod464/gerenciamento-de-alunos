@@ -96,18 +96,17 @@ export function CompanyTableRow({
       "hover:bg-gray-50 transition-colors",
       company.status === "Inativa" && "bg-gray-50 opacity-75"
     )}>
-      <td className="p-4">
-        <div className="flex items-start gap-3">
+      <td className="p-4 min-w-[300px]">
+        <div className="flex items-center gap-3">
           <div className="bg-primary/10 p-2 rounded-lg">
             <Building2 className="w-5 h-5 text-primary" />
           </div>
-          <div>
-            <div className="font-medium text-gray-900">{company.name}</div>
+          <div className="min-w-0">
+            <div className="font-medium text-gray-900 truncate">{company.name}</div>
             <div className="text-sm text-gray-500">
-              ID: {company.id}
-              <br />
-              <span className="flex items-center gap-1 text-gray-400">
-                <Folder className="w-4 h-4" />
+              <span className="block truncate">ID: {company.id}</span>
+              <span className="flex items-center gap-1 text-gray-400 truncate">
+                <Folder className="w-4 h-4 flex-shrink-0" />
                 {company.publicFolderPath}
               </span>
             </div>
@@ -115,7 +114,7 @@ export function CompanyTableRow({
         </div>
       </td>
 
-      <td className="p-4">
+      <td className="p-4 text-center min-w-[120px]">
         <UsageIndicator
           icon={<Users2 className="w-4 h-4" />}
           current={company.currentUsers}
@@ -124,7 +123,7 @@ export function CompanyTableRow({
         />
       </td>
 
-      <td className="p-4">
+      <td className="p-4 text-center min-w-[120px]">
         <UsageIndicator
           icon={<DoorOpen className="w-4 h-4" />}
           current={company.currentRooms}
@@ -133,18 +132,24 @@ export function CompanyTableRow({
         />
       </td>
 
-      <td className="p-4">
-        <Switch
-          checked={company.status === "Ativa"}
-          onCheckedChange={handleStatusChange}
-          className={cn(
-            "data-[state=checked]:bg-green-500",
-            "data-[state=unchecked]:bg-red-500"
-          )}
-        />
+      <td className="p-4 text-center min-w-[100px]">
+        <div className="flex justify-center">
+          <Switch
+            checked={company.status === "Ativa"}
+            onCheckedChange={handleStatusChange}
+            className={cn(
+              "data-[state=checked]:bg-green-500",
+              "data-[state=unchecked]:bg-red-500"
+            )}
+          />
+        </div>
       </td>
-      <td className="p-4 text-gray-500">{company.createdAt}</td>
-      <td className="p-4">
+
+      <td className="p-4 text-center whitespace-nowrap text-gray-500 min-w-[120px]">
+        {company.createdAt}
+      </td>
+
+      <td className="p-4 min-w-[120px]">
         <div className="flex justify-end space-x-2">
           <CompanyDataUsage company={company} />
 
