@@ -116,7 +116,20 @@ export const EnrollmentFormHeader = () => {
   return (
     <Card>
       <CardContent className="pt-6">
-        {formUrl ? (
+        {!formUrl ? (
+          <div className="flex flex-col items-center justify-center py-6 space-y-4">
+            <div className="text-center space-y-2">
+              <h3 className="text-lg font-semibold">Gerar Link do Formulário</h3>
+              <p className="text-sm text-muted-foreground">
+                Clique no botão abaixo para gerar um link único para o formulário de inscrição
+              </p>
+            </div>
+            <Button onClick={generateFormUrl} className="w-full sm:w-auto">
+              <Link className="mr-2 h-4 w-4" />
+              Gerar Link
+            </Button>
+          </div>
+        ) : (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -157,19 +170,6 @@ export const EnrollmentFormHeader = () => {
                   : "O formulário está desativado e não pode receber inscrições"}
               </p>
             </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-6 space-y-4">
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Gerar Link do Formulário</h3>
-              <p className="text-sm text-muted-foreground">
-                Clique no botão abaixo para gerar um link único para o formulário de inscrição
-              </p>
-            </div>
-            <Button onClick={generateFormUrl} className="w-full sm:w-auto">
-              <Link className="mr-2 h-4 w-4" />
-              Gerar Link
-            </Button>
           </div>
         )}
       </CardContent>
