@@ -11,7 +11,7 @@ interface RoomTableRowProps {
   room: Room;
   onEdit: (room: Room) => void;
   onDelete: (id: string) => void;
-  onShowStudents: (room: Room) => void;
+  onShowStudents?: (room: Room) => void;
 }
 
 export const RoomTableRow = ({
@@ -75,6 +75,18 @@ export const RoomTableRow = ({
     fetchCategoryAndTeachers();
   }, [room, toast]);
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit(room);
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete(room.id);
+  };
+
   return (
     <TableRow key={room.id}>
       <TableCell>{room.name}</TableCell>
@@ -111,14 +123,14 @@ export const RoomTableRow = ({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onEdit(room)}
+          onClick={handleEdit}
         >
           <Pencil className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => onDelete(room.id)}
+          onClick={handleDelete}
         >
           <Trash2 className="h-4 w-4" />
         </Button>

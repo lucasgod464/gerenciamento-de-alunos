@@ -21,7 +21,6 @@ export const AttendanceControl = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Verifica se já existe chamada para a data e sala selecionadas
   useEffect(() => {
     const checkAttendance = async () => {
       if (!user?.companyId || !selectedDate || !selectedRoom) return;
@@ -55,7 +54,7 @@ export const AttendanceControl = () => {
   }, [selectedDate, selectedRoom, user?.companyId, toast]);
 
   const handleStartAttendance = async () => {
-    if (!user?.companyId || !selectedRoom) return; // Added check for selectedRoom
+    if (!user?.companyId || !selectedRoom) return;
 
     if (isStarted) {
       try {
@@ -92,7 +91,7 @@ export const AttendanceControl = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center min-h-[50vh]">
         <p className="text-center text-muted-foreground">
           Carregando...
         </p>
@@ -101,29 +100,28 @@ export const AttendanceControl = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center space-y-2"> {/* Changed to flex-col and added space-y-2 */}
-              <h3 className="font-medium text-gray-700">Data</h3>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                className="rounded-md border bg-white"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
+    <div className="space-y-4">
+      <Card className="bg-white shadow-sm">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <h3 className="font-medium mb-2 text-gray-700">Sala</h3>
+              <h3 className="font-medium text-gray-700 mb-2">Data</h3>
+              <div className="flex justify-center bg-white rounded-lg border p-2">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(date) => date && setSelectedDate(date)}
+                  className="rounded-md"
+                  disabled={isStarted}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="font-medium text-gray-700">Sala</h3>
                 <Select value={selectedRoom} onValueChange={setSelectedRoom} disabled={isStarted}>
-                  <SelectTrigger className="bg-white">
+                  <SelectTrigger className="w-full bg-white">
                     <SelectValue placeholder="Selecione uma sala" />
                   </SelectTrigger>
                   <SelectContent>
@@ -139,28 +137,33 @@ export const AttendanceControl = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button 
-                className="w-full"
-                onClick={handleStartAttendance}
-                disabled={!selectedRoom || !selectedDate}
-              >
-                {isStarted ? "Cancelar Chamada" : "Iniciar Chamada"}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowStudentDetails(true)}
-              >
-                Consultar Aluno Individual
-              </Button>
+
+              <div className="flex flex-col gap-2 mt-4">
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-lg font-medium"
+                  onClick={handleStartAttendance}
+                  disabled={!selectedRoom || !selectedDate}
+                  size="lg"
+                >
+                  {isStarted ? "Cancelar Chamada" : "Iniciar Chamada"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full py-6 text-lg"
+                  onClick={() => setShowStudentDetails(true)}
+                  size="lg"
+                >
+                  Consultar Aluno Individual
+                </Button>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {isStarted && (
         <Card className="bg-white shadow-sm">
-          <CardContent className="pt-6">
+          <CardContent className="p-4">
             <AttendanceList
               date={selectedDate}
               roomId={selectedRoom}

@@ -35,19 +35,19 @@ export const AttendanceRow = ({
   onObservationChange,
 }: AttendanceRowProps) => {
   return (
-    <div className="grid grid-cols-12 gap-4 items-center p-4 border rounded-lg bg-white">
-      <div className="col-span-3 flex items-center gap-2">
+    <div className="flex flex-col gap-3 p-4 border rounded-lg bg-white">
+      <div className="flex items-center gap-2">
         {getStatusIcon(student.status)}
-        <span className="font-medium">{student.name}</span>
+        <span className="font-medium text-sm md:text-base">{student.name}</span>
       </div>
       
-      <div className="col-span-3">
+      <div className="w-full">
         <Select
           value={student.status}
           onValueChange={(value) => onStatusChange(student.id, value)}
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o status" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Status de presença" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="present">
@@ -78,12 +78,12 @@ export const AttendanceRow = ({
         </Select>
       </div>
       
-      <div className="col-span-6">
+      <div className="w-full">
         <Textarea
           placeholder="Observações (opcional)"
           value={observation}
           onChange={(e) => onObservationChange(student.id, e.target.value)}
-          className="h-10 min-h-0 resize-none"
+          className="h-20 min-h-[80px] resize-none text-sm"
           maxLength={500}
         />
       </div>

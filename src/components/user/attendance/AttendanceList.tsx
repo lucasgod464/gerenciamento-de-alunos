@@ -19,7 +19,6 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
   const [observations, setObservations] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
-  // Carregar observações existentes quando a data ou sala mudar
   useEffect(() => {
     const loadObservations = async () => {
       try {
@@ -48,30 +47,16 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
 
   const handleStatusChange = async (studentId: string, status: string) => {
     try {
-      const formattedDate = formatDate(date);
-      
-      const { error } = await supabase
-        .from('daily_attendance')
-        .upsert({
-          date: formattedDate,
-          student_id: studentId,
-          status: status,
-          company_id: companyId,
-          room_id: roomId
-        });
-
-      if (error) throw error;
-      
       setStudents(prev =>
         prev.map(student =>
           student.id === studentId ? { ...student, status } : student
         )
       );
     } catch (error) {
-      console.error('Erro ao salvar presença:', error);
+      console.error('Erro ao atualizar status:', error);
       toast({
-        title: "Erro ao salvar presença",
-        description: "Não foi possível salvar o status de presença.",
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status de presença.",
         variant: "destructive",
       });
     }
@@ -88,36 +73,60 @@ export const AttendanceList = ({ date, roomId, companyId, onAttendanceSaved }: A
     try {
       const formattedDate = formatDate(date);
       
-      // Primeiro, salvamos todas as presenças
-      for (const student of students) {
-        if (!student.status) continue;
+      // Primeiro, remover registros existentes para evitar duplicação
+      const { error: deleteAttendanceError } = await supabase
+        .from('daily_attendance')
+        .delete()
+        .eq('date', formattedDate)
+        .eq('room_id', roomId);
 
+      if (deleteAttendanceError) throw deleteAttendanceError;
+
+      // Preparar todas as presenças para inserção
+      const attendanceBatch = students
+        .filter(student => student.status)
+        .map(student => ({
+          date: formattedDate,
+          student_id: student.id,
+          status: student.status,
+          company_id: companyId,
+          room_id: roomId
+        }));
+
+      // Inserir presenças em uma única operação
+      if (attendanceBatch.length > 0) {
         const { error: attendanceError } = await supabase
           .from('daily_attendance')
-          .upsert({
-            date: formattedDate,
-            student_id: student.id,
-            status: student.status,
-            company_id: companyId,
-            room_id: roomId
-          });
-          
+          .insert(attendanceBatch);
+
         if (attendanceError) throw attendanceError;
       }
-      
-      // Depois, salvamos as observações
-      for (const [studentId, text] of Object.entries(observations)) {
-        if (!text.trim()) continue; // Pula observações vazias
-        
+
+      // Remover observações existentes
+      const { error: deleteObservationsError } = await supabase
+        .from('daily_observations')
+        .delete()
+        .eq('date', formattedDate)
+        .eq('company_id', companyId);
+
+      if (deleteObservationsError) throw deleteObservationsError;
+
+      // Preparar observações para inserção
+      const observationBatch = Object.entries(observations)
+        .filter(([_, text]) => text.trim())
+        .map(([studentId, text]) => ({
+          date: formattedDate,
+          text,
+          company_id: companyId,
+          student_id: studentId
+        }));
+
+      // Inserir observações em uma única operação
+      if (observationBatch.length > 0) {
         const { error: observationError } = await supabase
           .from('daily_observations')
-          .upsert({
-            date: formattedDate,
-            text,
-            company_id: companyId,
-            student_id: studentId
-          });
-          
+          .insert(observationBatch);
+
         if (observationError) throw observationError;
       }
 

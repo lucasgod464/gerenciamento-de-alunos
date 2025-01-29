@@ -57,12 +57,21 @@ export function CompanyTableRow({
     })
   }
 
-  const handleDelete = () => {
-    onDelete(company.id)
-    toast({
-      title: "Empresa excluída",
-      description: `A empresa ${company.name} foi excluída com sucesso.`,
-    })
+  const handleDelete = async () => {
+    try {
+      await onDelete(company.id)
+      toast({
+        title: "Empresa excluída",
+        description: `A empresa ${company.name} foi excluída com sucesso.`,
+      })
+    } catch (error) {
+      console.error("Erro ao deletar empresa:", error)
+      toast({
+        title: "Erro ao excluir empresa",
+        description: "Ocorreu um erro ao tentar excluir a empresa. Tente novamente.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleEditClick = () => {

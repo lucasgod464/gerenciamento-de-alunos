@@ -23,6 +23,7 @@ export function useCompanies() {
       })
     },
     onError: (error: Error) => {
+      console.error("Erro ao criar empresa:", error)
       toast({
         title: "Erro ao criar empresa",
         description: error.message,
@@ -41,6 +42,7 @@ export function useCompanies() {
       })
     },
     onError: (error: Error) => {
+      console.error("Erro ao atualizar empresa:", error)
       toast({
         title: "Erro ao atualizar empresa",
         description: error.message,
@@ -59,6 +61,7 @@ export function useCompanies() {
       })
     },
     onError: (error: Error) => {
+      console.error("Erro ao deletar empresa:", error)
       toast({
         title: "Erro ao deletar empresa",
         description: error.message,

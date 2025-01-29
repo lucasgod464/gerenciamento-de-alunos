@@ -55,9 +55,8 @@ export default function Companies() {
           inactiveCompanies={inactiveCompanies}
         />
 
-        <div className="flex items-center justify-between">
+        <div>
           <h2 className="text-xl font-semibold">Lista de Empresas</h2>
-          <CreateCompanyDialog onCompanyCreated={createCompany} />
         </div>
 
         <CompanyFilters

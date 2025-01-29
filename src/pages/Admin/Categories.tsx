@@ -22,7 +22,6 @@ const Categories = () => {
     if (!currentUser?.companyId) return;
     fetchCategories();
 
-    // Subscribe to real-time changes
     const channel = supabase
       .channel('categories-changes')
       .on(
@@ -137,23 +136,33 @@ const Categories = () => {
 
   const handleDeleteCategory = async (categoryId: string) => {
     try {
-      const { error } = await supabase
+      // Primeiro, atualizar todas as salas vinculadas para uma categoria padrão ou null
+      const { error: updateRoomsError } = await supabase
+        .from('rooms')
+        .update({ category: null })
+        .eq('category', categoryId);
+
+      if (updateRoomsError) throw updateRoomsError;
+
+      // Depois, excluir a categoria
+      const { error: deleteCategoryError } = await supabase
         .from('categories')
         .delete()
         .eq('id', categoryId);
 
-      if (error) throw error;
+      if (deleteCategoryError) throw deleteCategoryError;
 
-      fetchCategories();
+      await fetchCategories();
+      
       toast({
         title: "Categoria excluída",
-        description: "A categoria foi excluída com sucesso.",
+        description: "A categoria e suas vinculações foram removidas com sucesso.",
       });
     } catch (error) {
       console.error('Error deleting category:', error);
       toast({
         title: "Erro ao excluir categoria",
-        description: "Ocorreu um erro ao excluir a categoria.",
+        description: "Ocorreu um erro ao excluir a categoria. Tente novamente mais tarde.",
         variant: "destructive",
       });
     }

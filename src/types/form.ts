@@ -1,7 +1,8 @@
 import { Json } from "@/integrations/supabase/types";
 
-export type FieldType = "text" | "number" | "date" | "select" | "multiple" | "phone" | "email" | "tel" | "textarea";
-export type FieldSource = "admin" | "enrollment" | "public";
+export type FieldType = "text" | "email" | "tel" | "textarea" | "date" | "select" | "multiple";
+export type FieldSource = "admin" | "public" | "enrollment" | "system";
+export type FormType = "admin" | "enrollment";
 
 export interface FormField {
   id: string;
@@ -13,7 +14,7 @@ export interface FormField {
   order: number;
   options?: string[];
   source: FieldSource;
-  form_type?: string;
+  form_type?: FormType;
   isDefault?: boolean;
 }
 
@@ -27,8 +28,8 @@ export interface SupabaseFormField {
   order: number;
   options?: Json;
   company_id?: string;
-  created_at: string;
-  form_type: string;
+  created_at?: string;
+  form_type: FormType;
 }
 
 export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
@@ -36,22 +37,26 @@ export const mapSupabaseFormField = (field: SupabaseFormField): FormField => ({
   name: field.name,
   label: field.label,
   type: field.type as FieldType,
-  description: field.description,
+  description: field.description || "",
   required: field.required,
   order: field.order,
-  options: Array.isArray(field.options) ? field.options.map(String) : undefined,
-  source: field.form_type === 'enrollment' ? 'enrollment' : field.form_type === 'admin' ? 'admin' : 'public',
+  options: Array.isArray(field.options) 
+    ? field.options.map(String) 
+    : typeof field.options === 'string' 
+      ? [field.options]
+      : [],
+  source: field.form_type === 'admin' ? 'admin' : 'enrollment',
   form_type: field.form_type,
   isDefault: false
 });
 
-export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, "id" | "created_at"> => ({
+export const mapFormFieldToSupabase = (field: FormField): Omit<SupabaseFormField, 'id' | 'created_at'> => ({
   name: field.name,
   label: field.label,
   type: field.type,
   description: field.description,
   required: field.required,
   order: field.order,
-  options: field.options,
+  options: field.options || [],
   form_type: field.form_type || 'admin'
 });

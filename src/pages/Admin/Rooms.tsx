@@ -1,38 +1,61 @@
 import { useState } from "react";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { RoomStats } from "@/components/rooms/RoomStats";
+import { Room } from "@/types/room";
 import { RoomFilters } from "@/components/rooms/RoomFilters";
+import { RoomDialog } from "@/components/rooms/RoomDialog";
 import { RoomTable } from "@/components/rooms/RoomTable";
 import { useRooms } from "@/hooks/useRooms";
-import { RoomActions } from "@/components/rooms/RoomActions";
-import { Room } from "@/types/room";
+import { useToast } from "@/hooks/use-toast";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
-export default function AdminRooms() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
+export default function Rooms() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const { rooms, handleSave, handleDeleteConfirm } = useRooms();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { rooms, loading, handleSave, handleDeleteConfirm } = useRooms();
+  const { toast } = useToast();
 
-  const filteredRooms = rooms.filter((room) => {
-    const matchesSearch = 
-      room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (room.location || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === "all" || 
-                         (filterType === "active" && room.status) ||
-                         (filterType === "inactive" && !room.status);
-    return matchesSearch && matchesFilter;
-  });
+  const handleSaveRoom = async (roomData: Partial<Room>) => {
+    try {
+      await handleSave(roomData);
+      setIsDialogOpen(false);
+      setEditingRoom(null);
+      toast({
+        title: editingRoom ? "Sala atualizada" : "Sala adicionada",
+        description: editingRoom 
+          ? "A sala foi atualizada com sucesso."
+          : "A nova sala foi adicionada com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar sala:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Ocorreu um erro ao salvar a sala.",
+        variant: "destructive",
+      });
+    }
+  };
 
-  const handleEdit = (room: Room) => {
+  const handleEditRoom = (room: Room) => {
     setEditingRoom(room);
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (room: Room) => {
-    setEditingRoom(room);
-    setDeleteDialogOpen(true);
+  const handleDeleteRoom = async (roomId: string) => {
+    try {
+      await handleDeleteConfirm(roomId);
+      toast({
+        title: "Sala removida",
+        description: "A sala foi removida com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir sala:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Ocorreu um erro ao excluir a sala.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddRoom = () => {
@@ -42,44 +65,26 @@ export default function AdminRooms() {
 
   return (
     <DashboardLayout role="admin">
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex flex-col items-center mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            Gerenciamento de Salas
-          </h1>
-          <p className="text-muted-foreground max-w-2xl mb-6">
-            Gerencie todas as salas cadastradas no sistema
-          </p>
-        </div>
+      <div className="space-y-4 p-8">
+        <RoomFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onAddRoom={handleAddRoom}
+        />
 
-        <div className="space-y-8">
-          <RoomStats rooms={rooms} />
-          
-          <div className="space-y-6">
-            <RoomFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={filterType}
-              onStatusFilterChange={setFilterType}
-              onAddRoom={handleAddRoom}
-            />
-
-            <RoomTable 
-              rooms={filteredRooms}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </div>
-
-        <RoomActions
-          isDialogOpen={isDialogOpen}
-          setIsDialogOpen={setIsDialogOpen}
+        <RoomDialog
+          isOpen={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
           editingRoom={editingRoom}
-          deleteDialogOpen={deleteDialogOpen}
-          setDeleteDialogOpen={setDeleteDialogOpen}
-          onSave={handleSave}
-          onDeleteConfirm={handleDeleteConfirm}
+          onSave={handleSaveRoom}
+        />
+
+        <RoomTable
+          rooms={rooms}
+          onDelete={handleDeleteRoom}
+          onEdit={handleEditRoom}
         />
       </div>
     </DashboardLayout>
