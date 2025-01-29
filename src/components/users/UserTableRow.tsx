@@ -7,6 +7,7 @@ import { UserTags } from "./table/UserTags";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserTableRowProps {
   user: UserType;
@@ -50,26 +51,42 @@ export function UserTableRow({
   const isAdmin = user.accessLevel === "Admin";
 
   return (
-    <TableRow>
+    <TableRow className={isAdmin ? "bg-blue-50/50" : ""}>
       <TableCell>
-        <div className="flex items-center gap-2">
-          {isAdmin ? (
-            <div className="flex items-center gap-2">
-              <UserCog className="h-4 w-4 text-blue-600" />
-              <span>{user.name}</span>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                Admin
-              </Badge>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-gray-500" />
-              <span>{user.name}</span>
-            </div>
-          )}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-2">
+                {isAdmin ? (
+                  <div className="flex items-center gap-2">
+                    <UserCog className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium text-blue-700">{user.name}</span>
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
+                      Administrador
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-700">{user.name}</span>
+                    <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200">
+                      Usuário
+                    </Badge>
+                  </div>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{isAdmin ? "Usuário com privilégios administrativos" : "Usuário com acesso padrão"}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TableCell>
-      <TableCell>{user.email}</TableCell>
+      <TableCell>
+        <span className={isAdmin ? "text-blue-700" : "text-gray-600"}>
+          {user.email}
+        </span>
+      </TableCell>
       <TableCell>
         {authorizedRooms.length > 0 
           ? authorizedRooms.join(", ")
@@ -104,6 +121,7 @@ export function UserTableRow({
             variant="ghost"
             size="icon"
             onClick={() => onEdit(user)}
+            className={isAdmin ? "hover:text-blue-600" : "hover:text-gray-700"}
           >
             <Edit2 className="h-4 w-4" />
           </Button>
@@ -111,6 +129,7 @@ export function UserTableRow({
             variant="ghost"
             size="icon"
             onClick={() => onDelete(user.id)}
+            className="hover:text-red-600"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
