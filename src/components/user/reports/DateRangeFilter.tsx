@@ -86,8 +86,8 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
 
   return (
     <div className={cn("flex flex-col md:flex-row items-center gap-2", className)}>
-      <Select defaultValue="last30days" onValueChange={handlePresetChange} className="w-full md:w-auto">
-        <SelectTrigger>
+      <Select defaultValue="last30days" onValueChange={handlePresetChange}>
+        <SelectTrigger className="w-[220px]"> {/* Aumentei o tamanho aqui */}
           <SelectValue placeholder="Período predefinido" />
         </SelectTrigger>
         <SelectContent>
@@ -108,7 +108,6 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
           variant="outline" 
           size="icon"
           onClick={handlePreviousPeriod}
-          className="w-full md:w-auto"
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -118,7 +117,7 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
             <Button
               variant="outline"
               className={cn(
-                "justify-start text-left font-normal w-full md:w-auto",
+                "justify-start text-left font-normal w-[280px]",
                 !dateRange && "text-muted-foreground"
               )}
             >
@@ -158,7 +157,6 @@ export const DateRangeFilter = ({ dateRange, onDateRangeChange, className }: Dat
           variant="outline" 
           size="icon"
           onClick={handleNextPeriod}
-          className="w-full md:w-auto"
         >
           <ChevronRight className="h-4 w-4" />
         </Button>
