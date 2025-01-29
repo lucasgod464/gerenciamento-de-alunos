@@ -1,120 +1,167 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Link as LinkIcon } from "lucide-react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from "@/integrations/supabase/client";
+import { Copy, Link } from "lucide-react";
 
 export const EnrollmentFormHeader = () => {
-  const [enrollmentUrl, setEnrollmentUrl] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [formUrl, setFormUrl] = useState("");
+  const [isEnabled, setIsEnabled] = useState(false);
+  const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
-    const loadCompanyUrl = async () => {
-      if (!user?.companyId) return;
-
-      try {
-        const { data: company, error } = await supabase
-          .from('companies')
-          .select('enrollment_form_url')
-          .eq('id', user.companyId)
-          .single();
-
-        if (error) throw error;
-
-        if (company?.enrollment_form_url) {
-          setEnrollmentUrl(`${window.location.origin}/enrollment/${company.enrollment_form_url}`);
-        }
-      } catch (error) {
-        console.error("Error loading company URL:", error);
-        toast.error("Não foi possível carregar a URL do formulário.");
-      }
-    };
-
-    loadCompanyUrl();
+    loadFormUrl();
   }, [user?.companyId]);
+
+  const loadFormUrl = async () => {
+    if (!user?.companyId) return;
+
+    const { data, error } = await supabase
+      .from('companies')
+      .select('enrollment_form_url, enrollment_form_enabled')
+      .eq('id', user.companyId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao carregar URL do formulário:', error);
+      return;
+    }
+
+    if (data) {
+      setFormUrl(data.enrollment_form_url || '');
+      setIsEnabled(data.enrollment_form_enabled || false);
+    }
+  };
 
   const generateFormUrl = async () => {
     if (!user?.companyId) {
-      toast.error("Empresa não encontrada.");
+      toast({
+        title: "Erro",
+        description: "Você precisa estar vinculado a uma empresa para gerar o link.",
+        variant: "destructive",
+      });
       return;
     }
 
-    setIsGenerating(true);
-    try {
-      const uniqueUrl = uuidv4();
-      
-      const { error } = await supabase
-        .from('companies')
-        .update({ enrollment_form_url: uniqueUrl })
-        .eq('id', user.companyId);
+    const uniqueUrl = crypto.randomUUID();
 
-      if (error) throw error;
+    const { error } = await supabase
+      .from('companies')
+      .update({ 
+        enrollment_form_url: uniqueUrl,
+        enrollment_form_enabled: true
+      })
+      .eq('id', user.companyId);
 
-      setEnrollmentUrl(`${window.location.origin}/enrollment/${uniqueUrl}`);
-      toast.success("Link do formulário gerado com sucesso!");
-    } catch (error) {
-      console.error("Error generating form URL:", error);
-      toast.error("Não foi possível gerar o link do formulário.");
-    } finally {
-      setIsGenerating(false);
+    if (error) {
+      console.error('Erro ao gerar URL:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o link do formulário.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setFormUrl(uniqueUrl);
+    setIsEnabled(true);
+    toast({
+      title: "Sucesso",
+      description: "Link do formulário gerado com sucesso!",
+    });
   };
 
-  const copyLink = () => {
-    if (!enrollmentUrl) {
-      toast.error("A URL do formulário ainda não foi configurada.");
+  const copyToClipboard = () => {
+    const url = `${window.location.origin}/enrollment/${formUrl}`;
+    navigator.clipboard.writeText(url);
+    toast({
+      title: "Link copiado!",
+      description: "O link do formulário foi copiado para a área de transferência.",
+    });
+  };
+
+  const toggleFormStatus = async () => {
+    if (!user?.companyId) return;
+
+    const newStatus = !isEnabled;
+
+    const { error } = await supabase
+      .from('companies')
+      .update({ enrollment_form_enabled: newStatus })
+      .eq('id', user.companyId);
+
+    if (error) {
+      console.error('Erro ao atualizar status do formulário:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status do formulário.",
+        variant: "destructive",
+      });
       return;
     }
 
-    navigator.clipboard.writeText(enrollmentUrl);
-    toast.success("Link copiado para a área de transferência!");
+    setIsEnabled(newStatus);
+    toast({
+      title: "Status atualizado",
+      description: `Formulário ${newStatus ? 'ativado' : 'desativado'} com sucesso!`,
+    });
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Link do Formulário</CardTitle>
-            <CardDescription>
-              Compartilhe este link para receber inscrições
-            </CardDescription>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Link do Formulário</h2>
+          <p className="text-muted-foreground">
+            Gere e compartilhe o link do formulário de inscrição
+          </p>
+        </div>
+        {formUrl ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="form-status"
+                checked={isEnabled}
+                onCheckedChange={toggleFormStatus}
+              />
+              <Label htmlFor="form-status">
+                {isEnabled ? "Ativado" : "Desativado"}
+              </Label>
+            </div>
           </div>
-          {enrollmentUrl && (
-            <Button asChild>
-              <Link to={enrollmentUrl.replace(window.location.origin, '')} target="_blank">
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visualizar Formulário
-              </Link>
+        ) : (
+          <Button onClick={generateFormUrl}>
+            <Link className="mr-2 h-4 w-4" />
+            Gerar Link
+          </Button>
+        )}
+      </div>
+
+      {formUrl && (
+        <div className="flex flex-col gap-2">
+          <Label>Link do Formulário</Label>
+          <div className="flex gap-2">
+            <Input
+              value={`${window.location.origin}/enrollment/${formUrl}`}
+              readOnly
+              className="bg-muted"
+            />
+            <Button variant="outline" onClick={copyToClipboard}>
+              <Copy className="h-4 w-4" />
             </Button>
-          )}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            {isEnabled 
+              ? "O formulário está ativo e pode receber inscrições."
+              : "O formulário está desativado e não pode receber inscrições."}
+          </p>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-          <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <code className="text-sm flex-1 break-all">
-            {enrollmentUrl || "URL do formulário não configurada"}
-          </code>
-          {!enrollmentUrl ? (
-            <Button 
-              onClick={generateFormUrl} 
-              disabled={isGenerating}
-            >
-              {isGenerating ? "Gerando..." : "Gerar Link do Formulário"}
-            </Button>
-          ) : (
-            <Button variant="secondary" onClick={copyLink}>
-              Copiar Link
-            </Button>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };

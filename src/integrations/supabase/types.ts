@@ -100,6 +100,7 @@ export type Database = {
           current_rooms: number
           current_users: number
           document: string
+          enrollment_form_enabled: boolean | null
           enrollment_form_url: string | null
           id: string
           name: string
@@ -114,6 +115,7 @@ export type Database = {
           current_rooms?: number
           current_users?: number
           document: string
+          enrollment_form_enabled?: boolean | null
           enrollment_form_url?: string | null
           id?: string
           name: string
@@ -128,6 +130,7 @@ export type Database = {
           current_rooms?: number
           current_users?: number
           document?: string
+          enrollment_form_enabled?: boolean | null
           enrollment_form_url?: string | null
           id?: string
           name?: string

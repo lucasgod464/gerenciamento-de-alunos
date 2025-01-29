@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -40,12 +40,15 @@ export function PublicEnrollment() {
 
       const { data: company, error: companyError } = await supabase
         .from('companies')
-        .select('id')
+        .select('id, enrollment_form_enabled')
         .eq('enrollment_form_url', formUrl)
         .maybeSingle();
 
       if (companyError) throw companyError;
       if (!company) throw new Error("Formulário não encontrado");
+      if (!company.enrollment_form_enabled) {
+        throw new Error("Este formulário está temporariamente desativado");
+      }
 
       const { data: formFields, error: fieldsError } = await supabase
         .from('enrollment_form_fields')
